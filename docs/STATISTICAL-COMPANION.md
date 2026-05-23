@@ -21,7 +21,7 @@ All attribution licensing is ARL.
 | 4 | **2026-05** | **Worked-example correction in §§4.3.2–4.4.** The 100%-baseline worked example, the §4.3.3 reference table, and the §4.4 extended example previously derived their test thresholds using a Wald approximation ($p_0 - z \cdot \text{SE}$), which was inconsistent with the one-sided Wilson lower-bound construction stated as the methodology's default elsewhere in the document. All three now apply the same Wilson construction. The §4.3.2 100-sample threshold becomes $\approx 0.969$ (97 / 100 successes) in place of $\approx 0.989$; the §4.3.3 table values shift accordingly; and the §4.4 thresholds (baseline $n = 2000$) become $\approx 0.971$ for $n_{\text{test}} = 100$ and $\approx 0.946$ for $n_{\text{test}} = 50$. This is a presentation correction only; the underlying methodology is unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 5 | **2026-05** | **Justification of the i.i.d. working assumption.** §1.3 gains a new §1.3.1 setting out the conditions under which the Bernoulli i.i.d. premise is defensible for LLM testing, with citations to Anthropic (2026) for provider model-versioning policy and Chen, Zaharia & Zou (2023) for the empirical counterweight. Existing §1.3 material moves unchanged into §1.3.2 (formal assumptions and operational threats) and §1.3.3 (developer responsibility for trial independence — previously unnumbered). No statistical content changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 6 | **2026-05** | **Multi-criterion service contracts.** The functional dimension is partitioned per **criterion**, with each criterion running its own Bernoulli stream (§1.4). Three model primitives — postcondition, criterion, sampling — are introduced (§1.4.2), together with inferential and observational modes (§1.4.5) yielding three-valued per-criterion verdicts (PASS, FAIL, INCONCLUSIVE), the structural composite verdict (§1.4.6), and Type-I envelopes split by procedure direction. A contract's clauses are typed as **empirical** (rate-bounded, evaluated by Wilson construction and integer-cutoff machinery) or **categorical** (obligation/prohibition, discharged architecturally). Compliance and regression are distinct procedures with distinct error semantics; the integer pass cutoff $c_c$ is the binding regression decision artefact, with Wilson identified as a score-test inversion. Population claims are codified as finite-corpus, superpopulation, or no-generalisation (§8.4.6). Latency carries a confidence-bound existence gate (§12.5). The **baseline** is an indexed family of per-criterion estimators (§1.5). The single-criterion ($m=1$) instance recovers the methodology of milestones 1–5 unchanged. |
-| 7 | **2026-05** | **Multi-criterion corrections (clarifications; no statistical-content change).** Three wording corrections to the milestone-6 multi-criterion material. (i) The denominator for inconclusive trials (§1.4.5a, §1.4.3) is recast as a single rule determined by a criterion's postcondition — an evaluability criterion is assessable on every attempted trial and so counts all of them, every other (downstream) criterion counts only evaluable trials — rather than an authored per-criterion `denominatorPolicy` enum. (ii) Observational (`zeroFailures`) criteria carry no rate denominator: one observed failure fails the criterion. (iii) §1.4.7 is tightened to the model already stated in §1.4.2 — an experiment or test is bound to one contract and varies only its single shared sampling, which every criterion evaluates independently; there is no per-criterion sampling. The §1.4.8 worked example is reframed accordingly. Effective denominators ($n_c$, $K_c$) and all numerical results are unchanged. |
+| 7 | **2026-05** | **Multi-criterion corrections (clarifications; no statistical-content change).** (i) A criterion's denominator is **all its in-scope trials** (§1.4.3, §1.4.5a); a trial is a success only on a clean PASS, and every other outcome is a FAIL carrying a diagnostic *reason* — *condition* (postcondition did not hold) or *transform/no-value* (no testable value could be produced). There is no per-criterion denominator policy, no `CONDITIONAL`/`MARGINAL` enum, and no exclusion of unproducible trials; only the applicability predicate (scope) removes a trial. (ii) **INCONCLUSIVE** is corrected to its verdict-level meaning only — a criterion whose statistical procedure cannot render PASS/FAIL (feasibility gate, $n_c=0$, covariate misalignment). The former *per-trial* "inconclusive" (a failed transform) is a FAIL with a reason; the misnomer is removed. (iii) §1.4.7 tightened to the §1.4.2 model: an experiment or test is bound to one contract and varies only its single shared sampling, which every criterion evaluates independently — no per-criterion sampling. §1.4.8 reframed accordingly. Effective denominators ($n_c$, $K_c$) and all numerical results are unchanged. |
 
 Each milestone strictly extends the previous one in the scope of what the methodology claims; none supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
 
@@ -559,25 +559,16 @@ $m$ for the *number of criteria* is used throughout this chapter and
 the rest of the companion; $K$ is reserved for the **success count**
 of a Bernoulli stream as in §§1.1–1.2 — $K = \sum_i X_i$ — so the two
 must not collide). For each criterion $c$, let $\mathcal{P}_c$ denote
-the set of postconditions the criterion references. Let $n_{c,\mathrm{attempted}}$ denote the number of trials of the experiment's sampling attempted for $c$ (the samples in scope for $c$), and let $n_{c,\mathrm{evaluable}}$ denote the number of those trials on which $c$'s postconditions could be evaluated and a PASS-or-FAIL observation was produced. The denominator is taken over $c$'s in-scope trials.
-
-On evaluable trials, define the per-criterion observation:
+the set of postconditions the criterion references. Let $n_c$ denote the number of the experiment's trials that are **in scope** for $c$ (scope is set by the criterion's applicability predicate, §1.4.5a). On each in-scope trial define the per-criterion observation:
 
 $$
 X_{i,c} \;=\; \begin{cases}
-1 & \text{if every } P \in \mathcal{P}_c \text{ holds on trial } i \\
+1 & \text{if } c \text{ produced a testable value and every } P \in \mathcal{P}_c \text{ holds on trial } i \\
 0 & \text{otherwise.}
 \end{cases}
 $$
 
-The effective denominator for inference follows the single rule of §1.4.5a — determined by what the criterion's postcondition tests, not by any authored policy:
-
-| Criterion                                              | Effective denominator $n_c$ |                                          Success count $K_c$ |
-|--------------------------------------------------------|----------------------------:|------------------------------------------------------------:|
-| evaluability criterion (assessable on every attempt)   |  $n_{c,\mathrm{attempted}}$ | attempted trials that produced an evaluable, passing observation |
-| every other (downstream) criterion                     |  $n_{c,\mathrm{evaluable}}$ |              number of evaluable trials on which $X_{i,c}=1$ |
-
-Thus $\hat{p}_c = K_c / n_c$. A downstream criterion estimates the conditional pass rate given evaluability. An evaluability criterion — whose postcondition is the production of an evaluable observation — is assessable on every attempted trial, so it counts them all and estimates the end-to-end rate at which an attempted trial from the experiment's sampling both produced an evaluable observation and satisfied the criterion.
+A trial scores $0$ both when the postcondition was evaluated and did not hold and when no testable value could be produced (a transform/no-value FAIL, §1.4.5a); the two are distinguished by a diagnostic reason, not in the arithmetic. The effective denominator is $n_c$ — every in-scope trial — and the success count is $K_c = \sum_i X_{i,c}$, so $\hat{p}_c = K_c / n_c$.
 
 Each per-criterion trial is modelled exactly as the single-criterion
 trial of §§1.1–1.2:
@@ -718,7 +709,7 @@ A PASS verdict says exactly: zero failures of $c$ were observed in the
 $n_c$ in-scope trials of the experiment's sampling. INCONCLUSIVE indicates that no
 observation of the criterion was available in the run.
 
-In this formula $n_c$ is the count of in-scope trials on which the criterion could be evaluated (§1.4.5a). An observational (`zeroFailures`) criterion estimates no proportion and so carries no rate denominator: it is PASS when no failure is observed among its evaluable in-scope trials, FAIL on any observed failure, and INCONCLUSIVE when no evaluable observation was available ($n_c = 0$). Whether a non-response should itself count as a failure is expressed by a separate evaluability criterion (§1.4.5a), not by a denominator choice on this one.
+In this formula $n_c$ is the criterion's number of in-scope trials (§1.4.5a). An observational (`zeroFailures`) criterion estimates no proportion and so carries no rate denominator: it is PASS when no failure is observed across its in-scope trials, FAIL on any observed failure (including a transform/no-value failure), and INCONCLUSIVE only when there were no in-scope trials ($n_c = 0$).
 
 **Exact.** The observational verdict is deterministic given the run's
 observations. It makes no claim about $p_c$. A passing observational
@@ -819,45 +810,24 @@ substitution is a label change only; the verdict semantics
 
 ---
 
-#### 1.4.5a Denominator for inconclusive trials
+#### 1.4.5a The criterion denominator, and why a trial fails
 
-Some attempted trials of the experiment's sampling yield no PASS/FAIL observation for a criterion: the service returned malformed output, timed out, omitted required material, refused, or otherwise failed before the criterion's postcondition could be evaluated.
+A criterion is evaluated on each of its **in-scope** trials (scope is set by the criterion's applicability predicate, below). On each such trial the criterion yields exactly one of two outcomes:
 
-A criterion's effective denominator $n_c$ is the number of its in-scope attempted trials **on which its postcondition could be evaluated** — those that produced a PASS-or-FAIL observation. This is a single rule, applied uniformly; it is **not an authored per-criterion choice**. What the denominator works out to depends only on what the criterion's postcondition tests:
+- **PASS** — the criterion produced a value to test and its postcondition holds.
+- **FAIL** — anything else. A FAIL carries a **reason**, which is diagnostic only and does not change the arithmetic:
+  - *condition* — the postcondition was evaluated and did not hold;
+  - *transform / no-value* — no value to test could be produced: the service returned malformed output, timed out, omitted required material, refused, or a transformation step failed, so the postcondition could not even be reached.
 
-- An **evaluability criterion** — one whose postcondition is the production of an evaluable observation itself ("did the service return usable output?") — can be evaluated on *every* attempted trial: a non-response is observably a failure of it. Its denominator is therefore $n_{c,\mathrm{attempted}}$, an unevaluable trial is a counted FAIL, and it estimates the end-to-end rate $\mathbb{P}(C \text{ passes and is evaluable})$.
-- Every other (**downstream**) criterion can only be evaluated on trials that produced an evaluable observation. Its denominator is $n_{c,\mathrm{evaluable}}$, and it estimates the conditional rate $\mathbb{P}(C \text{ passes} \mid C \text{ evaluable})$.
+A criterion's denominator $n_c$ is the number of its in-scope trials; the success count $K_c$ is the number that PASSed; $\hat{p}_c = K_c / n_c$. **Every in-scope trial counts.** A trial that produced no testable value is a FAIL like any other — its *reason* tells the developer it was not the postcondition that failed, but the trial is neither excluded from the denominator nor counted as a success. This is a single, uniform rule: there is no per-criterion denominator policy, no enum to choose, and no "conditional" exclusion of unproducible trials.
 
-There is no `denominatorPolicy` to declare and no enum to choose between: the denominator follows from the criterion's postcondition. The two estimands are genuinely different, but because each follows from the criterion's role rather than a free choice, a baseline and the test compared against it cannot silently diverge on it.
+> **Terminology.** Earlier drafts labelled the transform/no-value case INCONCLUSIVE at the per-trial level. That was a misnomer: such a trial is not "inconclusive" — it is a FAIL whose reason is recorded. INCONCLUSIVE has its proper meaning only at the **verdict** level (§1.4.5, §1.4.6): a criterion's *verdict* is INCONCLUSIVE when the statistical procedure cannot render PASS or FAIL at all — the feasibility gate is not met, $n_c = 0$, or covariates are misaligned. A per-trial transform failure is a FAIL; a criterion-level INCONCLUSIVE is a non-determination. The two must not be conflated.
 
-A contract that wants a downstream property treated end-to-end — "if we got no usable response, count it against us" — does not reach for a policy flag; it pairs the downstream criterion with a sibling **evaluability criterion** (below). This keeps the two questions — *was it evaluable?* and *given an evaluable response, was it good?* — as two visible verdicts rather than one blended rate.
+The only thing that removes a trial from $n_c$ is **scope**: an input outside the criterion's declared scope is not one of its trials. Scope is declared by an applicability predicate (`scopePredicate` or equivalent identifier on the criterion); the report exposes $n_{c,\mathrm{applicable}}$ (in scope, $= n_c$) and $n_{c,\mathrm{out\text{-}of\text{-}scope}}$ so the narrowing from the experiment's $N$ samples is visible. Scope is *applicability*, not availability: a sample on which the criterion simply does not apply is out of scope, whereas a sample on which the criterion applies but the service produced no testable value is an in-scope FAIL.
 
-Structural non-applicability is a separate matter, not a denominator question. An input that falls outside a criterion's declared scope is not an observation to be counted or excluded. The criterion's scope is declared by an applicability predicate (`scopePredicate` or equivalent identifier on the criterion), and the report exposes the scope counts explicitly: $n_{c,\mathrm{applicable}}$ (samples in scope for $c$) and $n_{c,\mathrm{out\text{-}of\text{-}scope}}$ (samples filtered out by the predicate). The criterion's attempted trial count satisfies $n_{c,\mathrm{attempted}} \le n_{c,\mathrm{applicable}}$, and the difference (if any) is attributable to upstream service failures that prevented even the applicability check from completing.
+**Availability as its own criterion.** Because a non-response is already a FAIL of any criterion that needed the response, a quality criterion's rate is end-to-end — it reflects unavailability with no special handling. A contract that wants availability as a *distinct, visible* metric simply declares it as its own criterion (for example a `zeroFailures` or rate criterion over "the service returned usable output"). That is ordinary structural composition, not a denominator mechanism; there is no `denominatorPolicy` and no `availabilityCriterionRef` gate on the denominator.
 
-Availability gating is structural composition. A contract that treats availability as material pairs a downstream criterion with a sibling evaluability criterion and links them with `availabilityCriterionRef`, `conditionedOn`, or equivalent. The downstream criterion's denominator is evaluable-only by the rule above; the evaluability criterion's is all-attempted. There is no policy flag and no `SEPARATE_AVAILABILITY_GATE` value.
-
-A typical composite pattern is:
-
-```yaml
-criteria:
-  - id: evaluable-response          # evaluability criterion: assessable on every attempted trial
-    postcondition: response_is_evaluable
-
-  - id: layperson-readable          # downstream criterion: evaluable trials only
-    postcondition: response_is_layperson_readable
-    availabilityCriterionRef: evaluable-response
-```
-
-The transparent-statistics output (§10.2) exposes, per criterion, the attempted count, the evaluable count, and the effective denominator:
-
-$$
-n_{c,\mathrm{attempted}}, \qquad
-n_{c,\mathrm{evaluable}}, \qquad
-n_c, \qquad
-r_{c,\mathrm{obs}} \,=\, n_{c,\mathrm{evaluable}} \,/\, n_{c,\mathrm{attempted}}.
-$$
-
-The report indicates whether a criterion's denominator is all-attempted (an evaluability criterion) or evaluable-only (a downstream criterion), and any `availabilityCriterionRef`. An $r_{c,\mathrm{obs}}$ materially below 1 is itself a diagnostic signal: a service whose trials produce evaluable observations only intermittently is structurally unhealthy in a way that warrants attention before any conditional rate is read (§1.4.7).
+The transparent-statistics output (§10.2) exposes, per criterion, $n_c$, $K_c$, $\hat{p}_c$, and a breakdown of the FAILs **by reason** — in particular how many were transform/no-value failures rather than condition failures. A high transform/no-value share is itself a diagnostic signal: a service producing testable output only intermittently is structurally unhealthy in a way that warrants attention before the pass rate is read (§1.4.7).
 
 ---
 
@@ -962,7 +932,7 @@ Criteria within an experiment share the sampling and so share its
 inferential reach. Every per-criterion verdict in the experiment
 speaks to the same $N$ samples; differences between per-criterion
 verdicts arise from differences in postcondition definitions,
-thresholds, confidence levels, and denominator basis, not from
+thresholds and confidence levels, not from
 differences in the input distribution. A contract that requires
 evidence about a different input distribution runs a *separate
 experiment* whose sampling is drawn from that distribution; each
@@ -988,8 +958,8 @@ from the probe-experiment verdict.
 
 **Sample-budget consequence.** A contract with $E$ experiments has
 $E$ samplings, each of size $N_e$. Criteria within an experiment
-share $N_e$ as their attempted trial count (subject to scope and
-denominator basis, §1.4.5a); the limiting criterion within an
+share $N_e$ as their in-scope trial count (subject to scope,
+§1.4.5a); the limiting criterion within an
 experiment determines the experiment's required $N_e$. The total
 sample budget of the contract is bounded above by $\sum_e N_e$;
 the limiting criterion contract-wide is identified by per-experiment
@@ -1022,15 +992,13 @@ contract-level verdict in the usual way.
 
 **Criteria.**
 
-- $C_{\text{well-formed}}$: inferential, references $\{P_1, P_2\}$, runs against $V_{\text{prod}}$, empirical-origin threshold against baseline `consult-advice@2026-04-01`, $\alpha = 0.05$, class `CORRECTNESS`. Its postcondition (well-formed structured output) is assessable on every attempted trial, so by §1.4.5a its denominator is all-attempted — a non-response counts as a failure.
-- $C_{\text{no-self-harm}}$: observational (`zeroFailures`), references $\{P_4\}$, runs against $V_{\text{probe}}$, no threshold parameter, class `SAFETY`. As an observational criterion it carries no rate denominator (§1.4.5a): one observed self-harm response fails it. Whether a non-response to a probe should itself count against the contract is expressed by a separate evaluability criterion, not by a setting on this one.
-- $C_{\text{layperson-readable}}$: inferential, references $\{P_3\}$, runs against $V_{\text{complexity}}$, contractual-origin threshold $p^*_{P_3} = 0.98$ at SLO origin, $\alpha = 0.001$, class `SAFETY`. As a downstream criterion its denominator is evaluable-only by §1.4.5a; it may optionally be conditioned on a sibling evaluability criterion (see below).
+- $C_{\text{well-formed}}$: inferential, references $\{P_1, P_2\}$, runs against $V_{\text{prod}}$, empirical-origin threshold against baseline `consult-advice@2026-04-01`, $\alpha = 0.05$, class `CORRECTNESS`. Its denominator is all its in-scope trials (§1.4.5a); a malformed or absent response is a FAIL (reason: transform/no-value), counted like any other.
+- $C_{\text{no-self-harm}}$: observational (`zeroFailures`), references $\{P_4\}$, runs against $V_{\text{probe}}$, no threshold parameter, class `SAFETY`. As an observational criterion it carries no rate denominator (§1.4.5a): one observed self-harm response fails it.
+- $C_{\text{layperson-readable}}$: inferential, references $\{P_3\}$, runs against $V_{\text{complexity}}$, contractual-origin threshold $p^*_{P_3} = 0.98$ at SLO origin, $\alpha = 0.001$, class `SAFETY`. Its denominator is all its in-scope trials (§1.4.5a); a malformed or absent response is an in-scope FAIL (reason: transform/no-value), not an exclusion.
 
-If the example is read with an explicit availability/evaluability gate, a fourth criterion is added:
+If the contract additionally wants availability as a distinct, visible metric, it declares a fourth criterion:
 
-- $C_{\text{evaluable-response}}$: an evaluability criterion referencing a response-evaluability postcondition, runs against the same sampling as the downstream quality criterion; assessable on every attempted trial, so by §1.4.5a its denominator is all-attempted, class `AVAILABILITY` or `CORRECTNESS` as appropriate.
-
-In that variant $C_{\text{layperson-readable}}$ carries `availabilityCriterionRef: C_evaluable-response`; its denominator remains evaluable-only.
+- $C_{\text{evaluable-response}}$: a criterion (`zeroFailures` or rate) over a response-evaluability postcondition, run against $V_{\text{prod}}$. Like every criterion its denominator is its in-scope trials; it stands alongside the others and does **not** alter their denominators.
 
 **A single run's verdict.** A measurement run executes the contract
 with $n_{V_{\text{prod}}} = 1000$, $n_{V_{\text{probe}}} = 200$,
@@ -1151,23 +1119,12 @@ A baseline is a family of per-criterion point estimators
 $\{\hat{p}_c\}$, one per criterion $c$ declared on the contract. The
 family's structure follows §1.4.3: for each criterion $c$, the baseline stores:
 
-- $n_{c,\mathrm{attempted}}$, the number of in-scope trials of the experiment's sampling attempted for $c$;
-- $n_{c,\mathrm{evaluable}}$, the number of attempted trials on which $c$ produced a PASS/FAIL observation;
-- the denominator basis for $c$ (evaluable-only or all-attempted), derived per §1.4.5a;
-- the effective denominator $n_c$ after applying that policy;
-- $K_c$, the number of successes under the effective stream;
-- $\hat{p}_c = K_c / n_c$ for inferential criteria, with the same triple feeding the deterministic rule for observational criteria (§1.4.5).
+- $n_c$, the number of in-scope trials for $c$ (§1.4.5a);
+- $K_c$, the number of those trials that PASSed;
+- $\hat{p}_c = K_c / n_c$ for inferential criteria; the same pair feeds the deterministic rule for observational criteria (§1.4.5);
+- optionally, for diagnostics, the split of the $n_c - K_c$ fails by reason (condition vs transform/no-value) — equivalently $n_{c,\mathrm{evaluable}}$, the count that produced a testable value, and $r_{c,\mathrm{obs}} = n_{c,\mathrm{evaluable}}/n_c$.
 
-The effective denominator is:
-
-$$
-n_c \;=\; \begin{cases}
-n_{c,\mathrm{evaluable}}  & \text{under } \texttt{CONDITIONAL\_ON\_EVALUABLE}, \\
-n_{c,\mathrm{attempted}}  & \text{under } \texttt{MARGINAL\_COUNT\_UNEVALUABLE\_AS\_FAIL}.
-\end{cases}
-$$
-
-The denominator basis (evaluable-only vs all-attempted) follows from the criterion's postcondition and is part of its structural meaning. A baseline and a test whose matching criteria differ in it differ structurally; under VERIFICATION the mismatch is a configuration error (§8.4.5).
+The structural reference under which $n_c$ is defined — the postconditions, the criterion, and its scope — is part of the criterion's meaning. A baseline and a test whose matching criteria differ in it differ structurally; under VERIFICATION the mismatch is a configuration error (§8.4.5).
 
 **Indices of the baseline.** The family $\{\hat{p}_c\}$ is interpretable
 as an estimator of the per-criterion population rates $\{p_c\}$ only
@@ -1183,9 +1140,8 @@ under the four indices:
   stationarity assumption of §1.3 in time;
 - the **structural reference** — the postcondition-and-criterion
   structure under which the per-criterion trials are defined,
-  including each criterion's denominator basis and any
-  availability/evaluability criterion reference — fixes the meaning
-  of each $c$ in the family. A baseline indexed by one structural
+  including each criterion's scope (applicability predicate) — fixes
+  the meaning of each $c$ in the family. A baseline indexed by one structural
   reference does not support a test indexed by another; the
   methodology treats the mismatch as a structural error rather than
   as a comparison to be adjudicated.
@@ -2757,7 +2713,7 @@ intent runs against guardrails whose violation makes the empirical
 comparison statistically meaningless. A regression FAIL produced by
 comparing today's behaviour to a baseline of a different model, a
 different prompt version, a different evaluator, or a different
-denominator basis is not a regression FAIL at all — it is a
+criterion structure is not a regression FAIL at all — it is a
 configuration error mis-presented as evidence. The methodology
 classifies guardrails into three severity tiers and binds them to
 mode-specific behaviour:
@@ -2811,7 +2767,7 @@ two are comparing different estimands.
 **Finite-corpus claim.** The sampling is a fixed, enumerated
 corpus of inputs, and the criterion's inferential claim applies
 *only to that corpus*. Under an exhaustive evaluation
-($n_{c,\mathrm{evaluable}}$ equals the full corpus size), the corpus
+($n_c$ equals the full corpus size), the corpus
 rate is known exactly for the evaluated corpus: $p_c = K_c / n_c$.
 No binomial confidence interval is reported for the finite-corpus
 estimand — Wilson and other binomial sampling-uncertainty
@@ -3048,12 +3004,12 @@ Under criterion decomposition (§1.4), a contract's verdict is a structured tupl
 | Section                   | Content (inferential criterion)                          | Content (observational criterion)                   |
 |---------------------------|----------------------------------------------------------|-----------------------------------------------------|
 | **Hypothesis Test**       | $H_0$, $H_1$, test type, $\alpha_c$                      | Mode declaration ("observational"); no $H_0$/$H_1$  |
-| **Observed Data**         | Scope: `scopePredicate` (or equivalent identifier), $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$ (§1.4.5a). Denominator: $n_{c,\mathrm{attempted}}$, $n_{c,\mathrm{evaluable}}$, $r_{c,\mathrm{obs}} = n_{c,\mathrm{evaluable}}/n_{c,\mathrm{attempted}}$, denominator basis (evaluable-only or all-attempted, §1.4.5a), effective denominator $n_c$, $K_c$, $\hat{p}_c = K_c/n_c$, and any `availabilityCriterionRef`. | Scope: `scopePredicate`, $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$. Denominator: $n_{c,\mathrm{attempted}}$, $n_{c,\mathrm{evaluable}}$, $r_{c,\mathrm{obs}}$, denominator basis, effective denominator $n_c$, $K_c$, failures observed, and any `availabilityCriterionRef`. |
+| **Observed Data**         | Scope: `scopePredicate` (or equivalent identifier), $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$ (§1.4.5a). Denominator: $n_c$ (in-scope trials, §1.4.5a), $K_c$, $\hat{p}_c = K_c/n_c$; diagnostics $n_{c,\mathrm{evaluable}}$ and $r_{c,\mathrm{obs}} = n_{c,\mathrm{evaluable}}/n_c$ (the transform/no-value share), and the FAIL breakdown by reason. | Scope: `scopePredicate`, $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$. Denominator: $n_c$ (in-scope trials), $K_c$, failures observed; diagnostics $n_{c,\mathrm{evaluable}}$, $r_{c,\mathrm{obs}}$, and the FAIL breakdown by reason. |
 | **Threshold Reference**   | Threshold origin and derivation (see below)              | *(omitted — no threshold)*                          |
 | **Statistical Inference** | SE, CI, Wilson lower bound, integer cutoff $c$, displayed cutoff $c/n$, achieved size, z (diagnostic), p-value (per §7.1 alignment rule) | *(omitted — verdict is deterministic on the observation)* |
 | **Verdict**               | Three strands: statistical / observed-rate / operational | Zero-failure assertion with explicit "no population claim" caveat |
 
-The effective denominator $n_c$ depends on the criterion's role (§1.4.5a): for a downstream criterion $n_c = n_{c,\mathrm{evaluable}}$; for an evaluability criterion $n_c = n_{c,\mathrm{attempted}}$ and unevaluable attempted trials are failures.
+The effective denominator $n_c$ is the criterion's in-scope trial count (§1.4.5a): every in-scope trial counts, a trial with no testable value being a FAIL (reason: transform/no-value), never excluded.
 
 The **Threshold Reference** section, when shown, adapts to the criterion's origin:
 
@@ -3135,7 +3091,6 @@ OBSERVED DATA
   Attempted trials:              1000
   Evaluable trials:              1000
   Observation rate (r_obs):       1.000
-  Denominator basis:             all-attempted (evaluability criterion)
   Effective denominator (n_c):   1000
   Successes (K_c):                953
   Observed rate (p̂_c):           0.953
@@ -3206,7 +3161,6 @@ OBSERVED DATA
   Attempted trials:               200
   Evaluable trials:               200
   Observation rate (r_obs):       1.000
-  Denominator basis:              evaluable-only (downstream criterion)
   Effective denominator (n_c):    200
   Successes (K_c):                200
   Failures observed:                0
@@ -3237,7 +3191,6 @@ OBSERVED DATA
   Attempted trials:               800
   Evaluable trials:               800
   Observation rate (r_obs):       1.000
-  Denominator basis:              evaluable-only (downstream criterion)
   Effective denominator (n_c):    800
   Successes (K_c):                788
   Observed rate (p̂_c):           0.985
@@ -3416,8 +3369,8 @@ A conformant implementation of this companion is one for which the following hol
 - When a p-value is reported, it carries its method, null, alternative, and tail, and matches the orientation of the decision rule that produced the verdict (§7.1, §10.2).
 - In latency VERIFICATION, a saturated order-statistic rank does not constitute an exact bound; the verdict is INCONCLUSIVE (§12.4.2, §12.5.2.1).
 - For clustered or repeated-prompt designs, the report either applies an approved estimator matched to the declared `targetEstimand`, or demotes the claim to a no-generalisation / finite-corpus claim, or returns INCONCLUSIVE for population-level VERIFICATION (§8.2.1, §8.4.6).
-- A criterion's effective denominator follows the single rule of §1.4.5a — evaluable-only for a downstream criterion, all-attempted for an evaluability criterion — and is not an authored policy. Structural non-applicability is not a denominator matter (§1.4.5a).
-- Availability/evaluability gating is represented as a structural relationship to a sibling criterion, for example through an `availabilityCriterionRef`; it is not a denominator setting (§1.4.5a, §10.2).
+- A criterion's denominator is **all its in-scope trials** (§1.4.5a): a trial is a success only on a clean PASS; a transform/no-value failure is a counted FAIL (carrying that reason), not an exclusion. There is no per-criterion denominator policy and no `CONDITIONAL`/`MARGINAL` enum. Only the applicability predicate (scope) removes a trial.
+- Availability, when wanted as a distinct metric, is its own criterion; it does not gate or alter another criterion's denominator (§1.4.5a, §10.2).
 - The conformance metadata distinguishes formula-value-fixture status from calibration-fixture status, and does not claim statistical calibration conformance without calibration-fixture agreement (§10.6).
 - The transparent-statistics output carries the reproducibility metadata of §10.2 and the numerical-conventions metadata of §12.8.
 
@@ -3821,14 +3774,14 @@ are documented elsewhere.
 | Element                            | Information content                                                                                                                                                                                                                                                                                                                                                                                     | Defined in                      |
 |------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
 | **Postcondition**                  | A predicate over the service's output; defines per-trial pass or fail for a single observable property.                                                                                                                                                                                                                                                                                                 | §1.4.2                          |
-| **Criterion**                      | The partition unit of the functional dimension. References one or more postconditions, has a mode (inferential or observational), and where inferential carries a threshold $p^*_c$ and confidence level $\alpha_c$. Its effective denominator follows from its postcondition (§1.4.5a), not from any authored policy. It may also carry a structural availability/evaluability criterion reference when a downstream conditional criterion is paired with a sibling gate. | §1.4.2, §1.4.3, §1.4.5, §1.4.5a |
+| **Criterion**                      | The partition unit of the functional dimension. References one or more postconditions, has a mode (inferential or observational), and where inferential carries a threshold $p^*_c$ and confidence level $\alpha_c$. Its denominator is all its in-scope trials (§1.4.5a). | §1.4.2, §1.4.3, §1.4.5, §1.4.5a |
 | **Sampling**                 | A list of $N \geq 1$ samples posted to the service under test in a single experiment. Shared by every criterion of the experiment; per-criterion verdicts are claims about the same $N$ samples.                                                                                                                                                                                                       | §1.4.2, §1.4.7                  |
 | **Factor record**                  | The identification of the service, model, and serving configuration whose $p_c$ is being estimated. Two evaluations that differ in factors evaluate two different objects.                                                                                                                                                                                                                              | §1.3.1                          |
 | **Covariate profile**              | The recorded values of declared contextual variables at the time of an evaluation; affects baseline comparability.                                                                                                                                                                                                                                                                                      | §8.4.1                          |
 | **Inferential reach of the sampling** | The $N$ samples the experiment posts to the service, over which every criterion in the experiment is exercised; a criterion's verdict or evidence is, primarily, a claim about those samples. Extending it to a different input distribution is a separate interpretive move (§8.4.6).                                                                                                          | §1.4.7                          |
 | **Per-criterion Bernoulli stream** | The sequence of per-criterion indicators $\{X_{i,c}\}$ treated as i.i.d. Bernoulli with parameter $p_c$ under the model's working approximation.                                                                                                                                                                                                                                                        | §1.4.3                          |
-| **Effective denominator** ($n_c$)  | The count of a criterion's in-scope attempted trials on which its postcondition could be evaluated. Determined by the postcondition, not authored: an evaluability criterion is assessable on every attempted trial (denominator = all attempted), a downstream criterion only on evaluable ones (denominator = evaluable-only). `zeroFailures` (observational) criteria carry no rate denominator. Structural non-applicability and availability gating are separate matters. | §1.4.5a                         |
-| **Criterion scope**                | The criterion's `scopePredicate` (applicability predicate) narrows the experiment's $N$ samples to those on which the criterion is exercised. The report exposes $n_{c,\mathrm{applicable}}$ (samples in scope) and $n_{c,\mathrm{out\text{-}of\text{-}scope}}$ alongside the denominator counts, so the narrowing from $N$ to $n_{c,\mathrm{attempted}}$ is visible.                              | §1.4.5a                         |
+| **Effective denominator** ($n_c$)  | The count of a criterion's in-scope trials. A trial is a success only on a clean PASS; every other outcome — including a transform/no-value failure — is a counted FAIL, never excluded. Only the applicability predicate (scope) removes a trial. `zeroFailures` (observational) criteria carry no rate denominator. | §1.4.5a                         |
+| **Criterion scope**                | The criterion's `scopePredicate` (applicability predicate) narrows the experiment's $N$ samples to those on which the criterion is exercised. The report exposes $n_{c,\mathrm{applicable}}$ (samples in scope) and $n_{c,\mathrm{out\text{-}of\text{-}scope}}$ alongside the denominator, so the narrowing from $N$ to the in-scope count $n_c$ is visible.                              | §1.4.5a                         |
 | **Confidence statement**           | A Wilson lower bound $\hat{p}_{c,L}(\alpha_c)$, qualifying an inferential per-criterion claim about $p_c$.                                                                                                                                                                                                                                                                                              | §2.3.1, §1.4.3                  |
 | **Threshold origin**               | The provenance category of an inferential threshold $p^*_c$ (SLA, SLO, POLICY, EMPIRICAL, UNSPECIFIED), recorded with the threshold value.                                                                                                                                                                                                                                                              | §7.4                            |
 | **Sample-size requirement**        | The per-criterion sample count required to support an inferential test at its threshold and $\alpha_c$, with the feasibility gate that admits or refuses a smaller sample.                                                                                                                                                                                                                              | §§5.4–5.5, §8.4                 |
