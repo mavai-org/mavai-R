@@ -94,7 +94,7 @@ The latency dimension remains conditional on success — latency is measured ove
 
 ### Why a Single Aggregate Rate Is Inadequate
 
-Aggregating the per-criterion indicators into a single conjunction rate — one stream, one $p$, one Wilson interval — is the obvious temptation, and it is the wrong move. Let $\{C_1,\dots,C_m\}$ be the contract's criteria with per-trial indicators $X_{i,c}$, and define the conjunction indicator $X_i = \prod_{c=1}^{m} X_{i,c}$ with $p = \mathbb{P}(X_i = 1)$ — the rate at which every criterion holds simultaneously on a trial. By the union bound applied to the complementary events,
+Consider aggregating the per-criterion indicators into a single conjunction rate — one stream, one $p$, one Wilson interval. A union-bound argument shows what such an aggregate conceals. Let $\{C_1,\dots,C_m\}$ be the contract's criteria with per-trial indicators $X_{i,c}$, and define the conjunction indicator $X_i = \prod_{c=1}^{m} X_{i,c}$ with $p = \mathbb{P}(X_i = 1)$ — the rate at which every criterion holds simultaneously on a trial. By the union bound applied to the complementary events,
 
 $$1 - p \;=\; \mathbb{P}\bigl(\exists\, c : X_{i,c} = 0\bigr) \;\le\; \sum_{c=1}^{m} (1 - p_c),$$
 
@@ -108,7 +108,7 @@ Per-criterion partitioning is therefore the only faithful representation of a co
 
 ### Clause Forms: Rate-Bounded and Categorical
 
-Two questions about a clause must be kept apart: *what kind of proposition does it state?* — its **form** — and, if it carries a threshold, *where did that threshold come from?* — its **origin**. The form is the subject of this section; the origin axis is developed under threshold derivation. Conflating the two is the single easiest way to misread what follows, because the word *empirical* names a value on the origin axis and must not be borrowed as the name of a form.
+Two questions about a clause must be kept apart: *what kind of proposition does it state?* — its **form** — and, if it carries a threshold, *where did that threshold come from?* — its **origin**. The form is the subject of this section; the origin axis is developed under threshold derivation. The two axes are independent, and the word *empirical* names a value on the origin axis — it is not the name of a form.
 
 A **rate-bounded clause** states a proposition of the shape *criterion $c$ shall hold at rate at least $p^*_c$, with confidence $1 - \alpha_c$*. It is discharged statistically, by the machinery this paper develops, and it is the form every criterion discussed so far has taken. Its threshold $p^*_c$ has one of two **origins**, and the two are genuinely different inferential acts:
 
@@ -127,9 +127,9 @@ The full treatment of architectural discharge — how the commitment is declared
 
 ### Inferential and Observational Criteria
 
-A criterion is evaluated in one of two modes, and in either mode it delivers one of three verdicts — **PASS**, **FAIL**, or **INCONCLUSIVE**.
+Two levels of outcome must be kept distinct here. On a **single sample**, a criterion's evaluation has only two possible outcomes — **PASS** or **FAIL** (a FAIL carrying the diagnostic *condition* or *transform/no-value* reason of *The Operational Outcome of a Trial* above); there is no third per-sample outcome. It is only the criterion's **run-level verdict**, aggregated over the whole sampling, that admits a third value, **INCONCLUSIVE** — returned when the run cannot support a determination at all, not when some sample was hard to evaluate. A criterion reaches its run verdict in one of two modes.
 
-An **inferential criterion** estimates the population rate $p_c$ and tests it against a threshold. Subject to the feasibility gate, it returns PASS when the evidence clears the threshold at confidence $1 - \alpha_c$, FAIL when it does not, and INCONCLUSIVE when the sample is too small to support an inferential claim at the stated threshold and confidence (or when $n_c = 0$). This is the mode for the question *what is the true rate of behaviour $c$, and does it clear the demanded threshold?*
+An **inferential criterion** estimates the population rate $p_c$ from the run's per-sample PASS/FAIL outcomes and tests it against a threshold. Its run verdict is PASS when the evidence clears the threshold at confidence $1 - \alpha_c$, FAIL when it does not, and INCONCLUSIVE when the run cannot support a determination at all — either because the sample was too small to clear the feasibility gate at the stated threshold and confidence (the in-scope count $n_c$ below the feasible minimum, or $n_c = 0$), or because the threshold is empirical in origin and no baseline rate could be found for the covariates in force at evaluation time, leaving nothing to test against. INCONCLUSIVE is therefore a statement about the *run*, never about any one sample. This is the mode for the question *what is the true rate of behaviour $c$, and does it clear the demanded threshold?*
 
 An **observational criterion** asks only whether any failure was seen in the run. It estimates no parameter and carries no threshold:
 
