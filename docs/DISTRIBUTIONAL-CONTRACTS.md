@@ -320,13 +320,13 @@ If $n < N_{\min}$, the contract is infeasible: the evaluation cannot produce a p
 The feasibility gate scales steeply with the threshold. At the default confidence level of 95% ($z \approx 1.645$):
 
 | $p_{\min}$ | $N_{\min}$ |
-|-------------|------------|
-| 0.80        | 11         |
-| 0.90        | 25         |
-| 0.95        | 52         |
-| 0.99        | 268        |
-| 0.999       | 2,704      |
-| 0.9999      | 27,058     |
+|------------|------------|
+| 0.80       | 11         |
+| 0.90       | 25         |
+| 0.95       | 52         |
+| 0.99       | 268        |
+| 0.999      | 2,704      |
+| 0.9999     | 27,058     |
 
 A contract requiring $p \geq 0.9999$ cannot be verified with fewer than 27,058 samples. This is not a deficiency of the method; it is the inescapable cost of making a credible assertion about a service operating at four nines of reliability.
 
@@ -340,11 +340,11 @@ The advent of Large Language Models brought stochastic behaviour from the margin
 
 The methodology is implemented as language-native frameworks, each idiomatic to its ecosystem:
 
-| Framework | Language | Integration | Repository |
-|-----------|----------|-------------|------------|
-| [punit](https://github.com/javai-org/punit) | Java | JUnit 5 extension | The reference implementation |
-| [feotest](https://github.com/javai-org/feotest) | Rust | Cargo test integration | Idiomatic Rust, not a port |
-| baseltest | Python | pytest plugin (planned) | — |
+| Framework                                       | Language | Integration             | Repository                   |
+|-------------------------------------------------|----------|-------------------------|------------------------------|
+| [punit](https://github.com/javai-org/punit)     | Java     | JUnit 5 extension       | The reference implementation |
+| [feotest](https://github.com/javai-org/feotest) | Rust     | Cargo test integration  | Idiomatic Rust, not a port   |
+| baseltest                                       | Python   | pytest plugin (planned) | —                            |
 
 Each framework provides a direct operational realisation of the distributional contract as described in this paper. Their features correspond to the elements of the model.
 
@@ -354,7 +354,7 @@ Each framework gives the developer the means to express a distributional contrac
 
 All frameworks evaluate both dimensions using the statistical methods described in this paper: a per-criterion Bernoulli model with Wilson score lower bounds for functional stochasticity, and empirical percentile analysis for temporal stochasticity. Each criterion yields its own verdict, and the frameworks report the structured composite over those verdicts — never a single flattened boolean — together with the disclosed Type-I envelope; the contract passes only if every criterion and the latency constraints pass.
 
-The move to a distributional contract also reframes what it means for a postcondition to fail. In Meyer's original formulation, a violated postcondition is evidence of a defect in the supplier: the routine failed to honour its obligation, and the appropriate response is to locate and fix the bug. Under a distributional contract this interpretation is no longer available at the level of an individual execution. A single execution on which a postcondition is not satisfied is not a defect — it is a sample outcome from the underlying distribution, indistinguishable from the acceptable variability the contract explicitly admits. The notion of contract failure is therefore lifted along with the postcondition: a failure is no longer the falsification of a postcondition on one execution, but the failure of a criterion, over a principled number of executions, to deliver the desired outcome with sufficient probability. Accordingly, the frameworks treat an individual failing execution as data, not as an alarm, and reserve the contract-failure verdict for the statistical assessment of the population as a whole.
+The move to a distributional contract also reframes what it means for a postcondition to fail. In Meyer's original formulation, a violated postcondition is evidence of a defect in the supplier: the routine failed to honour its obligation, and the appropriate response is to locate and fix the bug. Under a distributional contract this interpretation is no longer available at the level of an individual execution. A single execution on which a postcondition is not satisfied does not, by itself, establish a defect — it is indistinguishable from a sample outcome drawn from the variability the contract explicitly admits. The notion of contract failure is therefore lifted along with the postcondition: a failure is no longer the falsification of a postcondition on one execution, but the failure of a criterion, over a principled number of executions, to deliver the desired outcome with sufficient probability. Accordingly, the frameworks treat an individual failing execution as data, not as an alarm, and reserve the contract-failure verdict for the statistical assessment of the population as a whole.
 
 ### Stipulated and Empirical Thresholds
 
