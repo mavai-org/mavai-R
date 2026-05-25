@@ -31,6 +31,8 @@ Since the quantities of interest are not directly observable, they are estimated
 
 In deterministic software, correctness is defined pointwise: for any input satisfying the precondition, the postcondition must hold for the resulting output. This model is insufficient for stochastic systems, where individual executions may legitimately vary even when the system is behaving acceptably overall. The idea of assessing stochastic systems through repeated execution and statistical inference has precedent in the tradition of statistical model checking, where Younes and Simmons [9] showed that time-bounded probabilistic properties can be assessed by hypothesis testing over sampled executions, trading absolute certainty for bounded decision error, and Legay, Delahaye, and Bensalem [10] surveyed this approach as a scalable alternative to numerical model checking. We extend this line of reasoning from formal stochastic models to operational software services, and from temporal-logic property satisfaction to a contractual framing: the notion of a contract is lifted from individual executions to distributions over executions.
 
+A separate tradition also uses the word *contract* for stochastic systems: assume–guarantee contracts, which separate assumptions about the environment from guarantees about the system and support refinement and compositional reasoning over formal models, including their probabilistic and stochastic variants [20]. The present work draws a different contract boundary. It is not a compositional proof system over a model of the system; it is an operational contract over black-box service executions, whose guarantees are established not by model refinement but by repeated execution under a declared input population and covariates, with confidence bounds and feasibility gates attached to each criterion. The two are complementary: where assume–guarantee contracts reason about a system whose stochastic model is given, the distributional contract gives day-to-day software teams a Design-by-Contract analogue for services whose behaviour can only be inferred empirically.
+
 The uncertainty exhibited by stochastic systems manifests along two orthogonal dimensions, each giving rise to a distinct form of distributional contract.
 
 The first is **functional stochasticity**: whether the service produces an acceptable result. Given identical input, a stochastic service may produce correct output on some executions and incorrect output on others. The correctness of the output is a random variable. The distributional contract over this dimension asserts that the service succeeds with probability at least some minimum acceptable level.
@@ -105,6 +107,14 @@ The consequence is a masking effect. If one criterion $c^*$ fails far more rarel
 Nor is the masking recoverable after the fact. Given only an observed conjunction rate $\hat{p}$, the per-criterion rates are not identified: any allocation of $1 - \hat{p}$ among the criteria that respects the union bound is consistent with the observation. Recovering them requires per-criterion attribution at trial-record time — the wide trial record the per-criterion model demands. An archive that did not preserve per-criterion outcomes per trial cannot be decomposed retrospectively.
 
 Per-criterion partitioning is therefore the only faithful representation of a contract whose postconditions defend against failure modes of differing consequence. Where the postconditions are genuinely interchangeable — equivalent consequence, comparable frequency, the same inputs — a single aggregated stream remains adequate, and that is exactly the $m = 1$ case recovered unchanged. A contract may still report an aggregate $\hat{p}$ as a descriptive dashboard statistic, but it is not threshold-bearing: thresholds are not derived from it, and verdicts are not framed against it.
+
+### Criterion Design Rule
+
+The criterion is the unit of statistical inference, and a criterion may host more than one postcondition, conjoining their per-trial verdicts into a single pass/fail stream. That conjunction can reintroduce the very masking the per-criterion partition exists to prevent, one level lower: a rare, high-consequence postcondition folded in beside a frequent, low-consequence one is again absorbed into the latter's failure rate. The partition is therefore disciplined by a design rule.
+
+> Postconditions may be hosted in a single criterion only when their failures share the same consequence class, the same remediation path, the same applicability scope, and broadly comparable expected frequency. Postconditions that differ along any of these axes belong in separate criteria.
+
+Even where postconditions are legitimately conjoined, the per-postcondition outcomes are retained in the wide trial record demanded above, so that a criterion-level failure can be attributed to the postcondition that caused it: the conjunction governs the verdict, not what is recorded.
 
 ### Clause Forms: Rate-Bounded and Categorical
 
@@ -422,7 +432,7 @@ These are not deficiencies to be apologised for; they are honest boundaries of w
 
 [7] The javai project family: probabilistic testing frameworks. Source code and documentation available at https://javai.org and https://github.com/javai-org.
 
-[8] Christensen, K., Varshosaz, M., and Pardo, R. "ProbTest: Unit Testing for Probabilistic Programs." In: Bianculli, D. and Gómez-Martínez, E. (Eds.): SEFM 2025, LNCS 16192, pp. 91–109. Springer, 2026.
+[8] Christensen, K., Varshosaz, M., and Pardo, R. "ProbTest: Unit Testing for Probabilistic Programs." In: Bianculli, D. and Gómez-Martínez, E. (Eds.), *Software Engineering and Formal Methods (SEFM 2025)*, LNCS 16192, pp. 91–109. Springer Nature Switzerland, 2026. (The chapter carries a 2025 date in some indexes while the proceedings volume is dated 2026; the volume year is used here.)
 
 [9] Younes, H. L. S. and Simmons, R. G. "Statistical probabilistic model checking with a focus on time-bounded properties." *Information and Computation*, vol. 204, no. 9, 2006, pp. 1368–1409.
 
@@ -445,3 +455,5 @@ These are not deficiencies to be apologised for; they are honest boundaries of w
 [18] Hollander, M. and Wolfe, D. A. *Nonparametric Statistical Methods*, 2nd ed. Wiley, 1999.
 
 [19] Wilks, S. S. "Determination of sample sizes for setting tolerance limits." *Annals of Mathematical Statistics*, vol. 12, no. 1, 1941, pp. 91–96.
+
+[20] Benveniste, A., Caillaud, B., Nickovic, D., Passerone, R., Raclet, J.-B., Reinkemeier, P., Sangiovanni-Vincentelli, A., Damm, W., Henzinger, T. A., and Larsen, K. G. "Contracts for System Design." *Foundations and Trends in Electronic Design Automation*, vol. 12, no. 2–3, 2018, pp. 124–400.
