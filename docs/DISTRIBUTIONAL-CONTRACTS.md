@@ -1,9 +1,7 @@
-# Distributional Contracts for Stochastic Systems
-
-**Version**: 0.4
-**Last updated**: 2026-05-25
-
-Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
+---
+title: "Distributional Contracts for Stochastic Systems"
+author: "Version 0.4 · last updated 2026-05-25 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+---
 
 ## 1. Document History
 

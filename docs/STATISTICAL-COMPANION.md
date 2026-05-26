@@ -1,12 +1,7 @@
-# Statistical Companion Document
-
-**Version**: 1.3.3
-**Last updated**: 2026-05-26
-
-Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
-
-## Formal Statistical Foundations for the javai Methodology
-
+---
+title: "Statistical Companion Document"
+subtitle: "Formal Statistical Foundations for the javai Methodology"
+author: "Version 1.3.4 · last updated 2026-05-26 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## Document History
@@ -19,9 +14,9 @@ Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
 | 4 | **2026-05** | **Worked-example correction in §§4.3.2–4.4.** The 100%-baseline worked example, the §4.3.3 reference table, and the §4.4 extended example previously derived their test thresholds using a Wald approximation ($p_0 - z \cdot \text{SE}$), which was inconsistent with the one-sided Wilson lower-bound construction stated as the methodology's default elsewhere in the document. All three now apply the same Wilson construction. The §4.3.2 100-sample threshold becomes $\approx 0.969$ (97 / 100 successes) in place of $\approx 0.989$; the §4.3.3 table values shift accordingly; and the §4.4 thresholds (baseline $n = 2000$) become $\approx 0.971$ for $n_{\text{test}} = 100$ and $\approx 0.946$ for $n_{\text{test}} = 50$. This is a presentation correction only; the underlying methodology is unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 5 | **2026-05** | **Justification of the i.i.d. working assumption.** §1.3 gains a new §1.3.1 setting out the conditions under which the Bernoulli i.i.d. premise is defensible for LLM testing, with citations to Anthropic (2026) for provider model-versioning policy and Chen, Zaharia & Zou (2023) for the empirical counterweight. Existing §1.3 material moves unchanged into §1.3.2 (formal assumptions and operational threats) and §1.3.3 (developer responsibility for trial independence — previously unnumbered). No statistical content changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 6 | **2026-05** | **Multi-criterion service contracts.** The functional dimension is partitioned per **criterion**, with each criterion running its own Bernoulli stream (§1.4). Three model primitives — postcondition, criterion, sampling — are introduced (§1.4.2), together with inferential and observational modes (§1.4.5) yielding three-valued per-criterion verdicts (PASS, FAIL, INCONCLUSIVE), the structural composite verdict (§1.4.6), and Type-I envelopes split by procedure direction. A contract's clauses are typed as **empirical** (rate-bounded, evaluated by Wilson construction and integer-cutoff machinery) or **categorical** (obligation/prohibition, discharged architecturally). Compliance and regression are distinct procedures with distinct error semantics; the integer pass cutoff $c_c$ is the binding regression decision artefact, with Wilson identified as a score-test inversion. Population claims are codified as finite-corpus, superpopulation, or no-generalisation (§8.4.6). Latency carries a confidence-bound existence gate (§12.5). The **baseline** is an indexed family of per-criterion estimators (§1.5). The single-criterion ($m=1$) instance recovers the methodology of milestones 1–5 unchanged. |
-| 7 | **2026-05** | **Multi-criterion corrections (clarifications; no statistical-content change).** (i) A criterion's denominator is **all its in-scope trials** (§1.4.3, §1.4.5a); a trial is a success only on a clean PASS, and every other outcome is a FAIL carrying a diagnostic *reason* — *condition* (postcondition did not hold) or *transform/no-value* (no testable value could be produced). There is no per-criterion denominator policy, no `CONDITIONAL`/`MARGINAL` enum, and no exclusion of unproducible trials; only the applicability predicate (scope) removes a trial. (ii) **INCONCLUSIVE** is corrected to its verdict-level meaning only — a criterion whose statistical procedure cannot render PASS/FAIL (feasibility gate, $n_c=0$, covariate misalignment). The former *per-trial* "inconclusive" (a failed transform) is a FAIL with a reason; the misnomer is removed. (iii) §1.4.7 tightened to the §1.4.2 model: an experiment or test is bound to one contract and varies only its single shared sampling, which every criterion evaluates independently — no per-criterion sampling. §1.4.8 reframed accordingly. Effective denominators ($n_c$, $K_c$) and all numerical results are unchanged. |
-| 8 | **2026-05** | **Criterion scope withdrawn (clarification; no statistical-content or fixture change).** The criterion *scope* / applicability-predicate concept — `scopePredicate`, $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$, and the "in-scope trials" framing — is removed. A sampling is $N$ samples and every sample is seen by every criterion, so a functional criterion's denominator is always $N$. The sole denominator-narrowing in the methodology is latency's conditioning on success (§12). Effective denominators ($n_c = N$, $K_c$) and all numerical results are unchanged; no fixture or schema change. |
-| 9 | **2026-05** | **Clause-form terminology refinement (no statistical-content or fixture change).** The clause *form* is renamed **rate-bounded** (formerly "empirical"); the word *empirical* is now reserved for the threshold-**origin** axis (normative vs empirical), which the old form-name contradicted whenever a rate-bounded clause carried a normative threshold. The front-matter section "Clause Types: Empirical and Categorical" becomes "Clause Forms: Rate-Bounded and Categorical". The zero-failures evidence criterion that supports an architectural commitment is named **observational**, not "derived-empirical". Aligns the companion with the distributional-contracts paper; no change to the statistics, the model, or the fixtures. |
+| 7 | **2026-05** | **Multi-criterion corrections (clarifications; no statistical-content change).** (i) A criterion's denominator is **all its in-scope trials** (§1.4.3, §1.4.5a); a trial is a success only on a clean PASS, and every other outcome is a FAIL carrying a diagnostic *reason* — *condition* (postcondition did not hold) or *transform/no-value* (no testable value could be produced). There is no per-criterion denominator policy, no `CONDITIONAL`/`MARGINAL` enum, and no exclusion of unproducible trials; only the applicability predicate (scope) removes a trial. (ii) **INCONCLUSIVE** is corrected to its verdict-level meaning only — a criterion whose statistical procedure cannot render PASS/FAIL (feasibility gate, $n_c=0$, covariate misalignment). The former *per-trial* "inconclusive" (a failed transform) is a FAIL with a reason; the misnomer is removed. (iii) §1.4.7 tightened to the §1.4.2 model: an experiment or test is bound to one contract and varies only its single shared sampling, which every criterion evaluates independently — no per-criterion sampling. §1.4.8 reframed accordingly. Effective denominators ($n_c$, $K_c$) and all numerical results are unchanged.                               |
+| 8 | **2026-05** | **Criterion scope withdrawn (clarification; no statistical-content or fixture change).** The criterion *scope* / applicability-predicate concept — `scopePredicate`, $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$, and the "in-scope trials" framing — is removed. A sampling is $N$ samples and every sample is seen by every criterion, so a functional criterion's denominator is always $N$. The sole denominator-narrowing in the methodology is latency's conditioning on success (§12). Effective denominators ($n_c = N$, $K_c$) and all numerical results are unchanged; no fixture or schema change.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 9 | **2026-05** | **Clause-form terminology refinement (no statistical-content or fixture change).** The clause *form* is renamed **rate-bounded** (formerly "empirical"); the word *empirical* is now reserved for the threshold-**origin** axis (normative vs empirical), which the old form-name contradicted whenever a rate-bounded clause carried a normative threshold. The front-matter section "Clause Types: Empirical and Categorical" becomes "Clause Forms: Rate-Bounded and Categorical". The zero-failures evidence criterion that supports an architectural commitment is named **observational**, not "derived-empirical". Aligns the companion with the distributional-contracts paper; no change to the statistics, the model, or the fixtures. New section 1.4.5b formalises the architectural discharge (guardrails) probabilistically and contains a worked example.                                                                                                                                                                                                                                                                                                                                                                       |
 
 Each milestone strictly extends the previous one in the scope of what the methodology claims; none supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
 
@@ -831,18 +826,206 @@ Every sample is seen by every criterion, so nothing narrows a functional criteri
 
 The transparent-statistics output (§10.2) exposes, per criterion, $n_c$, $K_c$, $\hat{p}_c$, and a breakdown of the FAILs **by reason** — in particular how many were transform/no-value failures rather than condition failures. A high transform/no-value share is itself a diagnostic signal: a service producing testable output only intermittently is structurally unhealthy in a way that warrants attention before the pass rate is read (§1.4.7).
 
+
+#### 1.4.5b Conditional containment model for architectural discharge
+
+Architectural discharge of a categorical clause leaves a statistical shadow, which this section models — taking care not to confuse the shadow with the obligation that casts it. The obligation is genuinely categorical, but it cannot be enforced at the level of the stochastic *service*: the service is a black box whose outputs vary by design, and a contract over it can only *measure* rates — and no rate expresses *never*. The prohibition is therefore a categorical imperative on the *application* that wraps the service, not a clause the service's own contract can carry. The application's answer is to interpose a *second* service — the guardrail — between the generator and the consumer; that guardrail has its own, closely related contract: an ordinary rate-bounded clause on how reliably it blocks the prohibited class of content. The categorical expectation is thereby relocated to the *composite* of generator-then-guardrail, and the statistical question becomes the residual rate at which prohibited content clears both stages.
+
+Write $p_{\mathrm{harm}}$ for the probability that the stochastic generator emits content violating the categorical clause, and $p_{\mathrm{miss}\mid\mathrm{harm}}$ for the conditional probability that the architectural boundary fails to block such content given that it was emitted. By the multiplication rule for the probability of a conjunction, the *residual* probability that prohibited content reaches the consumer is their product:
+
+$$
+p_{\mathrm{residual}} = p_{\mathrm{harm}} \cdot p_{\mathrm{miss}\mid\mathrm{harm}}.
+$$
+
+The decomposition separates two quantities with different evidential sources:
+
+| Quantity                             | Meaning                                                                                    | How it is evidenced                                                                           |
+|--------------------------------------|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| $p_{\mathrm{harm}}$                  | The upstream generator's prevalence of harmful candidate outputs                           | Production monitoring, sentinel streams, representative production sampling, or not estimated |
+| $p_{\mathrm{miss}\mid\mathrm{harm}}$ | The guardrail's conditional false-negative probability when presented with harmful content | Guardrail experiment over a harmful challenge sampling                                        |
+| $p_{\mathrm{residual}}$              | The end-to-end probability that harmful content reaches the user                           | Product of the two terms, if both are known or bounded under compatible population claims     |
+
+The architectural-discharge experiment primarily estimates or bounds the second term, $p_{\mathrm{miss}\mid\mathrm{harm}}$. It does not, by itself, estimate $p_{\mathrm{harm}}$. A clean guardrail experiment therefore supports a statement of the form:
+
+> Conditional on harmful content being presented to the guardrail, and
+> relative to the specified challenge sampling or challenge
+> distribution, the guardrail's miss probability is bounded above by
+> the reported value at the configured confidence level.
+
+It does not support, by itself, the statement:
+
+> Harmful content reaches users in production at no more than this rate.
+
+That stronger end-to-end claim requires a separate estimate or bound on the upstream generator harm prevalence $p_{\mathrm{harm}}$, and the two quantities must be indexed to compatible populations.
+
+**Guardrail sensitivity and miss probability.** For a harmful challenge sampling of size $n_H$, let $K_B$ be the number of harmful candidate outputs correctly blocked by the guardrail. Define the guardrail sensitivity estimate
+
+$$
+\hat{s} = \frac{K_B}{n_H}.
+$$
+
+The corresponding observed miss rate is
+
+$$
+\hat{q} = 1 - \hat{s}.
+$$
+
+Under the same Bernoulli/Wilson machinery used elsewhere in the methodology, an inferential guardrail-sensitivity criterion may report the one-sided Wilson lower bound
+
+$$
+L_s(\alpha)
+$$
+
+on the true sensitivity $s$ — the probability that the guardrail blocks a harmful candidate output given one is presented to it. The corresponding upper confidence bound on the conditional miss probability is
+
+$$
+U_{\mathrm{miss}}(\alpha) = 1 - L_s(\alpha).
+$$
+
+The residual end-to-end harm probability is then bounded conditionally as
+
+$$
+p_{\mathrm{residual}}
+\leq
+p_{\mathrm{harm}} \cdot U_{\mathrm{miss}}(\alpha),
+$$
+
+provided the challenge sampling is admitted as representative of the harmful-output population to which the claim is being extended, and provided the production architecture admits no bypass around the guardrail.
+
+The experiment has bounded the containment term, $U_{\mathrm{miss}}(\alpha)$, not the upstream prevalence term $p_{\mathrm{harm}}$.
+
+**Relationship to observational zero-failures criteria.** The observational zero-failures criterion of §1.4.5 remains deterministic: it reports whether any miss was observed. It does not itself become an inferential criterion. Where a population-level statement about the guardrail's conditional miss probability is required, the contract may pair the observational criterion with an inferential guardrail-sensitivity criterion over the same harmful challenge sampling. The former answers "was any miss observed?"; the latter answers "what lower confidence bound is supported for the guardrail's sensitivity, and what upper bound follows for its miss probability?"
+
+**False positives.** A guardrail that blocks every candidate output has perfect sensitivity but no practical utility. For this reason the guardrail's false-positive behaviour should be modelled separately over a non-harmful challenge sampling. Write $p_{\mathrm{fp}}$ for the false-positive probability — the probability that the guardrail blocks content given that the content is non-harmful — and $p_{\mathrm{specificity}} = 1 - p_{\mathrm{fp}}$ for the corresponding specificity.
+
+Safety-class contracts typically require both a high-sensitivity criterion over harmful probes and an acceptable false-positive or specificity criterion over non-harmful probes. The former supports the categorical discharge; the latter controls over-refusal, usability, and
+service continuity.
+
+**Population-claim discipline.** The challenge sampling's `populationClaim` governs the reach of the evidence. If the harmful probe set is a finite corpus, the result is a claim about that corpus. If the operator declares a superpopulation claim, the verdict must name  the challenge distribution and record the representativeness argument. If the probes are exploratory, the result is no-generalisation evidence. In no case does an adversarial challenge result automatically become a production-traffic claim.
+
+The model therefore licenses only *conditional* claims — a bound on the guardrail's miss probability, and, given a separate estimate of $p_{\mathrm{harm}}$, a bound on the residual harm rate under the stated population and no-bypass assumptions — never a claim that the categorical clause has been *proved*. In short: the guardrail experiment does not estimate how often the generator is dangerous; it estimates how much containment remains when it is.
+
+##### Worked example: guardrail containment for clinical advice
+
+A clinical-advice service contains a categorical clause:
+
+> The service shall not emit harmful medical advice.
+
+The clause is discharged architecturally by interposing a guardrail between the LLM and the user. The guardrail is tested separately over a harmful challenge sampling
+
+$$
+V_{\mathrm{harm}}
+$$
+
+containing $n_H = 100{,}000$ pseudo-LLM responses classified as harmful by the project's safety taxonomy and attested independent from the guardrail's training data.
+
+The guardrail blocks $K_B = 99{,}990$ of the harmful candidate outputs.
+
+The observed sensitivity is
+
+$$
+\hat{s} = \frac{99{,}990}{100{,}000} = 0.9999.
+$$
+
+Using the one-sided Wilson lower bound at $\alpha = 0.05$ gives
+
+$$
+L_s(0.05) \approx 0.999833.
+$$
+
+The corresponding upper confidence bound on the conditional miss probability is
+
+$$
+U_{\mathrm{miss}}(0.05)
+=
+1 - 0.999833
+\approx
+0.000167.
+$$
+
+Therefore, relative to the stated harmful challenge distribution, the guardrail experiment supports the statement:
+
+> At one-sided 95% confidence, the guardrail's conditional miss
+> probability on harmful candidate outputs is bounded above by
+> approximately $1.67 \times 10^{-4}$.
+
+Equivalently, the guardrail misses at most approximately 1.67 harmful candidate outputs per 10,000 harmful candidate outputs, at the stated confidence level and under the stated modelling assumptions.
+
+The residual end-to-end harm probability is
+
+$$
+p_{\mathrm{residual}}
+=
+p_{\mathrm{harm}} \cdot p_{\mathrm{miss}\mid\mathrm{harm}}.
+$$
+
+The experiment has bounded the second term. It has not estimated the first. Thus the end-to-end claim remains conditional:
+
+$$
+p_{\mathrm{residual}}
+\leq
+p_{\mathrm{harm}} \cdot 0.000167.
+$$
+
+If, hypothetically, a separate production sentinel stream established
+
+$$
+p_{\mathrm{harm}} = 0.001,
+$$
+
+then the residual harm probability would be bounded by
+
+$$
+0.001 \times 0.000167
+=
+1.67 \times 10^{-7}.
+$$
+
+That is approximately 1.67 harmful responses reaching the user per 10 million production interactions, subject to both estimates being valid for compatible populations and subject to the production architecture admitting no bypass around the guardrail.
+
+Without the separate estimate of $p_{\mathrm{harm}}$, the companion must not make the "1.67 per 10 million" claim. It may only state the conditional containment result.
+
+If the guardrail instead blocks all $100{,}000$ harmful challenge outputs, the observed sensitivity is
+
+$$
+\hat{s} = 1.0.
+$$
+
+This is not evidence of perfection. The one-sided Wilson lower bound at $\alpha = 0.05$ is approximately
+
+$$
+L_s(0.05) \approx 0.999973,
+$$
+
+so the corresponding upper confidence bound on the conditional miss probability is
+
+$$
+U_{\mathrm{miss}}(0.05)
+\approx
+2.71 \times 10^{-5}.
+$$
+
+The correct statement is therefore:
+
+> No misses were observed in 100,000 harmful challenge trials. Under
+> the i.i.d. Bernoulli/Wilson model, the guardrail's conditional miss
+> probability is bounded above by approximately $2.71 \times 10^{-5}$
+> at one-sided 95% confidence, relative to the specified harmful
+> challenge distribution.
+
+The incorrect statement is:
+
+> The guardrail is perfect.
+
+The experiment supports a strong containment claim, not a zero-risk claim.
+
 ---
 
 #### 1.4.6 The composite verdict and its Type-I envelope
 
-A contract's verdict is a structured tuple over its per-criterion
-verdicts. The tuple is not collapsed to a single PASS/FAIL at the
-reporting layer; a flat boolean verdict surface would obscure
-per-criterion outcomes that the contract requires the consumer to see.
+A contract's verdict is a structured tuple over its per-criterion verdicts. The tuple is not collapsed to a single PASS/FAIL at the reporting layer; a flat boolean verdict surface would obscure per-criterion outcomes that the contract requires the consumer to see.
 
-**Structural composite.** Let $V_c \in \{\text{PASS}, \text{FAIL}, \text{INCONCLUSIVE}\}$
-denote the verdict of criterion $c$ (§1.4.5). The contract's
-structural composite verdict is
+**Structural composite.** Let $V_c \in \{\text{PASS}, \text{FAIL}, \text{INCONCLUSIVE}\}$ denote the verdict of criterion $c$ (§1.4.5). The contract's structural composite verdict is
 
 $$
 V_{\text{contract}} \;=\; \begin{cases}
@@ -852,19 +1035,9 @@ V_{\text{contract}} \;=\; \begin{cases}
 \end{cases}
 $$
 
-with the per-criterion verdicts retained in full on the composite
-artefact. A consumer reads the contract verdict and the supporting
-per-criterion verdicts in one place.
+with the per-criterion verdicts retained in full on the composite artefact. A consumer reads the contract verdict and the supporting per-criterion verdicts in one place.
 
-The structural composite is the methodology's representation of "the
-contract is satisfied." A baseline may carry an aggregate $\hat{p}$
-over the conjunction of all postconditions as a descriptive statistic
-— useful for dashboards and trend reporting — but the aggregate is
-not threshold-bearing: thresholds are not derived from it and
-verdicts are not framed against it. The hiding result of §1.4.4
-demonstrates why a conjunction-based threshold is structurally unable
-to detect the per-criterion movement the methodology exists to
-surface.
+The structural composite is the methodology's representation of "the contract is satisfied." A baseline may carry an aggregate $\hat{p}$ over the conjunction of all postconditions as a descriptive statistic — useful for dashboards and trend reporting — but the aggregate is not threshold-bearing: thresholds are not derived from it and verdicts are not framed against it. The hiding result of §1.4.4 demonstrates why a conjunction-based threshold is structurally unable to detect the per-criterion movement the methodology exists to surface.
 
 **Type-I envelopes by procedure direction.** Per-criterion procedures of §3.2 control different error events, and a single unlabelled "composite Type-I envelope" mixes them. The methodology therefore reports two procedure-specific envelopes, each a union-bound aggregate over its own family of inferential criteria:
 

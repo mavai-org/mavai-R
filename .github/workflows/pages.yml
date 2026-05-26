@@ -34,7 +34,7 @@ jobs:
           PANDOC="docker run --rm -v ${PWD}:/data -w /data ${PANDOC_IMAGE}"
 
           $PANDOC docs/STATISTICAL-COMPANION.md \
-            --from gfm+tex_math_dollars \
+            --from gfm+tex_math_dollars+yaml_metadata_block \
             --lua-filter=scripts/wrap-tables.lua \
             --lua-filter=scripts/breakable-code.lua \
             --include-in-header=scripts/pdf-footer.tex \
@@ -46,12 +46,10 @@ jobs:
             -V mainfont="DejaVu Serif" \
             -V monofont="DejaVu Sans Mono" \
             --toc \
-            --toc-depth=3 \
-            -V title="Statistical Companion Document" \
-            -V subtitle="Formal Statistical Foundations for the javai Methodology"
+            --toc-depth=3
 
           $PANDOC docs/DISTRIBUTIONAL-CONTRACTS.md \
-            --from gfm+tex_math_dollars \
+            --from gfm+tex_math_dollars+yaml_metadata_block \
             --lua-filter=scripts/wrap-tables.lua \
             --lua-filter=scripts/breakable-code.lua \
             --include-in-header=scripts/pdf-footer.tex \
@@ -63,11 +61,10 @@ jobs:
             -V mainfont="DejaVu Serif" \
             -V monofont="DejaVu Sans Mono" \
             --toc \
-            --toc-depth=3 \
-            -V title="Distributional Contracts for Stochastic Systems"
+            --toc-depth=3
 
           $PANDOC docs/GLOSSARY.md \
-            --from gfm+tex_math_dollars \
+            --from gfm+tex_math_dollars+yaml_metadata_block \
             --lua-filter=scripts/wrap-tables.lua \
             --lua-filter=scripts/breakable-code.lua \
             -o _site/glossary.pdf \
