@@ -1,7 +1,7 @@
 # Statistical Companion Document
 
-**Version**: 1.3.2
-**Last updated**: 2026-05-23
+**Version**: 1.3.3
+**Last updated**: 2026-05-26
 
 Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
 
@@ -21,6 +21,7 @@ Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
 | 6 | **2026-05** | **Multi-criterion service contracts.** The functional dimension is partitioned per **criterion**, with each criterion running its own Bernoulli stream (§1.4). Three model primitives — postcondition, criterion, sampling — are introduced (§1.4.2), together with inferential and observational modes (§1.4.5) yielding three-valued per-criterion verdicts (PASS, FAIL, INCONCLUSIVE), the structural composite verdict (§1.4.6), and Type-I envelopes split by procedure direction. A contract's clauses are typed as **empirical** (rate-bounded, evaluated by Wilson construction and integer-cutoff machinery) or **categorical** (obligation/prohibition, discharged architecturally). Compliance and regression are distinct procedures with distinct error semantics; the integer pass cutoff $c_c$ is the binding regression decision artefact, with Wilson identified as a score-test inversion. Population claims are codified as finite-corpus, superpopulation, or no-generalisation (§8.4.6). Latency carries a confidence-bound existence gate (§12.5). The **baseline** is an indexed family of per-criterion estimators (§1.5). The single-criterion ($m=1$) instance recovers the methodology of milestones 1–5 unchanged. |
 | 7 | **2026-05** | **Multi-criterion corrections (clarifications; no statistical-content change).** (i) A criterion's denominator is **all its in-scope trials** (§1.4.3, §1.4.5a); a trial is a success only on a clean PASS, and every other outcome is a FAIL carrying a diagnostic *reason* — *condition* (postcondition did not hold) or *transform/no-value* (no testable value could be produced). There is no per-criterion denominator policy, no `CONDITIONAL`/`MARGINAL` enum, and no exclusion of unproducible trials; only the applicability predicate (scope) removes a trial. (ii) **INCONCLUSIVE** is corrected to its verdict-level meaning only — a criterion whose statistical procedure cannot render PASS/FAIL (feasibility gate, $n_c=0$, covariate misalignment). The former *per-trial* "inconclusive" (a failed transform) is a FAIL with a reason; the misnomer is removed. (iii) §1.4.7 tightened to the §1.4.2 model: an experiment or test is bound to one contract and varies only its single shared sampling, which every criterion evaluates independently — no per-criterion sampling. §1.4.8 reframed accordingly. Effective denominators ($n_c$, $K_c$) and all numerical results are unchanged. |
 | 8 | **2026-05** | **Criterion scope withdrawn (clarification; no statistical-content or fixture change).** The criterion *scope* / applicability-predicate concept — `scopePredicate`, $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$, and the "in-scope trials" framing — is removed. A sampling is $N$ samples and every sample is seen by every criterion, so a functional criterion's denominator is always $N$. The sole denominator-narrowing in the methodology is latency's conditioning on success (§12). Effective denominators ($n_c = N$, $K_c$) and all numerical results are unchanged; no fixture or schema change. |
+| 9 | **2026-05** | **Clause-form terminology refinement (no statistical-content or fixture change).** The clause *form* is renamed **rate-bounded** (formerly "empirical"); the word *empirical* is now reserved for the threshold-**origin** axis (normative vs empirical), which the old form-name contradicted whenever a rate-bounded clause carried a normative threshold. The front-matter section "Clause Types: Empirical and Categorical" becomes "Clause Forms: Rate-Bounded and Categorical". The zero-failures evidence criterion that supports an architectural commitment is named **observational**, not "derived-empirical". Aligns the companion with the distributional-contracts paper; no change to the statistics, the model, or the fixtures. |
 
 Each milestone strictly extends the previous one in the scope of what the methodology claims; none supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
 
@@ -114,7 +115,7 @@ The bulk of this document is, in the end, an account of how those verdicts are c
 
 ---
 
-## Clause Types: Empirical and Categorical
+## Clause Forms: Rate-Bounded and Categorical
 
 A service contract is a conjunction of clauses, but the clauses are
 not all of one kind. Two structurally different *forms* coexist in a
@@ -125,13 +126,15 @@ clause can be normative or empirical in *origin* — mandated by
 SLA/SLO/policy/regulation, or derived from a measured baseline —
 independently of the *form* the present section partitions on.
 
-An **empirical clause** states a rate-bounded proposition: *"the
+A **rate-bounded clause** states a rate-bounded proposition: *"the
 service shall satisfy criterion $c$ at rate at least $p^*_c$ with
-confidence $\gamma$ over sampling $V$."* The threshold $p^*_c$
-may be normative in origin (an SLA-mandated 99.5%, evaluated by the
-compliance paradigm of §3) or empirically derived (a measured
-baseline, evaluated by the regression paradigm of §3). Either way,
-the *form* of the clause is rate-bounded: a test invokes the
+confidence $\gamma$ over sampling $V$."* Its threshold $p^*_c$ has one
+of two **origins** — **normative** (a.k.a. *stipulated*), an SLA-mandated
+rate evaluated by the compliance paradigm of §3, or **empirical**, a
+measured baseline evaluated by the regression paradigm of §3. The word
+*empirical* names that origin and is **not** the name of this form;
+compliance and regression are simply the decision-side names for the two
+origins. Either way the *form* is rate-bounded: a test invokes the
 service many times, and the companion's central machinery turns the
 resulting evidence into a per-criterion verdict.
 
@@ -147,27 +150,26 @@ no rate-bounded discharge available. The canonical examples are
 categorical safety prohibitions: no self-harm advice, no PII leakage,
 no emission of illegal content.
 
-Empirical and categorical clauses are not two points on a strictness
-spectrum. Letting $p^*_c \to 1$ does not promote an empirical clause
+Rate-bounded and categorical clauses are not two points on a strictness
+spectrum. Letting $p^*_c \to 1$ does not promote a rate-bounded clause
 into a categorical one: it merely tightens the rate-bound proposition.
 No sample budget, threshold, or confidence level redenominates a
 categorical claim as a frequentist one — observing zero failures in
 $n$ trials yields, at best, a rule-of-three upper bound of
 $\approx 3/n$ on the failure rate, which approaches zero only in
 the limit. A categorical clause therefore cannot be discharged by the
-empirical-clause apparatus, however that apparatus is parameterised.
+rate-bounded apparatus, however that apparatus is parameterised.
 
 Categorical clauses are discharged **architecturally**. A separate
 component — a guardrail, a deterministic filter, a hard schema
 constraint, a refusal classifier — is interposed between the
 stochastic system and the consumer of its output, and its presence
 is the contract's answer. The component is itself probabilistic;
-its performance re-enters the contract as one or more **derived
-empirical clauses**, typically the component's false-negative and
+its performance re-enters the contract as one or more **rate-bounded
+clauses with empirical-origin thresholds**, typically the component's false-negative and
 false-positive rates evaluated over an adversarial sampling
-representative of the inputs the component exists to filter. The
-derived clauses are ordinary empirical clauses; their own thresholds
-may be normative or empirical in origin, independently of the
+representative of the inputs the component exists to filter. These are ordinary rate-bounded clauses; their thresholds are
+empirical in origin, independently of the
 categorical parent they evidence. The categorical clause itself is
 the obligation; the discharge is the architectural commitment.
 
@@ -178,10 +180,10 @@ therefore:
 > are bounded architecturally; and the architecture itself is bounded
 > statistically.*
 
-The empirical/categorical distinction is foundational. The
+The rate-bounded/categorical distinction is foundational. The
 compliance/regression paradigms of the next section, the criterion
 decomposition of §1.4, and the report and verdict layers of §7
-and §10 all operate *within the empirical class* — across both
+and §10 all operate *within the rate-bounded class* — across both
 normative-origin and empirically-derived thresholds. The architectural
 discharge of categorical clauses is sketched in §1.4.5 and developed
 fully in a forthcoming chapter on architectural commitments.
@@ -190,7 +192,7 @@ fully in a forthcoming chapter on architectural commitments.
 
 ## Two Testing Paradigms: Compliance and Regression
 
-Within the empirical class of contract clauses introduced in the
+Within the rate-bounded class of contract clauses introduced in the
 previous section, the methodology supports two distinct testing
 paradigms. They share the same hypothesis-test skeleton but differ
 in where the threshold comes from and how results are interpreted.
@@ -349,11 +351,11 @@ example, drawn from a clinical-advice service:
 
 The three modes are not interchangeable, and each carries a distinct
 methodological load. Parseability and register are both rate-bounded
-empirical criteria — they share clause type despite the gulf between
+criteria — they share clause type despite the gulf between
 their measurement apparatus (a JSON parser, a rubric-driven judge),
-and together they establish that the empirical-class machinery of
+and together they establish that the rate-bounded machinery of
 this chapter applies as readily to judge-mediated criteria as to
-mechanical ones. Self-harm is categorical rather than empirical: it
+mechanical ones. Self-harm is categorical rather than rate-bounded: it
 sits in a different clause type despite, like register, requiring a
 judge to detect, and the clause-type partition therefore does not
 run along the mechanical/judge-mediated axis. References to self-harm
@@ -365,35 +367,35 @@ A service contract's postconditions defend against failure modes that
 vary along at least three independent axes. Each axis is on its own
 sufficient to require separate statistical treatment of failure modes
 that differ along it, and each — at its extreme — also reveals the
-boundary between the empirical and categorical clause classes
-introduced in *Clause Types: Empirical and Categorical*.
+boundary between the rate-bounded and categorical clause classes
+introduced in *Clause Forms: Rate-Bounded and Categorical*.
 
 **Consequence.** Parseability, register, and harm all violate the
 contract, but the cost of each violation to the consumer of the
 verdict spans a wide gradient, and the methodology distinguishes
 points on that gradient at two different levels. *Within* the
-empirical class, where the cost is bounded and a non-zero failure
+rate-bounded class, where the cost is bounded and a non-zero failure
 rate is tolerable, consequence is operationalised as the per-criterion
 threshold $p^*_c$: register (medium-consequence) demands a tighter
 $p^*_c$ than parseability (low-consequence), and both are evaluated
 by the same Wilson-against-threshold machinery despite the gulf
 between their measurement apparatus (a JSON parser, a rubric-driven
-judge). *Across* the empirical/categorical boundary, where the
+judge). *Across* the rate-bounded/categorical boundary, where the
 project's stance is zero tolerance — harm advice, PII leakage,
 illegal content — consequence is no longer operationalised as a
 tight $p^*_c$ at all. The failure mode is admitted as a *categorical*
 clause and discharged architecturally (§1.4.5;
 forthcoming chapter on architectural commitments). The observational
 mode of §1.4.5 is the mode used to evaluate the
-*derived* empirical criterion on the architectural component, not a
-limit-case of an empirical clause at $p^*_c \to 1$.
+observational zero-failures criterion on the architectural component, not
+a limit-case of a rate-bounded clause at $p^*_c \to 1$.
 
-**Frequency.** Baselines of empirical-class criteria span a wide
+**Frequency.** Baselines of rate-bounded criteria span a wide
 range — parse-failure rates in the low single percents,
-register-mismatch rates higher still, other empirical criteria
+register-mismatch rates higher still, other rate-bounded criteria
 potentially lower. The sample budget required to support strong
 evidential power scales inversely with the baseline, and
-empirical-class peers with disparate baselines therefore make
+rate-bounded peers with disparate baselines therefore make
 competing demands on the experiment's shared sampling. A
 thousand-sample sampling gives a Wilson interval around a 5%-baseline
 observation tight enough to support a binding evidential claim
@@ -420,7 +422,7 @@ their baselines are commensurate. What it cannot do is discharge a
 rate with zero observed failures is $\approx 3/n$, which approaches
 zero only in the limit, and no $n$ reachable inside one experiment
 closes the gap. The zero-failures case is therefore discharged at
-the architectural layer (see *Clause Types: Empirical and
+the architectural layer (see *Clause Forms: Rate-Bounded and
 Categorical*); the architectural component is evaluated in a separate
 experiment over an adversarial sampling. The categorical postcondition
 may additionally be scored against the primary sampling as a
@@ -429,11 +431,11 @@ judge is already running — giving a signal that complements the
 discharge (§1.4.5).
 
 The methodology therefore partitions on two levels. *Within* the
-empirical class, failure modes that differ along consequence,
+rate-bounded class, failure modes that differ along consequence,
 frequency, or input share are treated as **separately contractual** —
 each is its own hypothesis test, with its own threshold, its own
 confidence level, its own feasibility gate, sharing the experiment's
-sampling. *Across* the empirical/categorical boundary, failure
+sampling. *Across* the rate-bounded/categorical boundary, failure
 modes are routed out of the MEASURE experiment **for the purposes of
 contractual discharge** and into the architectural-commitment
 treatment; they may remain present in the experiment as SMOKE-intent
@@ -442,17 +444,17 @@ diagnostic criteria, with the epistemic status set out in §1.4.5.
 A representative example, threaded through the chapter, is a
 clinical-advice service whose contract carries:
 
-- $P_1$: *response parses as JSON* — empirical, low-consequence
+- $P_1$: *response parses as JSON* — rate-bounded, low-consequence
   (parser-detected).
-- $P_2$: *required fields are present* — empirical, low-consequence
+- $P_2$: *required fields are present* — rate-bounded, low-consequence
   (parser-detected).
-- $P_3$: *response is layperson-readable* — empirical,
+- $P_3$: *response is layperson-readable* — rate-bounded,
   medium-consequence (judge-detected).
 - $P_4$: *advice does not suggest self-harm* — **categorical**,
   catastrophic-consequence. Discharged by a dedicated guardrail
   component (e.g., a harm classifier interposed between the model
-  and the user); the guardrail's false-negative rate is evaluated as
-  a derived empirical criterion over an adversarial sampling, and may
+  and the user); the guardrail's false-negative behaviour over an adversarial sampling
+  is reported as an observational zero-failures criterion, and may
   additionally be scored on the production sampling as a SMOKE-intent
   diagnostic (§1.4.5).
 
@@ -460,20 +462,20 @@ The four postconditions are not interchangeable along the partition
 axes. A $P_4$ violation at any rate is clinically significant in a
 way a $P_1$ violation at $10^{-3}$ is not, *and* a $P_3$ violation at
 5% is significant in a way a $P_1$ violation at 5% is not. The
-methodology evaluates the empirical postconditions ($P_1$, $P_2$,
+methodology evaluates the rate-bounded postconditions ($P_1$, $P_2$,
 $P_3$) each in its own statistical stream within the primary
 end-to-end MEASURE experiment, against its own threshold, at its
 own confidence level; $P_4$ is routed out of the primary end-to-end
 MEASURE experiment for contractual discharge. Its categorical
 obligation is discharged by the architectural commitment (§1.4.5);
-the guardrail's derived empirical criteria may themselves be
-evaluated in separate MEASURE experiments over adversarial samplings
+the guardrail's own rate-bounded criteria (empirical in origin) may
+themselves be evaluated in separate MEASURE experiments over adversarial samplings
 (§1.4.8). The three primitives of §1.4.2 give the
 empirical partition its formal structure; the hiding result of §1.4.4
-establishes that an aggregated stream over empirical postconditions
+establishes that an aggregated stream over rate-bounded postconditions
 that differ along any of the three axes potentially obscures
 movement in a low-frequency, high-consequence, or designed-input
-criterion. Where empirical postconditions defend against failure
+criterion. Where rate-bounded postconditions defend against failure
 modes that are interchangeable along all three axes — equivalent
 consequences, comparable frequencies, the same input distribution —
 a single aggregated stream remains an adequate representation; the
@@ -733,12 +735,13 @@ accumulation or to the guardrail-validation pattern (the subjects of
 follow-on chapters).
 
 **Epistemic status of observational mode.** What an observational
-verdict *means* depends on the clause it serves (see *Clause Types:
-Empirical and Categorical*). The methodology recognises three uses:
+verdict *means* depends on the clause it serves (see *Clause Forms:
+Rate-Bounded and Categorical*). The methodology recognises three uses:
 
-1. *Derived-empirical.* The verdict evaluates a derived empirical
-   criterion on an architectural component — typically a guardrail's
-   false-negative rate over an adversarial sampling. The rule-of-three
+1. *Architectural-commitment evidence.* The verdict evaluates an
+   observational zero-failures criterion on an architectural component —
+   typically a guardrail's false-negative behaviour over an adversarial
+   sampling. The rule-of-three
    annotation above quantifies it. This is the methodology's
    recommended path for categorical clauses; the report reads such a
    verdict alongside the architectural commitment it evidences
@@ -759,7 +762,7 @@ Empirical and Categorical*). The methodology recognises three uses:
 
 3. *Diagnostic, gap-signal.* The verdict accompanies a categorical
    clause that has not been routed through an architectural
-   commitment, with no derived-empirical criterion paired with it.
+   commitment, with no observational zero-failures criterion paired with it.
    It records whether a failure was observed but discharges nothing;
    the report flags it as a gap in the contract's architectural
    treatment.
@@ -1043,10 +1046,10 @@ sees the structural conclusion, the supporting per-criterion evidence,
 the populations each piece of evidence speaks to, and the disclosed
 false-alarm budget under which the conclusion was issued.
 
-Under the clause-type taxonomy (see *Clause Types: Empirical and
+Under the clause-type taxonomy (see *Clause Forms: Rate-Bounded and
 Categorical*), $C_{\text{no-self-harm}}$ in this example is the
-*derived-empirical* observational criterion evaluating the
-consult-advice guardrail's false-negative rate over $V_{\text{probe}}$.
+observational zero-failures criterion evaluating the
+consult-advice guardrail's false-negative behaviour over $V_{\text{probe}}$.
 The associated categorical clause — *the consult-advice service shall
 not emit self-harm advice* — is discharged not by
 $C_{\text{no-self-harm}}$ but by the architectural commitment that
