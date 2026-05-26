@@ -29,6 +29,8 @@ Within the functional dimension, the single notion of an acceptable result is it
 
 Since the quantities of interest are not directly observable, they are estimated empirically from repeated executions and assessed using conservative statistical bounds. This yields an operational basis for making statistically grounded assertions, at a defined confidence level, that a stochastic service satisfies its contractual obligations.
 
+The statistical foundations on which these methods rest — the Wilson score construction, conservative threshold derivation, the feasibility constraint, the per-criterion model, and non-parametric latency inference — are developed and justified in full in the Statistical Companion [21], the canonical methodology document of the javai family. The present paper builds on that work: it supplies the contractual framing and describes each method to the depth needed to convey the model, deferring the formal statistical justification to the companion.
+
 ## Two Dimensions of Stochasticity
 
 In deterministic software, correctness is defined pointwise: for any input satisfying the precondition, the postcondition must hold for the resulting output. This model is insufficient for stochastic systems, where individual executions may legitimately vary even when the system is behaving acceptably overall.
@@ -140,7 +142,7 @@ A **categorical clause** states an obligation that admits no rate threshold at a
 A categorical clause is **discharged architecturally**. A dedicated component — a guardrail, a deterministic filter, a refusal classifier — is interposed between the stochastic service and its consumer, positioned to catch the prohibited outcome before it reaches anyone. That component is developed independently and carries its *own* distributional contract: it is tested probabilistically against an adversarial sampling — a deliberately poisoned collection of inputs constructed to provoke the prohibited outcome — and tuned until it catches them at a very high rate, established at high confidence. Once the component meets its own contract it is added to the architecture, and the developer can rest assured that even a rare prohibited outcome will not get past it. The guardrail is therefore not a criterion of the service's contract; it is a separate component, separately contracted, and its presence is what discharges the categorical obligation. The methodology, in one line:
 
 > *Tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically.*
-
+ 
 The full treatment of architectural discharge — how the commitment is declared, how the adversarial sampling's coverage is recorded, how the component's false-positive rate enters alongside its false-negative behaviour — is deferred to a dedicated chapter of the Statistical Companion. This paper introduces the form/origin distinction and the rate-bounded/categorical split, which together determine how a given failure mode is discharged.
 
 ### Inferential and Observational Criteria
@@ -487,3 +489,5 @@ These are not deficiencies to be apologised for; they are honest boundaries of w
 [19] Wilks, S. S. "Determination of sample sizes for setting tolerance limits." *Annals of Mathematical Statistics*, vol. 12, no. 1, 1941, pp. 91–96.
 
 [20] Benveniste, A., Caillaud, B., Nickovic, D., Passerone, R., Raclet, J.-B., Reinkemeier, P., Sangiovanni-Vincentelli, A., Damm, W., Henzinger, T. A., and Larsen, K. G. "Contracts for System Design." *Foundations and Trends in Electronic Design Automation*, vol. 12, no. 2–3, 2018, pp. 124–400. DOI: 10.1561/1000000053.
+
+[21] Mannion, M. F. "Statistical Companion: Formal Statistical Foundations for the javai Methodology." The javai project family, 2026. Available at https://github.com/javai-org/javai-R/blob/main/docs/STATISTICAL-COMPANION.md.
