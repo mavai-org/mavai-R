@@ -899,9 +899,7 @@ $$
 The residual end-to-end harm probability is then bounded conditionally as
 
 $$
-p_{\mathrm{residual}}
-\leq
-p_{\mathrm{harm}} \cdot U_{\mathrm{miss}}(\alpha),
+p_{\mathrm{residual}} \leq p_{\mathrm{harm}} \cdot U_{\mathrm{miss}}(\alpha),
 $$
 
 provided the challenge sampling is admitted as representative of the harmful-output population to which the claim is being extended, and provided the production architecture admits no bypass around the guardrail.
@@ -970,11 +968,7 @@ $$
 The corresponding upper confidence bound on the conditional miss probability is
 
 $$
-U_{\mathrm{miss}}(0.05)
-=
-1 - 0.999833
-\approx
-0.000167.
+U_{\mathrm{miss}}(0.05) = 1 - 0.999833 \approx 0.000167.
 $$
 
 Therefore, relative to the stated harmful challenge distribution, the guardrail experiment supports the statement:
@@ -988,17 +982,13 @@ Equivalently, the guardrail misses at most approximately 1.67 harmful candidate 
 The residual end-to-end harm probability is
 
 $$
-p_{\mathrm{residual}}
-=
-p_{\mathrm{harm}} \cdot p_{\mathrm{miss}\mid\mathrm{harm}}.
+p_{\mathrm{residual}} = p_{\mathrm{harm}} \cdot p_{\mathrm{miss}\mid\mathrm{harm}}.
 $$
 
 The experiment has bounded the second term. It has not estimated the first. Thus the end-to-end claim remains conditional:
 
 $$
-p_{\mathrm{residual}}
-\leq
-p_{\mathrm{harm}} \cdot 0.000167.
+p_{\mathrm{residual}} \leq p_{\mathrm{harm}} \cdot 0.000167.
 $$
 
 If, hypothetically, a separate production sentinel stream established
@@ -1010,9 +1000,7 @@ $$
 then the residual harm probability would be bounded by
 
 $$
-0.001 \times 0.000167
-=
-1.67 \times 10^{-7}.
+0.001 \times 0.000167 = 1.67 \times 10^{-7}.
 $$
 
 That is approximately 1.67 harmful responses reaching the user per 10 million production interactions, subject to both estimates being valid for compatible populations and subject to the production architecture admitting no bypass around the guardrail.
@@ -1034,9 +1022,7 @@ $$
 so the corresponding upper confidence bound on the conditional miss probability is
 
 $$
-U_{\mathrm{miss}}(0.05)
-\approx
-2.71 \times 10^{-5}.
+U_{\mathrm{miss}}(0.05) \approx 2.71 \times 10^{-5}.
 $$
 
 The correct statement is therefore:
