@@ -1,12 +1,12 @@
 {
   "suite": "baseline_object",
-  "description": "Reference baseline objects per companion §1.5 + §1.4.5a. Cases are schema fixtures rather than computation fixtures: each case is a canonical baseline at a stated point in the index space with no expected output (the case itself is the example). Used by downstream frameworks to exercise parser conformance and the structural checks (covariate match, structural-reference match, policy match) that §§1.5.2 and 1.4.5a require.",
-  "method": "Object construction. No statistical computation involved; each baseline records the four indices and a list of per-criterion observation blocks under the locked §1.4.5a two-policy enum.",
+  "description": "Reference baseline objects per companion §1.5 + §1.4.5a. Cases are schema fixtures rather than computation fixtures: each case is a canonical baseline at a stated index (service-contract identity and resolved covariate values) with no expected output (the case itself is the example). Used by downstream frameworks to exercise parser conformance and the structural checks (covariate match, structural-reference match, policy match) that §§1.5.2 and 1.4.5a require.",
+  "method": "Object construction. No statistical computation involved; each baseline records its index (service-contract identity and covariate profile), the factor record, an optional expiration window, and a list of per-criterion observation blocks under the locked §1.4.5a two-policy enum.",
   "tolerance": 0,
   "cases": [
     {
       "name": "consult_advice_eu_weekday",
-      "description": "The consult-advice contract baseline at the EU / weekday / morning point in the index space. Three criteria mix REGRESSION + observational + COMPLIANCE; mixed denominator policies; r_obs = 1.0 throughout.",
+      "description": "The consult-advice contract baseline at the EU / weekday / morning index. Three criteria mix REGRESSION + observational + COMPLIANCE; mixed denominator policies; r_obs = 1.0 throughout.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -73,7 +73,7 @@
     },
     {
       "name": "guardrail_sentinel_observational_only",
-      "description": "A guardrail-validation baseline carrying a single observational criterion at sentinel scale (n_attempted = 10^7) under the MARGINAL_COUNT_UNEVALUABLE_AS_FAIL policy. The accumulation story of §1.5.5: per-run zero-failure observations pooled to a scale that supports a regulator-grade claim.",
+      "description": "A guardrail-validation baseline carrying a single observational criterion at sentinel scale (n_attempted = 10^7) under the MARGINAL_COUNT_UNEVALUABLE_AS_FAIL policy. A schema example of a large-n observational baseline; the observational verdict rule (§1.4.5) is unchanged at scale.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -112,7 +112,7 @@
     },
     {
       "name": "consult_advice_us_weekend_divergent",
-      "description": "The same consult-advice contract under a divergent covariate profile (US / weekend / evening). Used as a covariate-match counterexample: a test indexed at the EU / weekday point must not resolve against this baseline without explicit project- policy acknowledgement of the covariate divergence.",
+      "description": "The same consult-advice contract under a divergent covariate profile (US / weekend / evening). Used as a covariate-match counterexample: a test at the EU / weekday index must not resolve against this baseline without explicit project- policy acknowledgement of the covariate divergence.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -218,7 +218,7 @@
     },
     {
       "name": "consult_advice_cross_policy_counterexample",
-      "description": "The same consult-advice contract under the same indices as #1, except the C_layperson_readable criterion's denominator policy is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error check that cross-policy comparison between this baseline and the #1 baseline is rejected — the two baselines look identical on every other index but estimate different quantities under the C_layperson_readable criterion.",
+      "description": "The same consult-advice contract at the same index as #1, except the C_layperson_readable criterion's denominator policy is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error check that cross-policy comparison between this baseline and the #1 baseline is rejected — the two baselines look identical in every other respect but estimate different quantities under the C_layperson_readable criterion.",
       "inputs": {
         "baseline": {
           "factor_record": {

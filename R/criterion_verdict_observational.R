@@ -97,7 +97,7 @@ generate_criterion_verdict_observational_cases <- function() {
          n_attempted = 200, n_evaluable = 200, K_c = 200,
          policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"),
 
-    # PASS at sentinel scale (§1.5.5 accumulation story).
+    # PASS at large scale (observational verdict rule, §1.4.5).
     case("pass_sentinel_scale_10_million_marginal",
          n_attempted = 10000000, n_evaluable = 10000000, K_c = 10000000,
          policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"),

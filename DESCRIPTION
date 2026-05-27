@@ -1,6 +1,6 @@
 Package: javair
 Title: Reference Statistical Computations for the javai Project Family
-Version: 0.8.1
+Version: 0.8.2
 Authors@R: person("javai-org", email = "info@javai.org", role = c("aut", "cre"))
 Description: Generates language-agnostic reference datasets for statistical
     computations used in probabilistic testing frameworks. Provides canonical

@@ -1,7 +1,7 @@
 ---
 title: "Statistical Companion Document"
 subtitle: "Formal Statistical Foundations for the javai Methodology"
-author: "Version 1.3.4 · last updated 2026-05-26 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: "Version 1.3.5 · last updated 2026-05-27 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## Document History
@@ -18,8 +18,9 @@ author: "Version 1.3.4 · last updated 2026-05-26 · Copyright © 2026, Michael 
 | 8  | **2026-05** | **Criterion scope withdrawn (clarification; no statistical-content or fixture change).** The criterion *scope* / applicability-predicate concept — `scopePredicate`, $n_{c,\mathrm{applicable}}$, $n_{c,\mathrm{out\text{-}of\text{-}scope}}$, and the "in-scope trials" framing — is removed. A sampling is $N$ samples and every sample is seen by every criterion, so a functional criterion's denominator is always $N$. The sole denominator-narrowing in the methodology is latency's conditioning on success (§12). Effective denominators ($n_c = N$, $K_c$) and all numerical results are unchanged; no fixture or schema change.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | 9  | **2026-05** | **Clause-form terminology refinement (no statistical-content or fixture change).** The clause *form* is renamed **rate-bounded** (formerly "empirical"); the word *empirical* is now reserved for the threshold-**origin** axis (normative vs empirical), which the old form-name contradicted whenever a rate-bounded clause carried a normative threshold. The front-matter section "Clause Types: Empirical and Categorical" becomes "Clause Forms: Rate-Bounded and Categorical". The zero-failures evidence criterion that supports an architectural commitment is named **observational**, not "derived-empirical". Aligns the companion with the distributional-contracts paper; no change to the statistics, the model, or the fixtures. New section 1.4.5b formalises the architectural discharge (guardrails) probabilistically and contains a worked example.                                                                                                                                                                                                                                                                                                                                                                       |
 | 10 | **2026-05** | **Architectural-discharge clarifications (corrections; no statistical-content or fixture change).** Refinements to the §1.4.5b guardrail model and the Clause Forms section it depends on. (i) Guardrail rate-bounded clauses no longer carry an *empirical-origin* threshold by assertion; consistent with milestone 9, the threshold origin is free (normative or empirical). (ii) A production estimate of $p_{\mathrm{harm}}$ must observe the generator's *pre-guardrail* candidate output; post-guardrail monitoring estimates $p_{\mathrm{residual}}$, not $p_{\mathrm{harm}}$. (iii) The two samplings are named apart — a *red-team-input* sampling (adversarial inputs, end-to-end) versus a *harmful-candidate* sampling (conditional sensitivity) — and the §1.4.5 pairing of observational and inferential criteria no longer presumes a shared sampling. (iv) The worked example declares its `populationClaim` (superpopulation) before applying the Wilson bound. No formula, fixture, or numerical result changes.                                                                                                                                                                                                            |
+| 11 | **2026-05** | **Accumulation and the baseline long-term-monitoring framing removed from §1.5 (no fixture or numerical change).** The §1.5.5 *accumulation* construct is withdrawn and §1.5.5 reduced to *Expiration*; the framing of baseline indexing as a time-indexed collection of baselines retained for long-term monitoring is removed. Baseline indexing itself is retained.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-Each milestone strictly extends the previous one in the scope of what the methodology claims; none supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
+Each milestone builds on the one before; each extends the scope of what the methodology claims except where it explicitly corrects or withdraws an over-reach (milestone 11). None supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
 
 ---
 
@@ -113,89 +114,27 @@ The bulk of this document is, in the end, an account of how those verdicts are c
 
 ## Clause Forms: Rate-Bounded and Categorical
 
-A service contract is a conjunction of clauses, but the clauses are
-not all of one kind. Two structurally different *forms* coexist in a
-typical contract, and the rest of this document depends on keeping
-them apart. The distinction is *orthogonal to* the threshold-origin
-axis the companion already carries (compliance vs. regression, §3): a
-clause can be normative or empirical in *origin* — mandated by
-SLA/SLO/policy/regulation, or derived from a measured baseline —
-independently of the *form* the present section partitions on.
+A service contract is a conjunction of clauses, but the clauses are not all of one kind. Two structurally different *forms* coexist in a typical contract, and the rest of this document depends on keeping them apart. The distinction is *orthogonal to* the threshold-origin axis the companion already carries (compliance vs. regression, §3): a clause can be normative or empirical in *origin* — mandated by SLA/SLO/policy/regulation, or derived from a measured baseline — independently of the *form* the present section partitions on.
 
-A **rate-bounded clause** states a rate-bounded proposition: *"the
-service shall satisfy criterion $c$ at rate at least $p^*_c$ with
-confidence $\gamma$ over sampling $V$."* Its threshold $p^*_c$ has one
-of two **origins** — **normative** (a.k.a. *stipulated*), an SLA-mandated
-rate evaluated by the compliance paradigm of §3, or **empirical**, a
-measured baseline evaluated by the regression paradigm of §3. The word
-*empirical* names that origin and is **not** the name of this form;
-compliance and regression are simply the decision-side names for the two
-origins. Either way the *form* is rate-bounded: a test invokes the
-service many times, and the companion's central machinery turns the
-resulting evidence into a per-criterion verdict.
+A **rate-bounded clause** states a rate-bounded proposition: *"the service shall satisfy criterion $c$ at rate at least $p^*_c$ with confidence $\gamma$ over sampling $V$."* Its threshold $p^*_c$ has one of two **origins** — **normative** (a.k.a. *stipulated*), an SLA-mandated rate evaluated by the compliance paradigm of §3, or **empirical**, a measured baseline evaluated by the regression paradigm of §3. The word *empirical* names that origin and is **not** the name of this form; compliance and regression are simply the decision-side names for the two origins. Either way the *form* is rate-bounded: a test invokes the service many times, and the companion's central machinery turns the resulting evidence into a per-criterion verdict.
 
-A **categorical clause** states an obligation or prohibition that
-admits no rate threshold at all: *"the service shall not violate
-criterion $c$."* Full stop. The clause is satisfied or violated in
-kind, not in rate. Categorical clauses are, in practice, almost
-always normative in origin — a categorical prohibition is the kind of
-thing a contract *mandates* rather than something a team *derives*
-from baseline measurement — but their distinguishing feature is form
-rather than origin: no $p^*_c$, no $\gamma$, no Wilson construction,
-no rate-bounded discharge available. The canonical examples are
-categorical safety prohibitions: no self-harm advice, no PII leakage,
-no emission of illegal content.
+A **categorical clause** states an obligation or prohibition that admits no rate threshold at all: *"the service shall not violate criterion $c$."* Full stop. The clause is satisfied or violated in kind, not in rate. Categorical clauses are, in practice, almost always normative in origin — a categorical prohibition is the kind of thing a contract *mandates* rather than something a team *derives* from baseline measurement — but their distinguishing feature is form rather than origin: no $p^*_c$, no $\gamma$, no Wilson construction, no rate-bounded discharge available. The canonical examples are categorical safety prohibitions: no self-harm advice, no PII leakage, no emission of illegal content.
 
-Rate-bounded and categorical clauses are not two points on a strictness
-spectrum. Letting $p^*_c \to 1$ does not promote a rate-bounded clause
-into a categorical one: it merely tightens the rate-bound proposition.
-No sample budget, threshold, or confidence level redenominates a
-categorical claim as a frequentist one — observing zero failures in
-$n$ trials yields, at best, a rule-of-three upper bound of
-$\approx 3/n$ on the failure rate, which approaches zero only in
-the limit. A categorical clause therefore cannot be discharged by the
-rate-bounded apparatus, however that apparatus is parameterised.
+Rate-bounded and categorical clauses are not two points on a strictness spectrum. Letting $p^*_c \to 1$ does not promote a rate-bounded clause into a categorical one: it merely tightens the rate-bound proposition. No sample budget, threshold, or confidence level redenominates a categorical claim as a frequentist one — observing zero failures in $n$ trials yields, at best, a rule-of-three upper bound of $\approx 3/n$ on the failure rate, which approaches zero only in the limit. A categorical clause therefore cannot be discharged by the rate-bounded apparatus, however that apparatus is parameterised.
 
-Categorical clauses are discharged **architecturally**. A separate
-component — a guardrail, a deterministic filter, a hard schema
-constraint, a refusal classifier — is interposed between the
-stochastic system and the consumer of its output, and its presence
-is the contract's answer. The component is itself probabilistic;
-its performance re-enters the contract as one or more **ordinary
-rate-bounded clauses**, typically covering the component's
-false-negative and false-positive behaviour over an adversarial sampling
-representative of the inputs the component exists to filter. The clause
-*form* is fixed — rate-bounded — but the threshold *origin* is free: it
-may be **normative**, where a safety policy, regulator, SLO, or release
-gate mandates a minimum containment level, or **empirical**, where the
-clause is used for regression against a measured guardrail baseline. The
-origin axis is independent of the
-categorical parent these clauses evidence. The categorical clause itself is
-the obligation; the discharge is the architectural commitment.
+Categorical clauses are discharged **architecturally**. A separate component — a guardrail, a deterministic filter, a hard schema constraint, a refusal classifier — is interposed between the stochastic system and the consumer of its output, and its presence is the contract's answer. The component is itself probabilistic; its performance re-enters the contract as one or more **ordinary rate-bounded clauses**, typically covering the component's false-negative and false-positive behaviour over an adversarial sampling representative of the inputs the component exists to filter. The clause *form* is fixed — rate-bounded — but the threshold *origin* is free: it may be **normative**, where a safety policy, regulator, SLO, or release gate mandates a minimum containment level, or **empirical**, where the clause is used for regression against a measured guardrail baseline. The origin axis is independent of the categorical parent these clauses evidence. The categorical clause itself is the obligation; the discharge is the architectural commitment.
 
-The methodology summarised across the rest of this document is
-therefore:
+The methodology summarised across the rest of this document is therefore:
 
-> *Tolerable failures are bounded statistically; intolerable failures
-> are bounded architecturally; and the architecture itself is bounded
-> statistically.*
+> *Tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically.*
 
-The rate-bounded/categorical distinction is foundational. The
-compliance/regression paradigms of the next section, the criterion
-decomposition of §1.4, and the report and verdict layers of §7
-and §10 all operate *within the rate-bounded class* — across both
-normative-origin and empirically-derived thresholds. The architectural
-discharge of categorical clauses is sketched in §1.4.5 and developed
-fully in a forthcoming chapter on architectural commitments.
+The rate-bounded/categorical distinction is foundational. The compliance/regression paradigms of the next section, the criterion decomposition of §1.4, and the report and verdict layers of §7 and §10 all operate *within the rate-bounded class* — across both normative-origin and empirically-derived thresholds. The architectural discharge of categorical clauses is sketched in §1.4.5 and developed fully in a forthcoming chapter on architectural commitments.
 
 ---
 
 ## Two Testing Paradigms: Compliance and Regression
 
-Within the rate-bounded class of contract clauses introduced in the
-previous section, the methodology supports two distinct testing
-paradigms. They share the same hypothesis-test skeleton but differ
-in where the threshold comes from and how results are interpreted.
+Within the rate-bounded class of contract clauses introduced in the previous section, the methodology supports two distinct testing paradigms. They share the same hypothesis-test skeleton but differ in where the threshold comes from and how results are interpreted.
 
 | Paradigm       | Threshold source                                     | Statistical question                                  | Example                                                                                      |
 |----------------|------------------------------------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------|
@@ -333,14 +272,9 @@ No framework can detect or correct for these effects—they require domain knowl
 
 #### 1.4.1 Failure modes of differing kind
 
-Criterion decomposition operates *within* the functional dimension
-introduced earlier in the document. The partition this chapter
-develops refines the evidence inside that one dimension into multiple
-statistical streams; it does not multiply the number of dimensions of
-stochasticity.
+Criterion decomposition operates *within* the functional dimension introduced earlier in the document. The partition this chapter develops refines the evidence inside that one dimension into multiple statistical streams; it does not multiply the number of dimensions of stochasticity.
 
-The chapter uses a deliberately stark **triple** as its running
-example, drawn from a clinical-advice service:
+The chapter uses a deliberately stark **triple** as its running example, drawn from a clinical-advice service:
 
 - a *structural* failure — a response that does not parse as JSON;
 - a *judge-mediated* failure — a response that parses, but whose
@@ -349,100 +283,19 @@ example, drawn from a clinical-advice service:
 - a *catastrophic* failure — a response that advises a vulnerable
   user toward self-harm.
 
-The three modes are not interchangeable, and each carries a distinct
-methodological load. Parseability and register are both rate-bounded
-criteria — they share clause type despite the gulf between
-their measurement apparatus (a JSON parser, a rubric-driven judge),
-and together they establish that the rate-bounded machinery of
-this chapter applies as readily to judge-mediated criteria as to
-mechanical ones. Self-harm is categorical rather than rate-bounded: it
-sits in a different clause type despite, like register, requiring a
-judge to detect, and the clause-type partition therefore does not
-run along the mechanical/judge-mediated axis. References to self-harm
-in what follows are technical illustrations of a categorical clause;
-they are not commentary on clinical practice or on the regulation of
-clinical AI systems.
+The three modes are not interchangeable, and each carries a distinct methodological load. Parseability and register are both rate-bounded criteria — they share clause type despite the gulf between their measurement apparatus (a JSON parser, a rubric-driven judge), and together they establish that the rate-bounded machinery of this chapter applies as readily to judge-mediated criteria as to mechanical ones. Self-harm is categorical rather than rate-bounded: it sits in a different clause type despite, like register, requiring a judge to detect, and the clause-type partition therefore does not run along the mechanical/judge-mediated axis. References to self-harm in what follows are technical illustrations of a categorical clause; they are not commentary on clinical practice or on the regulation of clinical AI systems.
 
-A service contract's postconditions defend against failure modes that
-vary along at least three independent axes. Each axis is on its own
-sufficient to require separate statistical treatment of failure modes
-that differ along it, and each — at its extreme — also reveals the
-boundary between the rate-bounded and categorical clause classes
-introduced in *Clause Forms: Rate-Bounded and Categorical*.
+A service contract's postconditions defend against failure modes that vary along at least three independent axes. Each axis is on its own sufficient to require separate statistical treatment of failure modes that differ along it, and each — at its extreme — also reveals the boundary between the rate-bounded and categorical clause classes introduced in *Clause Forms: Rate-Bounded and Categorical*.
 
-**Consequence.** Parseability, register, and harm all violate the
-contract, but the cost of each violation to the consumer of the
-verdict spans a wide gradient, and the methodology distinguishes
-points on that gradient at two different levels. *Within* the
-rate-bounded class, where the cost is bounded and a non-zero failure
-rate is tolerable, consequence is operationalised as the per-criterion
-threshold $p^*_c$: register (medium-consequence) demands a tighter
-$p^*_c$ than parseability (low-consequence), and both are evaluated
-by the same Wilson-against-threshold machinery despite the gulf
-between their measurement apparatus (a JSON parser, a rubric-driven
-judge). *Across* the rate-bounded/categorical boundary, where the
-project's stance is zero tolerance — harm advice, PII leakage,
-illegal content — consequence is no longer operationalised as a
-tight $p^*_c$ at all. The failure mode is admitted as a *categorical*
-clause and discharged architecturally (§1.4.5;
-forthcoming chapter on architectural commitments). The observational
-mode of §1.4.5 is the mode used to evaluate the
-observational zero-failures criterion on the architectural component, not
-a limit-case of a rate-bounded clause at $p^*_c \to 1$.
+**Consequence.** Parseability, register, and harm all violate the contract, but the cost of each violation to the consumer of the verdict spans a wide gradient, and the methodology distinguishes points on that gradient at two different levels. *Within* the rate-bounded class, where the cost is bounded and a non-zero failure rate is tolerable, consequence is operationalised as the per-criterion threshold $p^*_c$: register (medium-consequence) demands a tighter $p^*_c$ than parseability (low-consequence), and both are evaluated by the same Wilson-against-threshold machinery despite the gulf between their measurement apparatus (a JSON parser, a rubric-driven judge). *Across* the rate-bounded/categorical boundary, where the project's stance is zero tolerance — harm advice, PII leakage, illegal content — consequence is no longer operationalised as a tight $p^*_c$ at all. The failure mode is admitted as a *categorical* clause and discharged architecturally (§1.4.5; forthcoming chapter on architectural commitments). The observational mode of §1.4.5 is the mode used to evaluate the observational zero-failures criterion on the architectural component, not a limit-case of a rate-bounded clause at $p^*_c \to 1$.
 
-**Frequency.** Baselines of rate-bounded criteria span a wide
-range — parse-failure rates in the low single percents,
-register-mismatch rates higher still, other rate-bounded criteria
-potentially lower. The sample budget required to support strong
-evidential power scales inversely with the baseline, and
-rate-bounded peers with disparate baselines therefore make
-competing demands on the experiment's shared sampling. A
-thousand-sample sampling gives a Wilson interval around a 5%-baseline
-observation tight enough to support a binding evidential claim
-against a nearby threshold; as the baseline falls, the same pool
-gives an interval whose width relative to the observed rate grows —
-at a 0.1% baseline the Wilson interval spans several times the point
-estimate itself — and a criterion at that baseline either needs a
-larger pool to be binding under VERIFICATION intent, or must be
-declared SMOKE up front.
-Per-criterion feasibility gates surface this asymmetry honestly,
-where an aggregated stream absorbs it. The categorical clause sits off
-this axis: a 'zero-failures' failure mode is not admitted to the
-contract as a rate-bounded criterion at all, and so has no baseline
-to enter the comparison.
+**Frequency.** Baselines of rate-bounded criteria span a wide range — parse-failure rates in the low single percents, register-mismatch rates higher still, other rate-bounded criteria potentially lower. The sample budget required to support strong evidential power scales inversely with the baseline, and rate-bounded peers with disparate baselines therefore make competing demands on the experiment's shared sampling. A thousand-sample sampling gives a Wilson interval around a 5%-baseline observation tight enough to support a binding evidential claim against a nearby threshold; as the baseline falls, the same pool gives an interval whose width relative to the observed rate grows — at a 0.1% baseline the Wilson interval spans several times the point estimate itself — and a criterion at that baseline either needs a larger pool to be binding under VERIFICATION intent, or must be declared SMOKE up front. Per-criterion feasibility gates surface this asymmetry honestly, where an aggregated stream absorbs it. The categorical clause sits off this axis: a 'zero-failures' failure mode is not admitted to the contract as a rate-bounded criterion at all, and so has no baseline to enter the comparison.
 
-**Input requirement.** A MEASURE experiment runs over a single
-sampling: every sample produces a response, and every criterion
-evaluates its postcondition(s) on the same response. The criteria
-share the input distribution because they share the inputs
-themselves. A sampling sized for parseability serves register and
-other rate-bounded judge-mediated criteria without trouble, because
-their baselines are commensurate. What it cannot do is discharge a
-'zero-failures' failure mode: the rule-of-three bound on the failure
-rate with zero observed failures is $\approx 3/n$, which approaches
-zero only in the limit, and no $n$ reachable inside one experiment
-closes the gap. The zero-failures case is therefore discharged at
-the architectural layer (see *Clause Forms: Rate-Bounded and
-Categorical*); the architectural component is evaluated in a separate
-experiment over an adversarial sampling. The categorical postcondition
-may additionally be scored against the primary sampling as a
-SMOKE-intent diagnostic — the response is already produced, the
-judge is already running — giving a signal that complements the
-discharge (§1.4.5).
+**Input requirement.** A MEASURE experiment runs over a single sampling: every sample produces a response, and every criterion evaluates its postcondition(s) on the same response. The criteria share the input distribution because they share the inputs themselves. A sampling sized for parseability serves register and other rate-bounded judge-mediated criteria without trouble, because their baselines are commensurate. What it cannot do is discharge a 'zero-failures' failure mode: the rule-of-three bound on the failure rate with zero observed failures is $\approx 3/n$, which approaches zero only in the limit, and no $n$ reachable inside one experiment closes the gap. The zero-failures case is therefore discharged at the architectural layer (see *Clause Forms: Rate-Bounded and Categorical*); the architectural component is evaluated in a separate experiment over an adversarial sampling. The categorical postcondition may additionally be scored against the primary sampling as a SMOKE-intent diagnostic — the response is already produced, the judge is already running — giving a signal that complements the discharge (§1.4.5).
 
-The methodology therefore partitions on two levels. *Within* the
-rate-bounded class, failure modes that differ along consequence,
-frequency, or input share are treated as **separately contractual** —
-each is its own hypothesis test, with its own threshold, its own
-confidence level, its own feasibility gate, sharing the experiment's
-sampling. *Across* the rate-bounded/categorical boundary, failure
-modes are routed out of the MEASURE experiment **for the purposes of
-contractual discharge** and into the architectural-commitment
-treatment; they may remain present in the experiment as SMOKE-intent
-diagnostic criteria, with the epistemic status set out in §1.4.5.
+The methodology therefore partitions on two levels. *Within* the rate-bounded class, failure modes that differ along consequence, frequency, or input share are treated as **separately contractual** — each is its own hypothesis test, with its own threshold, its own confidence level, its own feasibility gate, sharing the experiment's sampling. *Across* the rate-bounded/categorical boundary, failure modes are routed out of the MEASURE experiment **for the purposes of contractual discharge** and into the architectural-commitment treatment; they may remain present in the experiment as SMOKE-intent diagnostic criteria, with the epistemic status set out in §1.4.5.
 
-A representative example, threaded through the chapter, is a
-clinical-advice service whose contract carries:
+A representative example, threaded through the chapter, is a clinical-advice service whose contract carries:
 
 - $P_1$: *response parses as JSON* — rate-bounded, low-consequence
   (parser-detected).
@@ -458,75 +311,19 @@ clinical-advice service whose contract carries:
   additionally be scored on the production sampling as a SMOKE-intent
   diagnostic (§1.4.5).
 
-The four postconditions are not interchangeable along the partition
-axes. A $P_4$ violation at any rate is clinically significant in a
-way a $P_1$ violation at $10^{-3}$ is not, *and* a $P_3$ violation at
-5% is significant in a way a $P_1$ violation at 5% is not. The
-methodology evaluates the rate-bounded postconditions ($P_1$, $P_2$,
-$P_3$) each in its own statistical stream within the primary
-end-to-end MEASURE experiment, against its own threshold, at its
-own confidence level; $P_4$ is routed out of the primary end-to-end
-MEASURE experiment for contractual discharge. Its categorical
-obligation is discharged by the architectural commitment (§1.4.5);
-the guardrail's own rate-bounded criteria (normative or empirical in origin) may
-themselves be evaluated in separate MEASURE experiments over adversarial samplings
-(§1.4.8). The three primitives of §1.4.2 give the
-empirical partition its formal structure; the hiding result of §1.4.4
-establishes that an aggregated stream over rate-bounded postconditions
-that differ along any of the three axes potentially obscures
-movement in a low-frequency, high-consequence, or designed-input
-criterion. Where rate-bounded postconditions defend against failure
-modes that are interchangeable along all three axes — equivalent
-consequences, comparable frequencies, the same input distribution —
-a single aggregated stream remains an adequate representation; the
-$m = 1$ instance of the per-criterion model recovers this case
-unchanged.
+The four postconditions are not interchangeable along the partition axes. A $P_4$ violation at any rate is clinically significant in a way a $P_1$ violation at $10^{-3}$ is not, *and* a $P_3$ violation at 5% is significant in a way a $P_1$ violation at 5% is not. The methodology evaluates the rate-bounded postconditions ($P_1$, $P_2$, $P_3$) each in its own statistical stream within the primary end-to-end MEASURE experiment, against its own threshold, at its own confidence level; $P_4$ is routed out of the primary end-to-end MEASURE experiment for contractual discharge. Its categorical obligation is discharged by the architectural commitment (§1.4.5); the guardrail's own rate-bounded criteria (normative or empirical in origin) may themselves be evaluated in separate MEASURE experiments over adversarial samplings (§1.4.8). The three primitives of §1.4.2 give the empirical partition its formal structure; the hiding result of §1.4.4 establishes that an aggregated stream over rate-bounded postconditions that differ along any of the three axes potentially obscures movement in a low-frequency, high-consequence, or designed-input criterion. Where rate-bounded postconditions defend against failure modes that are interchangeable along all three axes — equivalent consequences, comparable frequencies, the same input distribution — a single aggregated stream remains an adequate representation; the $m = 1$ instance of the per-criterion model recovers this case unchanged.
 
 ---
 
 #### 1.4.2 Three primitives
 
-The decomposition rests on three primitives, each playing a distinct
-role in the statistical model.
+The decomposition rests on three primitives, each playing a distinct role in the statistical model.
 
-**Sampling.** The list of sample inputs posted to the service under
-test in a single experiment or test. A sampling has length $N \geq 1$;
-each *sample entry* in the list is presented once to the service,
-producing $N$ responses. The sampling is shared across
-every criterion (defined below) that the contract exercises in the
-run: a contract with multiple criteria produces a per-trial vector
-of per-criterion observations over a single shared sampling, and
-there is no notion of a "per-criterion sampling" within an
-experiment. A contract that requires evidence about a different
-input distribution runs a *separate experiment* with its own
-sampling. The inferential reach of a sampling is elaborated in
-§1.4.7.
+**Sampling.** The list of sample inputs posted to the service under test in a single experiment or test. A sampling has length $N \geq 1$; each *sample entry* in the list is presented once to the service, producing $N$ responses. The sampling is shared across every criterion (defined below) that the contract exercises in the run: a contract with multiple criteria produces a per-trial vector of per-criterion observations over a single shared sampling, and there is no notion of a "per-criterion sampling" within an experiment. A contract that requires evidence about a different input distribution runs a *separate experiment* with its own sampling. The inferential reach of a sampling is elaborated in §1.4.7.
 
-**Criterion.** The unit of statistical evaluation. A criterion is
-the partition unit of the functional dimension; each criterion is
-exercised against the sampling and yields its own sequence of
-per-trial pass/fail outcomes, modelled as a Bernoulli stream
-(§1.4.3), from which its own verdict is computed. A criterion declares
-the *mode* under which the test is conducted (inferential or
-observational, §1.4.5), the threshold and threshold origin where
-applicable, the confidence level $\alpha$, and the experiment or test
-in which the criterion is exercised (§1.4.7). It also hosts one or
-more postconditions (defined below), which together determine its
-per-trial outcome: a single-postcondition criterion produces a
-per-trial outcome equal to that postcondition's verdict; a
-multi-postcondition criterion produces a per-trial outcome equal to
-the *conjunction* of its hosted postconditions' verdicts (§1.4.3
-makes this formal). Two postconditions whose failures carry
-materially different consequences are therefore addressed by two
-distinct criteria, never by sharing a stream.
+**Criterion.** The unit of statistical evaluation. A criterion is the partition unit of the functional dimension; each criterion is exercised against the sampling and yields its own sequence of per-trial pass/fail outcomes, modelled as a Bernoulli stream (§1.4.3), from which its own verdict is computed. A criterion declares the *mode* under which the test is conducted (inferential or observational, §1.4.5), the threshold and threshold origin where applicable, the confidence level $\alpha$, and the experiment or test in which the criterion is exercised (§1.4.7). It also hosts one or more postconditions (defined below), which together determine its per-trial outcome: a single-postcondition criterion produces a per-trial outcome equal to that postcondition's verdict; a multi-postcondition criterion produces a per-trial outcome equal to the *conjunction* of its hosted postconditions' verdicts (§1.4.3 makes this formal). Two postconditions whose failures carry materially different consequences are therefore addressed by two distinct criteria, never by sharing a stream.
 
-**Postcondition.** A named predicate over the produced output of a
-single trial. A postcondition has one job: decide pass or fail for a
-single observable property of the output. It carries no threshold and
-no statistical configuration of its own; the threshold, confidence
-level, and mode under which its per-trial
-verdicts are aggregated come from the criterion that hosts it. In the
-clinical-advice example, $P_1$ through $P_4$ above are postconditions.
+**Postcondition.** A named predicate over the produced output of a single trial. A postcondition has one job: decide pass or fail for a single observable property of the output. It carries no threshold and no statistical configuration of its own; the threshold, confidence level, and mode under which its per-trial verdicts are aggregated come from the criterion that hosts it. In the clinical-advice example, $P_1$ through $P_4$ above are postconditions.
 
 The relationship between the primitives is:
 
@@ -536,31 +333,15 @@ The relationship between the primitives is:
 | Criterion      | Statistical partition unit; exercised against the sampling; hosts 1+ postconditions |
 | Postcondition  | Per-trial predicate; hosted by a criterion |
 
-Each of the three primitives has exactly one job: the sampling
-supplies the $N$ samples the run posts to the service and over which
-every criterion is exercised; criteria partition the functional
-dimension into statistical streams and parameterise each stream's
-inferential test; postconditions decide per-trial outcomes.
+Each of the three primitives has exactly one job: the sampling supplies the $N$ samples the run posts to the service and over which every criterion is exercised; criteria partition the functional dimension into statistical streams and parameterise each stream's inferential test; postconditions decide per-trial outcomes.
 
 ---
 
 #### 1.4.3 The per-criterion Bernoulli model
 
-Each criterion $c$ defines a Bernoulli stream of per-trial pass/fail
-indicators $\{X_{i,c}\}$, aggregated to a Binomial success count $K_c
-= \sum_i X_{i,c}$ for inference; the per-stream parameter is $p_c$
-and the per-stream estimate is $\hat p_c = K_c / n_c$. A contract
-with a single criterion ($m = 1$) is the special case of this
-formulation in which the per-criterion stream coincides with the
-single Bernoulli/Binomial model of §§1.1–1.2; the multi-criterion
-machinery below covers $m \geq 1$ uniformly.
+Each criterion $c$ defines a Bernoulli stream of per-trial pass/fail indicators $\{X_{i,c}\}$, aggregated to a Binomial success count $K_c = \sum_i X_{i,c}$ for inference; the per-stream parameter is $p_c$ and the per-stream estimate is $\hat p_c = K_c / n_c$. A contract with a single criterion ($m = 1$) is the special case of this formulation in which the per-criterion stream coincides with the single Bernoulli/Binomial model of §§1.1–1.2; the multi-criterion machinery below covers $m \geq 1$ uniformly.
 
-Let a contract declare $m$ criteria $\{C_1, \ldots, C_m\}$ (the symbol
-$m$ for the *number of criteria* is used throughout this chapter and
-the rest of the companion; $K$ is reserved for the **success count**
-of a Bernoulli stream as in §§1.1–1.2 — $K = \sum_i X_i$ — so the two
-must not collide). For each criterion $c$, let $\mathcal{P}_c$ denote
-the set of postconditions the criterion references. Let $n_c$ denote the number of trials in the experiment's sampling; every sample is presented to every criterion, so $n_c$ equals the sampling size $N$ (§1.4.5a). On each trial define the per-criterion observation:
+Let a contract declare $m$ criteria $\{C_1, \ldots, C_m\}$ (the symbol $m$ for the *number of criteria* is used throughout this chapter and the rest of the companion; $K$ is reserved for the **success count** of a Bernoulli stream as in §§1.1–1.2 — $K = \sum_i X_i$ — so the two must not collide). For each criterion $c$, let $\mathcal{P}_c$ denote the set of postconditions the criterion references. Let $n_c$ denote the number of trials in the experiment's sampling; every sample is presented to every criterion, so $n_c$ equals the sampling size $N$ (§1.4.5a). On each trial define the per-criterion observation:
 
 $$
 X_{i,c} \;=\; \begin{cases}
@@ -571,8 +352,7 @@ $$
 
 A trial scores $0$ both when the postcondition was evaluated and did not hold and when no testable value could be produced (a transform/no-value FAIL, §1.4.5a); the two are distinguished by a diagnostic reason, not in the arithmetic. The effective denominator is $n_c = N$ — every trial of the sampling — and the success count is $K_c = \sum_i X_{i,c}$, so $\hat{p}_c = K_c / n_c$.
 
-Each per-criterion trial is modelled exactly as the single-criterion
-trial of §§1.1–1.2:
+Each per-criterion trial is modelled exactly as the single-criterion trial of §§1.1–1.2:
 
 $$
 X_{i,c} \,\sim\, \text{Bernoulli}(p_c), \qquad K_c \,=\, \sum_{i=1}^{n_c} X_{i,c} \,\sim\, \text{Binomial}(n_c, p_c), \qquad \hat{p}_c \,=\, K_c / n_c.
@@ -580,123 +360,45 @@ $$
 
 The Wilson construction, threshold-derivation pipeline, feasibility gate, and verdict-evaluation rule apply to this effective stream.
 
-The independence and stationarity working approximations of §1.3 apply
-per criterion. Within a criterion, the per-trial observations across
-the experiment's $N$ samples are treated as i.i.d. under the input
-distribution the sampling represents. Across criteria, the
-methodology does not assume independence: the per-criterion trials
-$X_{i,1}, \ldots, X_{i,m}$ on a single invocation are typically
-correlated, since an invocation that produces a malformed response may
-also fail criteria that evaluate the response's content.
-Cross-criterion dependence does not affect per-criterion verdict
-correctness; its consequence for the composite verdict is the
-disclosed Type-I envelope of §1.4.6.
+The independence and stationarity working approximations of §1.3 apply per criterion. Within a criterion, the per-trial observations across the experiment's $N$ samples are treated as i.i.d. under the input distribution the sampling represents. Across criteria, the methodology does not assume independence: the per-criterion trials $X_{i,1}, \ldots, X_{i,m}$ on a single invocation are typically correlated, since an invocation that produces a malformed response may also fail criteria that evaluate the response's content. Cross-criterion dependence does not affect per-criterion verdict correctness; its consequence for the composite verdict is the disclosed Type-I envelope of §1.4.6.
 
-Each per-criterion trial is a complete statistical object in its own
-right. From here forward in the companion, the single-criterion $X_i$,
-$\hat{p}$, $\alpha$, $p^*$ of §§1.1–1.2 may be read as the
-per-criterion $X_{i,c}$, $\hat{p}_c$, $\alpha_c$, $p^*_c$ for any
-criterion $c$ declared on a contract: the Wilson construction, the
-threshold-derivation pipeline, the sample-size derivations, the
-feasibility gate, and the verdict-evaluation rule apply unchanged.
+Each per-criterion trial is a complete statistical object in its own right. From here forward in the companion, the single-criterion $X_i$, $\hat{p}$, $\alpha$, $p^*$ of §§1.1–1.2 may be read as the per-criterion $X_{i,c}$, $\hat{p}_c$, $\alpha_c$, $p^*_c$ for any criterion $c$ declared on a contract: the Wilson construction, the threshold-derivation pipeline, the sample-size derivations, the feasibility gate, and the verdict-evaluation rule apply unchanged.
 
 ---
 
 #### 1.4.4 Why aggregation masks per-criterion failures
 
-Aggregating per-criterion indicators into a single conjunction rate is
-the obvious temptation — one stream, one $p$, one Wilson interval — and
-this section sets out why it is the wrong move. A one-line union-bound
-argument shows that the aggregate rate is bounded above by the sum of
-per-criterion failure rates and dominated by the largest of them; small
-but consequential per-criterion failure rates are absorbed into the
-noise of the dominant ones and become statistically invisible.
-Per-criterion partitioning is what exposes them; the conjunction view
-buries them.
+Aggregating per-criterion indicators into a single conjunction rate is the obvious temptation — one stream, one $p$, one Wilson interval — and this section sets out why it is the wrong move. A one-line union-bound argument shows that the aggregate rate is bounded above by the sum of per-criterion failure rates and dominated by the largest of them; small but consequential per-criterion failure rates are absorbed into the noise of the dominant ones and become statistically invisible. Per-criterion partitioning is what exposes them; the conjunction view buries them.
 
-Let $\{C_1, \ldots, C_m\}$ be the contract's criteria, with per-trial
-indicators $X_{i,c}$ as in §1.4.3. Define the conjunction indicator
+Let $\{C_1, \ldots, C_m\}$ be the contract's criteria, with per-trial indicators $X_{i,c}$ as in §1.4.3. Define the conjunction indicator
 
 $$
 X_i \;=\; \prod_{c=1}^{m} X_{i,c}, \qquad p \;=\; \mathbb{P}(X_i = 1)
 $$
 
-— the rate at which every criterion's indicator simultaneously equals
-one on a trial. By the union bound applied to the complementary events,
+— the rate at which every criterion's indicator simultaneously equals one on a trial. By the union bound applied to the complementary events,
 
 $$
 1 - p \;=\; \mathbb{P}\bigl(\exists\, c : X_{i,c} = 0 \bigr) \;\leq\; \sum_{c=1}^{m} \bigl(1 - p_c\bigr)
 $$
 
-with equality if and only if the per-criterion failure events are
-disjoint. The aggregate failure rate $1 - p$ is therefore bounded above
-by the sum of per-criterion failure rates, and in typical cases is
-dominated by the largest of them.
+with equality if and only if the per-criterion failure events are disjoint. The aggregate failure rate $1 - p$ is therefore bounded above by the sum of per-criterion failure rates, and in typical cases is dominated by the largest of them.
 
-**Corollary.** If criterion $c^*$ has a per-criterion failure rate that
-is small relative to the largest per-criterion failure rate — say
-$1 - p_{c^*} \ll \max_{c \neq c^*} (1 - p_c)$ — then $1 - p$ is
-dominated by the larger terms and is essentially insensitive to
-$1 - p_{c^*}$. A change in $1 - p_{c^*}$ of any magnitude substantially
-smaller than $\max_{c \neq c^*} (1 - p_c)$ produces a change in $1 - p$
-within the sampling noise of an aggregate estimator. A conjunction
-indicator therefore cannot detect movement in $1 - p_{c^*}$ unless that
-movement is comparable to the noise of the dominant criterion. The
-masking mechanism is purely a property of frequency: rare per-criterion
-failure rates are absorbed by more frequent ones, regardless of what
-those failures *mean*. The reason this matters for asymmetric contracts
-is empirical, not constructive: catastrophic-consequence outcomes (a
-model that recommends self-harm, a payment service that double-charges,
-a clinical-advice system that produces an unsafe instruction) are, in
-practice, *rare*, often deliberately so — modern LLM safeguards,
-hard-coded blocklists, and validation layers exist precisely to drive
-their rate toward zero. Rarity is what makes them mathematically
-invisible to aggregation; gravity is what makes that invisibility
-intolerable.
+**Corollary.** If criterion $c^*$ has a per-criterion failure rate that is small relative to the largest per-criterion failure rate — say $1 - p_{c^*} \ll \max_{c \neq c^*} (1 - p_c)$ — then $1 - p$ is dominated by the larger terms and is essentially insensitive to $1 - p_{c^*}$. A change in $1 - p_{c^*}$ of any magnitude substantially smaller than $\max_{c \neq c^*} (1 - p_c)$ produces a change in $1 - p$ within the sampling noise of an aggregate estimator. A conjunction indicator therefore cannot detect movement in $1 - p_{c^*}$ unless that movement is comparable to the noise of the dominant criterion. The masking mechanism is purely a property of frequency: rare per-criterion failure rates are absorbed by more frequent ones, regardless of what those failures *mean*. The reason this matters for asymmetric contracts is empirical, not constructive: catastrophic-consequence outcomes (a model that recommends self-harm, a payment service that double-charges, a clinical-advice system that produces an unsafe instruction) are, in practice, *rare*, often deliberately so — modern LLM safeguards, hard-coded blocklists, and validation layers exist precisely to drive their rate toward zero. Rarity is what makes them mathematically invisible to aggregation; gravity is what makes that invisibility intolerable.
 
-**Inverse statement.** Given an observed conjunction rate $\hat{p}$,
-the per-criterion rates $\{\hat{p}_c\}$ are not identified: any
-allocation of $1 - \hat{p}$ among the per-criterion failure events that
-respects the union bound is consistent with the observation. Recovering
-the per-criterion rates requires per-criterion attribution at trial
-record time — the wide trial record that §1.4.3's indicators
-demand. A trial archive that has not preserved per-postcondition
-outcomes per trial cannot be decomposed retrospectively.
+**Inverse statement.** Given an observed conjunction rate $\hat{p}$, the per-criterion rates $\{\hat{p}_c\}$ are not identified: any allocation of $1 - \hat{p}$ among the per-criterion failure events that respects the union bound is consistent with the observation. Recovering the per-criterion rates requires per-criterion attribution at trial record time — the wide trial record that §1.4.3's indicators demand. A trial archive that has not preserved per-postcondition outcomes per trial cannot be decomposed retrospectively.
 
-These two facts together make per-criterion partitioning the only
-faithful representation of a contract whose postconditions defend
-against failure modes of differing consequence.
+These two facts together make per-criterion partitioning the only faithful representation of a contract whose postconditions defend against failure modes of differing consequence.
 
 ---
 
 #### 1.4.5 Inferential and observational criteria
 
-A criterion operates in one of two distinct modes. The distinction is
-not a matter of statistical convenience; it reflects two different
-kinds of question. In either mode the criterion delivers one of three
-results: **PASS**, **FAIL**, or **INCONCLUSIVE**.
+A criterion operates in one of two distinct modes. The distinction is not a matter of statistical convenience; it reflects two different kinds of question. In either mode the criterion delivers one of three results: **PASS**, **FAIL**, or **INCONCLUSIVE**.
 
-**Inferential criterion.** Estimates a population parameter $p_c$ from
-the observed sample and tests against a threshold. The threshold
-$p^*_c$ is either contractual (origin SLA, SLO, POLICY) or empirically
-derived (origin EMPIRICAL). Subject to the feasibility gate of §8.4,
-the verdict follows a procedure-direction-specific decision rule
-(§3.2, §5.1): a **compliance** criterion issues PASS iff the Wilson
-lower bound $\hat{p}_{c,L}(\alpha_c)$ clears $p_{\mathrm{req}}$; a
-**regression** criterion issues PASS iff the observed success count
-$K_c$ meets or exceeds the integer cutoff $c_c$ derived from the
-reference distribution at $\alpha_c$ (§3.4). Where the gate does not
-admit a verdict — the sample is too small to support an inferential
-claim at the stated threshold and $\alpha_c$, or $n_c = 0$ — the
-verdict is INCONCLUSIVE. The inferential mode is the appropriate
-choice for criteria whose contractual question is *"what is the true
-rate of behaviour $c$, with what confidence, and does it clear the
-demanded threshold?"*.
+**Inferential criterion.** Estimates a population parameter $p_c$ from the observed sample and tests against a threshold. The threshold $p^*_c$ is either contractual (origin SLA, SLO, POLICY) or empirically derived (origin EMPIRICAL). Subject to the feasibility gate of §8.4, the verdict follows a procedure-direction-specific decision rule (§3.2, §5.1): a **compliance** criterion issues PASS iff the Wilson lower bound $\hat{p}_{c,L}(\alpha_c)$ clears $p_{\mathrm{req}}$; a **regression** criterion issues PASS iff the observed success count $K_c$ meets or exceeds the integer cutoff $c_c$ derived from the reference distribution at $\alpha_c$ (§3.4). Where the gate does not admit a verdict — the sample is too small to support an inferential claim at the stated threshold and $\alpha_c$, or $n_c = 0$ — the verdict is INCONCLUSIVE. The inferential mode is the appropriate choice for criteria whose contractual question is *"what is the true rate of behaviour $c$, with what confidence, and does it clear the demanded threshold?"*.
 
-**Observational criterion.** Reports whether any failure of the
-criterion was observed in the run. No population estimation; no
-confidence interval; no threshold parameter. The test is on the
-observation itself:
+**Observational criterion.** Reports whether any failure of the criterion was observed in the run. No population estimation; no confidence interval; no threshold parameter. The test is on the observation itself:
 
 $$
 \text{verdict}(c) \;=\; \begin{cases}
@@ -706,37 +408,15 @@ $$
 \end{cases}
 $$
 
-A PASS verdict says exactly: zero failures of $c$ were observed in the
-$n_c$ trials of the experiment's sampling. INCONCLUSIVE indicates that no
-observation of the criterion was available in the run.
+A PASS verdict says exactly: zero failures of $c$ were observed in the $n_c$ trials of the experiment's sampling. INCONCLUSIVE indicates that no observation of the criterion was available in the run.
 
 In this formula $n_c$ is the criterion's number of trials, equal to the sampling size $N$ (§1.4.5a). An observational (`zeroFailures`) criterion estimates no proportion and so carries no rate denominator: it is PASS when no failure is observed across its trials, FAIL on any observed failure (including a transform/no-value failure), and INCONCLUSIVE only when there were no trials ($n_c = 0$).
 
-**Exact.** The observational verdict is deterministic given the run's
-observations. It makes no claim about $p_c$. A passing observational
-verdict at $n_c = 1000$ means exactly: *no failure of criterion $c$ was
-observed in 1000 trials of the experiment's sampling.* It does not entail
-any bound on the true population rate of such failures. A contract that
-also requires a population-level claim attaches an additional
-inferential criterion against the same postconditions; the two
-criteria coexist on the contract, ask different questions, and produce
-different verdicts.
+**Exact.** The observational verdict is deterministic given the run's observations. It makes no claim about $p_c$. A passing observational verdict at $n_c = 1000$ means exactly: *no failure of criterion $c$ was observed in 1000 trials of the experiment's sampling.* It does not entail any bound on the true population rate of such failures. A contract that also requires a population-level claim attaches an additional inferential criterion against the same postconditions; the two criteria coexist on the contract, ask different questions, and produce different verdicts.
 
-**Engineering guardrail.** A criterion declared as observational is not
-silently transformed into an inferential criterion at threshold
-$p^*_c = 1$, and the framework does not accept the literal threshold
-$1.0$ as an inferential parameter. The Wilson lower bound at
-$\hat{p}_c = 1$ is strictly less than $1$ for every finite $n_c$ and
-every $\alpha_c < 1$; an inferential test against $p^*_c = 1$ cannot
-pass at any finite sample size. The observational mode is the honest
-expression of zero-failures contracts: the verdict reports the
-observation, and the population claim is deferred to sentinel-scale
-accumulation or to the guardrail-validation pattern (the subjects of
-follow-on chapters).
+**Engineering guardrail.** A criterion declared as observational is not silently transformed into an inferential criterion at threshold $p^*_c = 1$, and the framework does not accept the literal threshold $1.0$ as an inferential parameter. The Wilson lower bound at $\hat{p}_c = 1$ is strictly less than $1$ for every finite $n_c$ and every $\alpha_c < 1$; an inferential test against $p^*_c = 1$ cannot pass at any finite sample size. The observational mode is the honest expression of zero-failures contracts: the verdict reports the observation, and the population claim is not asserted from the observation alone; where one is required it is supported architecturally by the guardrail-validation pattern (§1.4.5b), or by separate production monitoring, which this methodology does not currently develop.
 
-**Epistemic status of observational mode.** What an observational
-verdict *means* depends on the clause it serves (see *Clause Forms:
-Rate-Bounded and Categorical*). The methodology recognises three uses:
+**Epistemic status of observational mode.** What an observational verdict *means* depends on the clause it serves (see *Clause Forms: Rate-Bounded and Categorical*). The methodology recognises three uses:
 
 1. *Architectural-commitment evidence.* The verdict evaluates an
    observational zero-failures criterion on an architectural component —
@@ -767,48 +447,17 @@ Rate-Bounded and Categorical*). The methodology recognises three uses:
    the report flags it as a gap in the contract's architectural
    treatment.
 
-The pre-existing mechanics — the literal-$1.0$ prohibition on
-inferential thresholds, the *NO FAILURE OBSERVED* relabel, the
-rule-of-three annotation — apply across all three uses.
+The pre-existing mechanics — the literal-$1.0$ prohibition on inferential thresholds, the *NO FAILURE OBSERVED* relabel, the rule-of-three annotation — apply across all three uses.
 
-The two modes coexist within a single contract. The clinical-advice
-example holds an observational criterion against $P_4$ alongside an
-inferential criterion against $P_3$ at $p^*_{P_3} = 0.98$,
-$\alpha = 0.001$, and a further inferential criterion conjoining $P_1$
-and $P_2$ against an empirically derived threshold. The composite
-verdict (§1.4.6) is structured over the three criterion verdicts; the
-engineering response to a fired observational verdict is investigation,
-not threshold debate.
+The two modes coexist within a single contract. The clinical-advice example holds an observational criterion against $P_4$ alongside an inferential criterion against $P_3$ at $p^*_{P_3} = 0.98$, $\alpha = 0.001$, and a further inferential criterion conjoining $P_1$ and $P_2$ against an empirically derived threshold. The composite verdict (§1.4.6) is structured over the three criterion verdicts; the engineering response to a fired observational verdict is investigation, not threshold debate.
 
-The methodology's "Wilson everywhere" guideline applies to every
-inferential claim about a population parameter. Observational criteria
-make no inferential claim and lie outside the Wilson regime by
-construction.
+The methodology's "Wilson everywhere" guideline applies to every inferential claim about a population parameter. Observational criteria make no inferential claim and lie outside the Wilson regime by construction.
 
-**Optional contextual zero-failure bound.** An observational verdict
-makes no population-level claim. For *transparent reporting only*, the
-framework MAY annotate a passing observational verdict with a
-contextual upper bound on the failure probability under an
-explicitly-stated i.i.d. Bernoulli model. The classical "rule of
-three" (Hanley & Lippman-Hand, 1983; cross-referenced in §9) gives,
-under that model, an approximate 95% upper bound of $3 / n_c$ on the
-failure probability when zero failures are observed in $n_c$ trials.
-Where shown, the annotation carries the explicit i.i.d. Bernoulli
-caveat and does not change the verdict label, which remains
-observational. The methodology specifies the report wording as:
+**Optional contextual zero-failure bound.** An observational verdict makes no population-level claim. For *transparent reporting only*, the framework MAY annotate a passing observational verdict with a contextual upper bound on the failure probability under an explicitly-stated i.i.d. Bernoulli model. The classical "rule of three" (Hanley & Lippman-Hand, 1983; cross-referenced in §9) gives, under that model, an approximate 95% upper bound of $3 / n_c$ on the failure probability when zero failures are observed in $n_c$ trials. Where shown, the annotation carries the explicit i.i.d. Bernoulli caveat and does not change the verdict label, which remains observational. The methodology specifies the report wording as:
 
-> No failure of $C_c$ was observed in $n_c$ trials. This criterion is
-> configured as observational, so the verdict itself makes no
-> population-level claim. For context only, under an i.i.d. Bernoulli
-> model, zero failures in $n_c$ trials corresponds approximately to a
-> 95% upper bound of $3 / n_c$ on the failure probability.
+> No failure of $C_c$ was observed in $n_c$ trials. This criterion is configured as observational, so the verdict itself makes no population-level claim. For context only, under an i.i.d. Bernoulli model, zero failures in $n_c$ trials corresponds approximately to a 95% upper bound of $3 / n_c$ on the failure probability.
 
-**High-consequence label override.** For high-consequence safety
-criteria, the framework MAY (and the methodology recommends it)
-suppress the literal "PASS" label below an operator-configured
-minimum probe count and report **NO FAILURE OBSERVED** instead. The
-substitution is a label change only; the verdict semantics
-(observational, deterministic on the run) are unchanged.
+**High-consequence label override.** For high-consequence safety criteria, the framework MAY (and the methodology recommends it) suppress the literal "PASS" label below an operator-configured minimum probe count and report **NO FAILURE OBSERVED** instead. The substitution is a label change only; the verdict semantics (observational, deterministic on the run) are unchanged.
 
 ---
 
@@ -854,10 +503,7 @@ Any production estimate of $p_{\mathrm{harm}}$ must observe the generator's *pre
 
 The architectural-discharge experiment primarily estimates or bounds the second term, $p_{\mathrm{miss}\mid\mathrm{harm}}$. It does not, by itself, estimate $p_{\mathrm{harm}}$. A clean guardrail experiment therefore supports a statement of the form:
 
-> Conditional on harmful content being presented to the guardrail, and
-> relative to the specified challenge sampling or challenge
-> distribution, the guardrail's miss probability is bounded above by
-> the reported value at the configured confidence level.
+> Conditional on harmful content being presented to the guardrail, and relative to the specified challenge sampling or challenge distribution, the guardrail's miss probability is bounded above by the reported value at the configured confidence level.
 
 It does not support, by itself, the statement:
 
@@ -924,8 +570,7 @@ $$
 U_{\mathrm{fp}}(\alpha) = 1 - L_t(\alpha).
 $$
 
-Safety-class contracts typically require both a high-sensitivity criterion over harmful probes and an acceptable false-positive or specificity criterion over non-harmful probes, reported as separate criteria over separately named harmful and non-harmful challenge samplings. The former supports the categorical discharge; the latter controls over-refusal, usability, and
-service continuity. Reporting the two bounds together makes over-refusal evidence as inspectable as under-blocking evidence.
+Safety-class contracts typically require both a high-sensitivity criterion over harmful probes and an acceptable false-positive or specificity criterion over non-harmful probes, reported as separate criteria over separately named harmful and non-harmful challenge samplings. The former supports the categorical discharge; the latter controls over-refusal, usability, and service continuity. Reporting the two bounds together makes over-refusal evidence as inspectable as under-blocking evidence.
 
 **Population-claim discipline.** The challenge sampling's `populationClaim` governs the reach of the evidence. If the harmful probe set is a finite corpus, the result is a claim about that corpus. If the operator declares a superpopulation claim, the verdict must name the challenge distribution and record the representativeness argument. If the probes are exploratory, the result is no-generalisation evidence. In no case does an adversarial challenge result automatically become a production-traffic claim.
 
@@ -973,9 +618,7 @@ $$
 
 Therefore, relative to the stated harmful challenge distribution, the guardrail experiment supports the statement:
 
-> At one-sided 95% confidence, the guardrail's conditional miss
-> probability on harmful candidate outputs is bounded above by
-> approximately $1.67 \times 10^{-4}$.
+> At one-sided 95% confidence, the guardrail's conditional miss probability on harmful candidate outputs is bounded above by approximately $1.67 \times 10^{-4}$.
 
 Equivalently, the guardrail misses at most approximately 1.67 harmful candidate outputs per 10,000 harmful candidate outputs, at the stated confidence level and under the stated modelling assumptions.
 
@@ -1027,11 +670,7 @@ $$
 
 The correct statement is therefore:
 
-> No misses were observed in 100,000 harmful challenge trials. Under
-> the i.i.d. Bernoulli/Wilson model, the guardrail's conditional miss
-> probability is bounded above by approximately $2.71 \times 10^{-5}$
-> at one-sided 95% confidence, relative to the specified harmful
-> challenge distribution.
+> No misses were observed in 100,000 harmful challenge trials. Under the i.i.d. Bernoulli/Wilson model, the guardrail's conditional miss probability is bounded above by approximately $2.71 \times 10^{-5}$ at one-sided 95% confidence, relative to the specified harmful challenge distribution.
 
 The incorrect statement is:
 
@@ -1077,99 +716,33 @@ A contract whose criteria are all of one kind reports the single corresponding e
 
 **Exact.** Each bound holds under arbitrary dependence among the per-criterion test statistics in its family; it is the union bound applied to the per-criterion Type-I events of that direction. Observational criteria do not contribute to either envelope because their verdicts are deterministic on observation; they carry no $\alpha$.
 
-**Engineering guardrail.** Per-criterion $\alpha_c$ is set by the
-consequence of false acceptance for criterion $c$. A safety-class
-criterion at $\alpha = 0.001$ holds at that level because the
-consequence of falsely accepting a safety regression demands it. The
-envelope $\sum_c \alpha_c$ is reported on the composite verdict as a
-disclosed property; it is not a control target, and per-criterion
-$\alpha_c$ is not adjusted to control it. A uniform reduction
-$\alpha_c \mapsto \alpha_c / m$ would lower the per-criterion power
-proportionally — most consequentially in the safety case, where power
-to detect a true regression is the property the criterion most needs
-to preserve.
+**Engineering guardrail.** Per-criterion $\alpha_c$ is set by the consequence of false acceptance for criterion $c$. A safety-class criterion at $\alpha = 0.001$ holds at that level because the consequence of falsely accepting a safety regression demands it. The envelope $\sum_c \alpha_c$ is reported on the composite verdict as a disclosed property; it is not a control target, and per-criterion $\alpha_c$ is not adjusted to control it. A uniform reduction $\alpha_c \mapsto \alpha_c / m$ would lower the per-criterion power proportionally — most consequentially in the safety case, where power to detect a true regression is the property the criterion most needs to preserve.
 
-Projects whose governance demands a uniform composite $\alpha$ may
-apply a Bonferroni reduction at the operator level. The methodology
-does not impose it.
+Projects whose governance demands a uniform composite $\alpha$ may apply a Bonferroni reduction at the operator level. The methodology does not impose it.
 
-The companion's §7.3 addresses **cross-test** family-wise inflation
-when multiple independent contracts are evaluated in a suite. The
-§1.4.6 envelope addresses **intra-test** family-wise inflation across
-the criteria of a single contract. The two cases differ in source and
-in treatment.
+The companion's §7.3 addresses **cross-test** family-wise inflation when multiple independent contracts are evaluated in a suite. The §1.4.6 envelope addresses **intra-test** family-wise inflation across the criteria of a single contract. The two cases differ in source and in treatment.
 
 ---
 
 #### 1.4.7 Inferential reach of the sampling
 
-An experiment or probabilistic test is bound to a specific contract;
-the only thing it varies is the **sampling** — the single list of $N$
-samples it posts to the service. That one sampling is shared by every
-criterion the contract declares, and each criterion evaluates all $N$
-samples independently (§1.4.2); there is no per-criterion sampling.
+An experiment or probabilistic test is bound to a specific contract; the only thing it varies is the **sampling** — the single list of $N$ samples it posts to the service. That one sampling is shared by every criterion the contract declares, and each criterion evaluates all $N$ samples independently (§1.4.2); there is no per-criterion sampling.
 
-A criterion's verdict or evidence is, primarily, a claim about the
-sampling its experiment or test runs over (including observational PASS
-verdicts, which are claims about the samples observed rather than
-about a population). The Wilson lower bound
-$\hat{p}_{c,L}(\alpha_c)$, the regression integer cutoff, the
-observational PASS verdict — all are statements about the $N$ samples
-in the experiment's sampling and the responses the service produced
-for them. Extending the claim to a different input distribution
-(production traffic that the service ultimately faces, a hypothetical
-superpopulation the sampling is taken to represent) requires further
-evidence; the methodology does not sanction the extension implicitly.
-The finite-corpus and superpopulation framings of §8.4.6 set out the
-two interpretive moves available.
+A criterion's verdict or evidence is, primarily, a claim about the sampling its experiment or test runs over (including observational PASS verdicts, which are claims about the samples observed rather than about a population). The Wilson lower bound $\hat{p}_{c,L}(\alpha_c)$, the regression integer cutoff, the observational PASS verdict — all are statements about the $N$ samples in the experiment's sampling and the responses the service produced for them. Extending the claim to a different input distribution (production traffic that the service ultimately faces, a hypothetical superpopulation the sampling is taken to represent) requires further evidence; the methodology does not sanction the extension implicitly. The finite-corpus and superpopulation framings of §8.4.6 set out the two interpretive moves available.
 
-Criteria within an experiment share the sampling and so share its
-inferential reach. Every per-criterion verdict in the experiment
-speaks to the same $N$ samples; differences between per-criterion
-verdicts arise from differences in postcondition definitions,
-thresholds and confidence levels, not from
-differences in the input distribution. A contract that requires
-evidence about a different input distribution runs a *separate
-experiment* whose sampling is drawn from that distribution; each
-experiment names its own sampling.
+Criteria within an experiment share the sampling and so share its inferential reach. Every per-criterion verdict in the experiment speaks to the same $N$ samples; differences between per-criterion verdicts arise from differences in postcondition definitions, thresholds and confidence levels, not from differences in the input distribution. A contract that requires evidence about a different input distribution runs a *separate experiment* whose sampling is drawn from that distribution; each experiment names its own sampling.
 
-**Verdict surface.** Every per-criterion verdict names the sampling
-its experiment ran over — identifier, version, any policy-redaction
-metadata — so the reader knows exactly which $N$ samples produced the
-evidence. Extending the claim to anything other than that sampling is
-the reader's interpretive move, not the verdict's.
+**Verdict surface.** Every per-criterion verdict names the sampling its experiment ran over — identifier, version, any policy-redaction metadata — so the reader knows exactly which $N$ samples produced the evidence. Extending the claim to anything other than that sampling is the reader's interpretive move, not the verdict's.
 
-**Clinical-advice illustration.** A contract that runs both a primary
-MEASURE experiment over a representative production sampling and an
-architectural-discharge experiment over an adversarial probe sampling
-holds two samplings — one per experiment. The discharge experiment's
-verdict ("no failure observed under adversarial probing of the
-self-harm failure mode across 200 samples") is a statement about that
-probe sampling; it does not extend to a claim about self-harm advice
-in production traffic. The latter claim, if needed, requires sentinel
-monitoring or a SMOKE-intent diagnostic on the production sampling
-(§1.4.5); the methodology does not infer it
-from the probe-experiment verdict.
+**Clinical-advice illustration.** A contract that runs both a primary MEASURE experiment over a representative production sampling and an architectural-discharge experiment over an adversarial probe sampling holds two samplings — one per experiment. The discharge experiment's verdict ("no failure observed under adversarial probing of the self-harm failure mode across 200 samples") is a statement about that probe sampling; it does not extend to a claim about self-harm advice in production traffic. The latter claim, if needed, requires sentinel monitoring or a SMOKE-intent diagnostic on the production sampling (§1.4.5); the methodology does not infer it from the probe-experiment verdict.
 
-**Sample-budget consequence.** A contract with $E$ experiments has
-$E$ samplings, each of size $N_e$. Criteria within an experiment
-share $N_e$ as their trial count (§1.4.5a); the limiting criterion within an
-experiment determines the experiment's required $N_e$. The total
-sample budget of the contract is bounded above by $\sum_e N_e$;
-the limiting criterion contract-wide is identified by per-experiment
-inspection, not by an aggregate sample count.
+**Sample-budget consequence.** A contract with $E$ experiments has $E$ samplings, each of size $N_e$. Criteria within an experiment share $N_e$ as their trial count (§1.4.5a); the limiting criterion within an experiment determines the experiment's required $N_e$. The total sample budget of the contract is bounded above by $\sum_e N_e$; the limiting criterion contract-wide is identified by per-experiment inspection, not by an aggregate sample count.
 
 ---
 
 #### 1.4.8 Worked example: the consult-advice contract
 
-The clinical-advice contract has been threaded through this chapter;
-it is collected here as a single inspection point. The contract runs
-as **three MEASURE experiments**, each with its own sampling — one
-for the structural criterion, one for the layperson-readability
-criterion, and one for the architectural-discharge of the categorical
-$P_4$ clause. Per-criterion verdicts are combined into a
-contract-level verdict in the usual way.
+The clinical-advice contract has been threaded through this chapter; it is collected here as a single inspection point. The contract runs as **three MEASURE experiments**, each with its own sampling — one for the structural criterion, one for the layperson-readability criterion, and one for the architectural-discharge of the categorical $P_4$ clause. Per-criterion verdicts are combined into a contract-level verdict in the usual way.
 
 **Postconditions.** Four named predicates over the produced response.
 
@@ -1194,9 +767,7 @@ If the contract additionally wants availability as a distinct, visible metric, i
 
 - $C_{\text{evaluable-response}}$: a criterion (`zeroFailures` or rate) over a response-evaluability postcondition, run against $V_{\text{prod}}$. Like every criterion its denominator is the full sampling; it stands alongside the others and does **not** alter their denominators.
 
-**A single run's verdict.** A measurement run executes the contract
-with $n_{V_{\text{prod}}} = 1000$, $n_{V_{\text{probe}}} = 200$,
-$n_{V_{\text{complexity}}} = 800$, and observes:
+**A single run's verdict.** A measurement run executes the contract with $n_{V_{\text{prod}}} = 1000$, $n_{V_{\text{probe}}} = 200$, $n_{V_{\text{complexity}}} = 800$, and observes:
 
 - $\hat{p}_{C_{\text{well-formed}}} = 0.953$ over 1000 trials.
 - $K_{C_{\text{no-self-harm}}} = 200$ — zero observed self-harm responses in 200 probes.
@@ -1231,61 +802,21 @@ $$
 
 The observational $C_{\text{no-self-harm}}$ contributes to neither.
 
-The verdict report carries all three per-criterion verdicts, the
-envelope, the sampling references, the baseline reference for the
-empirical criterion, and the threshold provenance for the contractual
-criterion. The reader of the verdict — operator, auditor, regulator —
-sees the structural conclusion, the supporting per-criterion evidence,
-the populations each piece of evidence speaks to, and the disclosed
-false-alarm budget under which the conclusion was issued.
+The verdict report carries all three per-criterion verdicts, the envelope, the sampling references, the baseline reference for the empirical criterion, and the threshold provenance for the contractual criterion. The reader of the verdict — operator, auditor, regulator — sees the structural conclusion, the supporting per-criterion evidence, the populations each piece of evidence speaks to, and the disclosed false-alarm budget under which the conclusion was issued.
 
-Under the clause-type taxonomy (see *Clause Forms: Rate-Bounded and
-Categorical*), $C_{\text{no-self-harm}}$ in this example is the
-observational zero-failures criterion evaluating the
-consult-advice guardrail's false-negative behaviour over $V_{\text{probe}}$.
-The associated categorical clause — *the consult-advice service shall
-not emit self-harm advice* — is discharged not by
-$C_{\text{no-self-harm}}$ but by the architectural commitment that
-interposes the guardrail between the model and the user.
-$C_{\text{no-self-harm}}$ provides the empirical evidence for the
-commitment's reliability; the commitment is the contract's answer to
-the categorical clause. A report reader who sees
-$V_{C_{\text{no-self-harm}}} = \text{PASS}$ is reading evidence that
-the guardrail held over 200 probes, not evidence that the model would
-not have erred without it. The full apparatus — how the commitment is
-declared, how $V_{\text{probe}}$'s coverage premise is itself recorded,
-and how the guardrail's false-positive rate enters the contract
-alongside its false-negative rate — is the subject of the forthcoming
-architectural-commitments chapter.
+Under the clause-type taxonomy (see *Clause Forms: Rate-Bounded and Categorical*), $C_{\text{no-self-harm}}$ in this example is the observational zero-failures criterion evaluating the consult-advice guardrail's false-negative behaviour over $V_{\text{probe}}$. The associated categorical clause — *the consult-advice service shall not emit self-harm advice* — is discharged not by $C_{\text{no-self-harm}}$ but by the architectural commitment that interposes the guardrail between the model and the user. $C_{\text{no-self-harm}}$ provides the empirical evidence for the commitment's reliability; the commitment is the contract's answer to the categorical clause. A report reader who sees $V_{C_{\text{no-self-harm}}} = \text{PASS}$ is reading evidence that the guardrail held over 200 probes, not evidence that the model would not have erred without it. The full apparatus — how the commitment is declared, how $V_{\text{probe}}$'s coverage premise is itself recorded, and how the guardrail's false-positive rate enters the contract alongside its false-negative rate — is the subject of the forthcoming architectural-commitments chapter.
 
 ---
 
 #### 1.4.9 Per-criterion trials in subsequent chapters
 
-Each per-criterion trial is a complete statistical object —
-independent of the others as a unit of modelling, though not
-necessarily statistically independent of them. The remainder of the
-companion treats per-criterion trials transparently: where §§2–12
-develop estimation, threshold derivation, sample sizing, the
-feasibility gate, transparent-statistics reporting, and latency, the
-single-criterion $X_i$, $\hat{p}$, $\alpha$, and $p^*$ they discuss apply
-equally to each per-criterion trial $X_{i,c}$, $\hat{p}_c$,
-$\alpha_c$, and $p^*_c$. No section that follows needs to be
-re-derived for the per-criterion case.
+Each per-criterion trial is a complete statistical object — independent of the others as a unit of modelling, though not necessarily statistically independent of them. The remainder of the companion treats per-criterion trials transparently: where §§2–12 develop estimation, threshold derivation, sample sizing, the feasibility gate, transparent-statistics reporting, and latency, the single-criterion $X_i$, $\hat{p}$, $\alpha$, and $p^*$ they discuss apply equally to each per-criterion trial $X_{i,c}$, $\hat{p}_c$, $\alpha_c$, and $p^*_c$. No section that follows needs to be re-derived for the per-criterion case.
 
-The composite verdict over the per-criterion verdicts (§1.4.6) and
-the procedure-direction-specific Type-I envelopes of the composite
-(§1.4.6) are the constructs particular to the partition; they have
-no single-criterion analogue.
+The composite verdict over the per-criterion verdicts (§1.4.6) and the procedure-direction-specific Type-I envelopes of the composite (§1.4.6) are the constructs particular to the partition; they have no single-criterion analogue.
 
 The following chapter develops one further statistical consequence:
 
-- **Per-criterion baselines and sentinel accumulation** — how a
-  measurement run emits a baseline vectorised across criteria, how
-  thresholds are derived at resolution time rather than at emission,
-  and how observational evidence at low sample size accumulates at
-  larger sample size into population-level claims of meaningful
-  precision.
+- **Per-criterion baselines** — how a measurement run emits a baseline vectorised across criteria, and how thresholds are derived at resolution time rather than at emission.
 
 ---
 
@@ -1293,25 +824,13 @@ The following chapter develops one further statistical consequence:
 
 #### 1.5.1 The baseline as the link between measurement and inference
 
-For an empirical-origin criterion (§7.4) the threshold $p^*$ is a
-function of a prior observation rather than a contractual constant.
-The methodology resolves this in two phases. The **measurement
-phase** yields an estimator $\hat{p}$ of the population rate $p$ over
-$n$ trials of the contract. The **inference phase** derives the
-threshold $p^*$ from $\hat{p}$ at a stated confidence level $\alpha$
-and resolves the service's current behaviour against it. The
-**baseline** is the statistical object that links the two phases: the
-estimator together with the indices that fix the population it
-estimates. Section 1.5.2 gives the formal definition, generalised
-per criterion.
+For an empirical-origin criterion (§7.4) the threshold $p^*$ is a function of a prior observation rather than a contractual constant. The methodology resolves this in two phases. The **measurement phase** yields an estimator $\hat{p}$ of the population rate $p$ over $n$ trials of the contract. The **inference phase** derives the threshold $p^*$ from $\hat{p}$ at a stated confidence level $\alpha$ and resolves the service's current behaviour against it. The **baseline** is the statistical object that links the two phases: the estimator together with the conditions under which it was measured, which identify the population it estimates. Section 1.5.2 gives the formal definition, generalised per criterion.
 
 ---
 
-#### 1.5.2 The baseline as an indexed family of estimators
+#### 1.5.2 The baseline as a family of per-criterion estimators
 
-A baseline is a family of per-criterion point estimators
-$\{\hat{p}_c\}$, one per criterion $c$ declared on the contract. The
-family's structure follows §1.4.3: for each criterion $c$, the baseline stores:
+A baseline is a family of per-criterion point estimators $\{\hat{p}_c\}$, one per criterion $c$ declared on the contract. The family's structure follows §1.4.3: for each criterion $c$, the baseline stores:
 
 - $n_c$, the number of trials for $c$, equal to the sampling size $N$ (§1.4.5a);
 - $K_c$, the number of those trials that PASSed;
@@ -1320,219 +839,71 @@ family's structure follows §1.4.3: for each criterion $c$, the baseline stores:
 
 The structural reference under which $n_c$ is defined — the postconditions, the criterion, and its scope — is part of the criterion's meaning. A baseline and a test whose matching criteria differ in it differ structurally; under VERIFICATION the mismatch is a configuration error (§8.4.5).
 
-**Indices of the baseline.** The family $\{\hat{p}_c\}$ is interpretable
-as an estimator of the per-criterion population rates $\{p_c\}$ only
-under the four indices:
+**The index of a baseline.** The family $\{\hat{p}_c\}$ is interpretable as an estimator of the per-criterion population rates $\{p_c\}$ only relative to the conditions under which it was measured. A baseline is **indexed** by the pair (service-contract identity, resolved covariate values), and this index is its selection key: a test computes its own index and resolves against the baseline whose index matches (§1.5.3).
 
-- the **factor record** (§1.3.1) — service, model, serving
-  configuration — fixes the system under measurement;
-- the **covariate profile** (§8.4.1) — the contextual conditions of
-  the measurement run — fixes the operating regime under which the
-  estimators are valid; §1.5.3 develops the role of this index;
-- the **expiration window** (§8.4.2) — the temporal scope beyond which
-  the estimators are no longer admitted as references — bounds the
-  stationarity assumption of §1.3 in time;
-- the **structural reference** — the postcondition-and-criterion
-  structure under which the per-criterion trials are defined — fixes
-  the meaning of each $c$ in the family. A baseline indexed by one structural
-  reference does not support a test indexed by another; the
-  methodology treats the mismatch as a structural error rather than
-  as a comparison to be adjudicated.
+- The **service-contract identity** — in practice an ID or class name — names the contract whose criteria the baseline observes, and carries the **structural reference** (the postcondition-and-criterion structure under which the per-criterion trials are defined, fixing the meaning of each $c$ in the family). A baseline and a test under different structural references are different contracts; the methodology treats that mismatch as a structural error (§8.4.5), not as an index divergence to be adjudicated. The service-contract identity is not a covariate.
+- The **resolved covariate profile** (§8.4.1) — the operating regime of the measurement run, resolved to concrete values. §1.5.3 develops its role.
 
-Each index is a property of the baseline as a whole, not of an
-individual $\hat{p}_c$ within it.
+Two further things qualify a baseline without being part of its index:
 
-The per-criterion threshold $p^*_c$ and confidence level $\alpha_c$ are
-**not** part of the baseline. They are properties of the inference
-that consumes the baseline, not of the observation that supports it;
-§1.5.4 develops the consequence.
+- the **factor record** (§1.3.1) — service deployment, model, temperature, serving configuration — is *provenance*: a record of the system that was measured. It does not by itself drive selection. A project may — and in most cases should — declare the factor dimensions that matter (model ID, serving stack, and so on) **as covariates**, at which point their resolved values enter the index through the covariate channel; but the programming model does not force the factor record and the covariate profile to coincide.
+- an optional **expiration window** (§8.4.2) — where declared, the temporal scope beyond which the baseline is no longer admitted as a reference, bounding the stationarity assumption of §1.3 in time (§1.5.5).
+
+Each of these — index components and qualifiers alike — is a property of the baseline as a whole, not of an individual $\hat{p}_c$ within it.
+
+The per-criterion threshold $p^*_c$ and confidence level $\alpha_c$ are **not** part of the baseline. They are properties of the inference that consumes the baseline, not of the observation that supports it; §1.5.4 develops the consequence.
 
 ---
 
 #### 1.5.3 Covariates and the baseline's interpretive scope
 
-The role of the covariate profile in the baseline is more
-consequential than any single component of its structure. It is the
-covariate profile that makes the baseline's observations
-*interpretable as a reference for future tests*.
+The role of the covariate profile in the baseline is more consequential than any single component of its structure. It is the covariate profile that makes the baseline's observations *interpretable as a reference for future tests*.
 
-**Each $\hat{p}_c$ is conditional on the covariate profile.** The
-working approximation of §1.3 — that trials are i.i.d. samples from
-a Bernoulli distribution with parameter $p_c$ — holds at the
-population level *under the contextual conditions of the measurement
-run*. A measurement taken on a weekday morning in the EU under a
-specific deployment configuration produces a $\hat{p}_c$ that is an
-estimator of $p_c$ under those conditions. The same service
-measured on a weekend evening in a different region under
-serving-stack pressure may yield a different population $p_c$. The
-covariate profile is what the baseline records to make the
-condition explicit, so the consuming test can ask whether its own
-context is comparable.
+**Each $\hat{p}_c$ is conditional on the covariate profile.** The working approximation of §1.3 — that trials are i.i.d. samples from a Bernoulli distribution with parameter $p_c$ — holds at the population level *under the contextual conditions of the measurement run*. A measurement taken on a weekday morning in the EU under a specific deployment configuration produces a $\hat{p}_c$ that is an estimator of $p_c$ under those conditions. The same service measured on a weekend evening in a different region under serving-stack pressure may yield a different population $p_c$. The covariate profile is what the baseline records to make the condition explicit, so the consuming test can ask whether its own context is comparable.
 
-**Comparability between baseline and test depends on covariate
-matching.** A project will typically hold not one baseline but a
-collection, stratified over the index space of §1.5.2: at most one
-baseline per point in (factor, covariate, time, contract) space, each
-estimating its $\{p_c\}$ under those indices. A test, situated at its
-own point in the same index space, resolves against the baseline
-indexed by that point — selection-by-index is the statistical
-operation of conditioning on the test's context, not a lookup
-incidental to the model. Where the test's covariate profile matches
-a baseline's, the baseline's $\hat{p}_c$ is admitted as a reference
-for the test's inference. Where no matching baseline is available,
-the methodology treats the divergence as diagnostic: the test may
-proceed under explicit acknowledgement that the nearest baseline is
-indexed under different conditions, or it may decline to resolve
-empirically at all. The mechanism by which a project decides between
-these options is governed by the project's covariate policy (§8.4.1)
-and is operational rather than methodological; the methodology's
-contribution is to define stratification by index and to require that
-any inference made under divergent indices carries that divergence on
-the verdict.
+**Comparability between baseline and test depends on covariate matching.** A project may hold more than one baseline for a contract — for instance one per operating regime, distinguished by their index (for a fixed contract, by their resolved covariate values). A test resolves against the baseline whose index matches its own: where the test's covariate profile matches a baseline's, that baseline's $\hat{p}_c$ is admitted as a reference for the test's inference. Where no matching baseline is available, the methodology treats the divergence as diagnostic: the test may proceed under explicit acknowledgement that the nearest baseline was measured under different conditions, or it may decline to resolve empirically at all. The mechanism by which a project decides between these options is governed by the project's covariate policy (§8.4.1) and is operational rather than methodological; the methodology's contribution is to require that the appropriate baseline is selected by matching index, and that any inference made under a divergent index carries that divergence on the verdict.
 
-**The covariate profile applies to the baseline as a whole, not per
-criterion.** The covariates the project declares — time of day, day
-of week, deployment region, serving-stack version below the
-granularity the factor record pins, and so on — are properties of
-the measurement run that affect every criterion's observations
-simultaneously. They are recorded once for the baseline, not once per
-criterion. A reader inspecting the baseline reads one covariate
-profile, regardless of how many criteria the baseline carries
-observations for.
+**The covariate profile applies to the baseline as a whole, not per criterion.** The covariates the project declares — time of day, day of week, deployment region, serving-stack version below the granularity the factor record pins, and so on — are properties of the measurement run that affect every criterion's observations simultaneously. They are recorded once for the baseline, not once per criterion. A reader inspecting the baseline reads one covariate profile, regardless of how many criteria the baseline carries observations for.
 
-**The covariate profile is what makes the baseline an audit
-artefact.** Without it, the baseline is a vector of $\hat{p}_c$
-values with no anchor; a regulator inspecting the baseline cannot
-tell whether the conditions under which the measurement was taken
-match the conditions under which the service operates in production.
-With it, the baseline carries the contextual identity of the
-measurement and is inspectable end to end: this is the factor record
-of what was measured, under these covariate conditions, with these
-per-criterion outcomes, valid until this expiration. The baseline's
-role in Appendix A — as the empirical-evidence layer of the
-methodology's artefact stack — rests on the covariate profile being a
-first-class component of the artefact.
+**The covariate profile is what makes the baseline an audit artefact.** Without it, the baseline is a vector of $\hat{p}_c$ values with no anchor; a regulator inspecting the baseline cannot tell whether the conditions under which the measurement was taken match the conditions under which the service operates in production. With it, the baseline carries the contextual identity of the measurement and is inspectable end to end: this is the factor record of what was measured, under these covariate conditions, with these per-criterion outcomes, valid until this expiration. The baseline's role in Appendix A — as the empirical-evidence layer of the methodology's artefact stack — rests on the covariate profile being a first-class component of the artefact.
 
-The methodology does not require any specific set of covariates; it
-requires only that whatever covariates the project declares are
-recorded on every baseline and on every test that consumes a
-baseline. The §8.4.1 machinery defines the per-covariate matching
-discipline. This chapter elevates that machinery to a defining role
-in the baseline artefact.
+The methodology does not require any specific set of covariates; it requires only that whatever covariates the project declares are recorded on every baseline and on every test that consumes a baseline. The §8.4.1 machinery defines the per-covariate matching discipline. This chapter elevates that machinery to a defining role in the baseline artefact.
 
 ---
 
 #### 1.5.4 Threshold derivation at resolution time
 
-The baseline is an estimator. The threshold against which a test
-compares the service's behaviour is derived at the moment the test
-resolves against the baseline, not at the moment the baseline is
-produced.
+The baseline is an estimator. The threshold against which a test compares the service's behaviour is derived at the moment the test resolves against the baseline, not at the moment the baseline is produced.
 
-For an inferential criterion with origin EMPIRICAL, the threshold
-$p^*_c$ is the Wilson lower bound (§2.3.1) centred on the
-**baseline's** $\hat{p}_c$ but evaluated at the **test's** sample size
-$n_{c,\text{test}}$ and the test's confidence level $\alpha_c$:
+For an inferential criterion with origin EMPIRICAL, the threshold $p^*_c$ is the Wilson lower bound (§2.3.1) centred on the **baseline's** $\hat{p}_c$ but evaluated at the **test's** sample size $n_{c,\text{test}}$ and the test's confidence level $\alpha_c$:
 
 $$
 p^*_c \;=\; \text{WilsonLB}\bigl(\hat{p}_c^{\text{baseline}};\; n_{c,\text{test}},\; \alpha_c\bigr).
 $$
 
-The use of $n_{c,\text{test}}$ rather than $n_c^{\text{baseline}}$ is
-deliberate and is justified in the existing §3 (Threshold Derivation):
-the threshold must be the bound below which a test of size
-$n_{c,\text{test}}$ would, under the null hypothesis that the
-population rate equals the baseline's centre, fail to land with
-probability $\alpha_c$. Substituting the baseline's $n_c$ would
-calibrate the threshold to a sample size other than the one the test
-actually draws, breaking the test's stated Type-I rate.
+The use of $n_{c,\text{test}}$ rather than $n_c^{\text{baseline}}$ is deliberate and is justified in the existing §3 (Threshold Derivation): the threshold must be the bound below which a test of size $n_{c,\text{test}}$ would, under the null hypothesis that the population rate equals the baseline's centre, fail to land with probability $\alpha_c$. Substituting the baseline's $n_c$ would calibrate the threshold to a sample size other than the one the test actually draws, breaking the test's stated Type-I rate.
 
-The baseline's $n_c$ enters the methodology elsewhere: through the
-feasibility gate (§8.4), which refuses the EMPIRICAL origin when
-$n_c^{\text{baseline}}$ is too small to support the inferential
-claim, and through the perfect-baseline treatment of §4, which
-substitutes the Wilson lower bound of the baseline for the point
-estimate when $\hat{p}_c^{\text{baseline}} = 1$. Resolution-time
-threshold derivation reads the baseline's centre; the baseline's
-sample size shapes the conditions under which that centre is admitted
-as a reference.
+The baseline's $n_c$ enters the methodology elsewhere: through the feasibility gate (§8.4), which refuses the EMPIRICAL origin when $n_c^{\text{baseline}}$ is too small to support the inferential claim, and through the perfect-baseline treatment of §4, which substitutes the Wilson lower bound of the baseline for the point estimate when $\hat{p}_c^{\text{baseline}} = 1$. Resolution-time threshold derivation reads the baseline's centre; the baseline's sample size shapes the conditions under which that centre is admitted as a reference.
 
-The deferral of threshold derivation to resolution time is what
-allows the same baseline to support more than one test that disagrees
-on $\alpha_c$ or on $n_{c,\text{test}}$. The baseline is an
-*observation*; the test is the *inference*; the inference's
-parameters belong to the test that draws it.
+The deferral of threshold derivation to resolution time is what allows the same baseline to support more than one test that disagrees on $\alpha_c$ or on $n_{c,\text{test}}$. The baseline is an *observation*; the test is the *inference*; the inference's parameters belong to the test that draws it.
 
-**Engineering guardrail.** A baseline consumed by a test contributes,
-to the test's verdict, the baseline's identifier, the per-criterion
-centre $\hat{p}_c^{\text{baseline}}$, and the baseline's $n_c$. The
-verdict also records the test's $n_{c,\text{test}}$ and $\alpha_c$,
-and the resulting $p^*_c$. An auditor reading the verdict has the
-full set of inputs to the Wilson construction and can reproduce the
-threshold value.
+**Engineering guardrail.** A baseline consumed by a test contributes, to the test's verdict, the baseline's identifier, the per-criterion centre $\hat{p}_c^{\text{baseline}}$, and the baseline's $n_c$. The verdict also records the test's $n_{c,\text{test}}$ and $\alpha_c$, and the resulting $p^*_c$. An auditor reading the verdict has the full set of inputs to the Wilson construction and can reproduce the threshold value.
 
-For an inferential criterion with origin SLA, SLO, or POLICY, the
-threshold is contractual and the baseline does not enter threshold
-derivation; the baseline's $\hat{p}_c$ may still be carried on the
-verdict as diagnostic context, but it does not parameterise the test.
-For an observational criterion there is no threshold; the baseline's
-per-criterion observation enters the pooling discussion of §1.5.5 but
-is not consulted at verdict time.
+For an inferential criterion with origin SLA, SLO, or POLICY, the threshold is contractual and the baseline does not enter threshold derivation; the baseline's $\hat{p}_c$ may still be carried on the verdict as diagnostic context, but it does not parameterise the test. For an observational criterion there is no threshold; the baseline's per-criterion observation is carried as diagnostic context but is not consulted at verdict time.
 
 ---
 
-#### 1.5.5 Accumulation and expiration
+#### 1.5.5 Expiration
 
-A baseline at a given index need not arise from a single measurement
-run. The methodology admits **accumulation**: per-criterion samples
-from multiple runs at the same index may be pooled, increasing $n_c$
-and $K_c$ additively, provided the pooled runs satisfy the i.i.d.
-assumption of §1.3 — the same factor record, covariate profiles
-within the project's matching tolerance, the same structural
-reference.
-
-Accumulation is the path by which an observational criterion's
-per-run zero-failure observation strengthens into an inferential
-claim. A run at $n_c = 200$ with zero failures supports no
-population claim of useful precision; the same criterion pooled to
-$n_c = 10^7$ with continued zero failures supports a Wilson lower
-bound on $p_c$ tight enough to satisfy a regulator-grade claim. The
-verdict procedure for the observational criterion is unchanged — it
-remains "PASS if and only if zero failures were observed" — but the
-baseline over the pooled sample now supports an inferential criterion
-alongside, against the same postconditions, with a threshold derived
-from the pooled $(\hat{p}_c, n_c)$.
-
-**Engineering guardrail.** Pooling is valid only when the pooled
-runs are i.i.d. samples from the same population: the factor record
-must match (the same service, model, and serving configuration), and
-the covariate profiles must remain within the project's matching
-tolerance. Pooling across runs with diverging factor records or
-incompatible covariate profiles violates the i.i.d. assumption and
-the methodology rejects it. The framework that emits the baseline is
-responsible for enforcing this discipline; the methodology surfaces
-the requirement.
-
-**Expiration.** Every baseline has finite temporal scope. The
-expiration window — project-declared per §8.4.2 — bounds the time
-index of §1.5.2 to a half-open interval; beyond it, the baseline is
-no longer admitted as a reference for inference. Expiration is at
-the baseline level rather than per-criterion: the temporal scope is
-a property of the operating regime the covariate profile encodes —
-time of day, day of week, deployment region, and the like — which
-conditions every $\hat{p}_c$ simultaneously. A baseline is stale
-uniformly; a current baseline supports every criterion's resolution
-at once.
+A baseline may optionally carry an expiration window bounding its temporal scope. Where one is declared — per §8.4.2 — it bounds the baseline's validity (§1.5.2) to a half-open interval, beyond which the baseline is no longer admitted as a reference for inference. Expiration, when present, is at the baseline level rather than per-criterion: the temporal scope is a property of the operating regime the covariate profile encodes — time of day, day of week, deployment region, and the like — which conditions every $\hat{p}_c$ simultaneously. A baseline so bounded is stale uniformly; while current it supports every criterion's resolution at once. A baseline with no expiration window carries no temporal bound and is admitted until superseded by project or operational policy.
 
 ---
 
 #### 1.5.6 Worked example
 
-A baseline produced by a measurement run against the consult-advice
-contract of §1.4.8, at the point in the index space identified
-below.
+A baseline produced by a measurement run against the consult-advice contract of §1.4.8, under the measurement conditions identified below.
 
-**Indices.**
+**Measurement conditions.**
 
 - Factor record: `consult-advice-service@3.1`, model
   `claude-sonnet-4-5-20250929`, temperature `0.0`, system-prompt
@@ -1551,10 +922,7 @@ below.
 | `no-self-harm`         | 200   | 200   | 1.000       |
 | `layperson-readable`   | 800   | 788   | 0.985       |
 
-**A test consuming this baseline.** A subsequent test of the
-consult-advice contract under matching factor record and matching
-covariate profile resolves its per-criterion thresholds from the
-baseline:
+**A test consuming this baseline.** A subsequent test of the consult-advice contract under matching factor record and matching covariate profile resolves its per-criterion thresholds from the baseline:
 
 - $C_{\text{well-formed}}$ (origin EMPIRICAL, $\alpha = 0.05$, test
   sample size $n_{\text{well-formed},\text{test}} = 200$):
@@ -1572,31 +940,15 @@ baseline:
   not parameterise it. The baseline's $\hat{p}_{\text{layperson-readable}}
   = 0.985$ is recorded as diagnostic context.
 
-A test under a *non-matching* covariate profile — say, $\text{region}
-= \text{US}$ — declines to resolve against the baseline without
-explicit project-policy acknowledgement of the divergence. The
-verdict reports the divergence; the auditor reads it.
+A test under a *non-matching* covariate profile — say, $\text{region} = \text{US}$ — declines to resolve against the baseline without explicit project-policy acknowledgement of the divergence. The verdict reports the divergence; the auditor reads it.
 
 ---
 
 #### 1.5.7 Baselines in subsequent chapters
 
-The baseline is the statistical object that links measurement to
-inference: an indexed family of per-criterion estimators, conditioned
-on a factor record, a covariate profile, an expiration window, and a
-structural reference. Each index is a row of Appendix A.
+The baseline is the statistical object that links measurement to inference: a family of per-criterion estimators, qualified by the factor record, covariate profile, expiration window, and structural reference under which it was measured. Each baseline is recorded as a row of Appendix A's artefact stack.
 
-The remainder of the companion treats baselines transparently. The
-existing §2 (Baseline Estimation) develops the single-criterion
-point-estimator and standard-error machinery, which applies per
-criterion under §1.4.3. The existing §3 (Threshold Derivation)
-develops the Wilson lower bound that §1.5.4 invokes at resolution
-time. The existing §4 (The Perfect Baseline Problem) treats the
-$\hat{p}_c = 1$ case, which is the common situation for observational
-criteria where every evaluable trial was a success. The existing
-§§8.4.1–8.4.2 develop the covariate and expiration machinery that
-§§1.5.3 and §1.5.5 condition on. No section that follows needs to be
-re-derived for the per-criterion case.
+The remainder of the companion treats baselines transparently. The existing §2 (Baseline Estimation) develops the single-criterion point-estimator and standard-error machinery, which applies per criterion under §1.4.3. The existing §3 (Threshold Derivation) develops the Wilson lower bound that §1.5.4 invokes at resolution time. The existing §4 (The Perfect Baseline Problem) treats the $\hat{p}_c = 1$ case, which is the common situation for observational criteria where every evaluable trial was a success. The existing §§8.4.1–8.4.2 develop the covariate and expiration machinery that §§1.5.3 and §1.5.5 condition on. No section that follows needs to be re-derived for the per-criterion case.
 
 ---
 
@@ -1618,8 +970,7 @@ The standard error of $\hat{p}$ quantifies the precision of the estimate:
 
 $$\text{SE}(\hat{p}) = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}}$$
 
-**Example**:
-$$\text{SE} = \sqrt{\frac{0.951 \times 0.049}{1000}} = \sqrt{0.0000466} \approx 0.00683$$
+**Example**: $$\text{SE} = \sqrt{\frac{0.951 \times 0.049}{1000}} = \sqrt{0.0000466} \approx 0.00683$$
 
 ### 2.3 Confidence Intervals
 
@@ -1681,8 +1032,7 @@ $$\hat{p} \pm z_{\alpha/2} \cdot \text{SE}(\hat{p})$$
 
 where $z_{\alpha/2}$ is the $(1-\alpha/2)$ quantile of the standard normal distribution.
 
-**Example** (95% CI, $z_{0.025} = 1.96$):
-$$0.951 \pm 1.96 \times 0.00683 = [0.938, 0.964]$$
+**Example** (95% CI, $z_{0.025} = 1.96$): $$0.951 \pm 1.96 \times 0.00683 = [0.938, 0.964]$$
 
 ##### Why the javai Methodology Does Not Use Wald
 
@@ -1838,17 +1188,7 @@ A conformant report for every inferential verdict carries:
 
 This requirement applies uniformly to compliance and regression procedures (§3.2), and the transparent-statistics output in §7.1 / §10.2 carries the same fields.
 
-**Numerical conventions for the cutoff.** The integer cutoff uses the
-ceiling, $c = \lceil n \cdot p^* \rceil$, computed on the raw
-$n \cdot p^*$ without intermediate rounding. The displayed rate
-$c/n$ is reported to a stated fixed precision — typically **six
-decimal places** — for cross-language reproducibility against the
-javai-R fixtures; the unrounded $c$ and $n$ are retained on the
-trial record so a downstream consumer can recompute $c/n$ at any
-precision. Two thresholds whose displayed rates agree to six decimal
-places implement the same decision iff their integer cutoffs $c$
-agree, which is the binding identity. The latency-side analogue of
-this convention is set out in §12.8.
+**Numerical conventions for the cutoff.** The integer cutoff uses the ceiling, $c = \lceil n \cdot p^* \rceil$, computed on the raw $n \cdot p^*$ without intermediate rounding. The displayed rate $c/n$ is reported to a stated fixed precision — typically **six decimal places** — for cross-language reproducibility against the javai-R fixtures; the unrounded $c$ and $n$ are retained on the trial record so a downstream consumer can recompute $c/n$ at any precision. Two thresholds whose displayed rates agree to six decimal places implement the same decision iff their integer cutoffs $c$ agree, which is the binding identity. The latency-side analogue of this convention is set out in §12.8.
 
 ##### Conformance Verification
 
@@ -2074,17 +1414,7 @@ where $(a, b)$ are prior hyperparameters (Jeffreys: $a = b = 0.5$). See Gelman e
 
 ## 5. Test Execution and Interpretation
 
-**Procedure scope of the sections below.** §§5.1–5.4 describe the
-**regression** procedure: the decision rule against the integer
-cutoff $c$, the Type-I/Type-II error frame in degradation terms, and
-the sample-size derivation for detecting an effect $\delta$ at given
-power. The compliance procedure's verdict semantics, decision rule
-(Wilson lower-bound clearance of $p_{\mathrm{req}}$), and error
-events ("false compliance") are stated in §3.2; §5.5 covers the
-companion compliance-side sample-size derivation against an SLA
-threshold. §5.6 (minimum detectable effect) and §5.7
-(VERIFICATION/SMOKE intent and the feasibility gate) apply to both
-procedures.
+**Procedure scope of the sections below.** §§5.1–5.4 describe the **regression** procedure: the decision rule against the integer cutoff $c$, the Type-I/Type-II error frame in degradation terms, and the sample-size derivation for detecting an effect $\delta$ at given power. The compliance procedure's verdict semantics, decision rule (Wilson lower-bound clearance of $p_{\mathrm{req}}$), and error events ("false compliance") are stated in §3.2; §5.5 covers the companion compliance-side sample-size derivation against an SLA threshold. §5.6 (minimum detectable effect) and §5.7 (VERIFICATION/SMOKE intent and the feasibility gate) apply to both procedures.
 
 ### 5.1 Decision Rule
 
@@ -2133,9 +1463,7 @@ where:
 
 **Example**: Detecting a drop from $p_0 = 0.95$ to $p_1 = 0.90$ with $n = 100$ at $\alpha = 0.05$:
 
-$$\text{SE}_0 = \sqrt{0.95 \times 0.05 / 100} = 0.0218$$
-$$\text{SE}_1 = \sqrt{0.90 \times 0.10 / 100} = 0.0300$$
-$$\text{Power} = \Phi\left(\frac{0.95 - 0.90 - 1.645 \times 0.0218}{0.0300}\right) = \Phi\left(\frac{0.0141}{0.0300}\right) = \Phi(0.47) \approx 0.68$$
+$$\text{SE}_0 = \sqrt{0.95 \times 0.05 / 100} = 0.0218$$ $$\text{SE}_1 = \sqrt{0.90 \times 0.10 / 100} = 0.0300$$ $$\text{Power} = \Phi\left(\frac{0.95 - 0.90 - 1.645 \times 0.0218}{0.0300}\right) = \Phi\left(\frac{0.0141}{0.0300}\right) = \Phi(0.47) \approx 0.68$$
 
 With 100 samples, the test has only 68% power to detect a 5-percentage-point degradation.
 
@@ -2898,18 +2226,7 @@ This approach preserves statistical honesty without creating operational paralys
 
 #### 8.4.5 Guardrail Severity Levels
 
-The "warnings qualify, do not suppress" principle of §8.4.4 is the
-right default for SMOKE-intent runs and for diagnostic guardrails
-whose violation degrades but does not destroy the comparability of
-the empirical evidence. It is the wrong default for VERIFICATION-
-intent runs against guardrails whose violation makes the empirical
-comparison statistically meaningless. A regression FAIL produced by
-comparing today's behaviour to a baseline of a different model, a
-different prompt version, a different evaluator, or a different
-criterion structure is not a regression FAIL at all — it is a
-configuration error mis-presented as evidence. The methodology
-classifies guardrails into three severity tiers and binds them to
-mode-specific behaviour:
+The "warnings qualify, do not suppress" principle of §8.4.4 is the right default for SMOKE-intent runs and for diagnostic guardrails whose violation degrades but does not destroy the comparability of the empirical evidence. It is the wrong default for VERIFICATION- intent runs against guardrails whose violation makes the empirical comparison statistically meaningless. A regression FAIL produced by comparing today's behaviour to a baseline of a different model, a different prompt version, a different evaluator, or a different criterion structure is not a regression FAIL at all — it is a configuration error mis-presented as evidence. The methodology classifies guardrails into three severity tiers and binds them to mode-specific behaviour:
 
 | Severity              | Examples                                                                                                                                                                  | VERIFICATION behaviour                  | SMOKE behaviour |
 |-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------------|
@@ -2917,162 +2234,43 @@ mode-specific behaviour:
 | **Major caveat**      | Expired baseline beyond a stated grace window; unmatched critical covariate; changed endpoint, region, or serving-stack revision                                          | Default error unless an explicit policy override admits the run with a qualified verdict. | Warning. |
 | **Minor caveat**      | Near-expiration (within graduated-warning band of §8.4.2); non-critical covariate mismatch; near-grace-window batch metadata gaps                                          | Warning. | Warning. |
 
-**Hard invalidators in VERIFICATION are not qualifying caveats; they
-are configuration errors.** A VERIFICATION run that detects model-ID,
-denominator-policy, structural-reference, or unmitigated material
-cluster-structure violations terminates with a configuration-error
-verdict before any statistical inference is attempted. A "PASS with caveat" or "FAIL with caveat" verdict against
-a hard-invalidator violation under VERIFICATION is not produced; the
-comparison the operator asked the framework to make does not exist
-under that configuration. SMOKE runs may proceed under operator
-policy, since SMOKE carries no verification claim (§5.7.2).
+**Hard invalidators in VERIFICATION are not qualifying caveats; they are configuration errors.** A VERIFICATION run that detects model-ID, denominator-policy, structural-reference, or unmitigated material cluster-structure violations terminates with a configuration-error verdict before any statistical inference is attempted. A "PASS with caveat" or "FAIL with caveat" verdict against a hard-invalidator violation under VERIFICATION is not produced; the comparison the operator asked the framework to make does not exist under that configuration. SMOKE runs may proceed under operator policy, since SMOKE carries no verification claim (§5.7.2).
 
-**Major caveats** preserve the option to override the default error
-under explicit operator policy — useful for short, controlled runs
-against a baseline that has just expired, for example, where the
-operator is willing to read the verdict subject to the disclosed
-caveat. The override must be recorded on the verdict; it is not an
-implicit relaxation.
+**Major caveats** preserve the option to override the default error under explicit operator policy — useful for short, controlled runs against a baseline that has just expired, for example, where the operator is willing to read the verdict subject to the disclosed caveat. The override must be recorded on the verdict; it is not an implicit relaxation.
 
-**Minor caveats** retain the §8.4.4 "qualify, do not suppress"
-behaviour in both modes. Their statistical impact is bounded; their
-disclosure is enough.
+**Minor caveats** retain the §8.4.4 "qualify, do not suppress" behaviour in both modes. Their statistical impact is bounded; their disclosure is enough.
 
-This stratification prevents the failure mode the §8.4.4 default
-otherwise admits: a verification report that looks valid, carries an
-inconspicuous warning footnote, and reports a regression FAIL whose
-true cause is that the empirical comparison was no longer between the
-same two systems.
+This stratification prevents the failure mode the §8.4.4 default otherwise admits: a verification report that looks valid, carries an inconspicuous warning footnote, and reports a regression FAIL whose true cause is that the empirical comparison was no longer between the same two systems.
 
 #### 8.4.6 Population-Claim Discipline: Finite-Corpus vs Superpopulation
 
-The Wilson, binomial, and order-statistic machinery developed in
-§§2–4, §7, and §12 produces *inferential* claims — statements about
-a population parameter $p_c$ or $Q(p_j)$ that go beyond the sampled
-trials themselves. An inferential claim is only meaningful relative
-to a stated population. Every criterion's verdict declares, on the
-contract, which of three claim regimes its evidence supports. This
-declaration sits alongside the design metadata of §8.2.1
-(`populationClaim`, `samplingMode`, `weights`, `strata`); a mismatch
-between baseline and test is a §8.4.5 hard invalidator because the
-two are comparing different estimands.
+The Wilson, binomial, and order-statistic machinery developed in §§2–4, §7, and §12 produces *inferential* claims — statements about a population parameter $p_c$ or $Q(p_j)$ that go beyond the sampled trials themselves. An inferential claim is only meaningful relative to a stated population. Every criterion's verdict declares, on the contract, which of three claim regimes its evidence supports. This declaration sits alongside the design metadata of §8.2.1 (`populationClaim`, `samplingMode`, `weights`, `strata`); a mismatch between baseline and test is a §8.4.5 hard invalidator because the two are comparing different estimands.
 
-**Finite-corpus claim.** The sampling is a fixed, enumerated
-corpus of inputs, and the criterion's inferential claim applies
-*only to that corpus*. Under an exhaustive evaluation
-($n_c$ equals the full corpus size), the corpus
-rate is known exactly for the evaluated corpus: $p_c = K_c / n_c$.
-No binomial confidence interval is reported for the finite-corpus
-estimand — Wilson and other binomial sampling-uncertainty
-constructions do not apply, because there is no sampling
-uncertainty about a known quantity. Any claim made *beyond* the
-corpus is a separate superpopulation claim and must be labelled as
-such. Under a partial evaluation (sampling without replacement
-from the corpus), the relevant inferential machinery is the
-**hypergeometric** distribution, not the binomial; the binomial
-approximation is acceptable only when the sample fraction is
-small. The methodology accordingly carries the sample fraction
-alongside any finite-corpus inferential claim, and a binomial
-approximation in place of the structurally-correct hypergeometric is
-disclosed as such on the verdict.
+**Finite-corpus claim.** The sampling is a fixed, enumerated corpus of inputs, and the criterion's inferential claim applies *only to that corpus*. Under an exhaustive evaluation ($n_c$ equals the full corpus size), the corpus rate is known exactly for the evaluated corpus: $p_c = K_c / n_c$. No binomial confidence interval is reported for the finite-corpus estimand — Wilson and other binomial sampling-uncertainty constructions do not apply, because there is no sampling uncertainty about a known quantity. Any claim made *beyond* the corpus is a separate superpopulation claim and must be labelled as such. Under a partial evaluation (sampling without replacement from the corpus), the relevant inferential machinery is the **hypergeometric** distribution, not the binomial; the binomial approximation is acceptable only when the sample fraction is small. The methodology accordingly carries the sample fraction alongside any finite-corpus inferential claim, and a binomial approximation in place of the structurally-correct hypergeometric is disclosed as such on the verdict.
 
-**Superpopulation claim.** The sampling is treated as a
-*sample* from a conceptual population — the adversarial-probe
-distribution, the production input distribution, the
-red-team-corpus generator, or whichever distribution the criterion
-intends $p_c$ to characterise. Under a superpopulation claim, the
-binomial / hypergeometric inferential machinery is the right tool,
-and Wilson intervals, sample-size budgets, and feasibility gates
-all carry their usual interpretations. The claim is *only as
-strong as the argument that the sample is representative of the
-named superpopulation*; the methodology does not validate this
-argument, but it does require the named superpopulation to be
-recorded on the verdict (§1.4.7, `populationClaim` field of
-§8.2.1).
+**Superpopulation claim.** The sampling is treated as a *sample* from a conceptual population — the adversarial-probe distribution, the production input distribution, the red-team-corpus generator, or whichever distribution the criterion intends $p_c$ to characterise. Under a superpopulation claim, the binomial / hypergeometric inferential machinery is the right tool, and Wilson intervals, sample-size budgets, and feasibility gates all carry their usual interpretations. The claim is *only as strong as the argument that the sample is representative of the named superpopulation*; the methodology does not validate this argument, but it does require the named superpopulation to be recorded on the verdict (§1.4.7, `populationClaim` field of §8.2.1).
 
-**No-generalisation claim.** The trials are convenience evaluations
-— ad hoc, illustrative, exploratory. No inferential claim is made
-beyond the specific trials run. PASS / FAIL labels on a
-no-generalisation criterion describe the run, not a population,
-and the framework reports them as such. A no-generalisation claim
-is appropriate for early-stage development, smoke testing, and
-diagnostic probes; it is **not** appropriate for compliance,
-regression, or release-gating evidence.
+**No-generalisation claim.** The trials are convenience evaluations — ad hoc, illustrative, exploratory. No inferential claim is made beyond the specific trials run. PASS / FAIL labels on a no-generalisation criterion describe the run, not a population, and the framework reports them as such. A no-generalisation claim is appropriate for early-stage development, smoke testing, and diagnostic probes; it is **not** appropriate for compliance, regression, or release-gating evidence.
 
-**Where this most often goes wrong: safety-probe and red-team
-sets.** Curated safety-probe and red-team samplings are
-typically **finite-corpus** by design — the corpus *is* the
-artefact, and its inputs are chosen to exercise specific failure
-modes rather than to represent a production distribution. Reading
-$\hat{p}_c$ on such a set as a *superpopulation* rate (production
-self-harm rate, production jailbreak rate) inflates the claim well
-beyond what the evidence supports: an adversarially curated probe
-set is by construction more adverse than the production
-distribution, and a clean Wilson interval over it does not bound
-the production failure rate. The methodology warns explicitly
-against this slide: a red-team verdict is a verdict on the
-red-team corpus, and any extension to production traffic requires
-a parallel sentinel stream (§1.4.7's clinical-advice example
-illustrates the pattern). Under the methodology a safety-probe
-verdict is not labelled superpopulation absent an explicit operator
-declaration and a recorded representativeness argument; the default
-classification is finite-corpus, and elevation to superpopulation
-requires the operator to assume — and the verdict to record — the
-representativeness claim that elevation depends on.
+**Where this most often goes wrong: safety-probe and red-team sets.** Curated safety-probe and red-team samplings are typically **finite-corpus** by design — the corpus *is* the artefact, and its inputs are chosen to exercise specific failure modes rather than to represent a production distribution. Reading $\hat{p}_c$ on such a set as a *superpopulation* rate (production self-harm rate, production jailbreak rate) inflates the claim well beyond what the evidence supports: an adversarially curated probe set is by construction more adverse than the production distribution, and a clean Wilson interval over it does not bound the production failure rate. The methodology warns explicitly against this slide: a red-team verdict is a verdict on the red-team corpus, and any extension to production traffic requires a parallel sentinel stream (§1.4.7's clinical-advice example illustrates the pattern). Under the methodology a safety-probe verdict is not labelled superpopulation absent an explicit operator declaration and a recorded representativeness argument; the default classification is finite-corpus, and elevation to superpopulation requires the operator to assume — and the verdict to record — the representativeness claim that elevation depends on.
 
-**Operational binding.** The three regimes are recorded in the
-trial record's `populationClaim` field per §8.2.1. A baseline
-labelled `superpopulation` cannot be used as the reference for a
-test labelled `finite-corpus` (and vice versa) without the
-configuration-error treatment of §8.4.5 — the two are not
-comparing the same object. Mode transitions between baseline and
-test are likewise hard invalidators in VERIFICATION; an operator
-who genuinely intends to re-baseline under a new regime starts a
-new reference-state epoch (§8.5).
+**Operational binding.** The three regimes are recorded in the trial record's `populationClaim` field per §8.2.1. A baseline labelled `superpopulation` cannot be used as the reference for a test labelled `finite-corpus` (and vice versa) without the configuration-error treatment of §8.4.5 — the two are not comparing the same object. Mode transitions between baseline and test are likewise hard invalidators in VERIFICATION; an operator who genuinely intends to re-baseline under a new regime starts a new reference-state epoch (§8.5).
 
 ### 8.5 Repeated Use and Sequential Monitoring
 
-The probabilistic-test workflows the methodology targets are not
-single scientific studies — they are CI builds, nightly runs,
-release gates, and continuous monitors. A configured per-run nominal
-$\alpha$ is the calibration of one *invocation* of the procedure. It
-is not the long-run false-alarm probability over a horizon of
-repeated invocations, and it must not be reported as such.
+The probabilistic-test workflows the methodology targets are not single scientific studies — they are CI builds, nightly runs, release gates, and continuous monitors. A configured per-run nominal $\alpha$ is the calibration of one *invocation* of the procedure. It is not the long-run false-alarm probability over a horizon of repeated invocations, and it must not be reported as such.
 
-**Monitoring horizon.** A monitor's calibration is meaningful only
-relative to a stated horizon $H$ — the number of independent
-evaluations against which the operator wants the false-alarm
-probability bounded. The horizon may be expressed as a number of
-runs, a wall-clock window (seven days, one quarter), or a number of
-release gates. A horizon-level claim is meaningful only with respect
-to a declared $H$, and under the methodology the horizon is part of
-the monitor's metadata wherever a horizon-level claim is made.
+**Monitoring horizon.** A monitor's calibration is meaningful only relative to a stated horizon $H$ — the number of independent evaluations against which the operator wants the false-alarm probability bounded. The horizon may be expressed as a number of runs, a wall-clock window (seven days, one quarter), or a number of release gates. A horizon-level claim is meaningful only with respect to a declared $H$, and under the methodology the horizon is part of the monitor's metadata wherever a horizon-level claim is made.
 
-**Per-run nominal $\alpha$ versus horizon-level false-alarm
-probability.** Over $H$ invocations of a procedure with per-run
-nominal $\alpha$ against a *fixed* reference state, the horizon-level
-false-alarm probability satisfies
+**Per-run nominal $\alpha$ versus horizon-level false-alarm probability.** Over $H$ invocations of a procedure with per-run nominal $\alpha$ against a *fixed* reference state, the horizon-level false-alarm probability satisfies
 
 $$
 P\!\left(\text{at least one false alarm in } H \text{ runs}\right) \;\leq\; H \cdot \alpha \qquad \text{(Bonferroni)}
 $$
 
-regardless of the dependence structure across runs, and approaches
-$1 - (1-\alpha)^H$ under independence. At $\alpha = 0.05$ and $H =
-50$ the Bonferroni bound is $2.5$ (i.e., the bound is uninformative
-and the *expected* number of false alarms is $H \alpha$); the
-independence approximation gives $\approx 92\%$. **One historical
-false alarm in a long-running monitor is therefore not, by itself,
-evidence of method failure** — it is the expected behaviour of a
-correctly calibrated test repeated many times. Method failure is
-diagnosed against an excess rate of false alarms relative to the
-horizon-level expectation, not against a single occurrence.
+regardless of the dependence structure across runs, and approaches $1 - (1-\alpha)^H$ under independence. At $\alpha = 0.05$ and $H = 50$ the Bonferroni bound is $2.5$ (i.e., the bound is uninformative and the *expected* number of false alarms is $H \alpha$); the independence approximation gives $\approx 92\%$. **One historical false alarm in a long-running monitor is therefore not, by itself, evidence of method failure** — it is the expected behaviour of a correctly calibrated test repeated many times. Method failure is diagnosed against an excess rate of false alarms relative to the horizon-level expectation, not against a single occurrence.
 
-**Alpha spending and sequential designs (further reading).** When
-horizon-level control matters operationally — a quarterly compliance
-window, a release-train gate — the sequential-testing literature
-provides families of procedures that distribute a horizon-level
-$\alpha$ budget across runs:
+**Alpha spending and sequential designs (further reading).** When horizon-level control matters operationally — a quarterly compliance window, a release-train gate — the sequential-testing literature provides families of procedures that distribute a horizon-level $\alpha$ budget across runs:
 
 - alpha-spending functions (O'Brien–Fleming, Pocock) that allocate
   the budget across pre-planned interim looks;
@@ -3081,22 +2279,11 @@ $\alpha$ budget across runs:
 - group-sequential and always-valid sequential procedures
   (e.g., mSPRT, confidence sequences).
 
-The methodology does not impose a particular sequential procedure.
-Operators who require horizon-level guarantees stronger than the
-Bonferroni $H \alpha$ bound select a procedure whose dependence
-assumptions match their workflow, and report the horizon-level
-calibration alongside the per-run calibration.
+The methodology does not impose a particular sequential procedure. Operators who require horizon-level guarantees stronger than the Bonferroni $H \alpha$ bound select a procedure whose dependence assumptions match their workflow, and report the horizon-level calibration alongside the per-run calibration.
 
-**Baseline refresh as a new reference state.** A baseline refresh
-ends one reference state and begins another, and is recorded as a
-new reference-state epoch in the verdict stream. The verdict stream
-is therefore partitioned by epoch, and horizon-level calibrations
-are computed within an epoch, not across one. Cross-epoch trends are
-descriptive, not inferential.
+**Baseline refresh as a new reference state.** A baseline refresh ends one reference state and begins another, and is recorded as a new reference-state epoch in the verdict stream. The verdict stream is therefore partitioned by epoch, and horizon-level calibrations are computed within an epoch, not across one. Cross-epoch trends are descriptive, not inferential.
 
-**Verdict metadata under recurring monitoring.** A verdict produced
-inside a recurring monitor carries, in addition to its per-run
-nominal $\alpha$:
+**Verdict metadata under recurring monitoring.** A verdict produced inside a recurring monitor carries, in addition to its per-run nominal $\alpha$:
 
 - the monitoring horizon $H$;
 - the per-run nominal $\alpha$;
@@ -3105,9 +2292,7 @@ nominal $\alpha$:
   value as a contextual lower bound where it is computable);
 - the reference-state epoch the verdict belongs to.
 
-A run-level PASS/FAIL stripped of these annotations is not a
-horizon-level claim; reporting it as one inverts the relationship
-between per-run and horizon-level calibration.
+A run-level PASS/FAIL stripped of these annotations is not a horizon-level claim; reporting it as one inverts the relationship between per-run and horizon-level calibration.
 
 ---
 
@@ -3219,15 +2404,7 @@ The **inferential verdict's three strands** (per §10.3's example, applied per i
 
 Observational criteria do not carry the three strands; their verdict is deterministic on the observation and a single assertion line suffices.
 
-**Reproducibility metadata.** A transparent-statistics report
-carries a small reproducibility block, recorded once per
-contract-level report (not per criterion), naming the numerical
-ingredients of the verdict that vary across language ecosystems.
-The block exists so that an auditor or downstream conformance
-consumer can reproduce the report's numbers exactly against the
-javai-R fixtures, and so that divergence is detected early when an
-implementation upgrades a dependency that perturbs a quantile or a
-sort.
+**Reproducibility metadata.** A transparent-statistics report carries a small reproducibility block, recorded once per contract-level report (not per criterion), naming the numerical ingredients of the verdict that vary across language ecosystems. The block exists so that an auditor or downstream conformance consumer can reproduce the report's numbers exactly against the javai-R fixtures, and so that divergence is detected early when an implementation upgrades a dependency that perturbs a quantile or a sort.
 
 | Field                     | Content                                                                                                                                                | Purpose                                                                                                       |
 |---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
@@ -3237,14 +2414,7 @@ sort.
 | `sortStable`              | Boolean — whether the sort algorithm used on the latency stream is stable.                                                                              | Pairs with `tiePolicy`; see §12.8. Stability does not change percentile *values* but does change which trial-record is bound to a given rank when ties are present. |
 | `tiePolicy`               | The tie-handling rule actually used — for the javai default, `largest-tied-position-for-upper-bound-ranks` (§12.8).                                     | Confirms the implementation is consistent with the conservative-bound rule of §12.8.                          |
 
-These fields are emitted whether or not the contract under test
-exercises the latency dimension; the latency-specific fields
-(`sortStable`, `tiePolicy`) carry their declared values even on
-pass-rate-only contracts so that the report's reproducibility shape
-does not depend on the contract's content. The reproducibility block
-is part of the audit trail, not a verdict input — it carries no
-PASS/FAIL semantics of its own. The forward-looking calibration
-fixtures of §10.6 are checked against the same `referenceDataVersion`.
+These fields are emitted whether or not the contract under test exercises the latency dimension; the latency-specific fields (`sortStable`, `tiePolicy`) carry their declared values even on pass-rate-only contracts so that the report's reproducibility shape does not depend on the contract's content. The reproducibility block is part of the audit trail, not a verdict input — it carries no PASS/FAIL semantics of its own. The forward-looking calibration fixtures of §10.6 are checked against the same `referenceDataVersion`.
 
 ### 10.3 Example output: a multi-criteria contract
 
@@ -3364,9 +2534,10 @@ VERDICT
                        200 probe trials drawn from V_probe v3.
 
   No population claim: This verdict makes no inferential claim about the
-                       population rate of self-harm responses. Population-
-                       scale evidence requires sentinel accumulation against
-                       production traffic; see §1.5.5.
+                       population rate of self-harm responses. A population-
+                       level claim would need a separate inferential criterion
+                       at adequate sample size, or architectural discharge
+                       (§1.4.5b).
 
 ──────────────────────────────────────────────────────────────────────────────
 CRITERION 3 of 3: C_layperson-readable                     (inferential, SLO)
@@ -3465,21 +2636,9 @@ The transparent output enables statisticians to verify:
 
 ### 10.6 Calibration Conformance
 
-The published javai-R fixtures (§1.5, `inst/cases/*.json`, the
-`fetchConformanceData` pipeline named in the project's `CLAUDE.md`)
-today carry **formula-value** fixtures: per-input `(inputs, expected)`
-cases whose `expected` is the numerical output of the companion's
-formulae as computed by R. A downstream framework whose Wilson lower
-bound, $z$-quantile, integer cutoff, or order-statistic rank
-agrees with the fixture's `expected` to a stated tolerance is in
-arithmetic step with the oracle. This is necessary, but it does not
-by itself demonstrate that the framework's verdicts are
-**calibrated** — that the false-alarm and power rates the framework
-*claims* are the ones it *achieves* under a stated reference model.
+The published javai-R fixtures (§1.5, `inst/cases/*.json`, the `fetchConformanceData` pipeline named in the project's `CLAUDE.md`) today carry **formula-value** fixtures: per-input `(inputs, expected)` cases whose `expected` is the numerical output of the companion's formulae as computed by R. A downstream framework whose Wilson lower bound, $z$-quantile, integer cutoff, or order-statistic rank agrees with the fixture's `expected` to a stated tolerance is in arithmetic step with the oracle. This is necessary, but it does not by itself demonstrate that the framework's verdicts are **calibrated** — that the false-alarm and power rates the framework *claims* are the ones it *achieves* under a stated reference model.
 
-For full statistical conformance the methodology requires javai-R to
-publish, in addition to the existing formula-value fixtures, a
-class of **calibration fixtures**:
+For full statistical conformance the methodology requires javai-R to publish, in addition to the existing formula-value fixtures, a class of **calibration fixtures**:
 
 - **Pass-rate calibration.** For representative
   $(p_0, n, \alpha)$ tuples — covering at minimum the worked
@@ -3519,22 +2678,9 @@ class of **calibration fixtures**:
   describe different error events and may be set at different magnitudes
   within the same contract.
 
-The conformance contract is: a downstream framework whose verdicts
-agree numerically with the formula-value fixtures **and** whose
-empirical error rates match the calibration fixtures within tolerance
-is conformant. A framework that passes the first but fails the
-second has either a calibration bug or has surfaced a defect in the
-calibration fixture itself; both are first-class outcomes of the
-closed loop named in the project `CLAUDE.md`.
+The conformance contract is: a downstream framework whose verdicts agree numerically with the formula-value fixtures **and** whose empirical error rates match the calibration fixtures within tolerance is conformant. A framework that passes the first but fails the second has either a calibration bug or has surfaced a defect in the calibration fixture itself; both are first-class outcomes of the closed loop named in the project `CLAUDE.md`.
 
-**Forward-looking status.** At the time of this writing, the
-calibration fixtures described above are not yet published; only
-the formula-value fixtures are. This subsection states the
-**requirement on future javai-R releases**, not a present claim of
-fixture availability. Conformance-test scaffolding in punit and
-feotest should be structured so the calibration-fixture path can
-be wired in without restructuring the existing formula-value
-conformance.
+**Forward-looking status.** At the time of this writing, the calibration fixtures described above are not yet published; only the formula-value fixtures are. This subsection states the **requirement on future javai-R releases**, not a present claim of fixture availability. Conformance-test scaffolding in punit and feotest should be structured so the calibration-fixture path can be wired in without restructuring the existing formula-value conformance.
 
 **Two conformance statuses.** The forward-looking calibration fixtures motivate a strict distinction between two conformance statuses, which the methodology treats as non-interchangeable:
 
@@ -3897,72 +3043,27 @@ The two dimensions are evaluated **separately** and combined with logical conjun
 
 ### 12.8 Numerical Conventions
 
-The order-statistic constructions of §§12.2 and 12.4 commit to a small
-set of numerical conventions. They are part of the methodology rather
-than implementation choices: a downstream implementation that diverges
-from them produces values that disagree with the javai-R fixtures.
+The order-statistic constructions of §§12.2 and 12.4 commit to a small set of numerical conventions. They are part of the methodology rather than implementation choices: a downstream implementation that diverges from them produces values that disagree with the javai-R fixtures.
 
-**Sort order.** Observed successful latencies are sorted in
-**ascending** order before any rank lookup. The order statistic
-$t_{(k)}$ is the $k$-th smallest value (1-indexed).
+**Sort order.** Observed successful latencies are sorted in **ascending** order before any rank lookup. The order statistic $t_{(k)}$ is the $k$-th smallest value (1-indexed).
 
-**Nearest-rank percentile.** Per §12.2.2, the empirical percentile is
-$Q(p_j) = t_{(\lceil p_j \cdot n_s \rceil)}$. This is the same
-definition assumed by the binomial order-statistic upper bound of
-§12.4.2; the methodology uses this nearest-rank estimator rather
-than an interpolating quantile estimator (e.g. R's Type 7), and
-the conformance fixtures encode it. The ceiling is taken on the raw
-product $p_j \cdot n_s$ without intermediate rounding.
+**Nearest-rank percentile.** Per §12.2.2, the empirical percentile is $Q(p_j) = t_{(\lceil p_j \cdot n_s \rceil)}$. This is the same definition assumed by the binomial order-statistic upper bound of §12.4.2; the methodology uses this nearest-rank estimator rather than an interpolating quantile estimator (e.g. R's Type 7), and the conformance fixtures encode it. The ceiling is taken on the raw product $p_j \cdot n_s$ without intermediate rounding.
 
-**Tie policy at integer-millisecond resolution.** Wall-clock latencies
-reported in integer milliseconds induce ties. When a rank lookup
-$t_{(k)}$ falls inside a run of equal-valued observations, the
-**largest tied position** is used for upper-bound rank lookups —
-the threshold derivation of §12.4.2 and any operator-side query for
-an upper bound on $Q(p_j)$. This is the **conservative** tie
-convention: ties at the boundary of a confidence-bound rank do not
-let the bound collapse below the value the tied observations
-actually exhibit, so the bound is not anti-conservatively tight.
-Point-estimate percentile lookups (§12.2.2) use the rank as
-written; the conservative tie rule applies specifically to the
-*upper-bound* rank $k_j$ of §12.4.2 and to any other order-statistic
-lookup whose role is to bound a quantile from above.
+**Tie policy at integer-millisecond resolution.** Wall-clock latencies reported in integer milliseconds induce ties. When a rank lookup $t_{(k)}$ falls inside a run of equal-valued observations, the **largest tied position** is used for upper-bound rank lookups — the threshold derivation of §12.4.2 and any operator-side query for an upper bound on $Q(p_j)$. This is the **conservative** tie convention: ties at the boundary of a confidence-bound rank do not let the bound collapse below the value the tied observations actually exhibit, so the bound is not anti-conservatively tight. Point-estimate percentile lookups (§12.2.2) use the rank as written; the conservative tie rule applies specifically to the *upper-bound* rank $k_j$ of §12.4.2 and to any other order-statistic lookup whose role is to bound a quantile from above.
 
-**Displayed-threshold rounding.** When a derived latency threshold is
-rendered for human consumption it is rounded **half-to-even**
-(banker's rounding) at the displayed precision — typically integer
-milliseconds for latency. The **raw** values — order statistics,
-ranks, and any unrounded intermediate quantity — are retained
-unrounded in the trial record and the transparent-statistics output
-(§7.1, §10.2), so a downstream consumer can recompute the displayed
-value from the raw inputs and verify against the javai-R fixtures
-without depending on the renderer's precision.
+**Displayed-threshold rounding.** When a derived latency threshold is rendered for human consumption it is rounded **half-to-even** (banker's rounding) at the displayed precision — typically integer milliseconds for latency. The **raw** values — order statistics, ranks, and any unrounded intermediate quantity — are retained unrounded in the trial record and the transparent-statistics output (§7.1, §10.2), so a downstream consumer can recompute the displayed value from the raw inputs and verify against the javai-R fixtures without depending on the renderer's precision.
 
-**Sort stability.** Where the implementation language offers a
-choice of sort algorithms, the methodology assumes a **stable**
-sort. Stability has no statistical effect on the order-statistic *values*,
-but it makes the trial-record-to-rank *mapping* reproducible across
-runs when ties are present, which simplifies post-hoc audit.
+**Sort stability.** Where the implementation language offers a choice of sort algorithms, the methodology assumes a **stable** sort. Stability has no statistical effect on the order-statistic *values*, but it makes the trial-record-to-rank *mapping* reproducible across runs when ties are present, which simplifies post-hoc audit.
 
-The transparent-statistics report (§7.1, §10.2) names the actual
-sort algorithm and tie convention used at runtime; see the
-`sortStable` and `tiePolicy` fields specified there.
+The transparent-statistics report (§7.1, §10.2) names the actual sort algorithm and tie convention used at runtime; see the `sortStable` and `tiePolicy` fields specified there.
 
 ---
 
 ## Appendix A. Elements of the statistical model
 
-The statistical model described in this companion is built from a set
-of named primitives, parameterised by named statistical quantities,
-and produces a set of named statistical results. This appendix gathers
-them in one place, with references to the sections in which each is
-defined.
+The statistical model described in this companion is built from a set of named primitives, parameterised by named statistical quantities, and produces a set of named statistical results. This appendix gathers them in one place, with references to the sections in which each is defined.
 
-The list is restricted to elements that are intrinsic to the model.
-Operationalization artefacts that frameworks and projects assemble
-around the model — the service contract as a programming artefact,
-contract families, binding policies, runtime-resolution mechanisms —
-are documented elsewhere.
+The list is restricted to elements that are intrinsic to the model. Operationalization artefacts that frameworks and projects assemble around the model — the service contract as a programming artefact, contract families, binding policies, runtime-resolution mechanisms — are documented elsewhere.
 
 | Element                            | Information content                                                                                                                                                                                                                                                                                                                                                                                     | Defined in                      |
 |------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
@@ -3980,7 +3081,7 @@ are documented elsewhere.
 | **Per-criterion verdict**          | PASS, FAIL, or INCONCLUSIVE on a criterion: for **compliance** criteria, the one-sided Wilson lower bound's relation to $p_{\mathrm{req}}$; for **regression** criteria, the observed success count's relation to the integer cutoff $c_c$ derived from the reference distribution at $\alpha_c$; for **observational** criteria, the zero-failure observation. Carries the supporting statistics, the threshold and origin, $\alpha_c$, and the population specification.                                                                                                                                                                                                                                                                                                                       | §1.4.3, §1.4.5, §1.4.6          |
 | **Composite verdict**              | A structured tuple over per-criterion verdicts.                                                                                                                                                                                                                                                                                                                                                         | §1.4.6                          |
 | **Composite Type-I envelopes**     | Procedure-direction-specific union-bound aggregates over inferential criteria: the **false-degradation-signal envelope** $\alpha_{\text{fds}} \leq \sum_{c \in \text{regression}} \alpha_c$ and the **false-compliance envelope** $\alpha_{\text{fc}} \leq \sum_{c \in \text{compliance}} \alpha_c$. A contract reports each envelope only when it carries criteria of that direction; mixed contracts report both. Observational criteria contribute to neither.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | §1.4.6                          |
-| **Baseline**                       | An indexed family of per-criterion point estimators $\{\hat{p}_c\}$ with supporting $\{n_c\}$ and $\{K_c\}$, conditioned on a factor record, a covariate profile, an expiration window, and a structural reference. Consumed by inferential criteria of origin EMPIRICAL to derive $p^*_c$ at resolution time.                                                                                          | §1.5                            |
+| **Baseline**                       | A family of per-criterion point estimators $\{\hat{p}_c\}$ with supporting $\{n_c\}$ and $\{K_c\}$, qualified by the factor record, covariate profile, structural reference, and optional expiration window under which it was measured. Consumed by inferential criteria of origin EMPIRICAL to derive $p^*_c$ at resolution time.                                                                                          | §1.5                            |
 
 ---
 

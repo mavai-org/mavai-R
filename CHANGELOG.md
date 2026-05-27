@@ -5,6 +5,23 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.8.2] — 2026-05-27
+
+**Documentation-only string cleanup on `baseline_object.json`.**
+
+Statistical Companion §1.5 was revised (companion doc 1.3.4 → 1.3.5):
+the §1.5.5 *accumulation* construct was withdrawn and the long-term-
+monitoring framing of baseline indexing removed, while baseline
+indexing itself was retained and stated precisely (the index is the
+service-contract identity plus the resolved covariate values; the
+factor record is provenance). None of this was ever implemented as
+fixture data, expected values, schema, or generator logic — only as
+descriptive strings. This patch re-words the `baseline_object`
+suite/case `description` and `method` strings to match. No inputs,
+expected outputs, tolerances, numerical values, case set, or schema
+change; conformance behaviour is unaffected. Downstream frameworks
+need not re-pin.
+
 ## [0.8.1] — 2026-05-19
 
 **Saturation discipline on `latency_threshold_bootstrap.json`.**

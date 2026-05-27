@@ -1,7 +1,8 @@
 #' Reference baseline objects (companion §1.5, §1.4.5a, schema fixtures)
 #'
-#' This generator emits canonical `baseline` objects at named points in
-#' the index space. Unlike the computation fixtures elsewhere in
+#' This generator emits canonical `baseline` objects at named indices — a
+#' service-contract identity together with resolved covariate values. Unlike
+#' the computation fixtures elsewhere in
 #' `inst/cases/`, these cases carry no `expected` block: the case **is**
 #' the example. Downstream frameworks load these objects, verify the
 #' structural fields round-trip through their parsers, and exercise
@@ -9,8 +10,9 @@
 #' them.
 #'
 #' Each baseline carries:
-#'   - the four indices (`factor_record`, `covariate_profile`,
-#'     `expiration_window`, `structural_reference`),
+#'   - its index — `structural_reference` (the service-contract identity)
+#'     and `covariate_profile` — alongside `factor_record` (provenance) and
+#'     an optional `expiration_window`,
 #'   - a list of per-criterion entries, each with `criterion_id`,
 #'     `mode`, `procedure` (REGRESSION / COMPLIANCE / NA for
 #'     observational), `denominator_policy` (one of two §1.4.5a
@@ -113,7 +115,7 @@ generate_baseline_object_cases <- function() {
       name = "consult_advice_eu_weekday",
       description = paste(
         "The consult-advice contract baseline at the EU / weekday /",
-        "morning point in the index space. Three criteria mix",
+        "morning index. Three criteria mix",
         "REGRESSION + observational + COMPLIANCE; mixed denominator",
         "policies; r_obs = 1.0 throughout."
       ),
@@ -142,9 +144,9 @@ generate_baseline_object_cases <- function() {
       description = paste(
         "A guardrail-validation baseline carrying a single observational",
         "criterion at sentinel scale (n_attempted = 10^7) under the",
-        "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL policy. The accumulation",
-        "story of §1.5.5: per-run zero-failure observations pooled to a",
-        "scale that supports a regulator-grade claim."
+        "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL policy. A schema example of",
+        "a large-n observational baseline; the observational verdict",
+        "rule (§1.4.5) is unchanged at scale."
       ),
       factor_record        = list(
         service       = "moderation-guardrail@2.0",
@@ -168,7 +170,7 @@ generate_baseline_object_cases <- function() {
       description = paste(
         "The same consult-advice contract under a divergent covariate",
         "profile (US / weekend / evening). Used as a covariate-match",
-        "counterexample: a test indexed at the EU / weekday point must",
+        "counterexample: a test at the EU / weekday index must",
         "not resolve against this baseline without explicit project-",
         "policy acknowledgement of the covariate divergence."
       ),
@@ -223,13 +225,13 @@ generate_baseline_object_cases <- function() {
     baseline_case(
       name = "consult_advice_cross_policy_counterexample",
       description = paste(
-        "The same consult-advice contract under the same indices as #1,",
+        "The same consult-advice contract at the same index as #1,",
         "except the C_layperson_readable criterion's denominator policy",
         "is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of",
         "CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error",
         "check that cross-policy comparison between this baseline and",
         "the #1 baseline is rejected — the two baselines look identical",
-        "on every other index but estimate different quantities under",
+        "in every other respect but estimate different quantities under",
         "the C_layperson_readable criterion."
       ),
       factor_record        = consult_advice_factor_record,
@@ -290,7 +292,8 @@ generate_baseline_object_cases <- function() {
     description = paste(
       "Reference baseline objects per companion §1.5 + §1.4.5a. Cases",
       "are schema fixtures rather than computation fixtures: each case",
-      "is a canonical baseline at a stated point in the index space",
+      "is a canonical baseline at a stated index (service-contract identity",
+      "and resolved covariate values)",
       "with no expected output (the case itself is the example). Used",
       "by downstream frameworks to exercise parser conformance and the",
       "structural checks (covariate match, structural-reference match,",
@@ -298,7 +301,9 @@ generate_baseline_object_cases <- function() {
     ),
     method = paste(
       "Object construction. No statistical computation involved; each",
-      "baseline records the four indices and a list of per-criterion",
+      "baseline records its index (service-contract identity and covariate",
+      "profile), the factor record, an optional expiration window, and a",
+      "list of per-criterion",
       "observation blocks under the locked §1.4.5a two-policy enum."
     ),
     tolerance = 0,
