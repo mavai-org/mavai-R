@@ -371,7 +371,7 @@ The methodology is implemented as language-native frameworks, each idiomatic to 
 | Framework                                       | Language | Integration             | Repository                   |
 |-------------------------------------------------|----------|-------------------------|------------------------------|
 | [punit](https://github.com/javai-org/punit)     | Java     | JUnit 5 extension       | The reference implementation |
-| [feotest](https://github.com/javai-org/feotest) | Rust     | Cargo test integration  | Idiomatic Rust, not a port   |
+| [feotest](https://github.com/mavai-org/feotest) | Rust     | Cargo test integration  | Idiomatic Rust, not a port   |
 | baseltest                                       | Python   | pytest plugin (planned) | —                            |
 
 Each framework provides a direct operational realisation of the distributional contract as described in this paper. Their features correspond to the elements of the model.
