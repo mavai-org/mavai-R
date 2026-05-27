@@ -10,7 +10,7 @@ expected outputs for the statistical computations that underpin probabilistic
 testing frameworks across the javai family:
 
 - **[punit](https://github.com/javai-org/punit)** (Java)
-- **[feotest](https://github.com/javai-org/feotest)** (Rust)
+- **[feotest](https://github.com/mavai-org/feotest)** (Rust)
 - **[baseltest](https://github.com/javai-org/baseltest)** (Python, planned)
 
 Each framework implements the same statistical methods independently, in its own
