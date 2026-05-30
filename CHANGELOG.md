@@ -1,11 +1,23 @@
 # Changelog
 
-All notable changes to the `javai-R` fixture releases are documented here.
+All notable changes to the `mavai-R` fixture releases are documented here.
 Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.8.2] — 2026-05-27
+## [0.8.2] — 2026-05-30
+
+**First release from `mavai-org/mavai-R` — the javai → mavai rebrand
+(metadata only).** This is the first tagged cut under the new brand. The
+published docs (Statistical Companion, Glossary, Distributional
+Contracts, Model Overview, README, PDF footer), the schema `$id`
+(`github.com/mavai-org/mavai-R/...`), and the R package name
+(`javair` → `mavair`) now carry the mavai brand. **No fixture content,
+shape, expected values, tolerances, or schema *structure* changed** —
+only the schema's `$id` identifier string and surrounding documentation.
+Conformance behaviour is unaffected; downstream frameworks need not
+re-pin for the rebrand. (Old `javai-org/javai-R` release URLs continue to
+301-redirect here.)
 
 **Documentation-only string cleanup on `baseline_object.json`.**
 
