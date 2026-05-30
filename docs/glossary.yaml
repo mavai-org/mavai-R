@@ -58,7 +58,7 @@
   term: trial
   also_known_as: >
     Called a *sample* in the punit and feotest implementations. The two
-    terms are synonymous in javai's vocabulary; this document uses
+    terms are synonymous in mavai's vocabulary; this document uses
     *trial* in keeping with the statistical literature.
   short: >
     A single invocation of the service, evaluated against a criterion,

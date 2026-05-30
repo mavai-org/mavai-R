@@ -10,7 +10,7 @@ This is a maintenance utility, not a statistical computation: it exists so
 that inserting or moving a citation in the body does not require manual
 renumbering. Re-run it whenever citations are added, removed, or reordered.
 
-Assumptions (true of the javai distributional-contracts document):
+Assumptions (true of the mavai distributional-contracts document):
   * Citations are `[n]` tokens (digits only) in the prose *before* the
     `## References` heading. Markdown links like `[punit](url)` and maths
     intervals like `[0,1]` are not matched (the regex requires digits only

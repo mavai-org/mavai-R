@@ -1,7 +1,7 @@
 Package: javair
-Title: Reference Statistical Computations for the javai Project Family
+Title: Reference Statistical Computations for the mavai Project Family
 Version: 0.8.2
-Authors@R: person("javai-org", email = "info@javai.org", role = c("aut", "cre"))
+Authors@R: person("mavai-org", email = "info@mavai.org", role = c("aut", "cre"))
 Description: Generates language-agnostic reference datasets for statistical
     computations used in probabilistic testing frameworks. Provides canonical
     expected outputs — computed in R using established statistical packages — so
@@ -9,10 +9,10 @@ Description: Generates language-agnostic reference datasets for statistical
     and future languages can verify conformance. Covers Wilson score confidence
     intervals, threshold derivation, power analysis, feasibility checking, and
     verdict evaluation. Designed to grow into design of experiments (DoE)
-    reference data as the javai family expands.
+    reference data as the mavai family expands.
 License: Apache-2.0
-URL: https://github.com/javai-org/javai-R
-BugReports: https://github.com/javai-org/javai-R/issues
+URL: https://github.com/mavai-org/mavai-R
+BugReports: https://github.com/mavai-org/mavai-R/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

@@ -1,6 +1,6 @@
-# Probabilistic Testing: A Practical Summary of the javai Statistical Model
+# Probabilistic Testing: A Practical Summary of the mavai Statistical Model
 
-This page is the front door to the javai statistical model. It is intended for engineers, reviewers, product owners, and auditors who need to understand what the model is for, what kind of evidence it produces, and what it deliberately does not claim — without working through the full statistical companion.
+This page is the front door to the mavai statistical model. It is intended for engineers, reviewers, product owners, and auditors who need to understand what the model is for, what kind of evidence it produces, and what it deliberately does not claim — without working through the full statistical companion.
 
 The [statistical companion](#reference-materials) remains the canonical reference for formulae, derivations, and edge cases. This document summarises the conceptual frame around it.
 
@@ -14,7 +14,7 @@ The practical consequence is that the question "did this invocation pass?" is no
 
 ## 2. Scope: what the model is for
 
-The javai model focuses on two quality dimensions:
+The mavai model focuses on two quality dimensions:
 
 - **Functional stochasticity** — whether the service produces an acceptable result. Correctness is modelled as repeated pass/fail observations.
 - **Temporal stochasticity** — how long successful invocations take. Latency is modelled through empirical percentiles rather than averages.
@@ -46,7 +46,7 @@ Keeping these two questions separate is the single most important discipline for
 
 Real service contracts rarely contain one kind of failure. A malformed JSON response, a slightly unsuitable tone, a missing required field, and a safety violation are all "failures," but they are not failures of the same kind. Aggregating them into one pass rate can hide exactly the failure mode that matters most.
 
-The javai model therefore allows a contract to be decomposed into criteria, each with its own threshold, confidence level, input set, and verdict. The combined contract verdict is **structural**: all required criteria must pass. The model does not assume that criteria are statistically independent merely because they are reported separately.
+The mavai model therefore allows a contract to be decomposed into criteria, each with its own threshold, confidence level, input set, and verdict. The combined contract verdict is **structural**: all required criteria must pass. The model does not assume that criteria are statistically independent merely because they are reported separately.
 
 ## 6. Empirical vs categorical clauses
 
@@ -80,11 +80,11 @@ A reported confidence level is therefore not a claim that an individual verdict 
 
 ## Glossary
 
-Short definitions of the key statistical terms used above. The full [glossary](https://r.javai.org/glossary.pdf) lives alongside this overview; only the terms that appear in the body are repeated here.
+Short definitions of the key statistical terms used above. The full [glossary](https://r.mavai.org/glossary.pdf) lives alongside this overview; only the terms that appear in the body are repeated here.
 
 - **Binomial** — the distribution of the count of passes in a fixed number of independent trials with the same success probability. The companion uses binomial reasoning to relate observed pass counts to the underlying success rate.
 - **Confidence level** — the long-run frequency with which the procedure's interval would cover the true parameter if the experiment were repeated under the same conditions. A 95% confidence level is a property of the procedure, not a probability attached to any single verdict.
-- **Frequentist** — the school of statistical inference in which probabilities describe the long-run behaviour of procedures over repeated sampling, not degrees of belief about individual events. The javai model is frequentist by default; this is why a confidence level is a property of the procedure rather than a probability of the verdict.
+- **Frequentist** — the school of statistical inference in which probabilities describe the long-run behaviour of procedures over repeated sampling, not degrees of belief about individual events. The mavai model is frequentist by default; this is why a confidence level is a property of the procedure rather than a probability of the verdict.
 - **Independence** — the assumption that the outcome of one trial does not influence the outcome of another. Required for binomial reasoning to apply; the model asks for *approximate* independence and records the assumption rather than assuming it away.
 - **One-sided decision rule** — a test that asks whether the evidence exceeds (or fails to exceed) a single threshold in one direction only — for example, "is the lower bound on the success rate at least 0.9?" — rather than testing equality against a two-sided interval.
 - **Percentile** — the value below which a stated fraction of observations fall. Latency is summarised by empirical percentiles (e.g. p95) rather than means, because the upper tail is what users and SLAs care about.

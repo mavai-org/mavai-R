@@ -1,17 +1,17 @@
-# javai-R
+# mavai-R
 
-Reference statistical computations for the [javai](https://javai.org) project
+Reference statistical computations for the [mavai](https://mavai.org) project
 family, implemented in R.
 
 ## Purpose
 
 This R package generates language-agnostic reference datasets — canonical
 expected outputs for the statistical computations that underpin probabilistic
-testing frameworks across the javai family:
+testing frameworks across the mavai family:
 
-- **[punit](https://github.com/javai-org/punit)** (Java)
+- **[punit](https://github.com/mavai-org/punit)** (Java)
 - **[feotest](https://github.com/mavai-org/feotest)** (Rust)
-- **[baseltest](https://github.com/javai-org/baseltest)** (Python, planned)
+- **[baseltest](https://github.com/mavai-org/baseltest)** (Python, planned)
 
 Each framework implements the same statistical methods independently, in its own
 language and idiom. This project provides the shared truth: if your
@@ -27,7 +27,7 @@ independently. No need to trust a Java or Rust implementation.
 
 ## What's covered
 
-The reference data spans two quality dimensions of the javai methodology:
+The reference data spans two quality dimensions of the mavai methodology:
 **pass-rate analysis** (binomial, Wilson score based) and **latency analysis**
 (non-parametric, empirical percentile based). For the full statistical
 treatment, see the [Statistical Companion](docs/STATISTICAL-COMPANION.md). For
@@ -54,7 +54,7 @@ the contract model that these computations serve, see
 
 ### Design of experiments (planned)
 
-Future suites will cover DoE reference data as the javai family expands into
+Future suites will cover DoE reference data as the mavai family expands into
 experimental design capabilities.
 
 ## Usage
@@ -71,7 +71,7 @@ repository so that consumers can read them without needing R installed.
 ### Install as an R package
 
 ```r
-devtools::install_github("javai-org/javai-R")
+devtools::install_github("mavai-org/mavai-R")
 ```
 
 ### Run the R tests
@@ -116,7 +116,7 @@ JSON files from `inst/cases/` in a flat structure.
 ### Download URL
 
 ```
-https://github.com/javai-org/javai-R/releases/download/vX.Y.Z/cases-vX.Y.Z.zip
+https://github.com/mavai-org/mavai-R/releases/download/vX.Y.Z/cases-vX.Y.Z.zip
 ```
 
 ### Creating a release
@@ -167,7 +167,7 @@ The JSON files are the contract. The R code is the oracle.
 This project does not accept code contributions, but feedback is welcome —
 especially from statisticians. If you spot a flaw in the methodology, a
 questionable computation, or a missing edge case, please
-[open an issue](https://github.com/javai-org/javai-R/issues).
+[open an issue](https://github.com/mavai-org/mavai-R/issues).
 
 ## License
 
