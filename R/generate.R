@@ -8,7 +8,7 @@
 #' @export
 generate_all <- function(output_dir = NULL) {
   if (is.null(output_dir)) {
-    output_dir <- system.file("cases", package = "javair")
+    output_dir <- system.file("cases", package = "mavair")
     if (output_dir == "") {
       # Not installed — use local path
       output_dir <- file.path("inst", "cases")
