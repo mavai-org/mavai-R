@@ -106,8 +106,8 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>javai-R — Documents</title>
-            <meta name="description" content="Statistical foundations and reference data for the javai probabilistic testing methodology.">
+            <title>mavai-R — Documents</title>
+            <meta name="description" content="Statistical foundations and reference data for the mavai probabilistic testing methodology.">
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -234,17 +234,17 @@ jobs:
           <body>
             <header class="site-header">
               <div class="container">
-                <a href="https://javai.org" class="site-logo">Javai</a>
+                <a href="https://mavai.org" class="site-logo">Mavai</a>
                 <nav class="site-nav">
-                  <a href="https://javai.org/projects/">Projects</a>
+                  <a href="https://mavai.org/projects/">Projects</a>
                 </nav>
               </div>
             </header>
 
             <section class="section-banner">
               <div class="container">
-                <h1>javai-R</h1>
-                <p class="section-banner-sub">A practical summary of the javai statistical model.</p>
+                <h1>mavai-R</h1>
+                <p class="section-banner-sub">A practical summary of the mavai statistical model.</p>
               </div>
             </section>
 
@@ -261,7 +261,7 @@ jobs:
                     <div class="doc-card">
                       <h3>Statistical Companion</h3>
                       <p>
-                        Primarily for statisticians, the formal foundations of the javai
+                        Primarily for statisticians, the formal foundations of the mavai
                         methodology. Covers hypothesis testing, confidence intervals, power
                         analysis, threshold derivation, and latency percentile analysis.
                       </p>
@@ -280,7 +280,7 @@ jobs:
                     <div class="doc-card">
                       <h3>Glossary</h3>
                       <p>
-                        Terminology used across the javai project family, defined in the
+                        Terminology used across the mavai project family, defined in the
                         context of the distributional contract methodology.
                       </p>
                       <a href="glossary.pdf" class="btn">Download PDF</a>
@@ -292,10 +292,10 @@ jobs:
 
             <footer class="site-footer">
               <div class="container">
-                <p>&copy; 2026 Javai. All rights reserved.</p>
+                <p>&copy; 2026 Mavai. All rights reserved.</p>
                 <p class="footer-links">
-                  <a href="https://github.com/javai-org">GitHub</a>
-                  <a href="https://github.com/javai-org/javai-R">javai-R</a>
+                  <a href="https://github.com/mavai-org">GitHub</a>
+                  <a href="https://github.com/mavai-org/mavai-R">mavai-R</a>
                 </p>
               </div>
             </footer>
@@ -339,7 +339,7 @@ jobs:
           rm _overview-body.html
 
       - name: Add CNAME for custom domain
-        run: echo "r.javai.org" > _site/CNAME
+        run: echo "r.mavai.org" > _site/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
