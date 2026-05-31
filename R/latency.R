@@ -2,7 +2,7 @@
 #'
 #' Computes the empirical percentile from a vector of latency observations
 #' using the nearest-rank (ceiling) method. This is the reference
-#' implementation against which all javai framework implementations must
+#' implementation against which all mavai framework implementations must
 #' conform.
 #'
 #' @param latencies Numeric vector. Observed latencies (need not be sorted).

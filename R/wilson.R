@@ -1,7 +1,7 @@
 #' Wilson score confidence interval (two-sided)
 #'
 #' Computes the Wilson score interval for a binomial proportion.
-#' This is the reference implementation against which all javai framework
+#' This is the reference implementation against which all mavai framework
 #' implementations (punit, feotest, baseltest, ...) must conform.
 #'
 #' @param successes Integer. Number of successes.

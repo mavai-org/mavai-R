@@ -1,17 +1,17 @@
-# javai-R
+# mavai-R
 
-This is the R member of the javai project family. It generates
+This is the R member of the mavai project family. It generates
 language-agnostic reference datasets for statistical computations used across
-all javai probabilistic testing frameworks.
+all mavai probabilistic testing frameworks.
 
 ## Role
 
-javai-R is the **statistical oracle**. It uses R — the gold standard for
+mavai-R is the **statistical oracle**. It uses R — the gold standard for
 statistical computing — to produce canonical expected outputs. Framework
 implementations (punit, feotest, baseltest, ...) verify conformance against
 these outputs.
 
-javai-R does not implement a testing framework. It produces reference data.
+mavai-R does not implement a testing framework. It produces reference data.
 
 ## Structure
 
@@ -107,7 +107,7 @@ punit / feotest maintainers know which release to pull.
 
 - **punit** and **feotest** consume `inst/cases/*.json` in their conformance
   tests.
-- **javai-orchestrator** tracks javai-R in the project registry and feature
+- **javai-orchestrator** tracks mavai-R in the project registry and feature
   inventory.
-- javai-R is an independent git repository, included as a submodule in
+- mavai-R is an independent git repository, included as a submodule in
   javai-orchestrator.
