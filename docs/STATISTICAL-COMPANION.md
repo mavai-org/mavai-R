@@ -1,7 +1,9 @@
 ---
 title: "Statistical Companion Document"
 subtitle: "Formal Statistical Foundations for the mavai Methodology"
-author: "Version 1.3.5 · last updated 2026-05-27 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: |
+  Version 1.3.5 · last updated 2026-05-27\
+  Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
 ---
 
 ## Document History
