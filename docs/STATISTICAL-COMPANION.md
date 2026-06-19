@@ -235,13 +235,7 @@ The Bernoulli model rests on three **formal assumptions**, each paired with the 
    - A baseline is created at a time when the system was under load, but a test performed later, while the system IS NOT under load. Such a test will likely miss a drop in performance of the system.
    - Contextual factors differ between baseline creation and test execution (time of day, day of week, deployment region, etc.)
 
-   The mavai methodology addresses stationarity through two complementary mechanisms:
-
-   - **Covariates** (see Section 8.4.1): Explicit declaration and tracking of contextual factors that may influence success rates, with warnings when baseline and test contexts differ.
-
-   - **Baseline expiration** (see Section 8.4.2): Time-based validity tracking that alerts operators when baselines may no longer represent current system behaviour.
-
-   These features do not *guarantee* stationarity—that is impossible in practice—but they make non-stationarity **visible and auditable** rather than silently undermining inference.
+   Non-stationarity is treated in depth in §8.3; the methodology's guardrails for it — covariate tracking (§8.4.1) and baseline expiration (§8.4.2) — do not *guarantee* stationarity (that is impossible in practice) but make its violation **visible and auditable** rather than silently undermining inference.
 
 3. **Binary outcomes**: Each trial has exactly two outcomes. Complex quality metrics may require more sophisticated models.
 
@@ -1340,11 +1334,7 @@ This value, $p_0 \approx 0.9973$, is the effective baseline used for subsequent 
 
 **Step 2: Derive the test threshold using the Wilson lower bound**
 
-For a regression test with $n_{\text{test}} = 100$, the threshold is not computed with the Wald approximation $p_0 - z \cdot \text{SE}$. The mavai methodology applies the same one-sided Wilson lower-bound construction used throughout this document:
-
-$$p^* = \frac{p_0 + \frac{z^2}{2n_{\text{test}}} - z\sqrt{\frac{p_0(1-p_0)}{n_{\text{test}}} + \frac{z^2}{4n_{\text{test}}^2}}}{1 + \frac{z^2}{n_{\text{test}}}}$$
-
-Substituting $p_0 = 0.9973$, $n_{\text{test}} = 100$, and $z = 1.645$:
+For a regression test with $n_{\text{test}} = 100$, the threshold is not computed with the Wald approximation $p_0 - z \cdot \text{SE}$. The mavai methodology applies the same one-sided Wilson lower-bound construction as §4.3.1 (the general form of §2.3.1), now evaluated at $\hat{p} = p_0$ and $n = n_{\text{test}}$. Substituting $p_0 = 0.9973$, $n_{\text{test}} = 100$, and $z = 1.645$:
 
 $$p^* \approx 0.9686$$
 
@@ -1383,9 +1373,9 @@ Each test threshold below is the one-sided Wilson lower bound for $p_0$ at the t
 
    $$p_0 = \frac{2000}{2000 + 1.645^2} = \frac{2000}{2002.706} \approx 0.9986$$
 
-2. For a 100-sample test, apply the one-sided Wilson lower bound at $p_0$ and $n_{\text{test}} = 100$:
+2. For a 100-sample test, apply the §4.3.1 one-sided Wilson lower bound at $p_0$ and $n_{\text{test}} = 100$:
 
-   $$p^* = \frac{p_0 + \frac{z^2}{2n_{\text{test}}} - z\sqrt{\frac{p_0(1-p_0)}{n_{\text{test}}} + \frac{z^2}{4n_{\text{test}}^2}}}{1 + \frac{z^2}{n_{\text{test}}}} \approx 0.971$$
+   $$p^* \approx 0.971$$
 
    Discrete equivalent: $\lceil 100 \times 0.971 \rceil = 98$ successes out of 100.
 
@@ -1686,11 +1676,7 @@ Fix the confidence and power requirements; compute the required sample size.
 
 **Given**: $\alpha$, desired power $(1-\beta)$, minimum detectable effect $\delta$, experimental basis $(\hat{p}_{\text{baseline}}, n_{\text{baseline}})$
 
-**Compute**: $n_{\text{test}}$
-
-$$
-n_{\text{test}} = \left(\frac{z_\alpha \sqrt{\hat{p}_{\text{baseline}}(1-\hat{p}_{\text{baseline}})} + z_\beta \sqrt{(\hat{p}_{\text{baseline}}-\delta)(1-\hat{p}_{\text{baseline}}+\delta)}}{\delta}\right)^2
-$$
+**Compute**: $n_{\text{test}}$ — by the power-based sample-size formula of §5.4, evaluated with $p_0 = \hat{p}_{\text{baseline}}$ and $p_1 = \hat{p}_{\text{baseline}} - \delta$.
 
 **Trade-off**: Fixed confidence and detection capability; cost (sample size) is determined.
 
@@ -1698,23 +1684,11 @@ $$
 
 **Given**: $\alpha$, desired power $(1-\beta)$, minimum detectable effect $\delta$, SLA threshold $p_{\text{SLA}}$
 
-**Compute**: $n_{\text{test}}$
-
-$$
-n_{\text{test}} = \left(\frac{z_\alpha \sqrt{p_{\text{SLA}}(1-p_{\text{SLA}})} + z_\beta \sqrt{(p_{\text{SLA}}-\delta)(1-p_{\text{SLA}}+\delta)}}{\delta}\right)^2
-$$
-
-**Example**: Verify 99.5% SLA, detecting drops of 1% or more with 95% confidence and 80% power:
-
-- $p_{\text{SLA}} = 0.995$, $\delta = 0.01$, $z_\alpha = 1.645$, $z_\beta = 0.842$
-
-$$
-n = \left(\frac{1.645 \times 0.0705 + 0.842 \times 0.1215}{0.01}\right)^2 \approx 477
-$$
+**Compute**: $n_{\text{test}}$ — by the SLA-verification sample-size formula and worked example of §5.5 (e.g. a 99.5% SLA at $\delta = 0.01$, 95% confidence, 80% power requires $\approx 477$ samples).
 
 **Trade-off**: Fixed confidence and detection capability; cost (sample size) is determined.
 
-**Critical**: The `minDetectableEffect` ($\delta$) is essential. Without it, verifying any SLA requires infinite samples.
+**Critical**: The `minDetectableEffect` ($\delta$) is essential. Without it, verifying any SLA requires infinite samples (§5.6).
 
 ### 6.3 Approach 3: Direct Threshold (Threshold-First)
 
@@ -1774,16 +1748,7 @@ The implied Type I error rate depends on where the true system rate lies relativ
 
 ### 7.1 Transparent Statistics Output
 
-When transparent statistics mode is enabled, the framework outputs a structured report containing the following sections:
-
-| Section                   | Contents                                                    | Purpose                                        |
-|---------------------------|-------------------------------------------------------------|------------------------------------------------|
-| **HYPOTHESIS TEST**       | $H_0$, $H_1$, test type                                     | Frames the statistical question being answered |
-| **OBSERVED DATA**         | Sample size $n$, successes $k$, observed rate $\hat{p}$     | Raw observations from test execution           |
-| **BASELINE REFERENCE**    | Source, empirical basis or SLA threshold, derivation method | Traces threshold to its origin                 |
-| **STATISTICAL INFERENCE** | Standard error, confidence interval, z-score, p-value       | Full calculation transparency                  |
-| **VERDICT**               | Result (PASS/FAIL), plain English interpretation, caveats   | Human-readable conclusion                      |
-| **THRESHOLD PROVENANCE**  | Threshold origin, contract reference (if specified)         | Auditability for compliance tests              |
+When transparent statistics mode is enabled, the framework emits a structured report whose canonical, multi-criterion layout — a contract-level composite header followed by one per-criterion analysis block — is specified in §10.2, with a full worked example in §10.3. A single-criterion contract is the $m = 1$ instance of that layout. This subsection defines the per-metric glossary and the p-value alignment rule on which the report's STATISTICAL INFERENCE block depends.
 
 #### Key Metrics in the Report
 
@@ -1807,52 +1772,11 @@ When transparent statistics mode is enabled, the framework outputs a structured 
 2. **Score-test p-values** matching the Wilson construction used to derive the threshold.
 3. **No p-value**, in which case the report carries the confidence bounds, the integer cutoff $c$, the achieved size, and the raw counts as the decision summary.
 
-Where a p-value is present, the null hypothesis, the alternative, and the tail are part of the same report entry, so that the p-value cannot be read against a different orientation than the one that produced it. A Wald-style z-score paired with a Wilson lower-bound decision is at most a diagnostic approximation: it does not by itself constitute a calibrated p-value for the procedure that produced the verdict, and the methodology classifies such z-scores as diagnostic alongside, rather than authoritative for, the verdict. The example output below retains a Wald-style z-score and one-tail p-value for illustration; the authoritative decision summary is the integer cutoff $c$ together with the achieved size.
+Where a p-value is present, the null hypothesis, the alternative, and the tail are part of the same report entry, so that the p-value cannot be read against a different orientation than the one that produced it. A Wald-style z-score paired with a Wilson lower-bound decision is at most a diagnostic approximation: it does not by itself constitute a calibrated p-value for the procedure that produced the verdict, and the methodology classifies such z-scores as diagnostic alongside, rather than authoritative for, the verdict. A report that retains a Wald-style z-score and one-tail p-value carries them for illustration only; the authoritative decision summary is the integer cutoff $c$ together with the achieved size.
 
 #### Example Output
 
-A transparent-statistics report for a regression criterion observing 87/100 successes against the §3.4 worked example (real-valued Wilson lower bound $p^*_{\text{Wilson}} \approx 0.902124$, integer cutoff $c = 91$) carries the procedure metadata alongside the observed data and the inference, so that the verdict cannot be read against a different orientation than the one that produced it:
-
-```
-PROCEDURE
-  procedure:           REGRESSION
-  nullHypothesis:      "K follows the stated reference model; no degradation signal"
-  alternative:         "Lower-tail degradation signal under the reference"
-  decisionRule:        "PASS iff K >= c"
-  integerCutoff (c):   91
-  realValuedBound:     p*_Wilson ≈ 0.902124
-  displayedCutoff:     c/n = 0.910000
-  configuredAlpha:     0.05
-  achievedSize:        P_0.951(K < 91) ≈ 0.024986
-
-OBSERVED DATA
-  Sample size (n):     100
-  Successes (K):       87
-  Observed rate (p̂):   0.870
-
-STATISTICAL INFERENCE
-  Wilson 95% one-sided lower bound on p: 0.790
-  Diagnostic z-score (Wald form, illustrative only — not the operative test):
-                       z = (p̂ - p*_Wilson) / √(p*_Wilson(1 - p*_Wilson)/n)
-                       z ≈ -1.10
-  achieved size at integer cutoff c = 91:
-    method:            exact-binomial-lower-tail
-    tail:              P_{p = 0.951}(K < 91)
-    value:             ≈ 0.026
-    interpretation:    false-degradation-alarm probability under the
-                       reference at the configured cutoff.
-
-VERDICT
-  Result:              FAIL
-  Interpretation:      The observed count K = 87 is below the integer cutoff
-                       c = 91 derived from the reference model at nominal
-                       alpha = 0.05. The decision is made on K versus c, not
-                       on rounded displayed rates.
-```
-
-The Wald-style z-score line is retained for orientation and is labelled diagnostic; the binding decision summary is the procedure block together with the observed $K$ and $n$.
-
-See Section 10 for complete example outputs including both compliance and regression paradigms.
+A complete worked report is given in §10.3 — a multi-criterion contract that exercises both decision rules (the regression integer-cutoff rule and the compliance lower-bound rule) and labels its diagnostic Wald-style z-score as such. The binding decision summary is always the procedure block together with the observed $K$ and $n$: a regression verdict is made on $K$ versus the integer cutoff $c$, never on rounded displayed rates.
 
 ##### Conformance Verification
 
