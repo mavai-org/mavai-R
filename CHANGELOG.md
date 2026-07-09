@@ -5,6 +5,30 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.8.3] — 2026-07-09
+
+**New suite: `latency_percentile_minimums.json` (additive).** Publishes
+the family standard for empirical-latency-percentile minimum sample
+sizes, closing a three-way implementation drift (companion §12.5.2 says
+the p50 emission minimum is 5; punit's emission gate and the
+orchestrator catalog said 1; feotest already said 5). Two case groups,
+distinguished by the `approach` field:
+
+- `emission_non_degeneracy` — the §12.5.2 minimums (5/10/20/100 for
+  p50/p90/p95/p99) governing whether a percentile may be emitted in
+  experiment artefacts and verdicts at all.
+- `bound_existence` — the §12.5.2.1 minimums
+  (`n_s ≥ ⌈log α / log p⌉`, Wilks) for a non-saturated
+  distribution-free upper bound at confidence 0.95 and 0.99.
+  Judgement-time minimums for latency-criterion evaluation, not
+  emission rules.
+
+All values are integers; suite `tolerance: 0` (exact equality). New
+exported helper `latency_bound_existence_min_samples()`; the emission
+values come from the existing `latency_min_samples()`. No existing
+suite changed. Tracked by `DIR-PERCENTILE-MINIMUMS-family` in the
+orchestrator.
+
 ## [0.8.2] — 2026-05-30
 
 **First release from `mavai-org/mavai-R` — the javai → mavai rebrand

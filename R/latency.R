@@ -116,6 +116,98 @@ latency_min_samples <- function(p) {
   100L
 }
 
+#' Minimum sample size for a non-saturated distribution-free upper bound
+#'
+#' Returns the minimum number of successful samples for which the exact
+#' binomial order-statistic construction admits a non-saturated one-sided
+#' upper confidence bound on the p-quantile: n_s >= ceiling(log(alpha) /
+#' log(p)) (Wilks tolerance-interval logic; Statistical Companion
+#' §12.5.2.1). This is the judgement-time existence gate, distinct from
+#' the emission-time non-degeneracy gate in latency_min_samples().
+#'
+#' @param p Numeric. Percentile level (e.g. 0.95).
+#' @param confidence Numeric. One-sided confidence level (e.g. 0.95).
+#' @return Integer. Minimum sample count.
+#' @export
+latency_bound_existence_min_samples <- function(p, confidence) {
+  alpha <- 1 - confidence
+  as.integer(ceiling(log(alpha) / log(p)))
+}
+
+#' Generate latency percentile minimum-sample-size reference cases
+#'
+#' Publishes the family standard for how many contributing (passing)
+#' samples an empirical latency percentile requires. Two case groups,
+#' distinguished by the `approach` field:
+#'
+#' (1) **emission_non_degeneracy** — the companion §12.5.2 minimums
+#'     governing whether a percentile may be emitted in experiment
+#'     artefacts and verdicts at all (below the minimum the key is
+#'     omitted, renderers show a dash). One case per supported level.
+#'
+#' (2) **bound_existence** — the companion §12.5.2.1 minimums for the
+#'     binomial order-statistic construction to admit a non-saturated
+#'     one-sided upper confidence bound at the given confidence
+#'     (n_s >= ceiling(log(alpha) / log(p))). These are judgement-time
+#'     minimums consumed by latency-criterion evaluation, NOT emission
+#'     rules.
+#'
+#' The values are deliberately trivial to compute; the suite exists so
+#' that every framework's gating table is conformance-locked to one
+#' published standard instead of each implementation carrying its own
+#' constants.
+#'
+#' @return A list suitable for JSON serialisation.
+#' @export
+generate_latency_percentile_minimums_cases <- function() {
+  levels <- c(0.50, 0.90, 0.95, 0.99)
+
+  emission_cases <- lapply(levels, function(p) {
+    list(
+      name = sprintf("emission_minimum_p%g", p * 100),
+      approach = "emission_non_degeneracy",
+      inputs = list(percentile = p),
+      expected = list(minimum_contributing_samples = latency_min_samples(p))
+    )
+  })
+
+  existence_cases <- unlist(lapply(c(0.95, 0.99), function(confidence) {
+    lapply(levels, function(p) {
+      list(
+        name = sprintf("bound_existence_minimum_p%g_c%g", p * 100, confidence * 100),
+        approach = "bound_existence",
+        inputs = list(percentile = p, confidence = confidence),
+        expected = list(
+          minimum_baseline_samples = latency_bound_existence_min_samples(p, confidence)
+        )
+      )
+    })
+  }), recursive = FALSE)
+
+  list(
+    suite = "latency_percentile_minimums",
+    description = paste0(
+      "Minimum sample sizes for empirical latency percentiles (p50/p90/p95/p99) — the single ",
+      "published standard every mavai framework's gating table must equal exactly. ",
+      "Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 ",
+      "minimums for emitting a percentile in experiment artefacts (baseline, exploration, ",
+      "optimization) and verdicts: below the minimum the percentile key is omitted entirely ",
+      "and renderers display a placeholder. Cases with approach 'bound_existence' carry the ",
+      "§12.5.2.1 minimums for the exact binomial order-statistic construction to admit a ",
+      "non-saturated one-sided upper confidence bound on the p-quantile at the stated ",
+      "confidence — judgement-time minimums for latency-criterion evaluation, not emission ",
+      "rules. All values are integers; conformance is exact equality (tolerance: 0)."
+    ),
+    method = paste0(
+      "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for ",
+      "p50/p90/p95/p99); bound-existence minimums per §12.5.2.1, ",
+      "n_s >= ceiling(log(alpha) / log(p)) (Wilks)."
+    ),
+    tolerance = 0,
+    cases = c(emission_cases, existence_cases)
+  )
+}
+
 #' Generate latency percentile reference cases
 #'
 #' @return A list suitable for JSON serialisation.

@@ -154,3 +154,35 @@ test_that("latency_min_samples returns correct minimums", {
   expect_equal(latency_min_samples(0.95), 20L)
   expect_equal(latency_min_samples(0.99), 100L)
 })
+
+test_that("latency_bound_existence_min_samples matches companion 12.5.2.1", {
+  # At alpha = 0.05 (companion's published table).
+  expect_equal(latency_bound_existence_min_samples(0.50, 0.95), 5L)
+  expect_equal(latency_bound_existence_min_samples(0.90, 0.95), 29L)
+  expect_equal(latency_bound_existence_min_samples(0.95, 0.95), 59L)
+  expect_equal(latency_bound_existence_min_samples(0.99, 0.95), 299L)
+  # Existence condition: p^n <= alpha holds at the minimum, fails below it.
+  for (p in c(0.50, 0.90, 0.95, 0.99)) {
+    n_min <- latency_bound_existence_min_samples(p, 0.95)
+    expect_lte(p^n_min, 0.05)
+    expect_gt(p^(n_min - 1L), 0.05)
+  }
+})
+
+test_that("percentile minimums suite publishes both gates exactly", {
+  suite <- generate_latency_percentile_minimums_cases()
+  expect_equal(suite$suite, "latency_percentile_minimums")
+  expect_equal(suite$tolerance, 0)
+  emission <- Filter(function(c) c$approach == "emission_non_degeneracy", suite$cases)
+  expect_equal(
+    vapply(emission, function(c) c$expected$minimum_contributing_samples, integer(1)),
+    c(5L, 10L, 20L, 100L)
+  )
+  existence <- Filter(function(c) c$approach == "bound_existence", suite$cases)
+  expect_length(existence, 8L)  # four levels at two confidence levels
+  c95 <- Filter(function(c) c$inputs$confidence == 0.95, existence)
+  expect_equal(
+    vapply(c95, function(c) c$expected$minimum_baseline_samples, integer(1)),
+    c(5L, 29L, 59L, 299L)
+  )
+})

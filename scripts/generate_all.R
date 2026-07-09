@@ -26,6 +26,7 @@ suites <- list(
   latency_percentile = generate_latency_percentile_cases(),
   latency_threshold = generate_latency_threshold_cases(),
   latency_threshold_bootstrap = generate_latency_threshold_bootstrap_cases(),
+  latency_percentile_minimums = generate_latency_percentile_minimums_cases(),
   # Multi-criteria model fixtures (per DIR-MULTI-CRITERIA-FIXTURES-javai-R):
   criterion_verdict_observational =
     generate_criterion_verdict_observational_cases(),
