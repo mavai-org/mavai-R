@@ -27,6 +27,7 @@ suites <- list(
   latency_threshold = generate_latency_threshold_cases(),
   latency_threshold_bootstrap = generate_latency_threshold_bootstrap_cases(),
   latency_percentile_minimums = generate_latency_percentile_minimums_cases(),
+  regression_decision = generate_regression_decision_cases(),
   # Multi-criteria model fixtures (per DIR-MULTI-CRITERIA-FIXTURES-javai-R):
   criterion_verdict_observational =
     generate_criterion_verdict_observational_cases(),
@@ -45,4 +46,14 @@ for (name in names(suites)) {
   message("Wrote: ", path)
 }
 
-message("\nDone. ", length(suites), " suites generated.")
+# The manifest is generated from the suites just written (content
+# hashes included), never hand-maintained.
+description <- read.dcf("DESCRIPTION")
+fixture_version <- unname(description[1, "Version"])
+manifest <- generate_manifest(suites, fixture_version, case_dir = output_dir)
+manifest_path <- file.path(output_dir, "manifest.json")
+jsonlite::write_json(manifest, manifest_path, pretty = TRUE, auto_unbox = TRUE,
+                     digits = NA, na = "null")
+message("Wrote: ", manifest_path)
+
+message("\nDone. ", length(suites), " suites generated + manifest.")
