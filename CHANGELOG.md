@@ -5,6 +5,55 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.8.4] — 2026-07-10
+
+**New suite: `regression_decision.json` (additive).** Publishes the
+composed §3.4 decision rule for the regression (baseline-derived)
+procedure as a first-class conformance target: end-to-end scenario
+cases `(baseline_successes, baseline_trials, test_samples, confidence,
+observed_successes) → (threshold_real, wilson_lower, cutoff_integer,
+displayed_rate, achieved_size, verdict)`, with `PASS iff K ≥ c`,
+`c = ⌈n_test · p*⌉`. Thirteen cases: the §3.4 worked example
+(p̂ = 0.951, n_test = 100 → p* ≈ 0.902124, c = 91, achieved size
+≈ 0.024986) with `K = c` / `K = c − 1` boundaries, small-n
+discretisation cases where the real-valued bound and the integer
+cutoff disagree materially, the perfect-baseline `k = n` edge
+(§4.3.2 effective-rate guard), a compliance-procedure sibling group
+(test-side Wilson lower bound vs a declared threshold, §3.2/§3.6),
+and a conflation-detector pair — one observation shared across both
+procedures with opposite verdicts (`K = c = 91` passes the regression
+rule; the same count read compliance-style against the same derived
+value fails), so a framework applying the compliance rule on the
+regression path fails the suite even though every component
+computation is arithmetically conformant. Tolerance 1e-10; `procedure` field
+distinguishes the two rule families. New generator
+`generate_regression_decision_cases()`.
+
+**New generated artefact: `manifest.json` (additive).** A conformance
+coverage manifest generated alongside the suites (never
+hand-maintained), `manifestVersion` 1: per-suite case rosters,
+**binding vs informational** expected-field classification authored in
+the generators, per-suite MD5 content hashes, and the oracle-declared
+**family-mandatory tier** — `wilson_ci`, `wilson_lower`,
+`threshold_derivation`, `verdict`, `latency_percentile`,
+`latency_threshold`, `regression_decision`. Downstream frameworks
+diff the set of `(suite, case, binding-field)` assertions they
+actually make against (family-mandatory ∪ committed scope), making
+field-selective assertion inside a nominally covered suite
+machine-detectable. New generator `generate_manifest()`, invoked at
+the end of `scripts/generate_all.R`.
+
+**Binding-status clarification (no content change):**
+`threshold_derivation.json`'s `cutoff_integer` and `achieved_size`
+have been published since the suite's introduction but were consumed
+by no framework — the blind spot that let a decision-rule deviation
+ship. The manifest now classifies them **binding**; conformance tests
+must assert them. Existing suites are otherwise unchanged.
+
+Tracked by `DIR-DECISION-RULE-CONFORMANCE-family` in the orchestrator;
+the manifest is Stage 1 of `DIR-CONFORMANCE-COVERAGE-MANIFEST-family`,
+riding this release per the owner decision of 2026-07-10.
+
 ## [0.8.3] — 2026-07-09
 
 **New suite: `latency_percentile_minimums.json` (additive).** Publishes
