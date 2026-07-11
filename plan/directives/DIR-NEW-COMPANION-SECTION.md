@@ -1,4 +1,4 @@
-# Directive to the Author — Proposed Section 1.4.5c
+# Proposed new Statistical Companion Section 1.4.5c
 ## Generalised Guardrail Composition and Weighted Defect Models
 
 ### Purpose of this Section
