@@ -2,7 +2,7 @@
 title: "Statistical Companion Document"
 subtitle: "Formal Statistical Foundations for the mavai Methodology"
 author: |
-  Version 1.4.0 · last updated 2026-07-11\
+  Version 1.4.1 · last updated 2026-07-11\
   Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
 ---
 
@@ -23,6 +23,7 @@ author: |
 | 11 | **2026-05** | **Accumulation and the baseline long-term-monitoring framing removed from §1.5 (no fixture or numerical change).** The §1.5.5 *accumulation* construct is withdrawn and §1.5.5 reduced to *Expiration*; the framing of baseline indexing as a time-indexed collection of baselines retained for long-term monitoring is removed. Baseline indexing itself is retained.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 12 | **2026-06** | **Editorial consolidation (no statistical-content, formula, or fixture change).** Restated formulae and a duplicated example block are replaced by cross-references to their canonical sections: the stationarity guardrails in §1.3.2 now point to §8.3 / §8.4.1 / §8.4.2; the inline Wilson lower-bound formula in the §4.3.2 regression worked example points to §4.3.1 (general form §2.3.1); the §6.1 and §6.2 sample-size restatements point to §5.4 / §5.5 / §5.6 (including the ≈477-sample SLA example); and the §7.1 transparent-statistics section table and single-criterion example output are subsumed by the canonical multi-criterion layout (§10.2) and worked report (§10.3), of which a single-criterion contract is the $m = 1$ instance. No statement, formula, numerical result, or fixture changes; each removed element survives once at its canonical location.                                                                                                                                                                                                                                                                                                                                                       |
 | 13 | **2026-07** | **Self-consistent power for baseline-derived thresholds.** New §5.4.1: power, required sample size, and detectable-rate inversion computed against the §3.4 moving acceptance floor rather than a fixed threshold, with worked examples; defined for $p_{\min} < p_0$. Cross-references added in §5.4 and §5.6; no existing formula changes. Reference values to follow as the `risk_driven_sizing` fixture suite.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 14 | **2026-07** | **Operational-approaches taxonomy reconciled (editorial; no formula change).** §6.3 adopts *threshold-first* as its primary name; §6 states the canonical qualifiers, the approach-versus-threshold-origin axis independence (with the common-pairing observation), and the planning-versus-operative layer split with pointers to §3.4, §3.2/§3.6, and §5.4.1; the duplicated implied-confidence computation consolidates into §6.3. |
 
 Each milestone builds on the one before; each extends the scope of what the methodology claims except where it explicitly corrects or withdraws an over-reach (milestone 11). None supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
 
@@ -1237,7 +1238,7 @@ Three regimes need to be kept distinct, because each behaves differently at the 
 
 3. **Failure to demonstrate compliance.** A system whose true success probability is exactly $p_{\text{req}}$ will often FAIL the confidence-bound rule, even when the true rate meets the requirement. Under regime 2 this is not a false positive — it is **failure to produce affirmative evidence** above the requirement, the expected behaviour of an affirmative-assurance procedure at modest sample sizes. Operators who require a higher chance of demonstrating compliance at the boundary increase the sample size or accept a smaller margin.
 
-The three operational approaches in §6 — sample-size-first, confidence-first, and direct-threshold — are alternative ways to manage that conservatism within regime 2; they do not alter the controlled error event.
+The three operational approaches in §6 — sample-size-first, confidence-first, and threshold-first — are alternative ways to manage that conservatism within regime 2; they do not alter the controlled error event.
 
 #### Reference Table: Sample Sizes for SLA Verification
 
@@ -1679,12 +1680,18 @@ These caveats appear in both summary and verbose output modes.
 
 > **Epistemic status**: decision-policy regimes, not distinct inferential theories. The three "approaches" below describe which test-configuration parameters the framework fixes and which it derives, not three different statistical methods. They all sit inside the same Bernoulli/binomial model, and the sample-size and confidence formulas used within them are the **asymptotic / normal-approximation** planning formulas from §2.4 and §5.3, not Wilson constructions.
 
-The three operational approaches apply to **both** paradigms. The key difference is the source of the threshold:
+The canonical names and descriptive glosses are **sample-size-first** (cost-driven), **confidence-first** (risk-driven), and **threshold-first** (externally-dictated); downstream documentation and implementations use these names.
+
+**The approach and the threshold origin are independent axes.** The *approach* is which test-configuration parameter the author fixes first. The *threshold origin* — declared (normative: SLA / SLO / policy) versus derived (empirical, from a measured baseline) — is what selects the compliance or regression procedure and with it the binding decision rule (§1.4.5). Every approach applies to **both** paradigms:
 
 | Paradigm       | Threshold Source                | Symbol Used                 |
 |----------------|---------------------------------|-----------------------------|
 | **Compliance** | Given by contract/policy        | $p_{\text{SLA}}$            |
 | **Regression** | Derived from experimental basis | $\hat{p}_{\text{baseline}}$ |
+
+In practice implementations commonly *pair* sample-size-first and confidence-first with the empirical origin, and threshold-first with the normative origin. That pairing is conventional, not definitional: §6.3's regression formulation — a declared threshold judged against a baseline, with the implied confidence derived — is a legitimate cell of the grid, and is exactly what the `threshold_derivation` fixture's threshold-first cases exercise.
+
+**These formulas plan; they never decide.** The binding decision rules live elsewhere: §3.4 for the regression procedure (the raw observed success count against the Wilson-derived integer cutoff, $K \ge c$) and §3.2/§3.6 for the compliance procedure (the test sample's own Wilson lower bound clearing the declared threshold). §6's formulas size and price designs against those rules; no verdict is ever computed from them.
 
 Below, we present each approach with formulations for both paradigms.
 
@@ -1708,17 +1715,7 @@ $$
 
 **Given**: $n_{\text{test}}$, $p_{\text{SLA}}$
 
-**Compute**: Implied confidence level
-
-Since the threshold is fixed ($p^* = p_{\text{SLA}}$), we compute what confidence the test achieves:
-
-$$
-z = \frac{\hat{p}_{\text{test}} - p_{\text{SLA}}}{\sqrt{p_{\text{SLA}}(1-p_{\text{SLA}})/n_{\text{test}}}}
-$$
-
-The achieved confidence is $1 - \Phi(-z)$ where $\Phi$ is the standard normal CDF.
-
-**Trade-off**: Fixed cost and threshold; confidence is determined by the data.
+With the sample count and the threshold both fixed, the only derivable quantity is the confidence the test achieves — which is the threshold-first compliance computation. See §6.3, which owns it; fixing $n$ first versus fixing $p_{\text{SLA}}$ first arrives at the same cell of the grid.
 
 ### 6.2 Approach 2: Confidence-First (Risk-Driven)
 
@@ -1728,7 +1725,7 @@ Fix the confidence and power requirements; compute the required sample size.
 
 **Given**: $\alpha$, desired power $(1-\beta)$, minimum detectable effect $\delta$, experimental basis $(\hat{p}_{\text{baseline}}, n_{\text{baseline}})$
 
-**Compute**: $n_{\text{test}}$ — by the power-based sample-size formula of §5.4, evaluated with $p_0 = \hat{p}_{\text{baseline}}$ and $p_1 = \hat{p}_{\text{baseline}} - \delta$.
+**Compute**: $n_{\text{test}}$ — by the power-based sample-size formula of §5.4, evaluated with $p_0 = \hat{p}_{\text{baseline}}$ and $p_1 = \hat{p}_{\text{baseline}} - \delta$. For a baseline-derived threshold the §5.4 closed form is the *seed*: the acceptance floor moves with $n$, and §5.4.1's self-consistent form is the honest sizing.
 
 **Trade-off**: Fixed confidence and detection capability; cost (sample size) is determined.
 
@@ -1742,9 +1739,9 @@ Fix the confidence and power requirements; compute the required sample size.
 
 **Critical**: The `minDetectableEffect` ($\delta$) is essential. Without it, verifying any SLA requires infinite samples (§5.6).
 
-### 6.3 Approach 3: Direct Threshold (Threshold-First)
+### 6.3 Approach 3: Threshold-First (Externally-Dictated)
 
-Use an explicit threshold directly; compute the implied confidence.
+Use an externally-dictated threshold directly; compute the implied confidence.
 
 #### Regression Formulation
 
