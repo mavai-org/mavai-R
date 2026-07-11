@@ -5,6 +5,36 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.8.5] — 2026-07-11
+
+**New suite: `risk_driven_sizing.json` (additive).** Materialises
+companion §5.4.1 (new in companion 1.4.0): self-consistent power for
+baseline-derived thresholds, where the acceptance floor
+`WilsonLower(p0, n, 1−α)` moves with the test's own sample size.
+Thirteen cases in three groups, discriminated by the `approach` field:
+
+- `required_n` — smallest n meeting a target power for a declared
+  minimal acceptable rate, with the floor and achieved power at that n;
+  includes the companion's two computed examples (0.87/0.84/0.95/0.80
+  → 891; the 0.96/0.93 scenario walk-through → 405) and parameter
+  sensitivity around them.
+- `power_at` — floor and power at candidate sample sizes, including the
+  walk-through's table rows and the case pinning that the §5.4
+  closed-form seed (n = 826) underpowers the worked example.
+- `detectable_rate` — the inversion (largest tolerable rate detectable
+  at a fixed n, bisection to 1e-10), including round-trips at the
+  required-n answers.
+
+The suite is **not** in the family-mandatory tier: it binds a framework
+when it adopts risk-driven sizing (baseltest first, per
+`DIR-BAS-SIZING-risk-driven` in the orchestrator). Defined for
+`minimum_acceptable_rate < baseline_rate` only — the generators refuse
+the over-reach regime. New exported helpers `power_self_consistent()`,
+`required_n_self_consistent()`, `detectable_rate_self_consistent()`.
+No existing suite changed. Also carries the companion at 1.4.1 (§5.4.1
+new section; §6 operational-approaches taxonomy reconciliation; Type
+I/II plain-language definitions).
+
 ## [0.8.4] — 2026-07-10
 
 **New suite: `regression_decision.json` (additive).** Publishes the
