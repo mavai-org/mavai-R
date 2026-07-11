@@ -2,7 +2,7 @@
 title: "Statistical Companion Document"
 subtitle: "Formal Statistical Foundations for the mavai Methodology"
 author: |
-  Version 1.3.6 · last updated 2026-06-19\
+  Version 1.4.0 · last updated 2026-07-11\
   Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA
 ---
 
@@ -22,6 +22,7 @@ author: |
 | 10 | **2026-05** | **Architectural-discharge clarifications (corrections; no statistical-content or fixture change).** Refinements to the §1.4.5b guardrail model and the Clause Forms section it depends on. (i) Guardrail rate-bounded clauses no longer carry an *empirical-origin* threshold by assertion; consistent with milestone 9, the threshold origin is free (normative or empirical). (ii) A production estimate of $p_{\mathrm{harm}}$ must observe the generator's *pre-guardrail* candidate output; post-guardrail monitoring estimates $p_{\mathrm{residual}}$, not $p_{\mathrm{harm}}$. (iii) The two samplings are named apart — a *red-team-input* sampling (adversarial inputs, end-to-end) versus a *harmful-candidate* sampling (conditional sensitivity) — and the §1.4.5 pairing of observational and inferential criteria no longer presumes a shared sampling. (iv) The worked example declares its `populationClaim` (superpopulation) before applying the Wilson bound. No formula, fixture, or numerical result changes.                                                                                                                                                                                                            |
 | 11 | **2026-05** | **Accumulation and the baseline long-term-monitoring framing removed from §1.5 (no fixture or numerical change).** The §1.5.5 *accumulation* construct is withdrawn and §1.5.5 reduced to *Expiration*; the framing of baseline indexing as a time-indexed collection of baselines retained for long-term monitoring is removed. Baseline indexing itself is retained.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 12 | **2026-06** | **Editorial consolidation (no statistical-content, formula, or fixture change).** Restated formulae and a duplicated example block are replaced by cross-references to their canonical sections: the stationarity guardrails in §1.3.2 now point to §8.3 / §8.4.1 / §8.4.2; the inline Wilson lower-bound formula in the §4.3.2 regression worked example points to §4.3.1 (general form §2.3.1); the §6.1 and §6.2 sample-size restatements point to §5.4 / §5.5 / §5.6 (including the ≈477-sample SLA example); and the §7.1 transparent-statistics section table and single-criterion example output are subsumed by the canonical multi-criterion layout (§10.2) and worked report (§10.3), of which a single-criterion contract is the $m = 1$ instance. No statement, formula, numerical result, or fixture changes; each removed element survives once at its canonical location. |
+| 13 | **2026-07** | **Self-consistent power for baseline-derived thresholds.** New §5.4.1: power, required sample size, and detectable-rate inversion computed against the §3.4 moving acceptance floor rather than a fixed threshold, with worked examples; defined for $p_{\min} < p_0$. Cross-references added in §5.4 and §5.6; no existing formula changes. Reference values to follow as the `risk_driven_sizing` fixture suite.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 Each milestone builds on the one before; each extends the scope of what the methodology claims except where it explicitly corrects or withdraws an over-reach (milestone 11). None supersedes the Bernoulli/Wilson foundation laid in Milestone 1.
 
@@ -1113,9 +1114,9 @@ with $p^* = c/n$ as the displayed-rate companion of the binding integer cutoff $
 
 The differences across the two paradigms are summarised below. Note that the controlled error and the verdict semantics differ.
 
-| Paradigm       | Threshold                                | Hypotheses                                                                                         | Error controlled                             | PASS means                                           |
-|----------------|------------------------------------------|----------------------------------------------------------------------------------------------------|----------------------------------------------|------------------------------------------------------|
-| **Compliance** | $p_{\text{SLA}}$ (given)                 | $H_0: p \le p_{\mathrm{req}}$ vs $H_1: p > p_{\mathrm{req}}$                                     | False-compliance probability                 | Evidence supports compliance at the configured level |
+| Paradigm       | Threshold                                | Hypotheses                                                                                     | Error controlled                             | PASS means                                           |
+|----------------|------------------------------------------|------------------------------------------------------------------------------------------------|----------------------------------------------|------------------------------------------------------|
+| **Compliance** | $p_{\text{SLA}}$ (given)                 | $H_0: p \le p_{\mathrm{req}}$ vs $H_1: p > p_{\mathrm{req}}$                                   | False-compliance probability                 | Evidence supports compliance at the configured level |
 | **Regression** | Derived from $\hat{p}_{\text{baseline}}$ | $H_0: p \ge p^*$ vs $H_1: p < p^*$, integer cutoff $c$ from $P_{\mathrm{ref}}(K < c)\le\alpha$ | False-degradation-alarm rate under reference | No degradation signal at the configured cutoff       |
 
 **Regression-rule status note.** The Wilson-derived empirical regression rule developed in §3.4 is a **one-sample reference-control approximation**. It uses the baseline point estimate $\hat p_{\text{baseline}}$ together with the test sample size $n_{\text{test}}$ and the configured $\alpha$ to set the cutoff; it does not fully propagate the baseline's own measurement uncertainty, especially when $n_{\text{baseline}} \ne n_{\text{test}}$. Two alternatives are available for projects that need fuller uncertainty propagation: the **beta-binomial posterior predictive** rule (§4.5), and frequentist **two-sample non-inferiority methods** such as Miettinen–Nurminen and Farrington–Manning. The Wilson rule is retained as the default for the operational reasons in §4.5; this note labels its status rather than replacing it.
@@ -1480,6 +1481,54 @@ $$n = \left(\frac{1.645 \times 0.218 + 0.842 \times 0.300}{0.05}\right)^2 = \lef
 | 10% (95%→85%) | 40        | 55        | 70        |
 | 3% (95%→92%)  | 410       | 550       | 700       |
 
+For a baseline-derived (empirical) threshold this fixed-$\delta$ closed form is a *seed*, not the answer: the acceptance floor is itself a function of the sample size being solved for — see §5.4.1.
+
+### 5.4.1 Self-Consistent Power for Baseline-Derived Thresholds
+
+> **Epistemic status**: planning approximation based on normal asymptotics, like §5.3. Additionally, the operative decision it prices is the discrete §3.4 rule ($K \ge c$, $c = \lceil n \cdot p^*(n) \rceil$), so true power is a step function of $n$ of which the form below is the smooth approximation — adequate for sizing a design, not an exact calibration claim.
+
+The §5.3 and §5.4 formulas hold the threshold constant while $n$ varies. For a regression-procedure test the threshold does not stand still: the acceptance floor is derived *at the test's own size*,
+
+$$p^*(n) = \text{WilsonLower}(p_0, n, 1-\alpha)$$
+
+with $p_0$ the effective baseline rate (§3.4; perfect-baseline guard §4.3.2). As $n$ shrinks, $p^*(n)$ falls — a small sample proves less, so less is demanded of it. That is correct inference, but it means the fixed-threshold formulas overstate the power of small designs: the bar the small test will actually apply is lower than the one they price.
+
+The self-consistent form puts the moving floor inside the calculation. For a hypothesised true rate $p_{\min} < p_0$ — the **minimal acceptable rate**, the worst true rate the operator is willing to tolerate; a declared tolerance, not a measured estimate —
+
+$$\text{Power}(n) = \Phi\left(\frac{p^*(n) - p_{\min}}{\sqrt{p_{\min}(1-p_{\min})/n}}\right)$$
+
+read as: the probability that a service whose true rate is $p_{\min}$ fails the test — that degradation at least this severe is detected. The z convention is the companion's usual one-sided convention throughout: $\Phi$ is the standard normal CDF, and the $z$ inside $\text{WilsonLower}$ is the same one-sided $z = \Phi^{-1}(1-\alpha)$ used everywhere else in this document. ($p_{\min}$ plays the role $p_1$ plays in §5.3; the distinct symbol marks that here it is a declared bound, not a hypothesised alternative chosen for illustration.) An implementation's Wilson function and its power function must share one $z$.
+
+**Domain.** The construction is defined for $p_{\min} < p_0$ only. For $p_{\min} \ge p_0$ the floor sits below the tolerated rate at every $n$, power falls as $n$ grows, and no sample size achieves a useful target power — such a design asks the test to detect a "degradation" the baseline already exceeds. Within the domain, increasing $n$ both raises $p^*(n)$ toward $p_0$ and shrinks the standard error, so $\text{Power}(n)$ is increasing in $n$ and the required sample size
+
+$$n_{\text{req}} = \min\{\, n : \text{Power}(n) \ge 1-\beta \,\}$$
+
+is well defined. It is found by search, seeded with the §5.4 closed form.
+
+**The inversion.** For a fixed affordable $N$, the *detectable rate* is the largest $p_{\min}$ (the smallest drop from $p_0$) at which $\text{Power}(N) \ge 1-\beta$, found by bisection on $p_{\min}$ over $(0, p_0)$ to an absolute tolerance of $10^{-10}$.
+
+**Example**: a baseline measured at $p_0 = 0.87$; the operator tolerates a true rate no lower than $p_{\min} = 0.84$; $\alpha = 0.05$, target power $1-\beta = 0.80$.
+
+$$n_{\text{req}} = 891, \qquad p^*(891) = 0.8503, \qquad \text{Power}(891) = 0.8001$$
+
+(and $\text{Power}(890) = 0.7997$, confirming minimality). The §5.4 closed form seeded the search at $n \approx 826$ and understates the requirement: it measures the detection margin from $p_0$ (a gap of $0.03$), while the margin the test actually enjoys is from the moving floor — $p^*(891) - p_{\min} \approx 0.0103$.
+
+Inverting instead at an affordable $N = 100$: the detectable rate is $p_{\min} \approx 0.7694$. With 100 samples, only a collapse of roughly ten percentage points from the 87% baseline is detected with 80% power; smaller degradations pass more often than that.
+
+**Scenario walk-through.** A service's baseline run measured $p_0 = 0.96$ — the rate the operator expects it still delivers. The operator can live with genuine performance down to $p_{\min} = 0.93$, but a service truly below that should fail the test; $\alpha = 0.05$, target power $1-\beta = 0.80$. How many samples must the test run? Watching the floor and the power at candidate sizes shows what is being paid for:
+
+| candidate $n$ | floor $p^*(n)$ | $\text{Power}(n)$ at $p_{\min} = 0.93$ |
+|---------------|----------------|-----------------------------|
+| 50            | 0.8861         | 0.11                        |
+| 150           | 0.9245         | 0.40                        |
+| **405**       | 0.9407         | **0.80**                    |
+
+At $n = 50$ the derived bar sits *below* the tolerated minimum: a service that has already degraded to the edge of tolerability still passes roughly nine runs in ten. At $n = 150$ the bar has climbed past $0.93$, but the sampling noise still hides the degradation more often than not. $n = 405$ is the smallest size at which a service truly at $0.93$ fails four times out of five — the operator's stated risk appetite, priced in samples.
+
+##### Conformance Verification
+
+The mavai-R project generates reference values for this construction — the required sample size, the corresponding floor, achieved power, and detectable-rate inversions, including both examples above — as the `risk_driven_sizing` suite in `inst/cases/`.
+
 ### 5.5 Sample Size for SLA Verification
 
 When verifying an SLA threshold $p_{\text{SLA}}$ (rather than detecting degradation from a baseline), the sample size formula adapts:
@@ -1543,6 +1592,8 @@ Without this parameter, the question "how many samples to verify $p \geq 0.999$?
 In the **Confidence-First approach**, developers must specify `minDetectableEffect` for the framework to compute the required sample size. This applies to both compliance and regression testing.
 
 Without `minDetectableEffect`, no framework can compute a finite sample size and will use the default sample count instead.
+
+A tolerated drop from a measured baseline is a minimum detectable effect expressed against the moving acceptance floor rather than a fixed threshold; §5.4.1 prices that form of the question.
 
 ### 5.7 Test Intent: VERIFICATION vs SMOKE
 
