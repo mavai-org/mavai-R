@@ -19,6 +19,14 @@ computed in R, and no statistical authority is claimed — see
 `inst/interchange/README.md`. The statistical cases and their schema are
 untouched.
 
+**Verdict XML schemas hosted (additive, non-statistical).** The verdict
+interchange XSDs (`verdict-1.0/1.1/1.2.xsd`) join `schema/` under the same
+publication-only terms, replacing their previous split existence (a private
+canonical copy and a punit-embedded copy that had drifted in comments —
+reconciled to one text). All schemas are also served at the documentation
+site under `/schema/`, and ship in the `interchange-vX.Y.Z.zip` release
+asset.
+
 ## [0.8.5] — 2026-07-11
 
 **New suite: `risk_driven_sizing.json` (additive).** Materialises
