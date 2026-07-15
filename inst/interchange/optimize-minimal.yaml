@@ -1,0 +1,35 @@
+# Worked example: the minimal valid optimize artefact — a single iteration
+# with no passing samples (so no latency block) and a failure distribution
+# (required because failures > 0). The convergence block still names the
+# best iteration: with one iteration, it is the best there is.
+schemaVersion: "mavai-optimize-1"
+serviceContractId: "echo-service"
+objective: "MAXIMIZE"
+generatedAt: "2026-07-14T12:00:00Z"
+iterations:
+  - iteration: 0
+    factors:
+      temperature: 0.5
+    score: 0.0
+    execution:
+      samplesExecuted: 2
+      terminationReason: "COMPLETED"
+    statistics:
+      observed: 0.0
+      successes: 0
+      failures: 2
+      failureDistribution:
+        echoes-input: 2
+      criteria:
+        echoes-input:
+          observedPassRate: 0.0
+          pass: 0
+          fail: 2
+          failureDistribution:
+            echoes-input: 2
+convergence:
+  totalIterations: 1
+  bestIteration: 0
+  bestScore: 0.0
+  bestFactors:
+    temperature: 0.5

@@ -1,0 +1,25 @@
+# Worked example: the minimal valid exploration artefact — binding fields only.
+# Three passing samples are below every percentile floor (p50 needs 5), so the
+# latency block carries the raw durations and no stated percentile at all.
+schemaVersion: "mavai-explore-1"
+serviceContractId: "echo-service"
+configuration: "default"
+generatedAt: "2026-07-14T12:00:00Z"
+execution:
+  samplesPlanned: 3
+  samplesExecuted: 3
+  terminationReason: "COMPLETED"
+statistics:
+  observed: 1.0
+  successes: 3
+  failures: 0
+  criteria:
+    echoes-input:
+      observedPassRate: 1.0
+      pass: 3
+      fail: 0
+latency:
+  basis: "passing-samples"
+  contributingSamples: 3
+  totalSamples: 3
+  sortedPassingLatenciesMs: [12, 14, 15]

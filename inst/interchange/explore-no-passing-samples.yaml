@@ -1,0 +1,32 @@
+# Worked example: the boundary where no sample passed.
+# The latency block is absent as a whole — its basis population is empty.
+# The failure distribution is required because failures > 0.
+schemaVersion: "mavai-explore-1"
+serviceContractId: "shopping-basket"
+experimentId: "model-comparison"
+configuration: "tiny-model_t1.9"
+generatedAt: "2026-07-14T12:00:00Z"
+factors:
+  model: "tiny-model"
+  temperature: 1.9
+execution:
+  samplesPlanned: 10
+  samplesExecuted: 10
+  terminationReason: "COMPLETED"
+statistics:
+  observed: 0.0
+  successes: 0
+  failures: 10
+  failureDistribution:
+    valid-json: 10
+  criteria:
+    response-not-empty:
+      observedPassRate: 1.0
+      pass: 10
+      fail: 0
+    valid-json:
+      observedPassRate: 0.0
+      pass: 0
+      fail: 10
+      failureDistribution:
+        valid-json: 10

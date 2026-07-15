@@ -6,6 +6,7 @@ on:
     paths:
       - 'docs/**'
       - 'scripts/**'
+      - 'schema/**'
       - '.github/workflows/pages.yml'
 
   workflow_dispatch:
@@ -97,6 +98,19 @@ jobs:
           s = re.sub(r'<h1[^>]*>.*?</h1>\s*', '', s, count=1, flags=re.DOTALL)
           open('_overview-body.html', 'w').write(s)
           PY
+
+      - name: Publish schemas
+        run: |
+          mkdir -p _site/schema
+          cp schema/*.schema.json schema/*.xsd _site/schema/
+          {
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>mavai — Schemas</title></head><body>'
+            echo '<h1>mavai interchange schemas</h1>'
+            echo '<p>Machine-readable schemas for the artefacts the mavai frameworks exchange: statistical conformance case suites, exploration and optimize experiment documents, and the verdict XML interchange. Their authority is the mavai requirements catalog; they are published here and as versioned assets on <a href="https://github.com/mavai-org/mavai-R/releases">mavai-R releases</a> — pin a release for build-time conformance.</p>'
+            echo '<ul>'
+            for f in _site/schema/*.json _site/schema/*.xsd; do b=$(basename "$f"); echo "<li><a href=\"$b\">$b</a></li>"; done
+            echo '</ul></body></html>'
+          } > _site/schema/index.html
 
       - name: Create index page
         run: |
@@ -284,6 +298,16 @@ jobs:
                         context of the distributional contract methodology.
                       </p>
                       <a href="glossary.pdf" class="btn">Download PDF</a>
+                    </div>
+                    <div class="doc-card">
+                      <h3>Interchange Schemas</h3>
+                      <p>
+                        Machine-readable schemas for the artefacts the mavai frameworks
+                        exchange: statistical conformance case suites, exploration and
+                        optimize experiment documents, and the verdict XML interchange.
+                        Also published as versioned release assets for build-time pinning.
+                      </p>
+                      <a href="schema/" class="btn">Browse Schemas</a>
                     </div>
                   </div>
                 </section>
