@@ -5,7 +5,7 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [Unreleased]
+## [0.8.6] — 2026-07-15
 
 **Interchange schemas hosted (additive, non-statistical).** This repository
 now additionally publishes the mavai family's experiment interchange
