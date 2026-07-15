@@ -5,6 +5,20 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [Unreleased]
+
+**Interchange schemas hosted (additive, non-statistical).** This repository
+now additionally publishes the mavai family's experiment interchange
+artefacts: JSON Schemas for `mavai-explore-1` (one document per explored
+experiment configuration) and `mavai-optimize-1` (one document per optimize
+run) in `schema/`, with conformant worked examples in `inst/interchange/`.
+Releases gain a second asset, `interchange-vX.Y.Z.zip`, alongside the
+statistical cases bundle. **Publication channel only**: the formats are
+specified canonically in the family's requirements catalog, nothing here is
+computed in R, and no statistical authority is claimed — see
+`inst/interchange/README.md`. The statistical cases and their schema are
+untouched.
+
 ## [0.8.5] — 2026-07-11
 
 **New suite: `risk_driven_sizing.json` (additive).** Materialises

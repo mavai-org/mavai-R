@@ -1,0 +1,48 @@
+# Worked example: a typical exploration artefact.
+# One document per explored experiment configuration. Percentiles are STATED
+# by the emitter under its minimum-sample gate: here 17 passing samples state
+# p50 (floor 5) but not p95 (floor 20) nor p99 (floor 100) — absence means
+# "not stateable", never zero.
+schemaVersion: "mavai-explore-1"
+serviceContractId: "shopping-basket"
+experimentId: "model-comparison"
+configuration: "small-model_t0.7"
+generatedAt: "2026-07-14T12:00:00Z"
+factors:
+  model: "small-model"
+  temperature: 0.7
+execution:
+  samplesPlanned: 20
+  samplesExecuted: 20
+  terminationReason: "COMPLETED"
+statistics:
+  observed: 0.85
+  successes: 17
+  failures: 3
+  failureDistribution:
+    valid-json: 2
+    response-not-empty: 1
+  criteria:
+    response-not-empty:
+      observedPassRate: 0.95
+      pass: 19
+      fail: 1
+      failureDistribution:
+        response-not-empty: 1
+    valid-json:
+      observedPassRate: 0.9
+      pass: 18
+      fail: 2
+      failureDistribution:
+        valid-json: 2
+cost:
+  totalTimeMs: 6540
+  avgTimePerSampleMs: 327
+  totalTokens: 2000
+  avgTokensPerSample: 100
+latency:
+  basis: "passing-samples"
+  contributingSamples: 17
+  totalSamples: 20
+  p50Ms: 16
+  sortedPassingLatenciesMs: [11, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19, 20, 22, 25]

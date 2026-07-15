@@ -1,0 +1,105 @@
+# Worked example: a typical optimize artefact.
+# One document per optimize run: the full iteration history plus the
+# convergence summary, which must be internally consistent with the iteration
+# it names (a semantic obligation on emitters, cross-checked by their
+# conformance tests). Per-iteration sample counts are typically small, so most
+# latency percentiles are absent — that is the emitter's gate working:
+# iteration 1's five passing samples state p50 (floor 5); two and four
+# passing samples state nothing.
+schemaVersion: "mavai-optimize-1"
+serviceContractId: "shopping-basket"
+experimentId: "temperature-optimization"
+objective: "MAXIMIZE"
+generatedAt: "2026-07-14T12:00:00Z"
+iterations:
+  - iteration: 0
+    factors:
+      model: "small-model"
+      temperature: 0.9
+    score: 0.4
+    execution:
+      samplesExecuted: 5
+      terminationReason: "COMPLETED"
+    statistics:
+      observed: 0.4
+      successes: 2
+      failures: 3
+      failureDistribution:
+        valid-json: 3
+      criteria:
+        valid-json:
+          observedPassRate: 0.4
+          pass: 2
+          fail: 3
+          failureDistribution:
+            valid-json: 3
+    cost:
+      totalTimeMs: 2400
+      avgTimePerSampleMs: 480
+    latency:
+      basis: "passing-samples"
+      contributingSamples: 2
+      totalSamples: 5
+      sortedPassingLatenciesMs: [420, 510]
+  - iteration: 1
+    factors:
+      model: "small-model"
+      temperature: 0.3
+    score: 1.0
+    execution:
+      samplesExecuted: 5
+      terminationReason: "COMPLETED"
+    statistics:
+      observed: 1.0
+      successes: 5
+      failures: 0
+      criteria:
+        valid-json:
+          observedPassRate: 1.0
+          pass: 5
+          fail: 0
+    cost:
+      totalTimeMs: 2270
+      avgTimePerSampleMs: 454
+    latency:
+      basis: "passing-samples"
+      contributingSamples: 5
+      totalSamples: 5
+      p50Ms: 450
+      sortedPassingLatenciesMs: [400, 430, 450, 470, 520]
+  - iteration: 2
+    factors:
+      model: "small-model"
+      temperature: 0.1
+    score: 0.8
+    execution:
+      samplesExecuted: 5
+      terminationReason: "COMPLETED"
+    statistics:
+      observed: 0.8
+      successes: 4
+      failures: 1
+      failureDistribution:
+        valid-json: 1
+      criteria:
+        valid-json:
+          observedPassRate: 0.8
+          pass: 4
+          fail: 1
+          failureDistribution:
+            valid-json: 1
+    cost:
+      totalTimeMs: 2330
+      avgTimePerSampleMs: 466
+    latency:
+      basis: "passing-samples"
+      contributingSamples: 4
+      totalSamples: 5
+      sortedPassingLatenciesMs: [410, 440, 480, 530]
+convergence:
+  totalIterations: 3
+  bestIteration: 1
+  bestScore: 1.0
+  bestFactors:
+    model: "small-model"
+    temperature: 0.3
