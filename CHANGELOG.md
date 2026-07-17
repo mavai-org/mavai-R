@@ -5,7 +5,7 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [Unreleased]
+## [0.9.0] — 2026-07-17
 
 **Interchange `failureDistribution` redesigned (breaking to the section's
 shape; the `mavai-explore-1` / `mavai-optimize-1` version ids are deliberately
