@@ -19,14 +19,16 @@ iterations:
       successes: 0
       failures: 2
       failureDistribution:
-        echoes-input: 2
+        - condition: "echoes-input"
+          count: 2
       criteria:
         echoes-input:
           observedPassRate: 0.0
           pass: 0
           fail: 2
           failureDistribution:
-            echoes-input: 2
+            - condition: "echoes-input"
+              count: 2
 convergence:
   totalIterations: 1
   bestIteration: 0

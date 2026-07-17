@@ -18,7 +18,8 @@ statistics:
   successes: 0
   failures: 10
   failureDistribution:
-    valid-json: 10
+    - condition: "valid-json"
+      count: 10
   criteria:
     response-not-empty:
       observedPassRate: 1.0
@@ -29,4 +30,5 @@ statistics:
       pass: 0
       fail: 10
       failureDistribution:
-        valid-json: 10
+        - condition: "valid-json"
+          count: 10

@@ -19,6 +19,17 @@ jobs:
         id: version
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install interchange validation dependencies
+        run: Rscript -e 'install.packages(c("jsonvalidate", "yaml", "jsonlite"))'
+
+      - name: Validate interchange schemas and worked examples
+        run: Rscript scripts/validate_interchange.R
+
       - name: Package case files with schema
         run: |
           cd inst/cases
