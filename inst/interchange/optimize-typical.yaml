@@ -25,14 +25,16 @@ iterations:
       successes: 2
       failures: 3
       failureDistribution:
-        valid-json: 3
+        - condition: "valid-json"
+          count: 3
       criteria:
         valid-json:
           observedPassRate: 0.4
           pass: 2
           fail: 3
           failureDistribution:
-            valid-json: 3
+            - condition: "valid-json"
+              count: 3
     cost:
       totalTimeMs: 2400
       avgTimePerSampleMs: 480
@@ -80,14 +82,16 @@ iterations:
       successes: 4
       failures: 1
       failureDistribution:
-        valid-json: 1
+        - condition: "valid-json"
+          count: 1
       criteria:
         valid-json:
           observedPassRate: 0.8
           pass: 4
           fail: 1
           failureDistribution:
-            valid-json: 1
+            - condition: "valid-json"
+              count: 1
     cost:
       totalTimeMs: 2330
       avgTimePerSampleMs: 466

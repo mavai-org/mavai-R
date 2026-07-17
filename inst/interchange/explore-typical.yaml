@@ -20,21 +20,29 @@ statistics:
   successes: 17
   failures: 3
   failureDistribution:
-    valid-json: 2
-    response-not-empty: 1
+    - condition: "valid-json"
+      count: 2
+    - condition: "response-not-empty (input 1)"
+      inputIndex: 1
+      inputExcerpt: "the second worked example's driving text, briefly"
+      count: 1
   criteria:
     response-not-empty:
       observedPassRate: 0.95
       pass: 19
       fail: 1
       failureDistribution:
-        response-not-empty: 1
+        - condition: "response-not-empty (input 1)"
+          inputIndex: 1
+          inputExcerpt: "the second worked example's driving text, briefly"
+          count: 1
     valid-json:
       observedPassRate: 0.9
       pass: 18
       fail: 2
       failureDistribution:
-        valid-json: 2
+        - condition: "valid-json"
+          count: 2
 cost:
   totalTimeMs: 6540
   avgTimePerSampleMs: 327

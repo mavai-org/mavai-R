@@ -5,6 +5,29 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [Unreleased]
+
+**Interchange `failureDistribution` redesigned (breaking to the section's
+shape; the `mavai-explore-1` / `mavai-optimize-1` version ids are deliberately
+reused — no framework emitter has shipped against the published schemas, so
+there are no external consumers to migrate).** The check-name-keyed mapping is
+withdrawn: emitters that derived keys from input content produced mapping keys
+past YAML's 1,024-character implicit-key limit, making faithfully emitted
+artefacts unparseable. The section is now a *sequence* of entries
+`{condition, count, inputIndex?, inputExcerpt?}` — `condition` is the
+violating condition's bounded identity (≤ 256 characters, never embedding
+input or response content), per-input attribution travels structurally in
+`inputIndex`, and `inputExcerpt` is a bounded informational excerpt. Both
+schemas and all worked examples are updated. Authority: the family catalog's
+interchange key-discipline amendment of 2026-07-17.
+
+**Interchange validation build step.** `scripts/validate_interchange.R`
+compiles each interchange schema under ajv (draft 2020-12) and validates
+every worked example against its schema; `tests/testthat/test-interchange-schemas.R`
+drives it and adds refusal cases, and the release workflow runs it before
+packaging the `interchange-vX.Y.Z.zip` asset, so an invalid schema or a
+drifted example can no longer ship. New Suggests: `jsonvalidate`, `yaml`.
+
 ## [0.8.6] — 2026-07-15
 
 **Interchange schemas hosted (additive, non-statistical).** This repository
