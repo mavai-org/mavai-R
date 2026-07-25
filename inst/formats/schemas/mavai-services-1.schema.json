@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mavai-org/mavai-R/inst/formats/schemas/mavai-services-1.schema.json",
+  "title": "mavai declarative service-definition file (mavai-services/1)",
+  "description": "Structural schema for the mavai family's declarative service-definition file. It validates the parsed data model of the YAML document. The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-SERVICES-FORMAT.md); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (type-registry resolution, factory-signature configuration validation for user types, duplicate-grid-point refusal, provider capability vetoes, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
+  "type": "object",
+  "required": ["format", "services"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "mavai-services/1",
+      "$comment": "SII.5: format: MUST be mavai-services/1."
+    },
+    "services": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"minLength": 1},
+      "additionalProperties": {"$ref": "#/$defs/serviceDefinition"}
+    }
+  },
+  "$defs": {
+    "scalarValue": {
+      "type": ["string", "number", "boolean"],
+      "$comment": "SII.7: configuration values are scalars (string, number, boolean) — matching the mavai-explore-1 factors value space."
+    },
+    "serviceDefinition": {
+      "type": "object",
+      "required": ["type", "configuration"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "SII.7: names a service implementation in the type registry — a built-in (language-model) or a user type registered in host code. Registry resolution is semantic, manifest-carried."
+        },
+        "configuration": {
+          "type": "object",
+          "$comment": "Part I: exactly one configuration: block — the complete set of covariate values the service runs under; no parameter lives anywhere else in the definition (the uniformity rule)."
+        },
+        "explorations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "object", "minProperties": 1},
+          "$comment": "Part I / SII.6: builder-style entries, each declaring only the covariates that deviate from the baseline record. An entry restating the baseline (including an empty entry) is refused — duplicate resolved grid points are semantic, manifest-carried."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"type": {"const": "language-model"}},
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "configuration": {"$ref": "#/$defs/languageModelConfiguration"},
+              "explorations": {
+                "items": {"$ref": "#/$defs/languageModelExplorationEntry"}
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "configuration": {
+                "additionalProperties": {"$ref": "#/$defs/scalarValue"},
+                "$comment": "SII.7: for a user-registered type the factory's signature is the configuration schema (validated by the reader at load time, not expressible here); values are scalars."
+              },
+              "explorations": {
+                "items": {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {"$ref": "#/$defs/scalarValue"}
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "languageModelConfiguration": {
+      "type": "object",
+      "required": ["system-prompt"],
+      "additionalProperties": false,
+      "properties": {
+        "system-prompt": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "SII.3: required — the system prompt is what turns a model into a service, the defining covariate of a language-model-backed service; a configuration without one is refused."
+        },
+        "provider": {
+          "enum": ["openai", "anthropic", "ollama", "mistral", "apertus"],
+          "$comment": "SII.3: the named vendor integrations; omitted means the generic OpenAI-compatible protocol against the environment-configured endpoint."
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "SII.3: optional, with an environment default."
+        },
+        "temperature": {"type": "number"},
+        "top-p": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "$comment": "SII.3, client-factors amendment 2026-07-17: a number in (0, 1], the nucleus-sampling mass."
+        },
+        "thinking": {
+          "enum": ["adaptive", "none"],
+          "$comment": "SII.3, client-factors amendment 2026-07-17: default none. Provider vetoes (anthropic's thinking/sampling exclusion) are semantic, manifest-carried."
+        },
+        "prompt-caching": {
+          "type": "boolean",
+          "$comment": "SII.3, client-factors amendment 2026-07-17: default false; correctness-invariant by construction, stochastic impact confined to latency and cost."
+        },
+        "response-schema": {
+          "type": "object",
+          "$comment": "SII.3: an inline mapping — the JSON Schema the model is instructed to satisfy, passed through the provider's structured-output mechanism; a covariate unconditionally (the generation-side rule, 2026-07-17). Per-provider support is a load-time refusal, semantic, manifest-carried."
+        }
+      },
+      "$comment": "SII.3: the type: language-model configuration block holds every parameter; no parameter may appear outside it. Token-related parameters are deliberately absent from v0. Secrets never appear in this file — credentials are environment-only."
+    },
+    "languageModelExplorationEntry": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "system-prompt": {"type": "string", "minLength": 1},
+        "provider": {"enum": ["openai", "anthropic", "ollama", "mistral", "apertus"]},
+        "model": {"type": "string", "minLength": 1},
+        "temperature": {"type": "number"},
+        "top-p": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "thinking": {"enum": ["adaptive", "none"]},
+        "prompt-caching": {"type": "boolean"},
+        "response-schema": {"type": "object"}
+      },
+      "$comment": "Part I / SII.6: an exploration entry declares only the covariates that deviate from the baseline record — the same key vocabulary, nothing required."
+    }
+  }
+}

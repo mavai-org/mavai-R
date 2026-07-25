@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mavai-org/mavai-R/inst/formats/schemas/mavai-contract-1.schema.json",
+  "title": "mavai declarative contract file (mavai-contract/1)",
+  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
+  "type": "object",
+  "required": ["format", "contract", "service", "criteria", "inputs"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "mavai-contract/1",
+      "$comment": "Part I, Keys: the format identifier MUST be mavai-contract/1 for this version."
+    },
+    "contract": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Part I, Keys: author-chosen name; the instantiated contract's identity (SII.2)."
+    },
+    "service": {
+      "type": "string",
+      "minLength": 1,
+      "$comment": "Part I, Keys: the name of the registered service binding (SII.3)."
+    },
+    "transforms": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "not": {"const": "raw"},
+        "$comment": "Part I, Views / SII.10: raw is the reserved name of the untransformed response and cannot be declared as a view."
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "$comment": "Part I, Views: json/xml/yaml are the stock transformations; any other value names a transformation registered in code (registry resolution is semantic, manifest-carried)."
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/criterion"},
+      "$comment": "Part I, criteria section: a list of one or more criterion entries, each its own Bernoulli stream with its own threshold. Criterion-name uniqueness is semantic, manifest-carried."
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/inputEntry"},
+      "$comment": "Part I, Keys: the fixed, finite input list — the pool the engine cycles over (SII.4)."
+    },
+    "intent": {
+      "enum": ["verification", "smoke"],
+      "$comment": "Part I, Keys: verification (default) or smoke (SII.5)."
+    },
+    "confidence": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "exclusiveMaximum": 1,
+      "$comment": "Part I, Keys / SII.4: contract-level confidence level; default 0.95."
+    },
+    "latency": {"$ref": "#/$defs/latency"},
+    "facets": {
+      "not": {},
+      "$comment": "Part III: reserved seam (shape normative, semantics reserved) — a v0 reader rejects facets: with a pointer to the extension-seams section."
+    },
+    "covariates": {
+      "not": {},
+      "$comment": "Part III: reserved seam — rejected by a v0 reader with the seam pointer."
+    },
+    "budget": {
+      "not": {},
+      "$comment": "Part III: reserved seam — rejected by a v0 reader with the seam pointer."
+    },
+    "kind": {
+      "not": {},
+      "$comment": "Part V, run-mode amendment 2026-07-07: kind: is withdrawn — the run mode is the invocation verb."
+    },
+    "samples": {
+      "not": {},
+      "$comment": "SII.4, invocation-time-sizing amendment 2026-07-08: sample sizing left the file — refused naming the --samples flag."
+    },
+    "samples-per-config": {
+      "not": {},
+      "$comment": "SII.4 / Part III explore seam: withdrawn file key — refused naming the --samples-per-config flag."
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "type": ["string", "number", "boolean"],
+      "$comment": "MAVAI-SERVICES-FORMAT.md SII.7: inputs are scalars, or flat lists of scalars splatted positionally."
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "threshold": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "$comment": "Part I, criteria section: required success rate in (0,1); normative by definition. threshold: empirical stays reserved (Part III) — the string fails this type, as mandated."
+        },
+        "tolerate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "$comment": "Part I / Part V risk-claim amendment 2026-07-12: the empirical criterion's risk claim — the worst true rate the operator accepts, an absolute rate in (0,1)."
+        },
+        "confidence": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "$comment": "Part V risk-claim amendment 2026-07-12: a per-criterion confidence on an empirical criterion, overriding the contract default."
+        },
+        "threshold-origin": {
+          "enum": ["sla", "slo", "policy"],
+          "$comment": "Part III, threshold provenance: sla / slo / policy, on the criterion entry."
+        },
+        "contract-ref": {"type": "string", "minLength": 1},
+        "postconditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/postconditionEntry"}
+        },
+        "equals": {"type": "string"},
+        "one-of": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "contains": {"type": "string"},
+        "matches": {"type": "string"},
+        "parses": {"type": "string", "minLength": 1},
+        "satisfies": {"type": "string", "minLength": 1}
+      },
+      "anyOf": [
+        {"required": ["postconditions"]},
+        {"required": ["equals"]},
+        {"required": ["one-of"]},
+        {"required": ["contains"]},
+        {"required": ["matches"]},
+        {"required": ["parses"]},
+        {"required": ["satisfies"]}
+      ],
+      "not": {
+        "required": ["threshold", "tolerate"],
+        "$comment": "Part I, criteria section: tolerate: alongside threshold: is refused — a stipulated bar has no baseline claim to protect."
+      },
+      "dependentSchemas": {
+        "confidence": {
+          "not": {"required": ["threshold"]},
+          "$comment": "Part III (per-criterion confidence is a graduation moment for thresholded criteria) with the 2026-07-12 amendment (empirical criteria MAY declare confidence:): confidence on a criterion entry requires the criterion to be empirical."
+        }
+      },
+      "$comment": "Part I, criteria section: content is one or more postcondition forms — declared directly (a compatible subset, all holding together) and/or as a postconditions: list. Direct forms judge raw; in:/path: qualifiers belong on postcondition entries."
+    },
+    "postconditionEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "in": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "Part I, subject rule: every form judges the view named by its in: qualifier; omitting in: means in: raw. That the named view is declared is semantic, manifest-carried."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "Part I, subject rule / SII.10: a selection expression (JSONPath RFC 9535 or XPath 1.0) addressing the subject view's structured value. Expression parseability is semantic, manifest-carried."
+        },
+        "equals": {"type": "string"},
+        "one-of": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "contains": {"type": "string"},
+        "matches": {"type": "string"},
+        "parses": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "Part I, forms catalogue: parses: <view> — the named transformation succeeds on this response. That the view is declared is semantic, manifest-carried."
+        },
+        "satisfies": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {"required": ["equals"]},
+        {"required": ["one-of"]},
+        {"required": ["contains"]},
+        {"required": ["matches"]},
+        {"required": ["parses"]},
+        {"required": ["satisfies"]}
+      ],
+      "dependentSchemas": {
+        "path": {
+          "required": ["in"],
+          "anyOf": [
+            {"required": ["equals"]},
+            {"required": ["one-of"]},
+            {"required": ["contains"]},
+            {"required": ["matches"]}
+          ],
+          "$comment": "Part I, subject rule: path requires an in: naming a declared view (the raw response is unstructured text), and only a string form MAY carry path:."
+        },
+        "parses": {
+          "not": {"required": ["in"]},
+          "$comment": "Part I, forms catalogue: parses: names its view directly — its subject is the response, so it takes no in: qualifier."
+        }
+      },
+      "$comment": "One postcondition entry: exactly one form, optionally in:-qualified, string forms optionally path:-qualified under a declared view."
+    },
+    "inputEntry": {
+      "oneOf": [
+        {"$ref": "#/$defs/scalar"},
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/scalar"},
+          "$comment": "MAVAI-SERVICES-FORMAT.md SII.7: a flat list of scalars, splatted positionally across the binding's parameters."
+        },
+        {
+          "type": "object",
+          "required": ["input", "expected"],
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "oneOf": [
+                {"$ref": "#/$defs/scalar"},
+                {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/scalar"}}
+              ]
+            },
+            "expected": {
+              "oneOf": [
+                {"$ref": "#/$defs/postconditionEntry"},
+                {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/postconditionEntry"}}
+              ],
+              "$comment": "Part I, input-specific postconditions: a single form (sugar) or a list of postcondition entries with the full form vocabulary. Legal only with exactly one criteria entry — semantic, manifest-carried."
+            }
+          },
+          "$comment": "Part I, input-specific postconditions: an {input, expected} entry carrying input-specific expectations."
+        }
+      ]
+    },
+    "latency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "p50": {"type": "integer", "minimum": 1},
+        "p90": {"type": "integer", "minimum": 1},
+        "p95": {"type": "integer", "minimum": 1},
+        "p99": {"type": "integer", "minimum": 1},
+        "empirical": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["p50", "p90", "p95", "p99"]}
+        },
+        "confidence": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "threshold-origin": {"enum": ["sla", "slo", "policy"]},
+        "contract-ref": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {"required": ["empirical"]},
+        {
+          "anyOf": [
+            {"required": ["p50"]},
+            {"required": ["p90"]},
+            {"required": ["p95"]},
+            {"required": ["p99"]}
+          ]
+        }
+      ],
+      "$comment": "Part III, latency (amendment 2026-07-09): two mutually exclusive shapes — explicit per-percentile millisecond ceilings (positive integers; the non-decreasing constraint is semantic, manifest-carried) or empirical: percentiles with baseline-derived bounds — with optional confidence: and the criterion provenance keys. Judged on test runs only."
+    }
+  }
+}
