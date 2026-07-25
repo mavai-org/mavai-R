@@ -6,5 +6,7 @@ services:
     type: language-model
     configuration:
       system-prompt: "You build baskets."
+      temperature: 0.2
     optimizations:
       - stepper: linear-sweep
+        stepper-config: { key: temperature, step: 0.1, stop: 1.0 }
