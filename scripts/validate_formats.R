@@ -54,20 +54,26 @@ for (format_id in names(schemas)) {
   validators[[format_id]] <- validator
 }
 
-# A corpus file's schema is selected by its own format: identifier — the
-# same dispatch a reader performs. A file whose format: matches no schema
-# is a corpus defect.
+manifest_path <- "inst/formats/manifest.yaml"
+manifest <- if (file.exists(manifest_path)) yaml::read_yaml(manifest_path) else NULL
+manifest_entries <- if (is.null(manifest)) list() else manifest[["corpus"]]
+by_file <- stats::setNames(
+  manifest_entries,
+  vapply(manifest_entries, function(e) e[["file"]], "")
+)
+
+# A corpus file's schema is selected by its manifest entry's format field
+# (a file's own format: identifier cannot serve — the wrong-identifier
+# refusal cases carry a deliberately unknown one); without a manifest
+# entry, the file's own identifier is the fallback dispatch.
 validator_for <- function(path) {
-  doc <- yaml::read_yaml(path)
-  format_id <- doc[["format"]]
+  entry <- by_file[[basename(path)]]
+  format_id <- if (!is.null(entry)) entry[["format"]] else yaml::read_yaml(path)[["format"]]
   if (is.null(format_id) || is.null(validators[[format_id]])) {
     return(NULL)
   }
   validators[[format_id]]
 }
-
-manifest_path <- "inst/formats/manifest.yaml"
-manifest <- if (file.exists(manifest_path)) yaml::read_yaml(manifest_path) else NULL
 
 valid_files <- sort(Sys.glob("inst/formats/corpus/valid/*.yaml"))
 for (path in valid_files) {
@@ -98,8 +104,6 @@ if (length(invalid_files) > 0L && is.null(manifest)) {
   failures <- failures + 1L
 }
 if (!is.null(manifest)) {
-  entries <- manifest[["corpus"]]
-  by_file <- stats::setNames(entries, vapply(entries, `[[`, "", "file"))
   for (path in invalid_files) {
     entry <- by_file[[basename(path)]]
     if (is.null(entry)) {
@@ -113,8 +117,16 @@ if (!is.null(manifest)) {
       failures <- failures + 1L
       next
     }
+    category <- entry[["category"]]
+    classification <- manifest[["categories"]][[category]]
+    if (is.null(classification)) {
+      cat(sprintf("FAIL  %s: category %s is not in the manifest's registry\n",
+                  path, category))
+      failures <- failures + 1L
+      next
+    }
     ok <- isTRUE(validator(read_yaml_as_json(path)))
-    structural <- identical(entry[["refusal"]], "structural")
+    structural <- identical(classification[["refusal"]], "structural")
     if (structural && ok) {
       cat(sprintf("FAIL  %s is classified structural but the schema accepts it\n", path))
       failures <- failures + 1L
