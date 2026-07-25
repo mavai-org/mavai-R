@@ -104,14 +104,36 @@ The `tolerance` field specifies the maximum acceptable absolute difference
 between a framework's output and the reference value. Framework conformance
 tests should use this tolerance for floating-point comparison.
 
+## A second oracle duty: the declarative format schemas
+
+Beside the statistical reference data, this repository hosts and versions the
+machine-checkable materialisation of the mavai family's declarative authoring
+formats — JSON Schemas for `mavai-contract/1` and `mavai-services/1` with a
+conformance corpus and its manifest, under
+[`inst/formats/`](inst/formats/README.md). The pairing is deliberate: the
+Statistical Companion with `inst/cases/` owns *methodology* truth; the format
+specifications with `inst/formats/` own *format* truth. Nothing in the
+formats directory is computed in R and none of it carries statistical
+authority — mavai-R is the family's language-neutral, release-tagged
+distribution channel, and these artefacts are family engineering
+infrastructure for the implementing frameworks, not a public standard (see
+the directory README for the full positioning and the consumer obligation).
+
 ## Releases
 
 Conformance case files are published as versioned GitHub Release artifacts.
 Consuming projects download a pinned release rather than depending on this
 repository directly.
 
-Each release attaches a zip archive (e.g., `cases-v0.1.0.zip`) containing the
-JSON files from `inst/cases/` in a flat structure.
+Each release attaches three zip archives in a flat structure:
+
+- `cases-vX.Y.Z.zip` — the statistical conformance cases from `inst/cases/`
+  plus their schema.
+- `interchange-vX.Y.Z.zip` — the experiment interchange schemas
+  (`mavai-explore-1`, `mavai-optimize-1`, the verdict XSDs) with worked
+  examples.
+- `formats-vX.Y.Z.zip` — the declarative format schemas with the conformance
+  corpus and manifest from `inst/formats/`.
 
 ### Download URL
 
