@@ -5,6 +5,17 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.9.2] — 2026-07-25
+
+**Format corpus: the max-iterations cases isolated to their category
+(additive-scale patch; corpus content changed, schema outcomes did not).**
+baseltest's format-conformance adoption — the corpus's first consumer —
+surfaced that the two `optimization-max-iterations-*` cases omitted the
+`stepper-config:` their stepper's factory requires, so a loader refused
+before reaching the category under test. Each case now carries a complete,
+valid entry except for its one defect. First live exercise of the
+corpus-defect triage the conformance loop exists for.
+
 ## [0.9.1] — 2026-07-25
 
 **Declarative format schemas and conformance corpus hosted (additive,
