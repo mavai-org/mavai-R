@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# mavai-ref: JVI-YM9A27C — do not remove (resolves in mavai-orchestrator)
 # Validate the declarative format schemas and their conformance corpus.
 #
 # Checks:
