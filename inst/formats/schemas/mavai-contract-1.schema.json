@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mavai-org/mavai-R/inst/formats/schemas/mavai-contract-1.schema.json",
   "title": "mavai declarative contract file (mavai-contract/1)",
-  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
+  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen; amendment session 2026-07-25); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, file-path resolution, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
   "type": "object",
   "required": ["format", "contract", "service", "criteria", "inputs"],
   "additionalProperties": false,
@@ -44,7 +44,7 @@
       "type": "array",
       "minItems": 1,
       "items": {"$ref": "#/$defs/inputEntry"},
-      "$comment": "Part I, Keys: the fixed, finite input list — the pool the engine cycles over (SII.4)."
+      "$comment": "Part I, Keys: the fixed, finite input list — the pool the engine cycles over (SII.4). Value shapes per Part I's input-values section (amended 2026-07-25)."
     },
     "intent": {
       "enum": ["verification", "smoke"],
@@ -85,7 +85,54 @@
   "$defs": {
     "scalar": {
       "type": ["string", "number", "boolean"],
-      "$comment": "MAVAI-SERVICES-FORMAT.md SII.7: inputs are scalars, or flat lists of scalars splatted positionally."
+      "$comment": "Part I, input-values section / MAVAI-SERVICES-FORMAT.md SII.7: a scalar input, passed to the binding as-is."
+    },
+    "filePart": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "oneOf": [
+            {"type": "string"},
+            {
+              "type": "object",
+              "required": ["file"],
+              "additionalProperties": false,
+              "properties": {"file": {"type": "string", "minLength": 1}}
+            }
+          ],
+          "$comment": "Part I, input-values section (amended 2026-07-25): inline text, or {file: <path>} decoded as UTF-8 text."
+        },
+        "audio": {"type": "string", "minLength": 1},
+        "image": {"type": "string", "minLength": 1},
+        "document": {"type": "string", "minLength": 1},
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "$comment": "Part I, input-values section: the kind with no model wire form — deliver-to-binding only."
+        }
+      },
+      "$comment": "Part I, input-values section (amended 2026-07-25): a file-sourced part — a single-key mapping; the kind is named by the author, never sniffed. Path resolution (relative to the contract file, read at load time, content-hashed into the input identity) is semantic, manifest-carried."
+    },
+    "inputValue": {
+      "oneOf": [
+        {"$ref": "#/$defs/scalar"},
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/scalar"},
+          "$comment": "Part I, input-values section / MAVAI-SERVICES-FORMAT.md SII.7: a flat list of scalars, splatted positionally across the binding's parameters."
+        },
+        {"$ref": "#/$defs/filePart"},
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/filePart"},
+          "$comment": "Part I, input-values section (amended 2026-07-25): parts in message order, forming one ordered multimodal message; a single-part list is the bare part. A list mixing scalars and parts is refused — the disjunction here admits no mixed list."
+        }
+      ]
     },
     "criterion": {
       "type": "object",
@@ -112,7 +159,7 @@
         },
         "threshold-origin": {
           "enum": ["sla", "slo", "policy"],
-          "$comment": "Part III, threshold provenance: sla / slo / policy, on the criterion entry."
+          "$comment": "Part III, threshold provenance: sla / slo / policy — a closed set, an unknown origin is refused (clarified 2026-07-25)."
         },
         "contract-ref": {"type": "string", "minLength": 1},
         "postconditions": {
@@ -143,10 +190,10 @@
       "dependentSchemas": {
         "confidence": {
           "not": {"required": ["threshold"]},
-          "$comment": "Part III (per-criterion confidence is a graduation moment for thresholded criteria) with the 2026-07-12 amendment (empirical criteria MAY declare confidence:): confidence on a criterion entry requires the criterion to be empirical."
+          "$comment": "Part I, criteria section (clarified 2026-07-25): a per-criterion confidence: is the empirical criterion's alone — beside threshold: it is refused."
         }
       },
-      "$comment": "Part I, criteria section: content is one or more postcondition forms — declared directly (a compatible subset, all holding together) and/or as a postconditions: list. Direct forms judge raw; in:/path: qualifiers belong on postcondition entries."
+      "$comment": "Part I, criteria section: content is one or more postcondition forms — declared directly (a compatible subset, all holding together) and/or as a postconditions: list; every criterion declares at least one form of its own (confirmed 2026-07-25). Direct forms judge raw; in:/path: qualifiers belong on postcondition entries."
     },
     "postconditionEntry": {
       "type": "object",
@@ -194,37 +241,58 @@
         },
         "parses": {
           "not": {"required": ["in"]},
-          "$comment": "Part I, forms catalogue: parses: names its view directly — its subject is the response, so it takes no in: qualifier."
+          "$comment": "Part I, subject rule (clarified 2026-07-25): parses: judges the response itself and names the view under test as its argument — it takes no in: qualifier."
         }
       },
       "$comment": "One postcondition entry: exactly one form, optionally in:-qualified, string forms optionally path:-qualified under a declared view."
     },
+    "expectedEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "in": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "equals": {"type": "string"},
+        "one-of": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "contains": {"type": "string"},
+        "matches": {"type": "string"},
+        "satisfies": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {"required": ["equals"]},
+        {"required": ["one-of"]},
+        {"required": ["contains"]},
+        {"required": ["matches"]},
+        {"required": ["satisfies"]}
+      ],
+      "dependentSchemas": {
+        "path": {
+          "required": ["in"],
+          "anyOf": [
+            {"required": ["equals"]},
+            {"required": ["one-of"]},
+            {"required": ["contains"]},
+            {"required": ["matches"]}
+          ]
+        }
+      },
+      "$comment": "Part I, input-specific postconditions (clarified 2026-07-25): the full form vocabulary except parses: — parseability is a property of the response under a view, not of one input; declare it once as a criterion-level form."
+    },
     "inputEntry": {
       "oneOf": [
-        {"$ref": "#/$defs/scalar"},
-        {
-          "type": "array",
-          "minItems": 1,
-          "items": {"$ref": "#/$defs/scalar"},
-          "$comment": "MAVAI-SERVICES-FORMAT.md SII.7: a flat list of scalars, splatted positionally across the binding's parameters."
-        },
+        {"$ref": "#/$defs/inputValue"},
         {
           "type": "object",
           "required": ["input", "expected"],
           "additionalProperties": false,
           "properties": {
-            "input": {
-              "oneOf": [
-                {"$ref": "#/$defs/scalar"},
-                {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/scalar"}}
-              ]
-            },
+            "input": {"$ref": "#/$defs/inputValue"},
             "expected": {
               "oneOf": [
-                {"$ref": "#/$defs/postconditionEntry"},
-                {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/postconditionEntry"}}
+                {"$ref": "#/$defs/expectedEntry"},
+                {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/expectedEntry"}}
               ],
-              "$comment": "Part I, input-specific postconditions: a single form (sugar) or a list of postcondition entries with the full form vocabulary. Legal only with exactly one criteria entry — semantic, manifest-carried."
+              "$comment": "Part I, input-specific postconditions: a single form (sugar) or a list of postcondition entries. Legal only with exactly one criteria entry — semantic, manifest-carried."
             }
           },
           "$comment": "Part I, input-specific postconditions: an {input, expected} entry carrying input-specific expectations."
@@ -245,7 +313,12 @@
           "uniqueItems": true,
           "items": {"enum": ["p50", "p90", "p95", "p99"]}
         },
-        "confidence": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "confidence": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "$comment": "Part III, latency seam (clarified 2026-07-25): legal on either shape — the derivation confidence for empirical bounds, recorded provenance for explicit ceilings."
+        },
         "threshold-origin": {"enum": ["sla", "slo", "policy"]},
         "contract-ref": {"type": "string", "minLength": 1}
       },
@@ -260,7 +333,7 @@
           ]
         }
       ],
-      "$comment": "Part III, latency (amendment 2026-07-09): two mutually exclusive shapes — explicit per-percentile millisecond ceilings (positive integers; the non-decreasing constraint is semantic, manifest-carried) or empirical: percentiles with baseline-derived bounds — with optional confidence: and the criterion provenance keys. Judged on test runs only."
+      "$comment": "Part III, latency (amendment 2026-07-09): two mutually exclusive shapes — explicit per-percentile millisecond ceilings (positive integers; the non-decreasing constraint is semantic, manifest-carried) or empirical: percentiles with baseline-derived bounds. Judged on test runs only."
     }
   }
 }

@@ -125,6 +125,36 @@ test_that("contradictory latency shapes are refused", {
   expect_false(contract_validator()(as_json(doc)))
 })
 
+test_that("parses: inside per-input expected is refused", {
+  # Clarified 2026-07-25: parseability is a criterion-level form.
+  doc <- minimal_contract()
+  doc$transforms <- list(basket = "json")
+  doc$inputs <- list(list(input = "Alice", expected = list(list(parses = "basket"))))
+  expect_false(contract_validator()(as_json(doc)))
+})
+
+test_that("a file-sourced part input with expectations validates", {
+  doc <- minimal_contract()
+  doc$inputs <- list(
+    list(input = list(list(audio = "./audio/clip-01.m4a")),
+         expected = list(list(contains = "fox"))),
+    list(list(text = "What colour dominates?"), list(image = "./images/swatch.png"))
+  )
+  expect_true(contract_validator()(as_json(doc)))
+})
+
+test_that("a list mixing scalars and parts is refused", {
+  doc <- minimal_contract()
+  doc$inputs <- list(list("a scalar", list(image = "./images/swatch.png")))
+  expect_false(contract_validator()(as_json(doc)))
+})
+
+test_that("an unknown input part key is refused", {
+  doc <- minimal_contract()
+  doc$inputs <- list(list(list(video = "./clip.mp4")))
+  expect_false(contract_validator()(as_json(doc)))
+})
+
 test_that("the specification's minimal services file validates", {
   expect_true(services_validator()(as_json(minimal_services())))
 })
@@ -150,5 +180,39 @@ test_that("an unknown language-model configuration key is refused", {
 test_that("an unknown provider is refused", {
   doc <- minimal_services()
   doc$services$greeter$configuration$provider <- "acme"
+  expect_false(services_validator()(as_json(doc)))
+})
+
+test_that("a capability allowance validates and an unknown capability is refused", {
+  doc <- minimal_services()
+  doc$services$greeter$configuration$capabilities <- list("image-input")
+  expect_true(services_validator()(as_json(doc)))
+  doc$services$greeter$configuration$capabilities <- list("telepathy")
+  expect_false(services_validator()(as_json(doc)))
+})
+
+test_that("an optimizations section validates", {
+  doc <- minimal_services()
+  doc$services$greeter$optimizations <- list(list(
+    id = "prompt-tuning",
+    stepper = "prompt-engineer",
+    `stepper-config` = list(model = "gpt-4o", `max-exemplars` = 1L),
+    `max-iterations` = 8L,
+    `no-improvement-window` = 2L
+  ))
+  expect_true(services_validator()(as_json(doc)))
+})
+
+test_that("an optimization entry without max-iterations is refused", {
+  doc <- minimal_services()
+  doc$services$greeter$optimizations <- list(list(stepper = "linear-sweep"))
+  expect_false(services_validator()(as_json(doc)))
+})
+
+test_that("an optimization entry with an unknown key is refused", {
+  doc <- minimal_services()
+  doc$services$greeter$optimizations <- list(list(
+    stepper = "linear-sweep", `max-iterations` = 5L, epochs = 3L
+  ))
   expect_false(services_validator()(as_json(doc)))
 })
