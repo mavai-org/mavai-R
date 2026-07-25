@@ -30,6 +30,9 @@ jobs:
       - name: Validate interchange schemas and worked examples
         run: Rscript scripts/validate_interchange.R
 
+      - name: Validate format schemas and conformance corpus
+        run: Rscript scripts/validate_formats.R
+
       - name: Package case files with schema
         run: |
           cd inst/cases
@@ -44,10 +47,16 @@ jobs:
           cd ../inst/interchange
           zip -g "../../interchange-${{ steps.version.outputs.tag }}.zip" *.yaml README.md
 
+      - name: Package format schemas with conformance corpus
+        run: |
+          cd inst/formats
+          zip -r "../../formats-${{ steps.version.outputs.tag }}.zip" README.md manifest.yaml schemas corpus
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             cases-${{ steps.version.outputs.tag }}.zip
             interchange-${{ steps.version.outputs.tag }}.zip
+            formats-${{ steps.version.outputs.tag }}.zip
           generate_release_notes: true

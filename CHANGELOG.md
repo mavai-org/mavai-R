@@ -5,6 +5,26 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.9.1] — 2026-07-25
+
+**Declarative format schemas and conformance corpus hosted (additive,
+non-statistical).** This repository takes on a second, distinct oracle duty:
+beside the methodology pair (Statistical Companion ↔ `inst/cases/`), it now
+hosts the format pair — JSON Schemas (draft 2020-12) for the family's
+declarative authoring formats `mavai-contract/1` and `mavai-services/1`,
+with a 74-file conformance corpus (`valid/` files that MUST load, `invalid/`
+files that MUST be refused, one per refusal category) and a manifest
+classifying every expectation binding vs informational and every refusal
+structural vs semantic, under `inst/formats/`. Releases gain a third asset,
+`formats-vX.Y.Z.zip`. **Publication channel only**: the prose format
+specifications are canonical in the family's requirements catalog and are
+not published; these artefacts are family engineering infrastructure the
+implementing frameworks conform to, not a public standard. Nothing here is
+computed in R; no statistical authority is claimed. Build step:
+`scripts/validate_formats.R` (schema compilation, corpus-vs-manifest
+validation, run by testthat and the release workflow); the testthat file
+adds the two-way coverage check and refusal cases.
+
 ## [0.9.0] — 2026-07-17
 
 **Interchange `failureDistribution` redesigned (breaking to the section's
