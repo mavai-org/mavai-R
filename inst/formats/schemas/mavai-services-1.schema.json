@@ -174,6 +174,12 @@
           "type": "boolean",
           "$comment": "SII.3, client-factors amendment 2026-07-17: default false; correctness-invariant by construction, stochastic impact confined to latency and cost."
         },
+        "max-tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16000,
+          "$comment": "SII.3 (adopted 2026-07-25): the output-token ceiling — a distributional factor, fingerprinted; unstated means the format-normative default 4096."
+        },
         "response-schema": {
           "type": "object",
           "$comment": "SII.3: an inline mapping — the JSON Schema the model is instructed to satisfy, passed through the provider's structured-output mechanism; a covariate unconditionally (the generation-side rule, 2026-07-17). Per-provider support is a load-time refusal, semantic, manifest-carried."
@@ -202,6 +208,7 @@
         "top-p": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
         "thinking": {"enum": ["adaptive", "none"]},
         "prompt-caching": {"type": "boolean"},
+        "max-tokens": {"type": "integer", "minimum": 1, "maximum": 16000},
         "response-schema": {"type": "object"},
         "capabilities": {
           "type": "array",

@@ -48,6 +48,33 @@ minimal_services <- function() {
   )
 }
 
+test_that("the manifest and the corpus tree agree both ways", {
+  # The two-way coverage check: every declared refusal category has at
+  # least one corpus case, every case's category is declared, every case
+  # cites its mandating spec section, and the manifest mirrors the tree
+  # on disk exactly — a file without an entry, or an entry without a
+  # file, fails the build.
+  manifest <- yaml::read_yaml(file.path(repo_root, "inst", "formats", "manifest.yaml"))
+  entries <- manifest$corpus
+  categories <- manifest$categories
+  files <- vapply(entries, function(e) e$file, "")
+  outcomes <- vapply(entries, function(e) e$outcome, "")
+
+  expect_equal(anyDuplicated(files), 0L)
+  valid_disk <- basename(Sys.glob(file.path(repo_root, "inst", "formats", "corpus", "valid", "*.yaml")))
+  invalid_disk <- basename(Sys.glob(file.path(repo_root, "inst", "formats", "corpus", "invalid", "*.yaml")))
+  expect_setequal(files[outcomes == "loads"], valid_disk)
+  expect_setequal(files[outcomes == "refused"], invalid_disk)
+
+  refused_categories <- vapply(entries[outcomes == "refused"], function(e) e$category %||% "", "")
+  expect_true(all(nzchar(refused_categories)))
+  expect_setequal(unique(refused_categories), names(categories))
+
+  expect_true(all(vapply(categories, function(c) isTRUE(nzchar(c$spec)), TRUE)))
+  expect_true(all(vapply(categories, function(c) c$refusal %in% c("structural", "semantic"), TRUE)))
+  expect_true(all(vapply(entries[outcomes == "loads"], function(e) isTRUE(nzchar(e$spec)), TRUE)))
+})
+
 test_that("format schemas compile and the corpus tree validates", {
   old_wd <- setwd(repo_root)
   on.exit(setwd(old_wd), add = TRUE)
@@ -173,7 +200,13 @@ test_that("a parameter outside the configuration block is refused", {
 
 test_that("an unknown language-model configuration key is refused", {
   doc <- minimal_services()
-  doc$services$greeter$configuration$`max-tokens` <- 100L
+  doc$services$greeter$configuration$flavour <- "vanilla"
+  expect_false(services_validator()(as_json(doc)))
+})
+
+test_that("a max-tokens ceiling above the bound is refused", {
+  doc <- minimal_services()
+  doc$services$greeter$configuration$`max-tokens` <- 20000L
   expect_false(services_validator()(as_json(doc)))
 })
 

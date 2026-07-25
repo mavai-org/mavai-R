@@ -77,6 +77,7 @@ categories:
   lm-thinking-vocabulary: { spec: "MAVAI-SERVICES-FORMAT.md §II.3 (client factors)", refusal: structural }
   lm-top-p-range: { spec: "MAVAI-SERVICES-FORMAT.md §II.3 (client factors)", refusal: structural }
   lm-prompt-caching-type: { spec: "MAVAI-SERVICES-FORMAT.md §II.3 (client factors)", refusal: structural }
+  lm-max-tokens-range: { spec: "MAVAI-SERVICES-FORMAT.md §II.3 (max-tokens, 2026-07-25)", refusal: structural }
   lm-capabilities-vocabulary: { spec: "MAVAI-SERVICES-FORMAT.md §II.3 (capabilities, 2026-07-25)", refusal: structural }
   explorations-empty: { spec: "MAVAI-SERVICES-FORMAT.md Part I; §II.6", refusal: structural }
   exploration-entry-null-value: { spec: "MAVAI-SERVICES-FORMAT.md Part I; §II.6", refusal: structural }
@@ -155,6 +156,7 @@ corpus:
   - { file: lm-thinking-vocabulary.yaml, format: mavai-services/1, outcome: refused, category: lm-thinking-vocabulary }
   - { file: lm-top-p-range.yaml, format: mavai-services/1, outcome: refused, category: lm-top-p-range }
   - { file: lm-prompt-caching-type.yaml, format: mavai-services/1, outcome: refused, category: lm-prompt-caching-type }
+  - { file: lm-max-tokens-range.yaml, format: mavai-services/1, outcome: refused, category: lm-max-tokens-range }
   - { file: lm-capabilities-vocabulary.yaml, format: mavai-services/1, outcome: refused, category: lm-capabilities-vocabulary }
   - { file: explorations-empty.yaml, format: mavai-services/1, outcome: refused, category: explorations-empty }
   - { file: exploration-entry-null-value.yaml, format: mavai-services/1, outcome: refused, category: exploration-entry-null-value }
