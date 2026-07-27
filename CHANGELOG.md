@@ -5,6 +5,25 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.9.3] — 2026-07-27
+
+**Format corpus: the value-comparison forms (additive).** The
+`mavai-contract/1` schema admits the deterministic value-comparison
+postcondition forms added by the 2026-07-27 spec amendment
+(`DIR-FAM-FORMS-value-comparison`): the numeric comparison sextet
+`eq`/`ne`/`lt`/`le`/`gt`/`ge` (decimal semantics, number or numeric-string
+operands), `not-equals`, `equals-ci`, `is-null` (operand `true` only), and
+the collective set forms `equals-set`/`contains-set`/`count-equals`, which
+require an `in:` naming a declared view plus a `path:` (expressed
+structurally via the entry's dependent schemas). The corpus gains two
+`valid/` cases (the scalar family; the set family, each form exercised
+including per-input use) and four `invalid/` cases with new categories,
+all structural: `set-form-without-path`, `value-operand-malformed`,
+`is-null-operand`, `set-operand-empty`. The manifest registers the
+categories against the mandating spec section. This release is the
+dependency floor for the baseltest and punit implementation directives
+(`DIR-BAS-FORMS-value-comparison`, `DIR-PU-FORMS-value-comparison`).
+
 ## [0.9.2] — 2026-07-25
 
 **Format corpus: the max-iterations cases isolated to their category

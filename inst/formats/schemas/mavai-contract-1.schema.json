@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mavai-org/mavai-R/inst/formats/schemas/mavai-contract-1.schema.json",
   "title": "mavai declarative contract file (mavai-contract/1)",
-  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen; amendment session 2026-07-25); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, file-path resolution, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
+  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen; amendment session 2026-07-25; value-comparison amendment 2026-07-27); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, file-path resolution, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
   "type": "object",
   "required": ["format", "contract", "service", "criteria", "inputs"],
   "additionalProperties": false,
@@ -86,6 +86,17 @@
     "scalar": {
       "type": ["string", "number", "boolean"],
       "$comment": "Part I, input-values section / MAVAI-SERVICES-FORMAT.md SII.7: a scalar input, passed to the binding as-is."
+    },
+    "numberOperand": {
+      "type": ["number", "string"],
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?$",
+      "$comment": "Part I, value comparison (2026-07-27): a numeric form's operand — a number, or a numeric string (sign/decimal/exponent; quoted where the file encoding's number parsing could lose the intended decimal). Comparison is decimal, not binary float."
+    },
+    "setOperand": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": ["string", "number", "boolean", "null"]},
+      "$comment": "Part I, value comparison (2026-07-27): a set form's operand — at least one element; elements compared by strict JSON value (numbers numeric/decimal, strings exact, booleans and null by identity)."
     },
     "filePart": {
       "type": "object",
@@ -172,7 +183,19 @@
         "contains": {"type": "string"},
         "matches": {"type": "string"},
         "parses": {"type": "string", "minLength": 1},
-        "satisfies": {"type": "string", "minLength": 1}
+        "satisfies": {"type": "string", "minLength": 1},
+        "eq": {"$ref": "#/$defs/numberOperand"},
+        "ne": {"$ref": "#/$defs/numberOperand"},
+        "not-equals": {"type": "string"},
+        "lt": {"$ref": "#/$defs/numberOperand"},
+        "le": {"$ref": "#/$defs/numberOperand"},
+        "gt": {"$ref": "#/$defs/numberOperand"},
+        "ge": {"$ref": "#/$defs/numberOperand"},
+        "equals-ci": {"type": "string"},
+        "is-null": {
+          "const": true,
+          "$comment": "Part I, value comparison (2026-07-27): is-null takes the literal true as its only operand — the negation is not offered."
+        }
       },
       "anyOf": [
         {"required": ["postconditions"]},
@@ -181,7 +204,16 @@
         {"required": ["contains"]},
         {"required": ["matches"]},
         {"required": ["parses"]},
-        {"required": ["satisfies"]}
+        {"required": ["satisfies"]},
+        {"required": ["eq"]},
+        {"required": ["ne"]},
+        {"required": ["not-equals"]},
+        {"required": ["lt"]},
+        {"required": ["le"]},
+        {"required": ["gt"]},
+        {"required": ["ge"]},
+        {"required": ["equals-ci"]},
+        {"required": ["is-null"]}
       ],
       "not": {
         "required": ["threshold", "tolerate"],
@@ -218,7 +250,26 @@
           "minLength": 1,
           "$comment": "Part I, forms catalogue: parses: <view> — the named transformation succeeds on this response. That the view is declared is semantic, manifest-carried."
         },
-        "satisfies": {"type": "string", "minLength": 1}
+        "satisfies": {"type": "string", "minLength": 1},
+        "eq": {"$ref": "#/$defs/numberOperand"},
+        "ne": {"$ref": "#/$defs/numberOperand"},
+        "not-equals": {"type": "string"},
+        "lt": {"$ref": "#/$defs/numberOperand"},
+        "le": {"$ref": "#/$defs/numberOperand"},
+        "gt": {"$ref": "#/$defs/numberOperand"},
+        "ge": {"$ref": "#/$defs/numberOperand"},
+        "equals-ci": {"type": "string"},
+        "is-null": {
+          "const": true,
+          "$comment": "Part I, value comparison (2026-07-27): is-null takes the literal true as its only operand — the negation is not offered."
+        },
+        "equals-set": {"$ref": "#/$defs/setOperand"},
+        "contains-set": {"$ref": "#/$defs/setOperand"},
+        "count-equals": {
+          "type": "integer",
+          "minimum": 0,
+          "$comment": "Part I, value comparison (2026-07-27): the selection's cardinality — count-equals: 0 holds on an empty selection."
+        }
       },
       "oneOf": [
         {"required": ["equals"]},
@@ -226,7 +277,19 @@
         {"required": ["contains"]},
         {"required": ["matches"]},
         {"required": ["parses"]},
-        {"required": ["satisfies"]}
+        {"required": ["satisfies"]},
+        {"required": ["eq"]},
+        {"required": ["ne"]},
+        {"required": ["not-equals"]},
+        {"required": ["lt"]},
+        {"required": ["le"]},
+        {"required": ["gt"]},
+        {"required": ["ge"]},
+        {"required": ["equals-ci"]},
+        {"required": ["is-null"]},
+        {"required": ["equals-set"]},
+        {"required": ["contains-set"]},
+        {"required": ["count-equals"]}
       ],
       "dependentSchemas": {
         "path": {
@@ -235,16 +298,35 @@
             {"required": ["equals"]},
             {"required": ["one-of"]},
             {"required": ["contains"]},
-            {"required": ["matches"]}
+            {"required": ["matches"]},
+            {"required": ["eq"]},
+            {"required": ["ne"]},
+            {"required": ["not-equals"]},
+            {"required": ["lt"]},
+            {"required": ["le"]},
+            {"required": ["gt"]},
+            {"required": ["ge"]},
+            {"required": ["equals-ci"]},
+            {"required": ["is-null"]},
+            {"required": ["equals-set"]},
+            {"required": ["contains-set"]},
+            {"required": ["count-equals"]}
           ],
-          "$comment": "Part I, subject rule: path requires an in: naming a declared view (the raw response is unstructured text), and only a string form MAY carry path:."
+          "$comment": "Part I, subject rule / value comparison (2026-07-27): path requires an in: naming a declared view (the raw response is unstructured text), and only a string or value-comparison form MAY carry path:."
         },
         "parses": {
           "not": {"required": ["in"]},
           "$comment": "Part I, subject rule (clarified 2026-07-25): parses: judges the response itself and names the view under test as its argument — it takes no in: qualifier."
-        }
+        },
+        "equals-set": {"$ref": "#/$defs/setFormAddressing"},
+        "contains-set": {"$ref": "#/$defs/setFormAddressing"},
+        "count-equals": {"$ref": "#/$defs/setFormAddressing"}
       },
-      "$comment": "One postcondition entry: exactly one form, optionally in:-qualified, string forms optionally path:-qualified under a declared view."
+      "$comment": "One postcondition entry: exactly one form, optionally in:-qualified, string and value-comparison forms optionally path:-qualified under a declared view; set forms require both (value comparison, 2026-07-27)."
+    },
+    "setFormAddressing": {
+      "required": ["in", "path"],
+      "$comment": "Part I, value comparison (2026-07-27): a set form judges the selected values collectively and REQUIRES an in: naming a declared view and a path: — there is no collection over the raw text or a scalar."
     },
     "expectedEntry": {
       "type": "object",
@@ -256,14 +338,38 @@
         "one-of": {"type": "array", "minItems": 1, "items": {"type": "string"}},
         "contains": {"type": "string"},
         "matches": {"type": "string"},
-        "satisfies": {"type": "string", "minLength": 1}
+        "satisfies": {"type": "string", "minLength": 1},
+        "eq": {"$ref": "#/$defs/numberOperand"},
+        "ne": {"$ref": "#/$defs/numberOperand"},
+        "not-equals": {"type": "string"},
+        "lt": {"$ref": "#/$defs/numberOperand"},
+        "le": {"$ref": "#/$defs/numberOperand"},
+        "gt": {"$ref": "#/$defs/numberOperand"},
+        "ge": {"$ref": "#/$defs/numberOperand"},
+        "equals-ci": {"type": "string"},
+        "is-null": {"const": true},
+        "equals-set": {"$ref": "#/$defs/setOperand"},
+        "contains-set": {"$ref": "#/$defs/setOperand"},
+        "count-equals": {"type": "integer", "minimum": 0}
       },
       "oneOf": [
         {"required": ["equals"]},
         {"required": ["one-of"]},
         {"required": ["contains"]},
         {"required": ["matches"]},
-        {"required": ["satisfies"]}
+        {"required": ["satisfies"]},
+        {"required": ["eq"]},
+        {"required": ["ne"]},
+        {"required": ["not-equals"]},
+        {"required": ["lt"]},
+        {"required": ["le"]},
+        {"required": ["gt"]},
+        {"required": ["ge"]},
+        {"required": ["equals-ci"]},
+        {"required": ["is-null"]},
+        {"required": ["equals-set"]},
+        {"required": ["contains-set"]},
+        {"required": ["count-equals"]}
       ],
       "dependentSchemas": {
         "path": {
@@ -272,9 +378,24 @@
             {"required": ["equals"]},
             {"required": ["one-of"]},
             {"required": ["contains"]},
-            {"required": ["matches"]}
+            {"required": ["matches"]},
+            {"required": ["eq"]},
+            {"required": ["ne"]},
+            {"required": ["not-equals"]},
+            {"required": ["lt"]},
+            {"required": ["le"]},
+            {"required": ["gt"]},
+            {"required": ["ge"]},
+            {"required": ["equals-ci"]},
+            {"required": ["is-null"]},
+            {"required": ["equals-set"]},
+            {"required": ["contains-set"]},
+            {"required": ["count-equals"]}
           ]
-        }
+        },
+        "equals-set": {"$ref": "#/$defs/setFormAddressing"},
+        "contains-set": {"$ref": "#/$defs/setFormAddressing"},
+        "count-equals": {"$ref": "#/$defs/setFormAddressing"}
       },
       "$comment": "Part I, input-specific postconditions (clarified 2026-07-25): the full form vocabulary except parses: — parseability is a property of the response under a view, not of one input; declare it once as a criterion-level form."
     },
