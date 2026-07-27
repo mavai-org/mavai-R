@@ -5,6 +5,21 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.9.6] — 2026-07-27
+
+**Format corpus: RFC 9535 path correction (fix).** The value-comparison
+corpus files addressed hyphenated fields through member-name shorthand
+(`$.instalment-fee`, `$.tax-rate`, `$.term-months`, `$.cancellation-date`)
+— but RFC 9535's grammar does not admit `-` in shorthand names (name-char
+is ALPHA / DIGIT / `_` / ≥U+0080), so a strictly conformant engine refuses
+the corpus's own valid case. Surfaced by punit's CTS-validated path engine;
+lenient third-party engines (e.g. Python's `jsonpath_rfc9535`) accept the
+old spelling, which is how it went unnoticed. The paths in
+`contract-value-comparison-scalar.yaml` and `is-null-operand.yaml` now use
+bracket selectors (`$['instalment-fee']`); no schema, manifest category, or
+expected-outcome change. Also refreshes the stale pre-amendment comment in
+`path-on-non-string-form.yaml`.
+
 ## [0.9.5] — 2026-07-27
 
 **Format corpus: the boolean comparison form (additive).** The
