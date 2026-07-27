@@ -5,6 +5,20 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.9.5] — 2026-07-27
+
+**Format corpus: the boolean comparison form (additive).** The
+`mavai-contract/1` schema admits `is: <bool>` — boolean identity, added by
+the 2026-07-27 boolean-comparison spec amendment
+(`DIR-FAM-FORMS-boolean-comparison`): the subject must be JSON
+`true`/`false` itself (never the strings `"true"`/`"false"` or the numbers
+1/0), the operand is strictly a boolean, and the form is universal over a
+multi-valued selection like the other scalar value forms. One `valid/`
+corpus case exercises it (true/false, wildcard selection, per-input use);
+one `invalid/` case pins the new structural category
+`is-operand-not-boolean` (`is: "true"` refused). This release is the
+dependency floor for the baseltest implementation.
+
 ## [0.9.4] — 2026-07-27
 
 **Format corpus: the scalar value-comparison case isolated to one

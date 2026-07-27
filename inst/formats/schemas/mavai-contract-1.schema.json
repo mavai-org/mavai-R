@@ -195,6 +195,10 @@
         "is-null": {
           "const": true,
           "$comment": "Part I, value comparison (2026-07-27): is-null takes the literal true as its only operand — the negation is not offered."
+        },
+        "is": {
+          "type": "boolean",
+          "$comment": "Part I, boolean comparison (2026-07-27): boolean identity — the operand is strictly a boolean; the subject must be JSON true/false itself, never its string or numeric projection."
         }
       },
       "anyOf": [
@@ -213,7 +217,8 @@
         {"required": ["gt"]},
         {"required": ["ge"]},
         {"required": ["equals-ci"]},
-        {"required": ["is-null"]}
+        {"required": ["is-null"]},
+        {"required": ["is"]}
       ],
       "not": {
         "required": ["threshold", "tolerate"],
@@ -263,6 +268,10 @@
           "const": true,
           "$comment": "Part I, value comparison (2026-07-27): is-null takes the literal true as its only operand — the negation is not offered."
         },
+        "is": {
+          "type": "boolean",
+          "$comment": "Part I, boolean comparison (2026-07-27): boolean identity — the operand is strictly a boolean; the subject must be JSON true/false itself, never its string or numeric projection."
+        },
         "equals-set": {"$ref": "#/$defs/setOperand"},
         "contains-set": {"$ref": "#/$defs/setOperand"},
         "count-equals": {
@@ -287,6 +296,7 @@
         {"required": ["ge"]},
         {"required": ["equals-ci"]},
         {"required": ["is-null"]},
+        {"required": ["is"]},
         {"required": ["equals-set"]},
         {"required": ["contains-set"]},
         {"required": ["count-equals"]}
@@ -308,6 +318,7 @@
             {"required": ["ge"]},
             {"required": ["equals-ci"]},
             {"required": ["is-null"]},
+            {"required": ["is"]},
             {"required": ["equals-set"]},
             {"required": ["contains-set"]},
             {"required": ["count-equals"]}
@@ -348,6 +359,7 @@
         "ge": {"$ref": "#/$defs/numberOperand"},
         "equals-ci": {"type": "string"},
         "is-null": {"const": true},
+        "is": {"type": "boolean"},
         "equals-set": {"$ref": "#/$defs/setOperand"},
         "contains-set": {"$ref": "#/$defs/setOperand"},
         "count-equals": {"type": "integer", "minimum": 0}
@@ -367,6 +379,7 @@
         {"required": ["ge"]},
         {"required": ["equals-ci"]},
         {"required": ["is-null"]},
+        {"required": ["is"]},
         {"required": ["equals-set"]},
         {"required": ["contains-set"]},
         {"required": ["count-equals"]}
@@ -388,6 +401,7 @@
             {"required": ["ge"]},
             {"required": ["equals-ci"]},
             {"required": ["is-null"]},
+            {"required": ["is"]},
             {"required": ["equals-set"]},
             {"required": ["contains-set"]},
             {"required": ["count-equals"]}
