@@ -5,6 +5,34 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.0] — 2026-07-27
+
+**Format corpus: the partial-credit and default-view amendments
+(breaking).** Realises the two 2026-07-27 spec amendments
+(`DIR-FAM-EXPECTED-partial-credit`, `DIR-FAM-FORMS-default-view`) in the
+`mavai-contract/1` schema and corpus. Partial credit: postcondition
+entries (global and per-input) admit `optional: true` (the literal
+`true` only — `optional: false` is refused, mirroring `is-null:`'s
+operand discipline), criteria admit `optional-slack:` (non-negative
+integer count, or an explicit `N%` string resolved by floor; a bare
+fraction is refused), and `optional:` on a `parses:` form is refused as
+inert. New structural categories `optional-slack-malformed`,
+`optional-operand`, `optional-on-parses`; one `valid/` case exercises
+both slack spellings and the double opt-in. Default view: `path:` no
+longer structurally requires `in:` — a path-bearing check omitting
+`in:` resolves to the criterion's single `parses:` view, else the sole
+declared transform, else a semantic load refusal (new category
+`default-view-unresolvable`); a path-less check omitting `in:` judges
+`raw` exactly as before. Two `valid/` cases exercise the two resolution
+tiers. **Breaking:** the structural category `path-without-in` is
+retired — its shape is now structurally admitted and its corpus file is
+reworked as `default-view-no-views.yaml` under the semantic
+`default-view-unresolvable` category — so consumers' binding-obligation
+diffs change shape. The postcondition standings (the amendments' other
+half) are output-artefact semantics and do not touch these authoring
+schemas. This release is the dependency floor for the framework
+implementations (baseltest first). Folds in the unreleased 0.9.6 below.
+
 ## [0.9.6] — 2026-07-27
 
 **Format corpus: RFC 9535 path correction (fix).** The value-comparison

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mavai-org/mavai-R/inst/formats/schemas/mavai-contract-1.schema.json",
   "title": "mavai declarative contract file (mavai-contract/1)",
-  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen; amendment session 2026-07-25; value-comparison amendment 2026-07-27); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, file-path resolution, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
+  "description": "Structural schema for the mavai family's declarative contract file. It validates the parsed data model of the YAML document (YAML is the file encoding; the schema addresses the resulting structure). The canonical specification is the prose format specification maintained in the family's internal requirements catalog (MAVAI-CONTRACT-FORMAT.md, v0 frozen; amendment session 2026-07-25; value-comparison, boolean-comparison, partial-credit, and default-view amendments 2026-07-27); this schema is its machine-checkable structural projection and never introduces a rule the specification does not state — $comment fields cite the mandating sections. Semantic obligations the schema cannot express (view-reference resolution, per-input expectations requiring a single criterion, selection-expression syntax, non-decreasing latency ceilings, file-path resolution, ...) are carried by the conformance corpus manifest. These artefacts are family engineering infrastructure — schemas the implementing frameworks conform to — not a standard for third-party implementations.",
   "type": "object",
   "required": ["format", "contract", "service", "criteria", "inputs"],
   "additionalProperties": false,
@@ -173,6 +173,13 @@
           "$comment": "Part III, threshold provenance: sla / slo / policy — a closed set, an unknown origin is refused (clarified 2026-07-25)."
         },
         "contract-ref": {"type": "string", "minLength": 1},
+        "optional-slack": {
+          "oneOf": [
+            {"type": "integer", "minimum": 0},
+            {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?%$"}
+          ],
+          "$comment": "Part I, partial credit (2026-07-27): the criterion's optional-check failure budget — a non-negative integer count, or an explicit percentage with the % suffix (resolved by floor over the applicable optional count). The % suffix is the disambiguator: a bare fraction (0.2) or a non-integer count fails here, as mandated."
+        },
         "postconditions": {
           "type": "array",
           "minItems": 1,
@@ -239,12 +246,16 @@
         "in": {
           "type": "string",
           "minLength": 1,
-          "$comment": "Part I, subject rule: every form judges the view named by its in: qualifier; omitting in: means in: raw. That the named view is declared is semantic, manifest-carried."
+          "$comment": "Part I, subject rule (default-view amendment 2026-07-27): every form judges the view named by its in: qualifier; a path-less check omitting in: judges raw, a path-bearing check omitting in: defaults to the criterion's single parses: view, else the sole declared transform, else refused. That the named or resolved view is declared/resolvable is semantic, manifest-carried."
         },
         "path": {
           "type": "string",
           "minLength": 1,
           "$comment": "Part I, subject rule / SII.10: a selection expression (JSONPath RFC 9535 or XPath 1.0) addressing the subject view's structured value. Expression parseability is semantic, manifest-carried."
+        },
+        "optional": {
+          "const": true,
+          "$comment": "Part I, partial credit (2026-07-27): opts the check out of non-negotiability — relaxable within the criterion's optional-slack budget (absent slack, budget 0: the check must still pass). The only spelling is optional: true — required is the default, not a spelling; false fails this const, as mandated."
         },
         "equals": {"type": "string"},
         "one-of": {"type": "array", "minItems": 1, "items": {"type": "string"}},
@@ -303,7 +314,6 @@
       ],
       "dependentSchemas": {
         "path": {
-          "required": ["in"],
           "anyOf": [
             {"required": ["equals"]},
             {"required": ["one-of"]},
@@ -323,21 +333,25 @@
             {"required": ["contains-set"]},
             {"required": ["count-equals"]}
           ],
-          "$comment": "Part I, subject rule / value comparison (2026-07-27): path requires an in: naming a declared view (the raw response is unstructured text), and only a string or value-comparison form MAY carry path:."
+          "$comment": "Part I, subject rule (default-view amendment 2026-07-27): path's subject must be a declared view — named by an explicit in:, or resolved by the path-conditional default (the criterion's single parses: view, else the sole declared transform); resolvability is semantic, manifest-carried. Only a string or value-comparison form MAY carry path:."
         },
         "parses": {
           "not": {"required": ["in"]},
           "$comment": "Part I, subject rule (clarified 2026-07-25): parses: judges the response itself and names the view under test as its argument — it takes no in: qualifier."
         },
+        "optional": {
+          "not": {"required": ["parses"]},
+          "$comment": "Part I, partial credit (2026-07-27): optional: on a parses: form is refused — transform failure hard-fails the trial regardless of budget, so the mark would be inert."
+        },
         "equals-set": {"$ref": "#/$defs/setFormAddressing"},
         "contains-set": {"$ref": "#/$defs/setFormAddressing"},
         "count-equals": {"$ref": "#/$defs/setFormAddressing"}
       },
-      "$comment": "One postcondition entry: exactly one form, optionally in:-qualified, string and value-comparison forms optionally path:-qualified under a declared view; set forms require both (value comparison, 2026-07-27)."
+      "$comment": "One postcondition entry: exactly one form, optionally in:-qualified and optional:-marked (partial credit, 2026-07-27), string and value-comparison forms optionally path:-qualified under a declared or defaulted view (default-view amendment, 2026-07-27); set forms require path:."
     },
     "setFormAddressing": {
-      "required": ["in", "path"],
-      "$comment": "Part I, value comparison (2026-07-27): a set form judges the selected values collectively and REQUIRES an in: naming a declared view and a path: — there is no collection over the raw text or a scalar."
+      "required": ["path"],
+      "$comment": "Part I, value comparison (2026-07-27, amended by the default-view amendment): a set form judges the selected values collectively and REQUIRES a path: with a declared-view subject — explicit in:, or the resolved default — since there is no collection over the raw text or a scalar. Subject resolvability is semantic, manifest-carried."
     },
     "expectedEntry": {
       "type": "object",
@@ -345,6 +359,7 @@
       "properties": {
         "in": {"type": "string", "minLength": 1},
         "path": {"type": "string", "minLength": 1},
+        "optional": {"const": true},
         "equals": {"type": "string"},
         "one-of": {"type": "array", "minItems": 1, "items": {"type": "string"}},
         "contains": {"type": "string"},
@@ -386,7 +401,6 @@
       ],
       "dependentSchemas": {
         "path": {
-          "required": ["in"],
           "anyOf": [
             {"required": ["equals"]},
             {"required": ["one-of"]},
@@ -405,13 +419,14 @@
             {"required": ["equals-set"]},
             {"required": ["contains-set"]},
             {"required": ["count-equals"]}
-          ]
+          ],
+          "$comment": "Default-view amendment 2026-07-27: an explicit in: is no longer structurally required beside path: — the subject may resolve through the path-conditional default; resolvability is semantic, manifest-carried."
         },
         "equals-set": {"$ref": "#/$defs/setFormAddressing"},
         "contains-set": {"$ref": "#/$defs/setFormAddressing"},
         "count-equals": {"$ref": "#/$defs/setFormAddressing"}
       },
-      "$comment": "Part I, input-specific postconditions (clarified 2026-07-25): the full form vocabulary except parses: — parseability is a property of the response under a view, not of one input; declare it once as a criterion-level form."
+      "$comment": "Part I, input-specific postconditions (clarified 2026-07-25): the full form vocabulary except parses: — parseability is a property of the response under a view, not of one input; declare it once as a criterion-level form. optional: marks a per-input check relaxable exactly as a global one (partial credit, 2026-07-27)."
     },
     "inputEntry": {
       "oneOf": [
