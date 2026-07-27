@@ -5,6 +5,19 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.9.4] — 2026-07-27
+
+**Format corpus: the scalar value-comparison case isolated to one
+criterion (corpus-defect patch; schema outcomes unchanged).** baseltest's
+adoption of v0.9.3 — the corpus's first consumer for the value-comparison
+forms — surfaced that `contract-value-comparison-scalar.yaml` declared two
+criteria *and* a per-input `expected:` entry, which the specification's
+single-criterion rule refuses (a semantic rule the schema deliberately
+does not express, so `validate_formats.R` could not catch it). The case
+now carries one criterion, with the raw-judging `not-equals` form beside
+its `postconditions:` list. Second live exercise of the corpus-defect
+triage discipline, after the v0.9.2 max-iterations isolation.
+
 ## [0.9.3] — 2026-07-27
 
 **Format corpus: the value-comparison forms (additive).** The

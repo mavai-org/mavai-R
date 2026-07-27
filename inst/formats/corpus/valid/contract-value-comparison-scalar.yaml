@@ -10,8 +10,12 @@ service: quote-service
 transforms:
   quote: json
 criteria:
+  # One criterion only: the per-input expected: entry below requires it.
+  # The direct (raw-judging) form sits beside the postconditions list —
+  # together they are the criterion's forms.
   - name: extracted-values-match-the-document
     threshold: 0.95
+    not-equals: "ERROR"
     postconditions:
       - in: quote
         path: "$.premium"
@@ -43,9 +47,6 @@ criteria:
       - in: quote
         path: "$.cancellation-date"
         is-null: true
-  - name: response-is-not-an-error-marker
-    threshold: 0.99
-    not-equals: "ERROR"
 inputs:
   - "quote the sample policy"
   - input: "quote the premium-only policy"
