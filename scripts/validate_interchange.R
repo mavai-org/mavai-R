@@ -66,6 +66,34 @@ for (name in names(formats)) {
   }
 }
 
+# The verdict XML interchange: every verdict-*.xml worked example validates
+# against the XSD its filename names (verdict-1.3-typical.xml -> verdict-1.3.xsd).
+# Requires xml2 (Suggests); the section is skipped with a notice when absent
+# so environments without it still validate the YAML formats.
+if (requireNamespace("xml2", quietly = TRUE)) {
+  verdict_examples <- sort(Sys.glob("inst/interchange/verdict-*.xml"))
+  for (example in verdict_examples) {
+    revision <- sub("^verdict-([0-9]+\\.[0-9]+).*$", "\\1",
+                    basename(example))
+    xsd_path <- sprintf("schema/verdict-%s.xsd", revision)
+    if (!file.exists(xsd_path)) {
+      cat(sprintf("FAIL  %s names no published XSD (%s)\n", example, xsd_path))
+      failures <- failures + 1L
+      next
+    }
+    ok <- xml2::xml_validate(xml2::read_xml(example), xml2::read_xml(xsd_path))
+    if (isTRUE(ok)) {
+      cat(sprintf("ok    %s validates against %s\n", example, xsd_path))
+    } else {
+      cat(sprintf("FAIL  %s does not validate against %s\n", example, xsd_path))
+      print(attr(ok, "errors"))
+      failures <- failures + 1L
+    }
+  }
+} else {
+  cat("note  xml2 not installed; verdict XSD validation skipped\n")
+}
+
 if (failures > 0L) {
   cat(sprintf("\n%d interchange validation failure(s)\n", failures))
   quit(status = 1L)

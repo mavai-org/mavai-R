@@ -1,6 +1,6 @@
 Package: mavair
 Title: Reference Statistical Computations for the mavai Project Family
-Version: 0.10.0
+Version: 0.10.1
 Authors@R: person("mavai-org", email = "info@mavai.org", role = c("aut", "cre"))
 Description: Generates language-agnostic reference datasets for statistical
     computations used in probabilistic testing frameworks. Provides canonical
@@ -23,5 +23,6 @@ Suggests:
     binom,
     pwr,
     jsonvalidate,
-    yaml
+    yaml,
+    xml2
 Config/testthat/edition: 3

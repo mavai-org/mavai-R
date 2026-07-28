@@ -35,6 +35,27 @@ iterations:
           failureDistribution:
             - condition: "valid-json"
               count: 3
+          # Standings (amendment 2026-07-28): identical shape to the
+          # exploration schema's block, stated per iteration. Descriptive
+          # only; the declared budget travels verbatim and every row
+          # states its optional flag.
+          standings:
+            optionalSlack: "1"
+            rows:
+              - inputIndex: 0
+                check: "parses as json"
+                optional: false
+                passed: 2
+                failed: 3
+                skipped: 0
+                observedFraction: 0.4
+              - inputIndex: 0
+                check: "declares an actions array"
+                optional: true
+                passed: 2
+                failed: 0
+                skipped: 3
+                observedFraction: 0.4
     cost:
       totalTimeMs: 2400
       avgTimePerSampleMs: 480
@@ -60,6 +81,23 @@ iterations:
           observedPassRate: 1.0
           pass: 5
           fail: 0
+          standings:
+            optionalSlack: "1"
+            rows:
+              - inputIndex: 0
+                check: "parses as json"
+                optional: false
+                passed: 5
+                failed: 0
+                skipped: 0
+                observedFraction: 1.0
+              - inputIndex: 0
+                check: "declares an actions array"
+                optional: true
+                passed: 5
+                failed: 0
+                skipped: 0
+                observedFraction: 1.0
     cost:
       totalTimeMs: 2270
       avgTimePerSampleMs: 454

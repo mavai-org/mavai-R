@@ -65,3 +65,61 @@ test_that("the explore validator refuses an over-bound condition identity", {
   )
   expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
 })
+
+test_that("the explore validator refuses a standings row without the optional flag", {
+  # Every standings row states whether its check is optional — explicitly,
+  # so consumers can flag partial credit without reading the contract.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  doc$statistics$criteria$`valid-json`$standings$rows[[1]]$optional <- NULL
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("the explore validator refuses a bare-fraction optional slack", {
+  # The declared budget travels verbatim: digits, or digits + %. A bare
+  # fraction ("0.2") is refused at authoring time by the contract format and
+  # must not appear in an artefact either.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  doc$statistics$criteria$`valid-json`$standings$optionalSlack <- "0.2"
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("the verdict-1.3 XSD refuses a standings row without the optional flag", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.3.xsd"))
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.3-typical.xml")
+  )
+  mutated <- sub(' optional="false" passed="20" failed="0" skipped="0" observed-fraction="1.0" />',
+                 ' passed="20" failed="0" skipped="0" observed-fraction="1.0" />',
+                 body)
+  expect_false(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(mutated, collapse = "\n")), xsd
+  )))
+})
+
+test_that("a verdict-1.3 record without the standings element remains valid", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.3.xsd"))
+  doc <- xml2::read_xml(
+    file.path(repo_root, "inst", "interchange", "verdict-1.3-typical.xml")
+  )
+  standings <- xml2::xml_find_first(
+    doc, ".//d1:postcondition-standings", xml2::xml_ns(doc)
+  )
+  xml2::xml_remove(standings)
+  expect_true(isTRUE(xml2::xml_validate(doc, xsd)))
+})

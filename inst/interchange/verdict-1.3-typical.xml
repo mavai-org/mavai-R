@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a typical verdict-1.3 record.
+
+     1.3 adds the first-class <postcondition-standings> element: the
+     descriptive per-(input, check) tally of per-trial check outcomes,
+     with the partial-credit facts stated beside the counts — every row
+     states whether its check is optional, and a criterion that declares
+     an optional-check failure budget states it verbatim as authored
+     (the extraction criterion below declares "2"; the well-formedness
+     criterion declares none and its check is required). 1.3 emitters do
+     not write the transitional postcondition-standings:* environment
+     entries some 1.2 emitters used; the environment element remains for
+     other metadata (here, the sizing disclosures). -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.3" timestamp="2026-07-28T12:00:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="40" samples-executed="40" successes="36" failures="4" elapsed-ms="52400" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <provenance origin="UNSPECIFIED" />
+  <termination reason="COMPLETED" />
+  <environment>
+    <entry key="sizing-approach" value="fixed-n" />
+  </environment>
+  <postcondition-failures>
+    <clause description="response does not state the premium amount" count="4" />
+  </postcondition-failures>
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="FAIL" pass="36" fail="4" inconclusive="0" total="40" observed-rate="0.9" threshold="0.9" />
+    <criterion id="response-well-formed" verdict="PASS" pass="40" fail="0" inconclusive="0" total="40" observed-rate="1.0" threshold="0.5" />
+    <composite value="FAIL" />
+  </per-criterion>
+  <postcondition-standings>
+    <criterion name="extraction-matches-reviewed-values" optional-slack="2">
+      <row input-index="0" check="states the offer id" optional="false" passed="20" failed="0" skipped="0" observed-fraction="1.0" />
+      <row input-index="0" check="states the premium amount" optional="false" passed="18" failed="2" skipped="0" observed-fraction="0.9" />
+      <row input-index="0" check="lists the applicable terms" optional="true" passed="12" failed="8" skipped="0" observed-fraction="0.6" />
+      <row input-index="1" check="states the offer id" optional="false" passed="20" failed="0" skipped="0" observed-fraction="1.0" />
+      <row input-index="1" check="states the premium amount" optional="false" passed="18" failed="2" skipped="0" observed-fraction="0.9" />
+      <row input-index="1" check="lists the applicable terms" optional="true" passed="13" failed="6" skipped="1" observed-fraction="0.65" />
+    </criterion>
+    <criterion name="response-well-formed">
+      <row input-index="0" check="parses as json" optional="false" passed="20" failed="0" skipped="0" observed-fraction="1.0" />
+      <row input-index="1" check="parses as json" optional="false" passed="20" failed="0" skipped="0" observed-fraction="1.0" />
+    </criterion>
+  </postcondition-standings>
+  <verdict value="FAIL" />
+</verdict-record>

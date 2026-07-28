@@ -36,6 +36,27 @@ statistics:
           inputIndex: 1
           inputExcerpt: "the second worked example's driving text, briefly"
           count: 1
+      # Standings (amendment 2026-07-28): the descriptive per-(input, check)
+      # tally of per-trial check outcomes — counts and the observed fraction
+      # only, never an interval or a per-check verdict. Every row states
+      # whether its check is optional; a criterion with no optional checks
+      # states no optionalSlack.
+      standings:
+        rows:
+          - inputIndex: 0
+            check: "response is not empty"
+            optional: false
+            passed: 10
+            failed: 0
+            skipped: 0
+            observedFraction: 1.0
+          - inputIndex: 1
+            check: "response is not empty"
+            optional: false
+            passed: 9
+            failed: 1
+            skipped: 0
+            observedFraction: 0.9
     valid-json:
       observedPassRate: 0.9
       pass: 18
@@ -43,6 +64,41 @@ statistics:
       failureDistribution:
         - condition: "valid-json"
           count: 2
+      # This criterion declares partial credit: the declared budget travels
+      # verbatim ('1' is a count), and the relaxable check is marked
+      # optional on each of its rows. A skipped check was not judged
+      # because an earlier transform failed; it counts in the tally.
+      standings:
+        optionalSlack: "1"
+        rows:
+          - inputIndex: 0
+            check: "parses as json"
+            optional: false
+            passed: 9
+            failed: 1
+            skipped: 0
+            observedFraction: 0.9
+          - inputIndex: 0
+            check: "declares an actions array"
+            optional: true
+            passed: 8
+            failed: 1
+            skipped: 1
+            observedFraction: 0.8
+          - inputIndex: 1
+            check: "parses as json"
+            optional: false
+            passed: 9
+            failed: 1
+            skipped: 0
+            observedFraction: 0.9
+          - inputIndex: 1
+            check: "declares an actions array"
+            optional: true
+            passed: 9
+            failed: 0
+            skipped: 1
+            observedFraction: 0.9
 cost:
   totalTimeMs: 6540
   avgTimePerSampleMs: 327

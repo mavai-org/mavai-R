@@ -10,13 +10,17 @@ family's report renderer:
 - `mavai-optimize-1` — one document per optimize run: iteration history plus
   convergence ([schema](../../schema/mavai-optimize-1.schema.json)).
 
-The **verdict XML interchange** schemas (`verdict-1.0.xsd`, `verdict-1.1.xsd`,
-`verdict-1.2.xsd`, namespace `http://mavai.org/verdict/1.0`) are published
+The **verdict XML interchange** schemas (`verdict-1.0.xsd` through
+`verdict-1.3.xsd`, namespace `http://mavai.org/verdict/1.0`) are published
 alongside them in [`schema/`](../../schema/) under the same terms: test
 verdicts travel as XML, and the XSD set lets any emitter or consumer validate
 a document of any published vintage. The namespace is an identifier, not a
 retrieval URL. Frameworks that embed a copy of an XSD at runtime treat it as
-a vendored snapshot of the published file, synced per release.
+a vendored snapshot of the published file, synced per release. From 1.3 the
+record carries a first-class `<postcondition-standings>` element (descriptive
+per-check tallies with the partial-credit facts stated verbatim); the
+`verdict-1.3-typical.xml` example here is validated against the XSD by the
+same build step that validates the YAML examples.
 
 **This repository is the publication channel for these artefacts, not their
 authority.** The formats are specified canonically in the mavai family's
