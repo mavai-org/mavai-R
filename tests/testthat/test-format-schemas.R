@@ -115,13 +115,17 @@ test_that("a criterion without any postcondition form is refused", {
   expect_false(contract_validator()(as_json(doc)))
 })
 
-test_that("path without in: is refused", {
+test_that("a path-bearing check may omit in: under the path-conditional default", {
+  # Default-view amendment (2026-07-27): a path-bearing check omitting in:
+  # resolves to the criterion's parses: view, else the sole declared
+  # transform — the resolution (and its load refusal when neither exists)
+  # is the reader's, beyond a structural schema's reach.
   doc <- minimal_contract()
   doc$criteria <- list(list(
     threshold = 0.95,
     postconditions = list(list(path = "$.items[*].name", matches = "\\w"))
   ))
-  expect_false(contract_validator()(as_json(doc)))
+  expect_true(contract_validator()(as_json(doc)))
 })
 
 test_that("path on a non-string form is refused", {

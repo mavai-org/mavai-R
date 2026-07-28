@@ -5,6 +5,42 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.1] — 2026-07-28
+
+**Interchange schemas: the postcondition standings (additive).** Realises
+the interchange side of the 2026-07-28 standings-consumption rulings
+(`DIR-R-STANDINGS-interchange-schemas`, following
+`DIR-REP-STANDINGS-rendering`); the statistical fixtures are untouched.
+
+- **`schema/verdict-1.3.xsd`** — a new verdict revision beside 1.2
+  (namespace unchanged). The record gains an optional first-class
+  `<postcondition-standings>` element: one `<criterion>` per criterion
+  carrying standings, with an optional verbatim `optional-slack`
+  attribute (`"2"` a count, `"20%"` a percentage; absent iff undeclared)
+  and `<row>` children stating input index, bounded check identity, a
+  **required** `optional` flag, the passed/failed/skipped counts, and the
+  observed fraction. Descriptive by construction — the element offers no
+  place for an interval, threshold, or per-check verdict. 1.3 emitters
+  do not write the transitional `postcondition-standings:*` environment
+  entries. The deferred decision-rule cutoff attribute does **not** ride
+  this revision (owner ruling 2026-07-28: standings only).
+- **`schema/mavai-explore-1.schema.json`** — the per-criterion
+  `standings` block (binding when present, additive): optional verbatim
+  `optionalSlack`, required `rows` with
+  `inputIndex`/`check`/`optional`/`passed`/`failed`/`skipped`/`observedFraction`.
+  Pre-amendment documents remain valid.
+- **`schema/mavai-optimize-1.schema.json`** — the identical block on each
+  iteration's per-criterion statistics, per the identical-statistics-shape
+  rule (the definition is duplicated per file deliberately: frameworks
+  vendor each schema as a self-contained file).
+- **Worked examples** — `explore-typical.yaml` and `optimize-typical.yaml`
+  gain standings blocks (including a marked-optional check and a declared
+  slack); new `verdict-1.3-typical.xml` with a populated standings
+  element. `scripts/validate_interchange.R` now also validates the
+  verdict XML examples against their XSDs (via `xml2`, skipped with a
+  notice where absent); negative tests cover a row missing `optional`, a
+  bare-fraction slack, and element absence remaining valid.
+
 ## [0.10.0] — 2026-07-27
 
 **Format corpus: the partial-credit and default-view amendments
