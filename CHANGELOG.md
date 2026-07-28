@@ -5,6 +5,23 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.2] — 2026-07-28
+
+**Interchange schemas: structured standings rows (additive).** Realises
+`DIR-FAM-STANDINGS-structured-rows` (owner feedback from the first
+realistic extraction report); fixtures untouched. Standings rows may
+state their structure beside the unchanged `check` identity — `path`
+(the by-path grouping key, never derived from the name), `form`, a
+bounded `expected` excerpt — plus `observed` obtained-value exemplars
+(`{excerpt ≤256, count, held}`, failing first, emitter-capped, with an
+`elided` remainder). `schema/verdict-1.4.xsd` adds the row attributes
+and `<observed>` children (1.3 stays published; a 1.3-shaped row is a
+valid 1.4 row); both JSON Schemas gain the additive row properties;
+worked examples exercise the structure including a failing exemplar,
+and `verdict-1.4-typical.xml` joins the validated set. Negative tests:
+an exemplar without `held` and an over-bound excerpt are refused; a
+restamped unstructured 1.4 record remains valid.
+
 ## [0.10.1] — 2026-07-28
 
 **Interchange schemas: the postcondition standings (additive).** Realises
