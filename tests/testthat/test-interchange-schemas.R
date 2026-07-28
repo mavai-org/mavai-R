@@ -123,3 +123,54 @@ test_that("a verdict-1.3 record without the standings element remains valid", {
   xml2::xml_remove(standings)
   expect_true(isTRUE(xml2::xml_validate(doc, xsd)))
 })
+
+test_that("the explore validator refuses an exemplar without its held flag", {
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  rows <- doc$statistics$criteria$`valid-json`$standings$rows
+  structured <- which(vapply(rows, function(r) !is.null(r$observed), logical(1)))[1]
+  row <- rows[[structured]]
+  obs <- lapply(row$observed, as.list)
+  obs[[1]][["held"]] <- NULL
+  row["observed"] <- list(obs)
+  doc$statistics$criteria$`valid-json`$standings$rows[[structured]] <- row
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("the explore validator refuses an over-bound obtained excerpt", {
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  rows <- doc$statistics$criteria$`valid-json`$standings$rows
+  structured <- which(vapply(rows, function(r) !is.null(r$observed), logical(1)))[1]
+  row <- rows[[structured]]
+  obs <- lapply(row$observed, as.list)
+  obs[[1]][["excerpt"]] <- strrep("x", 257L)
+  row["observed"] <- list(obs)
+  doc$statistics$criteria$`valid-json`$standings$rows[[structured]] <- row
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("a verdict-1.4 record with unstructured rows remains valid", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.4.xsd"))
+  # The 1.3 worked example, restamped 1.4: every row unstructured — valid.
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.3-typical.xml")
+  )
+  restamped <- sub('version="1.3"', 'version="1.4"', body)
+  expect_true(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(restamped, collapse = "\n")), xsd
+  )))
+})

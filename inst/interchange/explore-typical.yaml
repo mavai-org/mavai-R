@@ -81,10 +81,23 @@ statistics:
           - inputIndex: 0
             check: "declares an actions array"
             optional: true
+            # Structured-row amendment (2026-07-28): the check's stated
+            # structure and obtained-value exemplars, failing first.
+            path: "$.actions"
+            form: "is"
+            expected: "true"
             passed: 8
             failed: 1
             skipped: 1
             observedFraction: 0.8
+            observed:
+              - excerpt: "[]"
+                count: 1
+                held: false
+              - excerpt: "[{\"context\": \"SHOP\", \"name\": \"add\"}]"
+                count: 8
+                held: true
+            elided: 1
           - inputIndex: 1
             check: "parses as json"
             optional: false

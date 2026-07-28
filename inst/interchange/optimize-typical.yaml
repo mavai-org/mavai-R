@@ -52,10 +52,18 @@ iterations:
               - inputIndex: 0
                 check: "declares an actions array"
                 optional: true
+                path: "$.actions"
+                form: "is"
+                expected: "true"
                 passed: 2
                 failed: 0
                 skipped: 3
                 observedFraction: 0.4
+                observed:
+                  - excerpt: "[{\"context\": \"SHOP\", \"name\": \"add\"}]"
+                    count: 2
+                    held: true
+                elided: 3
     cost:
       totalTimeMs: 2400
       avgTimePerSampleMs: 480
