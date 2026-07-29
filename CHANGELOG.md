@@ -5,6 +5,19 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.3] — 2026-07-29
+
+**Release packaging fix (no content change).** The release workflow's
+interchange bundle listed the verdict XSDs by hand (1.0–1.2) and
+globbed only YAML worked examples, so the v0.10.1 and v0.10.2
+`interchange-*.zip` assets silently omitted `verdict-1.3.xsd`,
+`verdict-1.4.xsd`, and their typical XML records — the releases'
+own headline deliverables. The workflow now globs every
+`verdict-*.xsd` revision and both YAML and XML worked examples. No
+schema, corpus, or fixture content changes; this release exists so a
+complete interchange bundle is published under an immutable tag —
+consumers of the standings schemas should pin ≥ 0.10.3.
+
 ## [0.10.2] — 2026-07-28
 
 **Interchange schemas: structured standings rows (additive).** Realises
