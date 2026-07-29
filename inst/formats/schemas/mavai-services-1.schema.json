@@ -11,6 +11,21 @@
       "const": "mavai-services/1",
       "$comment": "SII.5: format: MUST be mavai-services/1."
     },
+    "roots": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "$comment": "Part I, named path anchors (2026-07-29): root names match [a-z][a-z0-9-]*."
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^/]",
+        "$comment": "Part I, named path anchors (2026-07-29): a relative directory path, resolved against the declaring file's directory. An absolute value is refused — absolute locations are the MAVAI_ROOT_<NAME> override's job (the POSIX spelling is schema-refused; loaders refuse every spelling)."
+      },
+      "$comment": "Part I, named path anchors (2026-07-29): the identical construct to the contract format's, stated once there (MAVAI-CONTRACT-FORMAT.md Part I, named path anchors); roots are per-file, never shared between a contract file and its services file. Reference resolution, undeclared-reference and dead-declaration refusals, directory existence, and the override are loader obligations (semantic, manifest-carried)."
+    },
     "services": {
       "type": "object",
       "minProperties": 1,
@@ -19,6 +34,20 @@
     }
   },
   "$defs": {
+    "systemPromptValue": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {
+          "type": "object",
+          "required": ["file"],
+          "additionalProperties": false,
+          "properties": {
+            "file": {"type": "string", "minLength": 1}
+          }
+        }
+      ],
+      "$comment": "SII.3, named-path-anchors amendment (2026-07-29): an inline string, or {file: <path>} — the referenced file decoded as UTF-8 text, the path resolving relative to this file's directory or against a declared root; the resolved string is the covariate exactly as if written inline (resolved-as-used, SII.4; fingerprint law, SII.6)."
+    },
     "scalarValue": {
       "type": ["string", "number", "boolean"],
       "$comment": "SII.7: configuration values are scalars (string, number, boolean) — matching the mavai-explore-1 factors value space."
@@ -146,9 +175,8 @@
       "additionalProperties": false,
       "properties": {
         "system-prompt": {
-          "type": "string",
-          "minLength": 1,
-          "$comment": "SII.3: required — the system prompt is what turns a model into a service, the defining covariate of a language-model-backed service; a configuration without one is refused."
+          "$ref": "#/$defs/systemPromptValue",
+          "$comment": "SII.3: required — the system prompt is what turns a model into a service, the defining covariate of a language-model-backed service; a configuration without one is refused. An inline string, or {file: <path>} (named-path-anchors amendment, 2026-07-29)."
         },
         "provider": {
           "enum": ["openai", "anthropic", "ollama", "mistral", "apertus"],
@@ -201,7 +229,7 @@
       "minProperties": 1,
       "additionalProperties": false,
       "properties": {
-        "system-prompt": {"type": "string", "minLength": 1},
+        "system-prompt": {"$ref": "#/$defs/systemPromptValue"},
         "provider": {"enum": ["openai", "anthropic", "ollama", "mistral", "apertus"]},
         "model": {"type": "string", "minLength": 1},
         "temperature": {"type": "number"},

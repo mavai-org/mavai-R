@@ -5,6 +5,34 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.5] — 2026-07-29
+
+**Format corpus: named path anchors (additive).** Both format schemas
+admit the top-level **`roots:`** block added by the 2026-07-29
+named-path-anchors spec amendment (`DIR-FAM-ROOTS-named-path-anchors`):
+named anchors for file-referencing positions — names matching
+`[a-z][a-z0-9-]*`, values relative directory paths — referenced as
+`@<name>/…` from file-sourced parts. The **`mavai-services/1`** schema
+additionally gains the format's first file-referencing position:
+`system-prompt:` accepts **`{file: <path>}`** (UTF-8 text; the resolved
+string is the covariate exactly as if inline), in the baseline
+configuration and in exploration deltas alike. Structural constraints
+pinned schema-side: non-empty block, name pattern, non-empty relative
+values (the POSIX absolute spelling refused by pattern; loaders refuse
+every spelling), and the non-empty `file:` value. Everything the schema
+deliberately accepts — `@` reference resolution, undeclared-reference
+and dead-declaration refusals, directory existence, the
+`MAVAI_ROOT_<NAME>` override (environment behaviour, outside the corpus)
+— is loader obligation, manifest-carried. New structural categories
+`roots-block-malformed`, `roots-name-shape`, `roots-value-malformed`,
+`lm-system-prompt-file-malformed`; new semantic categories
+`roots-reference-undeclared`, `roots-dead-declaration`,
+`roots-directory-missing`, `services-roots-reference-undeclared`. Two
+`valid/` cases exercise roots over text and media parts (contract) and
+the prompt-file form with and without a root (services); one new corpus
+asset (`system-prompt.txt`). This release is the dependency floor for
+the framework implementations of the amendment (baseltest first).
+
 ## [0.10.4] — 2026-07-29
 
 **Format corpus: the graded set claim (additive).** The

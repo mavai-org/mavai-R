@@ -21,6 +21,21 @@
       "minLength": 1,
       "$comment": "Part I, Keys: the name of the registered service binding (SII.3)."
     },
+    "roots": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "$comment": "Part I, named path anchors (2026-07-29): root names match [a-z][a-z0-9-]*."
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^/]",
+        "$comment": "Part I, named path anchors (2026-07-29): a relative directory path, resolved against the declaring file's directory. An absolute value is refused — absolute locations are the MAVAI_ROOT_<NAME> override's job (the POSIX spelling is schema-refused; loaders refuse every spelling)."
+      },
+      "$comment": "Part I, named path anchors (2026-07-29): named anchors for file-referencing positions, referenced as @<name>/... from file-sourced parts. Reference resolution, undeclared-reference and dead-declaration refusals, directory existence, and the MAVAI_ROOT_<NAME> override are loader obligations (semantic, manifest-carried)."
+    },
     "transforms": {
       "type": "object",
       "minProperties": 1,
