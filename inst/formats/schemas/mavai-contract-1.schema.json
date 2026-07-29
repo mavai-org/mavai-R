@@ -98,6 +98,24 @@
       "items": {"type": ["string", "number", "boolean", "null"]},
       "$comment": "Part I, value comparison (2026-07-27): a set form's operand — at least one element; elements compared by strict JSON value (numbers numeric/decimal, strings exact, booleans and null by identity)."
     },
+    "setOfOperand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["optional"],
+      "properties": {
+        "required": {"$ref": "#/$defs/setOperand"},
+        "optional": {"$ref": "#/$defs/setOperand"},
+        "min-present": {
+          "oneOf": [
+            {"type": "integer", "minimum": 0},
+            {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?%$"}
+          ],
+          "$comment": "Part I, graded set claims (2026-07-29): the floor over the optional list — a non-negative integer count of distinct members, or an explicit percentage with the % suffix (resolved by floor, exactly as optional-slack). A bare fraction or negative/non-integer count fails here, as mandated."
+        },
+        "refuse-extras": {"type": "boolean"}
+      },
+      "$comment": "Part I, graded set claims (2026-07-29): the composite set-of: operand — membership semantics (a set is a set: duplicates collapse, an operand duplicate is a loader warning, never a refusal). optional: is structurally required: a set-of: without it states equals-set: (refuse-extras true, the default) or contains-set: (false) and is refused naming the sharper form. Overlap between the lists and min-present's bounds against the optional list's distinct size are semantic, manifest-carried."
+    },
     "filePart": {
       "type": "object",
       "minProperties": 1,
@@ -289,7 +307,8 @@
           "type": "integer",
           "minimum": 0,
           "$comment": "Part I, value comparison (2026-07-27): the selection's cardinality — count-equals: 0 holds on an empty selection."
-        }
+        },
+        "set-of": {"$ref": "#/$defs/setOfOperand"}
       },
       "oneOf": [
         {"required": ["equals"]},
@@ -310,7 +329,8 @@
         {"required": ["is"]},
         {"required": ["equals-set"]},
         {"required": ["contains-set"]},
-        {"required": ["count-equals"]}
+        {"required": ["count-equals"]},
+        {"required": ["set-of"]}
       ],
       "dependentSchemas": {
         "path": {
@@ -331,7 +351,8 @@
             {"required": ["is"]},
             {"required": ["equals-set"]},
             {"required": ["contains-set"]},
-            {"required": ["count-equals"]}
+            {"required": ["count-equals"]},
+            {"required": ["set-of"]}
           ],
           "$comment": "Part I, subject rule (default-view amendment 2026-07-27): path's subject must be a declared view — named by an explicit in:, or resolved by the path-conditional default (the criterion's single parses: view, else the sole declared transform); resolvability is semantic, manifest-carried. Only a string or value-comparison form MAY carry path:."
         },
@@ -345,7 +366,8 @@
         },
         "equals-set": {"$ref": "#/$defs/setFormAddressing"},
         "contains-set": {"$ref": "#/$defs/setFormAddressing"},
-        "count-equals": {"$ref": "#/$defs/setFormAddressing"}
+        "count-equals": {"$ref": "#/$defs/setFormAddressing"},
+        "set-of": {"$ref": "#/$defs/setFormAddressing"}
       },
       "$comment": "One postcondition entry: exactly one form, optionally in:-qualified and optional:-marked (partial credit, 2026-07-27), string and value-comparison forms optionally path:-qualified under a declared or defaulted view (default-view amendment, 2026-07-27); set forms require path:."
     },
@@ -377,7 +399,8 @@
         "is": {"type": "boolean"},
         "equals-set": {"$ref": "#/$defs/setOperand"},
         "contains-set": {"$ref": "#/$defs/setOperand"},
-        "count-equals": {"type": "integer", "minimum": 0}
+        "count-equals": {"type": "integer", "minimum": 0},
+        "set-of": {"$ref": "#/$defs/setOfOperand"}
       },
       "oneOf": [
         {"required": ["equals"]},
@@ -397,7 +420,8 @@
         {"required": ["is"]},
         {"required": ["equals-set"]},
         {"required": ["contains-set"]},
-        {"required": ["count-equals"]}
+        {"required": ["count-equals"]},
+        {"required": ["set-of"]}
       ],
       "dependentSchemas": {
         "path": {
@@ -418,13 +442,15 @@
             {"required": ["is"]},
             {"required": ["equals-set"]},
             {"required": ["contains-set"]},
-            {"required": ["count-equals"]}
+            {"required": ["count-equals"]},
+            {"required": ["set-of"]}
           ],
           "$comment": "Default-view amendment 2026-07-27: an explicit in: is no longer structurally required beside path: — the subject may resolve through the path-conditional default; resolvability is semantic, manifest-carried."
         },
         "equals-set": {"$ref": "#/$defs/setFormAddressing"},
         "contains-set": {"$ref": "#/$defs/setFormAddressing"},
-        "count-equals": {"$ref": "#/$defs/setFormAddressing"}
+        "count-equals": {"$ref": "#/$defs/setFormAddressing"},
+        "set-of": {"$ref": "#/$defs/setFormAddressing"}
       },
       "$comment": "Part I, input-specific postconditions (clarified 2026-07-25): the full form vocabulary except parses: — parseability is a property of the response under a view, not of one input; declare it once as a criterion-level form. optional: marks a per-input check relaxable exactly as a global one (partial credit, 2026-07-27)."
     },

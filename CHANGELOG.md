@@ -5,6 +5,29 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.4] — 2026-07-29
+
+**Format corpus: the graded set claim (additive).** The
+`mavai-contract/1` schema admits the composite **`set-of:`** form,
+added by the 2026-07-29 graded-set spec amendment
+(`DIR-BAS-FORMS-set-of`): required members, tolerated members with a
+`min-present:` floor (a distinct-member count, or an explicit `N%`
+resolved by floor exactly as `optional-slack:`), and `refuse-extras:`
+defaulting true. **Membership semantics — a set is a set (owner
+ruling)**: declared lists and the selection are judged as sets,
+duplicates collapsing to one entry; an operand duplicate is a loader
+warning (informational), never a refusal, pinned by the
+`contract-set-of-duplicate-member.yaml` valid case. `optional:` is
+structurally required on the composite operand — a `set-of:` without
+it states `equals-set:`/`contains-set:` and is refused naming the
+sharper form. New structural categories `set-of-without-optional`,
+`set-of-min-present-malformed`; new semantic categories
+`set-of-lists-overlap`, `set-of-min-present-bounds` (excess and
+saturated floors, one file each). Two `valid/` cases exercise the full
+spelling, the percentage floor, `refuse-extras: false`, the
+pure-subset claim, and per-input use. This release is the dependency
+floor for the baseltest implementation.
+
 ## [0.10.3] — 2026-07-29
 
 **Release packaging fix (no content change).** The release workflow's
