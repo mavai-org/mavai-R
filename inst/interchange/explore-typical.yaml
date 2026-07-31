@@ -7,6 +7,13 @@ schemaVersion: "mavai-explore-1"
 serviceContractId: "shopping-basket"
 experimentId: "model-comparison"
 configuration: "small-model_t0.7"
+# The sweep was built around this configuration; the others override its
+# factor values. Stated by the emitter, which holds the authored fact — a
+# consumer cannot recover it from a balanced sweep, where every
+# configuration is structurally interchangeable. Stated only on the base,
+# and only ever as true; the sibling minimal example omits it, which means
+# unstated rather than "not the base".
+baseConfiguration: true
 generatedAt: "2026-07-14T12:00:00Z"
 factors:
   model: "small-model"

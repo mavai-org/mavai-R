@@ -174,3 +174,24 @@ test_that("a verdict-1.4 record with unstructured rows remains valid", {
     xml2::read_xml(paste(restamped, collapse = "\n")), xsd
   )))
 })
+
+test_that("the explore validator refuses a negated base-configuration marker", {
+  # The marker is stated only on the base, and only ever as true: `false`
+  # would invite consumers to read absence as a stated "not the base",
+  # when absence means the emitter said nothing at all.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  doc$baseConfiguration <- FALSE
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+
+  # Absent is valid: an emitter that has not adopted the field still emits
+  # conformant documents.
+  doc$baseConfiguration <- NULL
+  expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
