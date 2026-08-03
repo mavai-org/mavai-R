@@ -5,6 +5,21 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.8] — 2026-08-03
+
+**Zero-trial worked example corrected (additive).** The
+`baseline-zero-trials` example stated `observedPassRate: 0.0` beside a
+null `wilsonLowerBound`. A rate is not stateable at zero trials, and
+asserting one from the same non-evidence that makes the bound null is the
+confusion the null was introduced to prevent — so the field is now absent
+in that document, value-or-absent as the latency percentiles already are.
+Found by baseltest's emitter-conformance suite, whose writer omits it.
+
+The schema is unchanged: `observedPassRate` was never in `required`, so
+both spellings validate. Only the example was inconsistent with what a
+conformant emitter produces, which is precisely what a worked example
+must not be.
+
 ## [0.10.7] — 2026-08-03
 
 **Baseline interchange schema published (additive).** The family's
