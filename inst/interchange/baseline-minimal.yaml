@@ -1,0 +1,23 @@
+# Worked example: the minimal valid baseline artefact — required fields only.
+# One inferential criterion, three trials, no failures to attribute, no
+# declared expiration, no latency (no per-sample durations were recorded).
+schemaVersion: "mavai-baseline-1"
+serviceContractId: "echo-service"
+serviceName: "echo"
+generatedAt: "2026-08-02T12:00:00Z"
+confidenceLevel: 0.95
+inputsIdentity: "b7d41f0c9a2e"
+covariateProfile: {}
+execution:
+  samplesPlanned: 3
+  samplesExecuted: 3
+  terminationReason: "COMPLETED"
+criteria:
+  echoes-input:
+    mode: "inferential"
+    procedure: "REGRESSION"
+    trials: 3
+    successes: 3
+    observedPassRate: 1.0
+    wilsonLowerBound: 0.5258
+contentFingerprint: "sha256:0000000000000000000000000000000000000000000000000000000000000000"

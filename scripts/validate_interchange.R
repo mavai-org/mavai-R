@@ -19,14 +19,23 @@ suppressPackageStartupMessages({
 # failureDistribution or a one-sample sortedPassingLatenciesMs); the default
 # reader simplifies them to atomic vectors, which auto_unbox would then
 # collapse to scalars.
+# An explicit YAML null must survive as a JSON null. The default reader maps
+# it to R NULL, which jsonlite renders as {} — so a STATED null (mavai-baseline-1
+# uses one for wilsonLowerBound at zero trials, where "no evidence" must be
+# distinguishable from "field absent") would fail validation as an object.
+# Mapping it to NA and emitting with na = "null" preserves it.
 read_yaml_as_json <- function(path) {
-  doc <- yaml::read_yaml(path, handlers = list(seq = function(x) as.list(x)))
-  jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)
+  doc <- yaml::read_yaml(
+    path,
+    handlers = list(seq = function(x) as.list(x), "null" = function(x) NA)
+  )
+  jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA, na = "null")
 }
 
 formats <- list(
   explore  = "schema/mavai-explore-1.schema.json",
-  optimize = "schema/mavai-optimize-1.schema.json"
+  optimize = "schema/mavai-optimize-1.schema.json",
+  baseline = "schema/mavai-baseline-1.schema.json"
 )
 
 failures <- 0L

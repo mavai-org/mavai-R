@@ -1,0 +1,40 @@
+# Worked example: trials ran, none passed. The Wilson lower bound at k = 0 is
+# exactly 0 — a true and useless statement, emitted anyway because whether a
+# bound is SHOWN is the consumer's ruling, not the emitter's. No sample
+# passed, so the latency block is absent as a whole rather than empty. The
+# failure reasons show the diagnostic axis the arithmetic ignores: eleven
+# trials reached the postcondition and failed it, nine produced no testable
+# value at all.
+schemaVersion: "mavai-baseline-1"
+serviceContractId: "consult-advice"
+serviceName: "advice-model"
+generatedAt: "2026-08-02T12:00:00Z"
+confidenceLevel: 0.95
+inputsIdentity: "3fd0a91c4e77"
+footprint: "9c2ab41f"
+covariateProfile:
+  model: "advice-v2"
+  temperature: "0.7"
+factorRecord:
+  taskFormat: "mavai-contract/1"
+  serviceType: "language-model"
+execution:
+  samplesPlanned: 20
+  samplesExecuted: 20
+  terminationReason: "COMPLETED"
+criteria:
+  well-formed:
+    mode: "inferential"
+    procedure: "REGRESSION"
+    trials: 20
+    successes: 0
+    observedPassRate: 0.0
+    wilsonLowerBound: 0.0
+    failureDistribution:
+      - condition: "response parses as JSON"
+        reason: "condition"
+        count: 11
+      - condition: "response parses as JSON"
+        reason: "transform/no-value"
+        count: 9
+contentFingerprint: "sha256:2222222222222222222222222222222222222222222222222222222222222222"

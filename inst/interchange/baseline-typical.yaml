@@ -1,0 +1,97 @@
+# Worked example: the typical baseline artefact — every block populated,
+# modelled on a real document-extraction corpus. Two criteria, one of them
+# carrying partial-credit standings; failure reasons on both diagnostic axes;
+# a stated latency block whose sample count admits p50 only.
+#
+# The Wilson band this record supports: p̂ = 0.20, bound = 0.0686, width
+# 0.131 — not a boundary record and narrower than the 0.20 presentation
+# threshold, so a consumer draws the shaded band.
+schemaVersion: "mavai-baseline-1"
+serviceContractId: "buildings-extractor"
+serviceName: "buildings-extractor-axa"
+generatedAt: "2026-08-02T12:00:00Z"
+confidenceLevel: 0.95
+inputsIdentity: "3fd0a91c4e77b2085a1d"
+footprint: "9c2ab41f"
+covariateProfile:
+  model: "mistral-small-4"
+  temperature: "0.0"
+factorRecord:
+  taskFormat: "mavai-contract/1"
+  serviceType: "language-model"
+  provider: "litellm"
+execution:
+  samplesPlanned: 10
+  samplesExecuted: 10
+  terminationReason: "COMPLETED"
+criteria:
+  extraction-matches-reviewed-values:
+    mode: "inferential"
+    procedure: "REGRESSION"
+    trials: 10
+    successes: 2
+    observedPassRate: 0.2
+    wilsonLowerBound: 0.0686
+    failureDistribution:
+      - condition: "buildingSumInsured matches the reviewed value"
+        reason: "condition"
+        inputIndex: 3
+        inputExcerpt: "offer 4711, building insurance, 12 pages"
+        count: 6
+      - condition: "response satisfies the declared schema"
+        reason: "transform/no-value"
+        count: 2
+    normativeJudgement:
+      state: "not-met"
+      stipulatedThreshold: 0.95
+      confidence: 0.95
+    standings:
+      optionalSlack: "1"
+      rows:
+        - inputIndex: 0
+          check: "buildingSumInsured matches the reviewed value"
+          optional: false
+          path: "$.buildingSumInsured.amount"
+          form: "equals"
+          expected: "1970300.00"
+          passed: 0
+          failed: 1
+          skipped: 0
+          observedFraction: 0.0
+          observed:
+            - excerpt: "1970300"
+              count: 1
+              held: false
+        - inputIndex: 0
+          check: "textSpans quote the source verbatim"
+          optional: true
+          passed: 1
+          failed: 0
+          skipped: 0
+          observedFraction: 1.0
+  response-is-usable:
+    mode: "inferential"
+    procedure: "REGRESSION"
+    trials: 10
+    successes: 8
+    observedPassRate: 0.8
+    wilsonLowerBound: 0.5408
+    failureDistribution:
+      - condition: "the service returned usable output"
+        reason: "transform/no-value"
+        count: 2
+cost:
+  totalTimeMs: 84210
+  avgTimePerSampleMs: 8421
+  totalTokens: 41880
+  avgTokensPerSample: 4188
+latency:
+  basis: "passing-samples"
+  contributingSamples: 2
+  totalSamples: 10
+  p50Ms: 7980
+  sortedPassingLatenciesMs: [7420, 8540]
+expiration:
+  expiresInDays: 90
+  expiresAt: "2026-10-31T12:00:00Z"
+contentFingerprint: "sha256:4444444444444444444444444444444444444444444444444444444444444444"
