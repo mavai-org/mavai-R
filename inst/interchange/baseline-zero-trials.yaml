@@ -1,7 +1,11 @@
 # Worked example: a criterion with no trials. Every sample failed to deliver,
 # so the run executed nothing this criterion could count. trials is 0, the
-# rate is 0, and wilsonLowerBound is STATED AS NULL rather than omitted — a
-# consumer must be able to tell "no evidence" from "field absent". The
+# consumer must be able to tell "no evidence" from "field absent".
+#
+# observedPassRate is ABSENT, not 0.0. A rate is not stateable at zero
+# trials, and asserting one from the same non-evidence that makes the bound
+# null is exactly the confusion the null exists to prevent — so the rate is
+# value-or-absent here, as the latency percentiles already are. The
 # terminationReason records why the run stopped.
 schemaVersion: "mavai-baseline-1"
 serviceContractId: "consult-advice"
@@ -21,6 +25,5 @@ criteria:
     procedure: "REGRESSION"
     trials: 0
     successes: 0
-    observedPassRate: 0.0
     wilsonLowerBound: null
 contentFingerprint: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
