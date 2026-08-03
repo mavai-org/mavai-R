@@ -9,6 +9,16 @@ family's report renderer:
   ([schema](../../schema/mavai-explore-1.schema.json)).
 - `mavai-optimize-1` — one document per optimize run: iteration history plus
   convergence ([schema](../../schema/mavai-optimize-1.schema.json)).
+- `mavai-baseline-1` — one document per Empirical Baseline: what a measure
+  experiment recorded about one service contract's one service, under one
+  covariate profile, over one input set
+  ([schema](../../schema/mavai-baseline-1.schema.json)). It supersedes the
+  three per-framework dialects (`baseltest-baseline-2`, `punit-baseline-3`,
+  `feotest-spec-1`). Unlike its siblings a baseline is **read back** — by the
+  emitting framework's own resolver, to derive a regression threshold — so it
+  carries identity that is compared rather than merely displayed: the tuple
+  `(serviceContractId, serviceName, covariateProfile, inputsIdentity)`, no
+  element of which keys a record alone.
 
 The **verdict XML interchange** schemas (`verdict-1.0.xsd` through
 `verdict-1.3.xsd`, namespace `http://mavai.org/verdict/1.0`) are published

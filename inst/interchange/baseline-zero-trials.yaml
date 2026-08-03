@@ -1,0 +1,26 @@
+# Worked example: a criterion with no trials. Every sample failed to deliver,
+# so the run executed nothing this criterion could count. trials is 0, the
+# rate is 0, and wilsonLowerBound is STATED AS NULL rather than omitted — a
+# consumer must be able to tell "no evidence" from "field absent". The
+# terminationReason records why the run stopped.
+schemaVersion: "mavai-baseline-1"
+serviceContractId: "consult-advice"
+serviceName: "advice-model"
+generatedAt: "2026-08-02T12:00:00Z"
+confidenceLevel: 0.95
+inputsIdentity: "3fd0a91c4e77"
+covariateProfile:
+  model: "advice-v2"
+execution:
+  samplesPlanned: 50
+  samplesExecuted: 0
+  terminationReason: "ABORTED_SERVICE_UNREACHABLE"
+criteria:
+  well-formed:
+    mode: "inferential"
+    procedure: "REGRESSION"
+    trials: 0
+    successes: 0
+    observedPassRate: 0.0
+    wilsonLowerBound: null
+contentFingerprint: "sha256:1111111111111111111111111111111111111111111111111111111111111111"
