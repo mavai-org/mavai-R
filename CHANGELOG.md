@@ -5,6 +5,62 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.7] — 2026-08-03
+
+**Baseline interchange schema published (additive).** The family's
+baseline (measure) artefact gains its first machine-checkable form:
+`schema/mavai-baseline-1.schema.json`, plus five worked examples in
+`inst/interchange/` and validation wired into
+`scripts/validate_interchange.R`. Until now this repository published
+schemas for `mavai-explore-1`, `mavai-optimize-1` and the verdict XSD
+set, but nothing for the one artefact that is *read back* — by a
+resolver, to derive a regression threshold — so it was the only
+interchange surface with no published contract.
+
+`mavai-baseline-1` supersedes the three per-framework dialects
+(`baseltest-baseline-2`, `punit-baseline-3`, `feotest-spec-1`) under
+`DIR-FAM-BASELINE-interchange-standard`. Because it is read back rather
+than only displayed, it carries identity that is *compared*: the tuple
+`(serviceContractId, serviceName, covariateProfile, inputsIdentity)`, no
+element of which keys a record alone. Per-criterion it states `trials`,
+`successes`, `observedPassRate` and a one-sided `wilsonLowerBound` at the
+record's `confidenceLevel` — a characterisation of the recorded evidence,
+never an acceptance threshold — with `contentFingerprint` over the whole.
+
+The examples pin what a schema cannot: the perfect baseline states
+`0.9737` where a test at the same sample size would derive `0.9323`,
+because the test side applies the §4.3.2 two-step and the measure side
+does not; the zero-trials document states a **null** bound rather than
+omitting it, so "no evidence" stays distinguishable from "field absent".
+Supporting that required teaching `read_yaml_as_json` explicit nulls
+(YAML null → R `NULL` → jsonlite `{}` had failed validation as an
+object) — this is the first interchange format to state one.
+
+No denominator policy appears anywhere in the schema: the Companion
+withdrew the per-criterion policy in 2026-05 (§1.4.5a), so `trials` is
+the full sampling and a trial that produced no testable value is a FAIL
+distinguished by its *reason*. The generators in this repository still
+carry the withdrawn construct; correcting them is its own change
+(`DIR-FAM-DENOMINATOR-policy-withdrawal`), as is amending
+`inst/cases/baseline_object.json` to carry the new fields.
+
+Additive: no existing suite, schema or fixture value changes.
+
+## [0.10.6] — 2026-07-31
+
+**Base configuration stated in the explore schema (additive).** Entry
+backfilled 2026-08-03; the version shipped without one. An explore
+corpus is a base configuration plus configurations overriding some of
+its factor values, but every emitted document carries its own
+fully-resolved factor set, so the overlay structure is lost at
+serialisation and consumers were left inferring which configuration the
+sweep was built around — inference that provably cannot recover it,
+since a cross-product design is balanced and every corner reads equally
+well as the base. `mavai-explore-1` therefore gains **`baseConfiguration`**,
+stated only on the base and only as `true`
+(`DIR-FAM-BASE-configuration-marker`), with `explore-typical.yaml`
+updated and schema tests extended.
+
 ## [0.10.5] — 2026-07-29
 
 **Format corpus: named path anchors (additive).** Both format schemas
