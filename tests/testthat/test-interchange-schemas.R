@@ -175,6 +175,48 @@ test_that("a verdict-1.4 record with unstructured rows remains valid", {
   )))
 })
 
+test_that("the explore validator refuses an empty configuration name", {
+  # The name is stated only when authored. An empty string is neither
+  # authored nor absent — it is a name a consumer would faithfully show a
+  # reader, who would learn nothing. Absence is how an author says nothing.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  doc$configurationName <- ""
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+
+  # Prose is bounded, like every other displayable value in the format.
+  doc$configurationName <- strrep("x", 257)
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+
+  # Absent is valid: an emitter that has not adopted the field, or an author
+  # who named nothing, still emits conformant documents.
+  doc$configurationName <- NULL
+  expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("a configuration name is not identity — two documents may share one", {
+  # Prose carries no uniqueness guarantee. Two configurations stating the
+  # same name stay two configurations, distinguished by `configuration`.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  sibling <- doc
+  sibling$configuration <- "small-model_t0.9"
+  expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+  expect_true(validator(jsonlite::toJSON(sibling, auto_unbox = TRUE, digits = NA)))
+})
+
 test_that("the explore validator refuses a negated base-configuration marker", {
   # The marker is stated only on the base, and only ever as true: `false`
   # would invite consumers to read absence as a stated "not the base",
