@@ -5,6 +5,36 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.9] — 2026-08-05
+
+**The author can name a configuration (additive).** A configuration's
+identity is derived from its factor *values*, so grid points sharing a long
+common prefix — three system prompts all opening "You are an information
+extraction system" — are identical in their readable half by construction,
+separated only by a digest. A reader comparing them learns nothing from the
+name. `mavai-explore-1` therefore gains **`configurationName`**: the
+author's name for what the configuration *is*, stated on the grid entry
+rather than derived from its values.
+
+Optional and stated only when authored. A consumer showing a configuration
+to a reader shows this when present, and otherwise falls back to whatever it
+derives from `configuration` — never to an empty name, which is why the
+empty string is refused rather than treated as absence. Bounded at 256
+characters like every other displayable value. It is prose: it carries no
+uniqueness guarantee and never becomes identity, so two configurations may
+state the same name and remain two configurations.
+
+**`configuration` is no longer described as a display name.** It never was
+one — it is emitter-derived identity, and calling it a display name left two
+fields claiming the reader's eye once a name existed beside it. The
+description now says what the field is; nothing about its type, its
+`binding` class, or any emitted value changes.
+
+Specified in the orchestrator catalog's `MAVAI-EXPLORE-FORMAT.md`
+(amendment 2026-08-05, `DIR-FAM-PROVENANCE-factor-sources`). Additive: a
+pre-amendment document validates unchanged, and no emitter is obliged to
+adopt the field.
+
 ## [0.10.8] — 2026-08-03
 
 **Zero-trial worked example corrected (additive).** The

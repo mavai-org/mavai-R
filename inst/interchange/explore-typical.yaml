@@ -7,6 +7,13 @@ schemaVersion: "mavai-explore-1"
 serviceContractId: "shopping-basket"
 experimentId: "model-comparison"
 configuration: "small-model_t0.7"
+# What the author was actually testing, in their words — stated on the grid
+# entry, never derived from the factor values. A consumer showing this
+# configuration to a reader shows this; with it absent (as in the sibling
+# minimal example) the consumer falls back to something it derives from
+# `configuration` above. Prose, so it is bounded and guarantees nothing:
+# it never becomes identity, and two configurations may share a name.
+configurationName: "cheap-and-loose"
 # The sweep was built around this configuration; the others override its
 # factor values. Stated by the emitter, which holds the authored fact — a
 # consumer cannot recover it from a balanced sweep, where every
