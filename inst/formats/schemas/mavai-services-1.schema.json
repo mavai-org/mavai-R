@@ -208,6 +208,11 @@
           "maximum": 16000,
           "$comment": "SII.3 (adopted 2026-07-25): the output-token ceiling — a distributional factor, fingerprinted; unstated means the format-normative default 4096."
         },
+        "deadline-ms": {
+          "type": "integer",
+          "minimum": 1,
+          "$comment": "SII.3 (adopted 2026-08-07): how long the reader waits for one response before recording a failed delivery, in whole milliseconds — bounding the whole exchange, not the connection. A distributional factor, fingerprinted. No upper bound is stated here: patience is the author's to spend, and the rule the format enforces is that a reader ships a finite default and records it resolved, never that the number is small."
+        },
         "response-schema": {
           "type": "object",
           "$comment": "SII.3: an inline mapping — the JSON Schema the model is instructed to satisfy, passed through the provider's structured-output mechanism; a covariate unconditionally (the generation-side rule, 2026-07-17). Per-provider support is a load-time refusal, semantic, manifest-carried."
@@ -237,6 +242,7 @@
         "thinking": {"enum": ["adaptive", "none"]},
         "prompt-caching": {"type": "boolean"},
         "max-tokens": {"type": "integer", "minimum": 1, "maximum": 16000},
+        "deadline-ms": {"type": "integer", "minimum": 1},
         "response-schema": {"type": "object"},
         "capabilities": {
           "type": "array",

@@ -1,0 +1,119 @@
+# Worked example: some failures were judged, some never arrived.
+#
+# The mixed case, and the one a consumer must not flatten. Ten of the twenty
+# samples failed: seven were delivered and did not satisfy the contract, three
+# never produced a response to judge. A reader told only "0.50" learns that the
+# service is unreliable; a reader told which ten learns that the quality signal
+# rests on seventeen delivered trials, not twenty.
+#
+# Both kinds are stated explicitly here. `evaluated` is the default reading of
+# an entry with no kind at all — the sibling pre-amendment examples rely on
+# that — but an emitter that states one kind states both, so a consumer never
+# has to decide whether absence means "evaluated" or "this emitter is old".
+#
+# Note what the counts still do: they sum to `failures`, delivery entries
+# included. The amendment adds a distinction, not a second denominator, and a
+# failed delivery is a failed trial exactly as it was before.
+schemaVersion: "mavai-explore-1"
+serviceContractId: "shopping-basket"
+experimentId: "model-comparison"
+configuration: "medium-model_t0.4"
+generatedAt: "2026-08-07T09:15:00Z"
+factors:
+  model: "medium-model"
+  temperature: 0.4
+execution:
+  samplesPlanned: 20
+  samplesExecuted: 20
+  terminationReason: "COMPLETED"
+statistics:
+  observed: 0.5
+  successes: 10
+  failures: 10
+  failureDistribution:
+    - condition: "valid-json"
+      kind: "evaluated"
+      count: 5
+    - condition: "response-not-empty (input 1)"
+      kind: "evaluated"
+      inputIndex: 1
+      inputExcerpt: "the second worked example's driving text, briefly"
+      count: 2
+    # A cause the peer stated, not one this framework inferred: the service
+    # answered that it had timed out. Distinct from `client-deadline`, which
+    # would say that this framework stopped waiting — the same elapsed
+    # seconds, and two different facts about who gave up.
+    - condition: "peer-timeout"
+      kind: "delivery"
+      count: 2
+    - condition: "unusable-response"
+      kind: "delivery"
+      count: 1
+  criteria:
+    response-not-empty:
+      observedPassRate: 0.75
+      pass: 15
+      fail: 5
+      failureDistribution:
+        - condition: "response-not-empty (input 1)"
+          kind: "evaluated"
+          inputIndex: 1
+          inputExcerpt: "the second worked example's driving text, briefly"
+          count: 2
+        - condition: "peer-timeout"
+          kind: "delivery"
+          count: 2
+        - condition: "unusable-response"
+          kind: "delivery"
+          count: 1
+      standings:
+        rows:
+          - inputIndex: 0
+            check: "response is not empty"
+            optional: false
+            passed: 8
+            failed: 0
+            skipped: 2
+            observedFraction: 0.8
+          - inputIndex: 1
+            check: "response is not empty"
+            optional: false
+            passed: 7
+            failed: 2
+            skipped: 1
+            observedFraction: 0.7
+    valid-json:
+      observedPassRate: 0.75
+      pass: 15
+      fail: 5
+      failureDistribution:
+        - condition: "valid-json"
+          kind: "evaluated"
+          count: 5
+      standings:
+        rows:
+          - inputIndex: 0
+            check: "parses as json"
+            optional: false
+            passed: 6
+            failed: 2
+            skipped: 2
+            observedFraction: 0.6
+          - inputIndex: 1
+            check: "parses as json"
+            optional: false
+            passed: 6
+            failed: 3
+            skipped: 1
+            observedFraction: 0.6
+cost:
+  totalTimeMs: 9800
+  avgTimePerSampleMs: 490
+  totalTokens: 2400
+  avgTokensPerSample: 120
+latency:
+  basis: "passing-samples"
+  contributingSamples: 10
+  totalSamples: 20
+  p50Ms: 18
+  sortedPassingLatenciesMs: [12, 13, 15, 16, 17, 19, 21, 24, 28, 33]
