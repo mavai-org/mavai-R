@@ -5,6 +5,70 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.10] — 2026-08-07
+
+**A failed delivery says so (additive).** A trial that never received a
+response and a trial that received one and failed it are different findings
+that have, until now, been serialised identically: both a failed trial, both
+a `failureDistribution` entry, the delivery cause travelling as free text in
+the same `condition` field a declared contract condition uses. So a run in
+which nothing was ever measured presented exactly like a run in which
+everything was measured and found wanting — a 0.0 pass rate across four
+configurations, diagnosable only by reading raw artefacts.
+
+Every failure entry may now state **`kind`**: `delivery` or `evaluated`.
+Optional and additive — absent in pre-amendment emissions, and a consumer
+reads absence as *not stated*, never as "evaluated". The arithmetic is
+untouched: a failed delivery remains one failed trial counted against every
+criterion, and this states what kind of failure it was, not how much it
+counts. There is deliberately **no second count** of delivery failures: a
+consumer sums the delivery-kind entries, which is a trivial aggregate over
+stated counts, where a separate field would be a second source of one truth
+free to disagree with the first.
+
+A delivery entry's `condition` carries its **cause**, from a closed
+vocabulary the schemas enforce: `unreachable`, `client-deadline`,
+`peer-timeout`, `server-error`, `unusable-response`. Free text is refused
+there — a cause that is not groupable is not countable, and one that
+interpolates an endpoint or a provider message is not an identity at all
+(area rule 6). The two timeout senses are separate tokens on purpose:
+`client-deadline` says *this framework stopped waiting*, which only a
+framework holding its own deadline may claim, and `peer-timeout` says the
+peer stated that it did. One `timeout` token would have blurred them the
+moment client deadlines arrived, which they now have
+(`DIR-FAM-TIMEOUT-client-deadline`).
+
+`mavai-explore-1`, `mavai-optimize-1` and `mavai-baseline-1` all carry the
+amendment — one entry shape across the family, since an amendment reaching
+only the format a given report happens to read is how the last one went
+unnoticed. In the baseline format `kind` sits beside the existing `reason`
+and is orthogonal to it: `reason` is the Companion's §1.4.5a axis over
+trials that *were* evaluated, and a delivery entry states none, having never
+reached evaluation. Widening that enum instead would have put a transport
+fact on a companion-owned axis.
+
+`schema/verdict-1.5.xsd` adds the optional `@kind` on a failure-distribution
+`<check>`; 1.4 stays published and a 1.4-shaped check is a valid 1.5 check.
+The cause vocabulary is documented rather than typed there, because the
+constraint is conditional on `@kind` and XSD 1.0 cannot state a
+co-occurrence constraint — a simpleType nothing referenced would imply an
+enforcement the schema does not perform.
+
+Worked examples: `explore-nothing-delivered.yaml` (the incident's shape —
+every sample undelivered, three causes, all standings skipped) and
+`explore-mixed-delivery.yaml` (both kinds in one run, counts still summing
+to `failures`), plus `verdict-1.5-typical.xml`. The pre-amendment examples
+are unchanged and remain valid, which is the absent-kind case.
+
+**The services format gains `deadline-ms` (additive).** `mavai-services/1`
+admits the reader's own deadline on a `language-model` service — how long it
+waits for one response before recording a failed delivery, in whole
+milliseconds, bounding the whole exchange rather than the connection. It is
+a distributional factor and therefore identity: a shorter deadline converts
+slow-but-delivered responses into failed deliveries. The schema states no
+upper bound; what the format requires is that a reader ship a *finite*
+default and record it resolved, not that the number be small.
+
 ## [0.10.9] — 2026-08-05
 
 **The author can name a configuration (additive).** A configuration's

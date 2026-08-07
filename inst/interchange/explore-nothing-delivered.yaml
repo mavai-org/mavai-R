@@ -1,0 +1,84 @@
+# Worked example: a configuration that measured nothing.
+#
+# The shape that provoked the delivery-visibility amendment (2026-08-07). Every
+# sample failed and the observed rate is 0.0 — indistinguishable, before this
+# amendment, from a service that answered every time and was wrong every time.
+# It is the opposite finding: the service never answered at all, so the run
+# characterises the harness and the network, not the service.
+#
+# What makes the two distinguishable is `kind: delivery` on each entry. The
+# arithmetic is untouched: every undelivered trial is still a failed trial
+# counted against every criterion, exactly as before. What is new is that a
+# consumer can now say so.
+#
+# The causes here are three of the closed vocabulary's five, because a run
+# against an ailing service rarely fails one way: the peer refused some
+# connections, answered others with an error, and left the rest open without
+# ever replying until this framework's own deadline elapsed. `client-deadline`
+# is sayable only because the framework holds a deadline of its own; an
+# emitter that sets none may never state it.
+#
+# The latency block is absent as a whole: no sample passed, so its basis
+# population is empty. Nothing was delivered to time.
+schemaVersion: "mavai-explore-1"
+serviceContractId: "shopping-basket"
+experimentId: "model-comparison"
+configuration: "unreachable-gateway"
+configurationName: "the-one-that-was-down"
+generatedAt: "2026-08-07T09:15:00Z"
+factors:
+  model: "large-model"
+  temperature: 0.2
+execution:
+  samplesPlanned: 12
+  samplesExecuted: 12
+  terminationReason: "COMPLETED"
+statistics:
+  observed: 0.0
+  successes: 0
+  failures: 12
+  failureDistribution:
+    - condition: "client-deadline"
+      kind: "delivery"
+      count: 6
+    - condition: "server-error"
+      kind: "delivery"
+      count: 4
+    - condition: "unreachable"
+      kind: "delivery"
+      count: 2
+  criteria:
+    response-not-empty:
+      observedPassRate: 0.0
+      pass: 0
+      fail: 12
+      failureDistribution:
+        - condition: "client-deadline"
+          kind: "delivery"
+          count: 6
+        - condition: "server-error"
+          kind: "delivery"
+          count: 4
+        - condition: "unreachable"
+          kind: "delivery"
+          count: 2
+      # Every check on every input was skipped: a check is judged against a
+      # response, and there was none. The standings say the same thing the
+      # kind does, per trial rather than in aggregate — passed 0, failed 0,
+      # skipped 12. A row that failed nothing is not a row that held.
+      standings:
+        rows:
+          - inputIndex: 0
+            check: "response is not empty"
+            optional: false
+            passed: 0
+            failed: 0
+            skipped: 6
+            observedFraction: 0.0
+          - inputIndex: 1
+            check: "response is not empty"
+            optional: false
+            passed: 0
+            failed: 0
+            skipped: 6
+            observedFraction: 0.0

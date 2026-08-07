@@ -237,3 +237,120 @@ test_that("the explore validator refuses a negated base-configuration marker", {
   doc$baseConfiguration <- NULL
   expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
 })
+
+test_that("the explore validator refuses an unknown failure kind", {
+  # The discriminator is closed: `delivery` or `evaluated`. A third value
+  # invented by an emitter is a distinction no consumer knows how to render,
+  # and would arrive as one that reads plausibly rather than as a refusal.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-mixed-delivery.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  doc$statistics$failureDistribution[[1]]$kind <- "partial"
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("the explore validator refuses a free-text delivery cause", {
+  # The whole point of the amendment: a delivery entry's condition is drawn
+  # from the closed cause vocabulary. The message below is what the emitters
+  # used to put there — unbounded, ungroupable, and carrying an endpoint.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-nothing-delivered.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  doc$statistics$failureDistribution[[1]]$condition <-
+    "service unreachable at https://gateway.example/v1/chat/completions: timed out"
+  expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+
+  # And a cause from the vocabulary is accepted in its place.
+  doc$statistics$failureDistribution[[1]]$condition <- "peer-timeout"
+  expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("an ordinary condition is unconstrained where no kind is stated", {
+  # The vocabulary binds delivery entries only. A pre-amendment document —
+  # every entry a declared condition, no kind anywhere — is still valid, and
+  # a consumer reads that absence as "not stated", never as "evaluated".
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-explore-1.schema.json"),
+    engine = "ajv"
+  )
+  doc <- yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", "explore-typical.yaml"),
+    handlers = list(seq = function(x) as.list(x))
+  )
+  expect_null(doc$statistics$failureDistribution[[1]]$kind)
+  expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+
+  # An evaluated-kind entry states its condition as before: naming the kind
+  # constrains nothing that was not already constrained.
+  doc$statistics$failureDistribution[[1]]$kind <- "evaluated"
+  expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA)))
+})
+
+test_that("the optimize and baseline validators carry the same rule", {
+  # One entry shape across the family: an amendment that reached only the
+  # format a report happens to read is how the last one went unnoticed.
+  for (format in c("mavai-optimize-1", "mavai-baseline-1")) {
+    validator <- jsonvalidate::json_validator(
+      file.path(repo_root, "schema", paste0(format, ".schema.json")),
+      engine = "ajv"
+    )
+    example <- if (format == "mavai-optimize-1") "optimize-typical.yaml" else "baseline-typical.yaml"
+    doc <- yaml::read_yaml(
+      file.path(repo_root, "inst", "interchange", example),
+      handlers = list(seq = function(x) as.list(x), "null" = function(x) NA)
+    )
+    entry <- list(condition = "unreachable", kind = "delivery", count = 1L)
+    if (format == "mavai-optimize-1") {
+      doc$iterations[[1]]$statistics$failureDistribution <- list(entry)
+    } else {
+      doc$criteria[[1]]$failureDistribution <- list(entry)
+    }
+    expect_true(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA, na = "null")),
+                info = format)
+
+    entry$condition <- "the gateway said no"
+    if (format == "mavai-optimize-1") {
+      doc$iterations[[1]]$statistics$failureDistribution <- list(entry)
+    } else {
+      doc$criteria[[1]]$failureDistribution <- list(entry)
+    }
+    expect_false(validator(jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA, na = "null")),
+                 info = format)
+  }
+})
+
+test_that("the verdict-1.5 XSD refuses an unknown failure kind", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.5.xsd"))
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.5-typical.xml")
+  )
+  mutated <- sub('kind="delivery"', 'kind="partial"', body, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(mutated, collapse = "\n")), xsd
+  )))
+})
+
+test_that("a 1.4-shaped check is a valid 1.5 check", {
+  # The attribute is optional, so an emitter that has not adopted the kind
+  # still writes conformant 1.5 records.
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.5.xsd"))
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.5-typical.xml")
+  )
+  mutated <- gsub(' kind="delivery"| kind="evaluated"', "", body)
+  expect_true(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(mutated, collapse = "\n")), xsd
+  )))
+})
