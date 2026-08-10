@@ -16,6 +16,12 @@ examples and not the format. It is in the bundle from this release; the
 copies vendored downstream were taken from the repository rather than from
 an asset, whatever their notes say.
 
+The interchange validator now checks the bundle against the directory in
+both directions — a schema present but unpackaged, a packaged name that does
+not exist — so the next format cannot be published everywhere except in its
+own release asset. It runs before packaging in the release workflow, so the
+release fails rather than shipping short.
+
 **An input can say what it is (additive).** A report could name an input
 only where that input had failed. `inputExcerpt` rides on
 `failureDistribution` entries, so a document that behaved had nowhere to
