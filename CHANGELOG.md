@@ -5,6 +5,29 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.11] — 2026-08-10
+
+**An input can say what it is (additive).** A report could name an input
+only where that input had failed. `inputExcerpt` rides on
+`failureDistribution` entries, so a document that behaved had nowhere to
+state what it was, and a reader met a table naming one row and leaving five
+blank — asymmetry that reads as missing data rather than as a fact about
+which inputs failed.
+
+Every artefact may now state **`inputs`**: one entry per input the run drove,
+each carrying the `inputIndex` that failure entries already use and an
+`inputExcerpt` of the same shape and bound. Optional and additive in
+`mavai-explore-1`, `mavai-optimize-1` and `mavai-baseline-1` — absent in
+pre-amendment emissions, and a consumer reads absence as *not stated* and
+renders the report it renders today.
+
+Informational throughout. Nothing here is identity: that remains the inputs
+fingerprint, which is why an emitter may state a document's name without
+its path. Consumers correlate by `inputIndex`, never by matching excerpts.
+
+The worked examples show both: the three `*-typical` documents state the
+block, and the `*-minimal` ones do not.
+
 ## [0.10.10] — 2026-08-07
 
 **A failed delivery says so (additive).** A trial that never received a
