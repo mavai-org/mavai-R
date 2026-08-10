@@ -65,10 +65,17 @@ statistics:
       # only, never an interval or a per-check verdict. Every row states
       # whether its check is optional; a criterion with no optional checks
       # states no optionalSlack.
+      #
+      # Provenance (amendment 2026-08-10): who stated the postcondition.
+      # This criterion states its own, so every row is `criterion` and each
+      # is asserted against every input. Absence means `criterion` too — the
+      # field is additive, and stating it is how an emitter becomes able to
+      # say `input` on the rows below.
       standings:
         rows:
           - inputIndex: 0
             check: "response is not empty"
+            provenance: "criterion"
             optional: false
             passed: 10
             failed: 0
@@ -76,6 +83,7 @@ statistics:
             observedFraction: 1.0
           - inputIndex: 1
             check: "response is not empty"
+            provenance: "criterion"
             optional: false
             passed: 9
             failed: 1
@@ -135,6 +143,22 @@ statistics:
             passed: 9
             failed: 0
             skipped: 1
+            observedFraction: 0.9
+          # An input postcondition: input 1 states the value it expects the
+          # response to contain, and this row is judged only on the samples
+          # that input drove. Its denominator is smaller than the criterion
+          # rows above by construction — the reason a consumer must be able
+          # to tell the two apart before listing them together.
+          - inputIndex: 1
+            check: "equals-set ['SHOP'] at $.actions[*].context (input 1)"
+            provenance: "input"
+            optional: false
+            path: "$.actions[*].context"
+            form: "equals-set"
+            expected: "['SHOP']"
+            passed: 9
+            failed: 1
+            skipped: 0
             observedFraction: 0.9
 cost:
   totalTimeMs: 6540

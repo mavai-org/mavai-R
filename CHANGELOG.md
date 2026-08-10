@@ -5,6 +5,45 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.12] — 2026-08-10
+
+**A postcondition says who stated it, and a verdict record says what its
+inputs are.** Two additive facts, carried in one turn of the loop so the
+schemas move once.
+
+*Postcondition provenance.* A standings row gains an optional
+`provenance`: `criterion` for a postcondition the criterion states, asserted
+of every input; `input` for one an input's own expected values state,
+asserted only against that input. Both are postconditions — they differ in
+who stated them, and their denominators differ accordingly, which is why a
+consumer that lists them together shows one figure out of six beside
+another out of twelve with nothing to explain it. Absence means
+`criterion`, so every emission already in the field keeps its present
+meaning and no consumer needs a migration. Added to
+`mavai-explore-1` and `mavai-optimize-1`; `mavai-baseline-1` defers to the
+exploration schema for the standings shape and needed no change.
+
+*Verdict record inputs.* `schema/verdict-1.6.xsd` adds an optional
+`<inputs>` element, one `<input>` per input with its structural index and a
+bounded excerpt, and the same optional `@provenance` on a standings row.
+Every other interchange format has carried an inputs block for some time; a
+verdict record could not, so a verdict report named the document a failure
+came from by its index and nothing else. Stated for every input, not only
+the ones that failed. Both additions are optional: a 1.5-shaped record is a
+valid 1.6 record.
+
+Worked examples: `explore-typical.yaml` states both provenances, including
+an input postcondition whose denominator is that input's samples alone, and
+`verdict-1.6-typical.xml` states the inputs block and both provenances. The
+pre-amendment examples are untouched and still validate — absence remains
+the shape most records have.
+
+A note on the word, since the verdict record now carries it twice: a
+`<provenance>` element describes the run, the `@provenance` attribute
+describes a postcondition. They sit at different positions and ask the same
+question of different subjects — where did this stated thing come from —
+which is why the family spells both the same way.
+
 ## [0.10.11] — 2026-08-10
 
 **The baseline schema ships in the bundle.** `mavai-baseline-1` has been the
