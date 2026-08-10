@@ -43,7 +43,7 @@ jobs:
       - name: Package interchange schemas with worked examples
         run: |
           cd schema
-          zip "../interchange-${{ steps.version.outputs.tag }}.zip" mavai-explore-1.schema.json mavai-optimize-1.schema.json verdict-*.xsd
+          zip "../interchange-${{ steps.version.outputs.tag }}.zip" mavai-explore-1.schema.json mavai-optimize-1.schema.json mavai-baseline-1.schema.json verdict-*.xsd
           cd ../inst/interchange
           zip -g "../../interchange-${{ steps.version.outputs.tag }}.zip" *.yaml *.xml README.md
 

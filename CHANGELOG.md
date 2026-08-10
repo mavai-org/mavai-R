@@ -7,6 +7,21 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 
 ## [0.10.11] — 2026-08-10
 
+**The baseline schema ships in the bundle.** `mavai-baseline-1` has been the
+family's one baseline format since 0.9.0, and its worked examples have
+travelled in every interchange asset since — but the schema itself never
+did. The commit that introduced it says *publish*, and the packaging step
+was missed, so a consumer following the release could obtain the format's
+examples and not the format. It is in the bundle from this release; the
+copies vendored downstream were taken from the repository rather than from
+an asset, whatever their notes say.
+
+The interchange validator now checks the bundle against the directory in
+both directions — a schema present but unpackaged, a packaged name that does
+not exist — so the next format cannot be published everywhere except in its
+own release asset. It runs before packaging in the release workflow, so the
+release fails rather than shipping short.
+
 **An input can say what it is (additive).** A report could name an input
 only where that input had failed. `inputExcerpt` rides on
 `failureDistribution` entries, so a document that behaved had nowhere to

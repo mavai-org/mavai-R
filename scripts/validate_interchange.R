@@ -103,6 +103,58 @@ if (requireNamespace("xml2", quietly = TRUE)) {
   cat("note  xml2 not installed; verdict XSD validation skipped\n")
 }
 
+# ── the bundle carries what the directory holds ─────────────────────────────
+#
+# A third check, and the one that would have caught mavai-baseline-1 sitting
+# outside its own release asset for four versions: every interchange schema
+# under schema/ must be named by the step that packages the interchange
+# bundle, and every name that step lists must exist. Nothing downstream fails
+# when a schema is missing from the asset — consumers copy it out of the
+# repository instead — so the omission is invisible until someone asks how a
+# consumer would obtain an amendment.
+#
+# Globs in the packaging line (verdict-*.xsd) are expanded, so adding a
+# revision covered by an existing pattern needs no workflow change, while
+# adding a format does.
+workflow_path <- ".github/workflows/release.yml"
+if (file.exists(workflow_path)) {
+  workflow <- readLines(workflow_path, warn = FALSE)
+  packaging <- grep("interchange-.*\\.zip", workflow, value = TRUE)
+  tokens <- unlist(strsplit(paste(packaging, collapse = " "), "[[:space:]]+"))
+  named <- tokens[grepl("\\.(schema\\.json|xsd)$", tokens)]
+  packaged <- unique(basename(unlist(lapply(
+    named, function(token) Sys.glob(file.path("schema", token))
+  ))))
+
+  # cases.schema.json travels in the cases bundle, not this one.
+  present <- setdiff(basename(Sys.glob("schema/*")), "cases.schema.json")
+
+  unpackaged <- setdiff(present, packaged)
+  for (schema in unpackaged) {
+    cat(sprintf(
+      "FAIL  schema/%s is published in the repository but not in the interchange bundle\n",
+      schema
+    ))
+    failures <- failures + 1L
+  }
+  missing <- setdiff(
+    basename(named[!grepl("[*?]", named)]),
+    basename(Sys.glob("schema/*"))
+  )
+  for (schema in missing) {
+    cat(sprintf("FAIL  the interchange bundle names schema/%s, which does not exist\n", schema))
+    failures <- failures + 1L
+  }
+  if (length(unpackaged) == 0L && length(missing) == 0L) {
+    cat(sprintf(
+      "ok    the interchange bundle carries every schema in schema/ (%d)\n",
+      length(present)
+    ))
+  }
+} else {
+  cat("note  no release workflow here; bundle-completeness check skipped\n")
+}
+
 if (failures > 0L) {
   cat(sprintf("\n%d interchange validation failure(s)\n", failures))
   quit(status = 1L)
