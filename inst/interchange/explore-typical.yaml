@@ -29,6 +29,16 @@ execution:
   samplesPlanned: 20
   samplesExecuted: 20
   terminationReason: "COMPLETED"
+# How each input presents itself, for a reader: a file input's document name,
+# a text input's bounded excerpt. Stated for EVERY input the run drove, not
+# only for those that failed — a consumer naming some rows and leaving others
+# blank is the asymmetry this block removes. Never identity (that is the
+# inputs fingerprint), and a consumer must render a document that omits it.
+inputs:
+  - inputIndex: 0
+    inputExcerpt: "a litre of milk, two apples"
+  - inputIndex: 1
+    inputExcerpt: "delivery-note-1page.pdf"
 statistics:
   observed: 0.85
   successes: 17
