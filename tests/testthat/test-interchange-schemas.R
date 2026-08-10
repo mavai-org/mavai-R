@@ -354,3 +354,49 @@ test_that("a 1.4-shaped check is a valid 1.5 check", {
     xml2::read_xml(paste(mutated, collapse = "\n")), xsd
   )))
 })
+
+test_that("the verdict-1.6 XSD refuses an unknown postcondition provenance", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.6.xsd"))
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.6-typical.xml")
+  )
+  mutated <- sub('provenance="input"', 'provenance="reviewer"', body, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(mutated, collapse = "\n")), xsd
+  )))
+})
+
+test_that("a 1.5-shaped record is a valid 1.6 record", {
+  # Both 1.6 additions are optional, so an emitter that has adopted
+  # neither still writes conformant 1.6 records: a row without the
+  # provenance means "criterion", and a record without the inputs block
+  # names its inputs structurally, as it always did.
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.6.xsd"))
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.6-typical.xml")
+  )
+  mutated <- gsub(' provenance="criterion"| provenance="input"', "", body)
+  mutated <- mutated[!grepl("<inputs>|<input index=|</inputs>", mutated)]
+  expect_true(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(mutated, collapse = "\n")), xsd
+  )))
+})
+
+test_that("the verdict-1.6 XSD requires an input's index and excerpt", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.6.xsd"))
+  body <- readLines(
+    file.path(repo_root, "inst", "interchange", "verdict-1.6-typical.xml")
+  )
+  mutated <- sub(
+    '<input index="0" excerpt="offer-letter-standard.pdf" />',
+    '<input index="0" />',
+    body,
+    fixed = TRUE
+  )
+  expect_false(isTRUE(xml2::xml_validate(
+    xml2::read_xml(paste(mutated, collapse = "\n")), xsd
+  )))
+})
