@@ -115,3 +115,37 @@ test_that("wilson_lower_from_rate accepts continuous p_hat", {
   expect_true(result < 0.9973)
   expect_true(result > 0.9)
 })
+
+test_that("a zero rate gives exactly zero, not a cancellation residue", {
+  # Companion §4.3.4: at p_hat = 0 the leading term z^2/(2n) and the
+  # radical are the same quantity, so the bound is exactly 0 — an
+  # algebraic identity holding at every n and every confidence, not a
+  # small number. `expect_identical` rather than `expect_equal`: a
+  # tolerance-based comparison is precisely what fails to see this.
+  # A dense sweep, not a handful of round numbers: the round ones mostly
+  # cancel cleanly on their own, which is how this went unseen.
+  for (n in 1:1000) {
+    for (conf in c(0.90, 0.95, 0.99)) {
+      expect_identical(wilson_lower_from_rate(0, n, conf), 0,
+                       info = paste("n =", n, "confidence =", conf))
+    }
+  }
+})
+
+test_that("a zero rate leaves the integer cutoff at zero", {
+  # Why the identity above is worth a test of its own. The binding
+  # decision artefact is ceiling(n_test * threshold), so a residue of any
+  # size at all — n = 50 and n = 200 at one-sided 95% each left one near
+  # 1e-18 — raises the cutoff from 0 to 1 and demands a success of a test
+  # that the evidence says can demand nothing. The threshold comparison
+  # would not have caught it at any sane tolerance; the cutoff does.
+  # Against the previous body this fails at 265 sizes at 90%, 201 at 95%
+  # and 121 at 99% — roughly one test size in five, not a rare quirk.
+  for (n_test in 1:1000) {
+    for (conf in c(0.90, 0.95, 0.99)) {
+      expect_identical(
+        ceiling(n_test * wilson_lower_from_rate(0, n_test, conf)), 0,
+        info = paste("n_test =", n_test, "confidence =", conf))
+    }
+  }
+})

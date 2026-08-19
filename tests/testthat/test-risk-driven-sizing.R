@@ -59,3 +59,42 @@ test_that("the generated suite is well formed", {
     expect_true(all(!vapply(case$expected, is.null, logical(1))), info = case$name)
   }
 })
+
+test_that("inadmissible sizing designs are published as refusals, not omitted", {
+  # The suite used to express the §5.4.1 domain restriction by declining
+  # to emit cases outside it, which left "correctly refuses" a convention
+  # rather than an assertable outcome. Both routes out of the domain are
+  # now published, and they are distinguishable by cause.
+  suite <- generate_risk_driven_sizing_cases()
+  by_name <- setNames(suite$cases, vapply(suite$cases, `[[`, "", "name"))
+
+  refused <- Filter(function(c) c$expected$sizing_gate == "REFUSE", suite$cases)
+  expect_length(refused, 4)
+
+  for (case in refused) {
+    # Every numeric expectation is absent, because none exists.
+    numerics <- setdiff(names(case$expected), c("sizing_gate", "refusal_category"))
+    expect_gt(length(numerics), 0)
+    for (f in numerics) expect_true(is.na(case$expected[[f]]))
+  }
+
+  # A zero baseline reaches the refusal through an effective rate of
+  # exactly 0 (§4.3.4); all three approaches refuse, since the emptiness
+  # is in the domain rather than in any one inversion.
+  zero <- Filter(function(c) c$expected$refusal_category == "ZERO_BASELINE", refused)
+  expect_setequal(vapply(zero, `[[`, "", "approach"),
+                  c("required_n", "power_at", "detectable_rate"))
+  for (case in zero) expect_identical(case$inputs$baseline_rate, 0)
+
+  # The other route out is a tolerance that is not below the baseline —
+  # same gate, different cause. A framework collapsing the two into one
+  # message loses the distinction the operator acts on.
+  expect_identical(
+    by_name[["tolerance_at_baseline_refused"]]$expected$refusal_category,
+    "EMPTY_TOLERANCE_INTERVAL")
+
+  # Admissible cases carry the gate too, so its absence is never how a
+  # consumer infers admissibility.
+  admitted <- Filter(function(c) c$expected$sizing_gate == "ADMIT", suite$cases)
+  expect_length(admitted, length(suite$cases) - 4)
+})
