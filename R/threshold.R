@@ -18,6 +18,13 @@
 #'    baseline itself, `p_0 = wilson_lower(k, n, confidence) = n / (n + z^2)`,
 #'    and then the threshold is the Wilson lower bound at
 #'    `(p_0, test_samples, confidence)`.
+#'  - **Zero-baseline case** (k == 0): the effective baseline rate is the
+#'    point estimate 0, and per §4.3.4 the Wilson lower bound at a zero
+#'    rate is exactly 0 — so the derivation degenerates to a threshold of
+#'    0 and a cutoff of 0. This is defined, not refused: a baseline that
+#'    succeeded on no attempt can demand nothing of its successor.
+#'    (Sizing, unlike derivation, has no answer here — see §5.4.1 and
+#'    `risk_driven_sizing`.)
 #'
 #' @param baseline_successes Integer. Successes observed in baseline.
 #' @param baseline_trials Integer. Total baseline trials.
@@ -40,6 +47,11 @@ threshold_sample_size_first <- function(baseline_successes, baseline_trials,
 #'  - the Wilson lower bound `n / (n + z^2)` when `k == n` (companion §4.3.2,
 #'    Step 1) so that a perfect empirical observation is not promoted to
 #'    proof of perfect population reliability.
+#'
+#' At `k == 0` the general branch already returns the right answer: the
+#' point estimate is 0, and §4.3.4 gives the Wilson lower bound at a zero
+#' rate as exactly 0. The boundary needs no branch of its own here — it
+#' needs one in `wilson_lower_from_rate`, where the cancellation is.
 #'
 #' @keywords internal
 effective_baseline_rate <- function(baseline_successes, baseline_trials, confidence) {
@@ -169,6 +181,54 @@ generate_threshold_derivation_cases <- function() {
       # Companion §4.3.2 worked example: real-valued ≈ 0.9686, cutoff ≈ 97
       expected = ssf_expected_block(1000, 1000, 100, 0.95)
     ),
+    # Sample-size-first case — zero baseline (companion §4.3.4)
+    #
+    # The mirror of the perfect-baseline cases above. At k = 0 the
+    # effective baseline rate is exactly 0 at every n, so the derivation
+    # degenerates: threshold 0, cutoff 0, and an achieved size of 0
+    # because a cutoff of 0 excludes no outcome. A baseline that
+    # succeeded on no attempt can demand nothing of its successor, and
+    # these cases publish that rather than leaving each framework to
+    # infer it.
+    #
+    # The two test sizes are chosen, not arbitrary. n_test = 50 and
+    # n_test = 200 are where the one-sided 95% arithmetic failed to
+    # cancel to zero and left a residue near 1e-18 — invisible against
+    # the suite's 1e-6 tolerance on `threshold`, and decisive on
+    # `cutoff_integer`, which ceiling() lifts from 0 to 1. These are the
+    # cases that hold the fix in place.
+    list(
+      name = "ssf_zero_baseline_n10_test50_95pct",
+      approach = "sample_size_first",
+      inputs = list(
+        baseline_successes = 0L, baseline_trials = 10L,
+        test_samples = 50L, confidence = 0.95
+      ),
+      expected = ssf_expected_block(0, 10, 50, 0.95)
+    ),
+    list(
+      name = "ssf_zero_baseline_n1000_test200_95pct",
+      approach = "sample_size_first",
+      inputs = list(
+        baseline_successes = 0L, baseline_trials = 1000L,
+        test_samples = 200L, confidence = 0.95
+      ),
+      expected = ssf_expected_block(0, 1000, 200, 0.95)
+    ),
+    # Same zero baseline at a different confidence: p_0 = 0 does not
+    # move with z any more than it moves with n. n_test = 85 rather than
+    # a round number because the round ones mostly cancel cleanly — 85 is
+    # a residue site at 99%, so this case discriminates as the other two
+    # do instead of merely agreeing with everyone.
+    list(
+      name = "ssf_zero_baseline_n100_test85_99pct",
+      approach = "sample_size_first",
+      inputs = list(
+        baseline_successes = 0L, baseline_trials = 100L,
+        test_samples = 85L, confidence = 0.99
+      ),
+      expected = ssf_expected_block(0, 100, 85, 0.99)
+    ),
     # Sample-size-first sensitivity to test sample size — companion §3.5
     list(
       name = "ssf_950_of_1000_test50_95pct",
@@ -244,12 +304,13 @@ generate_threshold_derivation_cases <- function() {
     suite = "threshold_derivation",
     description = paste(
       "Threshold derivation per the statistical companion: §3.4 for the",
-      "general case, §4.3.2 for the perfect-baseline two-step, §6.3 for",
+      "general case, §4.3.2 for the perfect-baseline two-step, §4.3.4 for",
+      "the zero-baseline degeneration, §6.3 for",
       "threshold-first inversion. The threshold is the one-sided Wilson",
       "lower bound at the *test* sample size; smaller test samples lower",
       "the threshold (§3.5)."
     ),
-    method = "Wilson lower bound at test sample size (§3.4 / §4.3.2); binary search for implied confidence (§6.3)",
+    method = "Wilson lower bound at test sample size (§3.4 / §4.3.2 / §4.3.4); binary search for implied confidence (§6.3)",
     tolerance = 1e-6,
     cases = cases
   )

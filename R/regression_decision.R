@@ -104,6 +104,20 @@ generate_regression_decision_cases <- function() {
     regression_decision_case("perfect_baseline_fail_below_cutoff",
                              50, 50, 50, 0.95, perfect_c - 1L),
 
+    # Zero baseline (k = 0): the §4.3.4 degeneration carried all the way
+    # to a verdict. The cutoff is 0, so K >= 0 holds for every outcome
+    # and the test passes on nothing observed. That reads oddly and is
+    # correct — the baseline supports no lower bound above zero, so it
+    # can demand nothing — but it is exactly the shape a framework is
+    # likely to get wrong, by refusing, by erroring, or by carrying a
+    # floating-point residue into ceiling() and demanding one success.
+    # n_test = 50 is the residue site; the pair pins both the arithmetic
+    # and the verdict it composes into.
+    regression_decision_case("zero_baseline_pass_on_nothing_observed",
+                             0, 10, 50, 0.95, 0L),
+    regression_decision_case("zero_baseline_pass_at_test_200",
+                             0, 1000, 200, 0.95, 0L),
+
     # High confidence variant.
     regression_decision_case("worked_example_high_confidence_at_95_of_100",
                              951, 1000, 100, 0.99, 95L),
@@ -143,7 +157,8 @@ generate_regression_decision_cases <- function() {
     ),
     method = paste0(
       "REGRESSION: p* = sample-size-first Wilson lower bound (with the S4.3.2 perfect-baseline ",
-      "guard), c = ceiling(n_test * p*), PASS iff K >= c; achieved size = P_p0(K < c). ",
+      "guard, and the S4.3.4 zero-baseline degeneration), c = ceiling(n_test * p*), PASS iff ",
+      "K >= c; achieved size = P_p0(K < c). ",
       "COMPLIANCE: PASS iff WilsonLower(K, n_test, C) >= given threshold."
     ),
     tolerance = 1e-10,

@@ -100,6 +100,7 @@ required_n_case <- function(name, baseline_rate, minimum_acceptable_rate,
       target_power = target_power
     ),
     expected = list(
+      sizing_gate = "ADMIT",
       required_n = n,
       floor = wilson_lower_from_rate(baseline_rate, n, confidence),
       achieved_power = power_self_consistent(n, baseline_rate,
@@ -120,6 +121,7 @@ power_at_case <- function(name, baseline_rate, minimum_acceptable_rate,
       test_samples = test_samples
     ),
     expected = list(
+      sizing_gate = "ADMIT",
       floor = wilson_lower_from_rate(baseline_rate, test_samples, confidence),
       power = power_self_consistent(test_samples, baseline_rate,
                                     minimum_acceptable_rate, confidence)
@@ -139,10 +141,42 @@ detectable_rate_case <- function(name, baseline_rate, confidence,
       test_samples = test_samples
     ),
     expected = list(
+      sizing_gate = "ADMIT",
       detectable_rate = detectable_rate_self_consistent(test_samples, baseline_rate,
                                                         confidence, target_power)
     )
   )
+}
+
+#' One inadmissible sizing design: the refusal, published (companion S4.3.4).
+#'
+#' Until now this suite expressed the S5.4.1 domain restriction by
+#' declining to emit cases outside it — the generator's `stopifnot` fired
+#' and the regime went unpublished. That makes "correctly refuses" a
+#' convention each framework invents rather than an outcome any of them
+#' can be held to. These cases publish the refusal in the form the family
+#' already uses for an inadmissible input (`criterion_verdict_inferential`
+#' expresses one as a gate plus nulled numerics): `sizing_gate` is REFUSE,
+#' every numeric expectation is null because none exists, and a category
+#' names the cause.
+#'
+#' A zero baseline is the case that matters here and the reason it is
+#' reachable at all: at k = 0 the effective baseline rate is exactly 0
+#' (S4.3.4), so `baseline_rate = 0` is the faithful input rather than a
+#' contrived one, and p_min < p0 is empty for every p_min in (0, 1).
+#' The constructor computes nothing — there is nothing to compute — so it
+#' does not route through `validate_sizing_inputs`, which would stop.
+#'
+#' @keywords internal
+sizing_refusal_case <- function(name, approach, inputs, category) {
+  fields <- list(
+    required_n = c("required_n", "floor", "achieved_power"),
+    power_at = c("floor", "power"),
+    detectable_rate = c("detectable_rate")
+  )[[approach]]
+  expected <- list(sizing_gate = "REFUSE", refusal_category = category)
+  for (f in fields) expected[[f]] <- NA
+  list(name = name, approach = approach, inputs = inputs, expected = expected)
 }
 
 #' Generate risk-driven sizing reference cases (companion S5.4.1).
@@ -170,7 +204,39 @@ generate_risk_driven_sizing_cases <- function() {
     # Inversions, including round-trips at the required-n cases' sizes.
     detectable_rate_case("companion_inversion_at_100", 0.87, 0.95, 0.80, 100),
     detectable_rate_case("roundtrip_worked_example", 0.87, 0.95, 0.80, 891),
-    detectable_rate_case("roundtrip_walkthrough", 0.96, 0.95, 0.80, 405)
+    detectable_rate_case("roundtrip_walkthrough", 0.96, 0.95, 0.80, 405),
+
+    # The refused regime, at the boundary that reaches it in practice:
+    # a baseline that observed no successes. All three approaches refuse,
+    # because the emptiness is in the domain and not in any one
+    # inversion. Published so a framework's refusal is assertable rather
+    # than assumed — see `sizing_refusal_case`.
+    sizing_refusal_case(
+      "zero_baseline_required_n_refused", "required_n",
+      list(baseline_rate = 0, minimum_acceptable_rate = 0.90,
+           confidence = 0.95, target_power = 0.80),
+      "ZERO_BASELINE"),
+    sizing_refusal_case(
+      "zero_baseline_power_at_refused", "power_at",
+      list(baseline_rate = 0, minimum_acceptable_rate = 0.90,
+           confidence = 0.95, test_samples = 100L),
+      "ZERO_BASELINE"),
+    sizing_refusal_case(
+      "zero_baseline_detectable_rate_refused", "detectable_rate",
+      list(baseline_rate = 0, confidence = 0.95,
+           target_power = 0.80, test_samples = 100L),
+      "ZERO_BASELINE"),
+
+    # The other way out of the domain, for contrast: the baseline is
+    # admissible but the declared tolerance is not below it, so there is
+    # nothing to detect. Same gate, different cause — a framework that
+    # collapses the two into one message loses the distinction the
+    # operator needs to act on.
+    sizing_refusal_case(
+      "tolerance_at_baseline_refused", "required_n",
+      list(baseline_rate = 0.90, minimum_acceptable_rate = 0.90,
+           confidence = 0.95, target_power = 0.80),
+      "EMPTY_TOLERANCE_INTERVAL")
   )
 
   list(
@@ -182,7 +248,11 @@ generate_risk_driven_sizing_cases <- function() {
       "cases give the floor and power at a candidate n; REQUIRED_N cases give the ",
       "smallest n meeting a target power for a declared minimal acceptable rate; ",
       "DETECTABLE_RATE cases invert to the largest tolerable rate detectable at a ",
-      "fixed n. Defined for minimum_acceptable_rate < baseline_rate only."
+      "fixed n. Defined for minimum_acceptable_rate < baseline_rate only; designs outside ",
+      "that domain are published as refusals rather than omitted -- sizing_gate is REFUSE, ",
+      "every numeric expectation is null, and refusal_category names the cause. A zero ",
+      "baseline (S4.3.4) reaches the refusal by way of an effective baseline rate of exactly ",
+      "0, at which the domain is empty for every tolerance."
     ),
     method = paste0(
       "floor = WilsonLower(baseline_rate, n, confidence) (from-rate form, shared z); ",

@@ -5,6 +5,24 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.10.13] — 2026-08-19
+
+**The zero baseline becomes assertable, and a decision-rule defect it exposed is fixed.** Additive: nine new cases, one new expected field, no existing expected value changed.
+
+`wilson_lower_from_rate` did not reliably return zero at a zero rate. The formula's leading term and its radical are the same quantity there, `z²/(2n)`, so the bound is exactly 0 — but binary floating point does not always cancel them, leaving a residue near 1e-18 at 265 of the first 1000 sample sizes at one-sided 90%, 201 at 95%, and 121 at 99%. The residue is invisible against any tolerance a suite would set and decisive on the artefact that binds: `ceiling(n_test × threshold)` turns it into a cutoff of 1, so roughly one test size in five demanded a success of a test that the evidence says can demand nothing. Fixed by returning the algebraic value at `p̂ = 0`. **No published expectation moves** — the residue had never reached a fixture, because no fixture had ever put a zero baseline through a threshold.
+
+New cases, all at boundaries no suite previously exercised:
+
+- `threshold_derivation` (+3, family-mandatory) — a zero baseline at three test sizes and two confidence levels. Threshold 0, cutoff 0, achieved size 0.
+- `regression_decision` (+2, family-mandatory) — the same degeneration composed into a verdict: cutoff 0, so a test that observed nothing PASSES. Correct, and the shape a framework is likeliest to get wrong.
+- `risk_driven_sizing` (+4) — the §5.4.1 domain restriction, previously expressed by *declining to emit cases* outside it. Now published as refusals: `sizing_gate` REFUSE, every numeric expectation null, `refusal_category` naming the cause (`ZERO_BASELINE` vs `EMPTY_TOLERANCE_INTERVAL`). "Correctly refuses" becomes an assertable outcome rather than a convention each framework invents.
+
+**Consumer-visible shape change (additive).** `risk_driven_sizing` cases now carry `sizing_gate` (`ADMIT` on every previously-published case, `REFUSE` on the four new ones) and refusals carry `refusal_category`. Both are binding fields, so a framework consuming this suite must assert them and will report a coverage gap until it does. That is the intended mechanism, not a regression.
+
+Companion §4.3.4 is new, stating the zero baseline's consequences explicitly: the effective rate is exactly 0 at every `n` and confidence, derivation degenerates but stays defined, and sizing has no answer and must decline the design rather than clamp `p₀` to something small. No formula changes.
+
+Also fixed: `manifest.json` had been carrying `fixtureVersion` **0.8.5** since that release — the cases had not changed, so nobody regenerated it, and five releases of consumers vendored a manifest misdescribing its own version. It now reads 0.10.13. The manifest also gains `familyMandatoryRationale`, recording why the mandatory roster is unchanged and which obligation deliberately sits outside it.
+
 ## [0.10.12] — 2026-08-10
 
 **A postcondition says who stated it, and a verdict record says what its

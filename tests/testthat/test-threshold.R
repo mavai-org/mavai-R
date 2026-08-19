@@ -92,3 +92,37 @@ test_that("Threshold-first flags unsound when threshold too close to baseline", 
   expect_true(result$implied_confidence < 0.80)
   expect_false(result$is_sound)
 })
+
+test_that("a zero baseline derives a threshold of zero and a cutoff of zero", {
+  # Companion §4.3.4. Derivation degenerates rather than refusing: a
+  # baseline that succeeded on no attempt supports no lower bound above
+  # zero, so it can demand nothing of its successor. The cutoff is the
+  # assertion that matters — it is the binding artefact, and it is what a
+  # cancellation residue would move.
+  for (baseline_n in c(10, 100, 1000)) {
+    for (test_n in c(50, 85, 200)) {
+      for (conf in c(0.90, 0.95, 0.99)) {
+        block <- ssf_expected_block(0, baseline_n, test_n, conf)
+        info <- paste("baseline 0 /", baseline_n, "test", test_n, "conf", conf)
+        expect_identical(block$threshold, 0, info = info)
+        expect_identical(block$cutoff_integer, 0L, info = info)
+        # cutoff 0 excludes no outcome, so the false-degradation
+        # probability at it is 0.
+        expect_identical(block$achieved_size, 0, info = info)
+      }
+    }
+  }
+})
+
+test_that("the effective baseline rate is zero at k = 0 and interior at k = n", {
+  # The asymmetry §4.3.4 exists to state. At k = n the guard compresses a
+  # perfect observation to something strictly inside (0, 1) and usable; at
+  # k = 0 the general branch already gives exactly 0, which is not usable
+  # for sizing and is correct for derivation.
+  for (n in c(10, 100, 1000)) {
+    expect_identical(effective_baseline_rate(0, n, 0.95), 0)
+    p0 <- effective_baseline_rate(n, n, 0.95)
+    expect_true(p0 > 0 && p0 < 1)
+    expect_equal(p0, n / (n + qnorm(0.95)^2))
+  }
+})
