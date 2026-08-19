@@ -153,7 +153,7 @@
       "procedure": "REGRESSION",
       "inputs": {
         "baseline_successes": 0,
-        "baseline_trials": 10,
+        "baseline_trials": 50,
         "test_samples": 50,
         "confidence": 0.95,
         "observed_successes": 0
