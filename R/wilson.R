@@ -59,6 +59,17 @@ wilson_lower <- function(successes, trials, confidence) {
 #' @return Numeric. The lower bound.
 #' @export
 wilson_lower_from_rate <- function(p_hat, n, confidence) {
+  # At p_hat = 0 the leading term and the radical are the same quantity,
+  # z^2 / (2n), so the bound is exactly 0 at every n and confidence
+  # (companion §4.3.4). Binary floating point does not reliably cancel
+  # them: over n in 1:1000 a residue near 1e-18 survives at 265 sizes at
+  # one-sided 90%, 201 at 95%, and 121 at 99%. It is not harmless. The
+  # decision artefact is ceiling(n_test * threshold), and ceiling turns
+  # any positive residue into a cutoff of 1 — so roughly one test size in
+  # five would demand a success of a test that can demand nothing.
+  # Return the algebraic value rather than the computed one.
+  if (p_hat == 0) return(0)
+
   alpha <- 1 - confidence
   z <- qnorm(1 - alpha)  # one-sided
 
