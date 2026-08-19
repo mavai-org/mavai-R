@@ -110,7 +110,7 @@
       "cases": ["worked_example_pass_at_cutoff", "worked_example_fail_below_cutoff", "worked_example_pass_above_cutoff", "worked_example_fail_deep_degradation", "small_test_pass_at_cutoff", "small_test_fail_below_cutoff", "perfect_baseline_pass_at_cutoff", "perfect_baseline_fail_below_cutoff", "zero_baseline_pass_on_nothing_observed", "zero_baseline_pass_at_test_200", "worked_example_high_confidence_at_95_of_100", "compliance_pass_clear_margin", "compliance_fail_bound_below_threshold", "conflation_detector_regression_pass", "conflation_detector_compliance_fail"],
       "bindingFields": ["achieved_size", "cutoff_integer", "displayed_rate", "threshold_real", "verdict", "wilson_lower"],
       "informationalFields": {},
-      "md5": "60516c2cf2bfa277cb66a6f4c6504261"
+      "md5": "830e6059f421d5a74667174312438250"
     },
     "risk_driven_sizing": {
       "file": "risk_driven_sizing.json",

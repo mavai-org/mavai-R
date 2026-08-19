@@ -113,8 +113,16 @@ generate_regression_decision_cases <- function() {
     # floating-point residue into ceiling() and demanding one success.
     # n_test = 50 is the residue site; the pair pins both the arithmetic
     # and the verdict it composes into.
+    #
+    # The baseline is sized at the test's own size rather than smaller.
+    # A framework may legitimately hold that a baseline must be at least
+    # as rigorous as the test it grounds — punit returns INCONCLUSIVE
+    # when the test outsizes its baseline — and a case that trips that
+    # rule cannot discriminate the boundary it was written for. The
+    # effective rate is 0 at every baseline size, so nothing about the
+    # expectation depends on this choice.
     regression_decision_case("zero_baseline_pass_on_nothing_observed",
-                             0, 10, 50, 0.95, 0L),
+                             0, 50, 50, 0.95, 0L),
     regression_decision_case("zero_baseline_pass_at_test_200",
                              0, 1000, 200, 0.95, 0L),
 
