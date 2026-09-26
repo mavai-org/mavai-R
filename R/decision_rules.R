@@ -1,11 +1,11 @@
-#' The Statistical Companion 1.5.0 decision rules.
+#' The Statistical Companion 2.0.0 decision rules.
 #'
 #' Three verdict-producing procedures, each with a versioned identifier
 #' that travels in every fixture it governs:
 #'
-#'   - `regression/score-cc` v1 — empirical regression: the continuity-
-#'     corrected pooled two-sample score test, expressed as an integer
-#'     cutoff c on the test's success count (companion §3.4).
+#'   - `regression/fisher` v1 — empirical regression: the one-sided
+#'     Fisher exact test, expressed as an integer cutoff c on the test's
+#'     success count (companion §3.4).
 #'   - `compliance/exact-binomial` v1 — normative compliance: the exact
 #'     one-sided binomial test of H0: p <= p_req, expressed as the
 #'     smallest passing count k_min (companion §3.6, §5.7).
@@ -13,15 +13,14 @@
 #'     rank whose exact no-degradation breach probability for the test's
 #'     nearest-rank percentile is at most alpha (companion §12.4).
 #'
-#' Plus the three configuration errors refused before any sample runs:
-#' `TEST_LARGER_THAN_BASELINE`, `OUTSIDE_CALIBRATION_TOLERANCE` and
-#' `COMPLIANCE_INFEASIBLE`.
+#' Plus the two configuration errors refused before any sample runs:
+#' `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`.
 #'
 #' Everything here is an exact finite sum over base-R distribution
-#' functions (`pnorm`/`qnorm`, `dbinom`/`pbinom`, `lchoose`/`lbeta`);
+#' functions (`phyper`, `dbinom`/`pbinom`, `qbeta`, `lchoose`/`lbeta`);
 #' nothing is simulated.
 
-METHODOLOGY_VERSION <- "1.5.0"
+METHODOLOGY_VERSION <- "2.0.0"
 
 # Version of the fixture file shape (cases.schema.json and the manifest).
 # 1 was the unversioned shape up to fixtures 0.10.13; 2 adds
@@ -29,19 +28,17 @@ METHODOLOGY_VERSION <- "1.5.0"
 FIXTURE_SCHEMA_VERSION <- 2L
 
 DECISION_RULES <- list(
-  "regression/score-cc" = list(id = "regression/score-cc", version = 1L),
+  "regression/fisher" = list(id = "regression/fisher", version = 1L),
   "compliance/exact-binomial" = list(id = "compliance/exact-binomial", version = 1L),
   "latency/precedence" = list(id = "latency/precedence", version = 1L)
 )
 
 CONFIGURATION_ERRORS <- c(
   "TEST_LARGER_THAN_BASELINE",
-  "OUTSIDE_CALIBRATION_TOLERANCE",
   "COMPLIANCE_INFEASIBLE"
 )
 
-# The alpha values at which regression/score-cc calibration is certified
-# and the calibration-tolerance rule is published.
+# The alpha values at which the certification scans run.
 CERTIFIED_ALPHAS <- c(0.001, 0.01, 0.05, 0.10)
 
 # The latency percentiles the precedence rule supports (as P in p = P/100).
@@ -64,37 +61,30 @@ check_alpha <- function(alpha) {
 }
 
 # ===========================================================================
-# regression/score-cc, version 1
+# regression/fisher, version 1
 # ===========================================================================
 
-#' Continuity-corrected pooled score statistic
+#' One-sided Fisher p-value of a test count
 #'
-#' For a test count k_t of n_t against a baseline count k_b of n_b:
-#' d = k_t/n_t - k_b/n_b, corrected toward the null,
-#' d_cc = min(0, d + (1/n_b + 1/n_t)/2); pooled rate
-#' p_bar = (k_b + k_t)/(n_b + n_t); v = p_bar (1 - p_bar) (1/n_b + 1/n_t);
-#' z = d_cc / sqrt(v), and z = 0 when v = 0 (both rates 0 or both 1: no
-#' evidence of degradation). Vectorised in k_t and k_b.
+#' The hypergeometric lower tail P(X <= k_t), X the number of the
+#' s = k_b + k_t pooled successes that fall in the test's n_t of the
+#' n_b + n_t trials. Vectorised in k_t and k_b.
 #'
 #' @param k_t,k_b Test and baseline success counts.
 #' @param n_b,n_t Baseline and test sizes.
-#' @return Numeric vector of z.
+#' @return Numeric vector of p-values.
 #' @export
-score_cc_z <- function(k_t, k_b, n_b, n_t) {
-  d <- k_t / n_t - k_b / n_b
-  d <- pmin(0, d + 0.5 * (1 / n_b + 1 / n_t))
-  pbar <- (k_b + k_t) / (n_b + n_t)
-  v <- pbar * (1 - pbar) * (1 / n_b + 1 / n_t)
-  z <- d / sqrt(v)
-  z[v == 0] <- 0
-  z
+fisher_pvalue <- function(k_t, k_b, n_b, n_t) {
+  s <- k_b + k_t
+  phyper(k_t, s, n_b + n_t - s, n_t)
 }
 
-#' Integer cutoff of regression/score-cc (the binding decision artefact)
+#' Integer cutoff of regression/fisher (the binding decision artefact)
 #'
-#' c = the smallest k_t in 0..n_t with z(k_t) >= -qnorm(1 - alpha); PASS
-#' iff the observed test count K_t >= c. Computed by the literal scan the
-#' definition states. Vectorised in `baseline_successes`.
+#' k_t FAILs iff its one-sided Fisher p-value is <= alpha; the p-value is
+#' non-decreasing in k_t, so c is the smallest k_t whose p-value exceeds
+#' alpha (0 when k_t = 0 already does); PASS iff K_t >= c. Computed by the
+#' literal scan the definition states. Vectorised in `baseline_successes`.
 #'
 #' @param baseline_successes K_b, 0..n_b (may be a vector).
 #' @param baseline_trials n_b >= 1.
@@ -102,7 +92,7 @@ score_cc_z <- function(k_t, k_b, n_b, n_t) {
 #' @param alpha One-sided level.
 #' @return Integer vector of cutoffs.
 #' @export
-score_cc_cutoff <- function(baseline_successes, baseline_trials, test_samples, alpha) {
+fisher_cutoff <- function(baseline_successes, baseline_trials, test_samples, alpha) {
   check_count(baseline_trials, "baseline_trials", 1)
   check_count(test_samples, "test_samples", 1)
   check_alpha(alpha)
@@ -110,57 +100,43 @@ score_cc_cutoff <- function(baseline_successes, baseline_trials, test_samples, a
           baseline_successes != round(baseline_successes))) {
     stop("baseline_successes must be integers in 0..baseline_trials", call. = FALSE)
   }
-  crit <- -qnorm(1 - alpha)
   k_t <- 0:test_samples
   vapply(baseline_successes, function(k_b) {
-    pass <- score_cc_z(k_t, k_b, baseline_trials, test_samples) >= crit
-    as.integer(which(pass)[1] - 1L)
+    above <- fisher_pvalue(k_t, k_b, baseline_trials, test_samples) > alpha
+    as.integer(which(above)[1] - 1L)
   }, integer(1))
 }
 
-#' All cutoffs of regression/score-cc for K_b = 0..n_b, fast
+#' Cutoffs of regression/fisher for a range of K_b, fast
 #'
-#' Vectorised bisection over k_t for every K_b at once. It presumes what
-#' the rule's PASS set is proven to be on the certification grid — an
-#' upper interval {c, ..., n_t} — and checks the boundary it returns
-#' (c passes, c - 1 fails) for every K_b; `verify_interval = TRUE` also
-#' checks the whole PASS pattern (O(n_b n_t)). Agrees with
-#' `score_cc_cutoff()` wherever the interval property holds.
+#' Vectorised bisection over k_t for every K_b at once, relying on the
+#' p-value being non-decreasing in k_t (P(X <= k_t) with s = K_b + k_t);
+#' the boundary it returns (p-value above alpha at c, at most alpha at
+#' c - 1) is checked for every K_b. Agrees with `fisher_cutoff()`.
 #'
 #' @param n_b,n_t Baseline and test sizes.
 #' @param alpha One-sided level.
-#' @param verify_interval Logical; check the full PASS pattern too.
-#' @return Integer vector of length n_b + 1, the cutoff at K_b = 0..n_b.
+#' @param k_b Baseline counts (default 0..n_b).
+#' @return Integer vector of cutoffs, one per k_b.
 #' @export
-score_cc_cutoffs <- function(n_b, n_t, alpha, verify_interval = FALSE) {
+fisher_cutoffs <- function(n_b, n_t, alpha, k_b = 0:n_b) {
   check_count(n_b, "n_b", 1)
   check_count(n_t, "n_t", 1)
   check_alpha(alpha)
-  crit <- -qnorm(1 - alpha)
-  k_b <- 0:n_b
-  passes <- function(k_t, idx = seq_along(k_b)) {
-    score_cc_z(k_t, k_b[idx], n_b, n_t) >= crit
-  }
-  lo <- rep(-1L, length(k_b))            # virtual failing point
-  hi <- rep(as.integer(n_t), length(k_b)) # k_t = n_t always passes (d_cc = 0)
+  lo <- rep(-1L, length(k_b))             # virtual failing point
+  hi <- rep(as.integer(n_t), length(k_b))  # P(X <= n_t) = 1 > alpha
   repeat {
     open <- which(hi - lo > 1L)
     if (length(open) == 0) break
     mid <- (lo[open] + hi[open]) %/% 2L
-    p <- passes(mid, open)
-    hi[open[p]] <- mid[p]
-    lo[open[!p]] <- mid[!p]
+    above <- fisher_pvalue(mid, k_b[open], n_b, n_t) > alpha
+    hi[open[above]] <- mid[above]
+    lo[open[!above]] <- mid[!above]
   }
-  if (!all(passes(hi)) || any(hi > 0L & passes(pmax(hi - 1L, 0L)))) {
-    stop("score-cc cutoff boundary check failed", call. = FALSE)
-  }
-  if (verify_interval) {
-    for (k in k_b) {
-      ps <- score_cc_z(0:n_t, k, n_b, n_t) >= crit
-      if (!all(ps[(hi[k + 1L] + 1L):(n_t + 1L)]) || any(ps[seq_len(hi[k + 1L])])) {
-        stop(sprintf("score-cc PASS set has a hole at K_b = %d", k), call. = FALSE)
-      }
-    }
+  low <- hi > 0L
+  if (!all(fisher_pvalue(hi, k_b, n_b, n_t) > alpha) ||
+      any(fisher_pvalue(hi[low] - 1L, k_b[low], n_b, n_t) > alpha)) {
+    stop("Fisher cutoff boundary check failed", call. = FALSE)
   }
   hi
 }
@@ -177,13 +153,13 @@ score_cc_cutoffs <- function(n_b, n_t, alpha, verify_interval = FALSE) {
 #' @param p_b,p_t Baseline and test success probabilities.
 #' @return Numeric scalar.
 #' @export
-score_cc_fail_probability <- function(cutoffs, n_b, n_t, p_b, p_t) {
+regression_fail_probability <- function(cutoffs, n_b, n_t, p_b, p_t) {
   w <- dbinom(0:n_b, n_b, p_b)
   lower <- c(0, pbinom(0:(n_t - 1), n_t, p_t))  # P(K_t < c) at c = 0..n_t
   sum(w * lower[cutoffs + 1L])
 }
 
-#' Exact unconditional size A(p) of regression/score-cc
+#' Exact unconditional size A(p) of regression/fisher
 #'
 #' @param n_b,n_t Baseline and test sizes.
 #' @param alpha One-sided level.
@@ -191,11 +167,11 @@ score_cc_fail_probability <- function(cutoffs, n_b, n_t, p_b, p_t) {
 #' @param cutoffs Optional precomputed cutoff vector.
 #' @return Numeric vector, one size per p.
 #' @export
-score_cc_size <- function(n_b, n_t, alpha, p, cutoffs = score_cc_cutoffs(n_b, n_t, alpha)) {
-  vapply(p, function(pp) score_cc_fail_probability(cutoffs, n_b, n_t, pp, pp), numeric(1))
+fisher_size <- function(n_b, n_t, alpha, p, cutoffs = fisher_cutoffs(n_b, n_t, alpha)) {
+  vapply(p, function(pp) regression_fail_probability(cutoffs, n_b, n_t, pp, pp), numeric(1))
 }
 
-#' Exact power of regression/score-cc against the operative cutoff
+#' Exact power of regression/fisher against the operative cutoff
 #'
 #' P(FAIL) with the baseline at p_b and the test at p_b - delta.
 #'
@@ -206,13 +182,13 @@ score_cc_size <- function(n_b, n_t, alpha, p, cutoffs = score_cc_cutoffs(n_b, n_
 #' @param cutoffs Optional precomputed cutoff vector.
 #' @return Numeric scalar.
 #' @export
-score_cc_power <- function(n_b, n_t, alpha, baseline_rate, delta,
-                           cutoffs = score_cc_cutoffs(n_b, n_t, alpha)) {
+fisher_power <- function(n_b, n_t, alpha, baseline_rate, delta,
+                         cutoffs = fisher_cutoffs(n_b, n_t, alpha)) {
   if (delta < 0 || delta > baseline_rate) stop("need 0 <= delta <= baseline_rate", call. = FALSE)
-  score_cc_fail_probability(cutoffs, n_b, n_t, baseline_rate, baseline_rate - delta)
+  regression_fail_probability(cutoffs, n_b, n_t, baseline_rate, baseline_rate - delta)
 }
 
-#' Minimum detectable degradation of regression/score-cc
+#' Minimum detectable degradation of regression/fisher
 #'
 #' The smallest delta at which the exact power under the operative rule
 #' reaches `power` (default 0.80), with the baseline at `baseline_rate`.
@@ -226,11 +202,11 @@ score_cc_power <- function(n_b, n_t, alpha, baseline_rate, delta,
 #' @param power Target power.
 #' @return Numeric scalar or NA.
 #' @export
-score_cc_minimum_detectable_degradation <- function(n_b, n_t, alpha, baseline_rate,
-                                                    power = 0.80) {
-  cutoffs <- score_cc_cutoffs(n_b, n_t, alpha)
-  pw <- function(delta) score_cc_fail_probability(cutoffs, n_b, n_t, baseline_rate,
-                                                  baseline_rate - delta)
+fisher_minimum_detectable_degradation <- function(n_b, n_t, alpha, baseline_rate,
+                                                  power = 0.80) {
+  cutoffs <- fisher_cutoffs(n_b, n_t, alpha)
+  pw <- function(delta) regression_fail_probability(cutoffs, n_b, n_t, baseline_rate,
+                                                    baseline_rate - delta)
   if (pw(baseline_rate) < power) return(NA_real_)
   lo <- 0; hi <- baseline_rate
   while (hi - lo > 1e-12) {
@@ -240,48 +216,44 @@ score_cc_minimum_detectable_degradation <- function(n_b, n_t, alpha, baseline_ra
   hi
 }
 
+#' Implied alpha of a declared cutoff under regression/fisher
+#'
+#' The threshold-first inversion (companion §6.3): the smallest alpha at
+#' which the Fisher rule yields the declared cutoff c. The rule gives c
+#' exactly when P(X <= c - 1) <= alpha < P(X <= c), so the implied alpha
+#' is the p-value at c - 1 (0 for c = 0, the infimum). NA when no alpha
+#' yields c (the p-values at c - 1 and c coincide, so the rule skips c).
+#'
+#' @param baseline_successes,baseline_trials Baseline evidence.
+#' @param test_samples n_t.
+#' @param cutoff The declared cutoff, 0..n_t.
+#' @return Numeric or NA.
+#' @export
+fisher_implied_alpha <- function(baseline_successes, baseline_trials, test_samples, cutoff) {
+  check_count(cutoff, "cutoff", 0)
+  if (cutoff > test_samples) stop("cutoff must be at most test_samples", call. = FALSE)
+  if (cutoff == 0) return(0)
+  below <- fisher_pvalue(cutoff - 1, baseline_successes, baseline_trials, test_samples)
+  at <- fisher_pvalue(cutoff, baseline_successes, baseline_trials, test_samples)
+  if (!(below < at)) return(NA_real_)
+  below
+}
+
 #' Configuration error of an empirical (regression) configuration
 #'
-#' `TEST_LARGER_THAN_BASELINE` when n_t > n_b (a design rule);
-#' otherwise `OUTSIDE_CALIBRATION_TOLERANCE` when the published
-#' calibration-tolerance rule refuses (n_b, n_t, alpha); otherwise NA.
+#' `TEST_LARGER_THAN_BASELINE` when n_t > n_b (a design rule); NA
+#' otherwise. regression/fisher never exceeds alpha, so no configuration
+#' is refused on calibration grounds.
 #'
 #' @param baseline_trials n_b.
 #' @param test_samples n_t.
-#' @param alpha One of the certified alphas.
 #' @return A configuration-error code or NA_character_.
 #' @export
-regression_configuration_error <- function(baseline_trials, test_samples, alpha) {
+regression_configuration_error <- function(baseline_trials, test_samples) {
   check_count(baseline_trials, "baseline_trials", 1)
   check_count(test_samples, "test_samples", 1)
   if (test_samples > baseline_trials) return("TEST_LARGER_THAN_BASELINE")
-  if (outside_calibration_tolerance(baseline_trials, test_samples, alpha)) {
-    return("OUTSIDE_CALIBRATION_TOLERANCE")
-  }
   NA_character_
-}
-
-#' The published calibration-tolerance rule, applied
-#'
-#' TRUE iff some row of `CALIBRATION_TOLERANCE_RULE` for this alpha has
-#' n_b >= min_baseline_trials and n_t / n_b <= max_test_ratio. The ratio
-#' comparison is done in integers: n_t * ratio_den <= ratio_num * n_b.
-#' Defined only at the certified alphas.
-#'
-#' @param baseline_trials n_b.
-#' @param test_samples n_t (<= n_b).
-#' @param alpha One of `CERTIFIED_ALPHAS`.
-#' @return Logical.
-#' @export
-outside_calibration_tolerance <- function(baseline_trials, test_samples, alpha) {
-  if (!any(abs(alpha - CERTIFIED_ALPHAS) < 1e-12)) {
-    stop(sprintf(paste0("the calibration-tolerance rule is published for alpha in {%s} ",
-                        "only; alpha = %g is not certified"),
-                 paste(CERTIFIED_ALPHAS, collapse = ", "), alpha), call. = FALSE)
-  }
-  rows <- CALIBRATION_TOLERANCE_RULE[abs(CALIBRATION_TOLERANCE_RULE$alpha - alpha) < 1e-12, ]
-  any(baseline_trials >= rows$min_baseline_trials &
-        test_samples * rows$ratio_den <= rows$ratio_num * baseline_trials)
 }
 
 # ===========================================================================

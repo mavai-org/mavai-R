@@ -1,12 +1,12 @@
-# The Statistical Companion 1.5.0 decision rules: canonical cases and
+# The Statistical Companion 2.0.0 decision rules: canonical cases and
 # structural properties.
 
-test_that("regression/score-cc reproduces every canonical cutoff", {
+test_that("regression/fisher reproduces every canonical cutoff", {
   canonical <- list(
     list(951, 1000, 100, 0.05, 91L),
     list(1902, 2000, 100, 0.05, 91L),
     list(951, 1000, 1000, 0.05, 933L),
-    list(9510, 10000, 100, 0.05, 92L),
+    list(9510, 10000, 100, 0.05, 91L),
     list(99, 100, 100, 0.05, 94L),
     list(100, 100, 100, 0.05, 96L),
     list(1000, 1000, 100, 0.05, 99L),
@@ -16,9 +16,9 @@ test_that("regression/score-cc reproduces every canonical cutoff", {
   )
   for (r in canonical) {
     info <- paste(unlist(r[1:4]), collapse = " / ")
-    expect_identical(score_cc_cutoff(r[[1]], r[[2]], r[[3]], r[[4]]), r[[5]], info = info)
-    expect_identical(score_cc_cutoffs(r[[2]], r[[3]], r[[4]])[r[[1]] + 1L], r[[5]], info = info)
-    expect_true(is.na(regression_configuration_error(r[[2]], r[[3]], r[[4]])), info = info)
+    expect_identical(fisher_cutoff(r[[1]], r[[2]], r[[3]], r[[4]]), r[[5]], info = info)
+    expect_identical(fisher_cutoffs(r[[2]], r[[3]], r[[4]])[r[[1]] + 1L], r[[5]], info = info)
+    expect_true(is.na(regression_configuration_error(r[[2]], r[[3]])), info = info)
   }
 })
 
@@ -36,57 +36,65 @@ test_that("the v1.4.1 legacy cutoffs sit beside the canonical cases", {
   }
 })
 
-test_that("the canonical refusals carry their configuration errors", {
-  expect_identical(regression_configuration_error(100, 200, 0.05), "TEST_LARGER_THAN_BASELINE")
-  expect_identical(regression_configuration_error(1000, 25, 0.01), "OUTSIDE_CALIBRATION_TOLERANCE")
-  # The canonical worst case on the 110-point grid of the specification.
+test_that("the only empirical refusal is a test larger than its baseline", {
+  expect_identical(regression_configuration_error(100, 200), "TEST_LARGER_THAN_BASELINE")
+  expect_identical(regression_configuration_error(100, 100), NA_character_)
+  # The configuration score-cc had to refuse is admitted: Fisher stays within alpha.
+  expect_identical(regression_configuration_error(1000, 25), NA_character_)
   ps <- seq(0.50, 0.9999, length.out = 110)
-  sz <- score_cc_size(1000, 25, 0.01, ps)
-  expect_equal(round(100 * max(sz), 3), 1.313)
-  expect_equal(round(ps[which.max(sz)], 3), 0.977)
-  expect_identical(regression_configuration_error(1000, 1000, 0.05), NA_character_)
+  expect_lte(max(fisher_size(1000, 25, 0.01, ps)), 0.01)
 })
 
 test_that("the perfect-baseline discontinuity is gone: c is monotone in K_b", {
   for (cfg in list(c(100, 100, 0.05), c(30, 25, 0.05), c(1000, 100, 0.01), c(10, 10, 0.10))) {
-    cut <- score_cc_cutoffs(cfg[1], cfg[2], cfg[3], verify_interval = TRUE)
+    cut <- fisher_cutoffs(cfg[1], cfg[2], cfg[3])
     expect_true(all(diff(cut) >= 0))
     expect_identical(cut[1], 0L)
   }
-  expect_true(score_cc_cutoff(99, 100, 100, 0.05) < score_cc_cutoff(100, 100, 100, 0.05))
+  expect_true(fisher_cutoff(99, 100, 100, 0.05) < fisher_cutoff(100, 100, 100, 0.05))
 })
 
 test_that("the literal scan and the bisection agree on every K_b", {
   for (cfg in list(c(10, 1, 0.001), c(17, 9, 0.01), c(50, 50, 0.05), c(300, 40, 0.10),
                    c(1000, 999, 0.001))) {
-    expect_identical(score_cc_cutoff(0:cfg[1], cfg[1], cfg[2], cfg[3]),
-                     score_cc_cutoffs(cfg[1], cfg[2], cfg[3]))
+    expect_identical(fisher_cutoff(0:cfg[1], cfg[1], cfg[2], cfg[3]),
+                     fisher_cutoffs(cfg[1], cfg[2], cfg[3]))
   }
 })
 
-test_that("z is zero where the pooled variance vanishes", {
-  expect_identical(score_cc_z(0, 0, 100, 50), 0)
-  expect_identical(score_cc_z(50, 100, 100, 50), 0)
+test_that("the Fisher p-value is the hypergeometric lower tail", {
+  s <- 951 + 90
+  brute <- sum(choose(s, 0:90) * choose(1100 - s, 100 - 0:90)) / choose(1100, 100)
+  expect_equal(fisher_pvalue(90, 951, 1000, 100), brute, tolerance = 1e-10)
+  expect_equal(fisher_pvalue(3, 10, 30, 12),
+               fisher.test(matrix(c(3, 10, 9, 20), 2), alternative = "less")$p.value,
+               tolerance = 1e-12)
 })
 
 test_that("unconditional size and power are exact sums", {
-  cut <- score_cc_cutoffs(30, 25, 0.05)
+  cut <- fisher_cutoffs(30, 25, 0.05)
   brute <- 0
   for (kb in 0:30) for (kt in 0:25) {
     if (kt < cut[kb + 1]) brute <- brute + dbinom(kb, 30, 0.9) * dbinom(kt, 25, 0.85)
   }
-  expect_equal(score_cc_fail_probability(cut, 30, 25, 0.9, 0.85), brute, tolerance = 1e-14)
-  expect_equal(score_cc_power(30, 25, 0.05, 0.9, 0.05), brute, tolerance = 1e-14)
-  # The canonical size figures of the specification.
-  expect_equal(round(100 * score_cc_size(1000, 100, 0.05, 0.951), 2), 3.86)
-  expect_equal(round(100 * score_cc_size(1000, 1000, 0.01, 0.951), 2), 0.74)
+  expect_equal(regression_fail_probability(cut, 30, 25, 0.9, 0.85), brute, tolerance = 1e-14)
+  expect_equal(fisher_power(30, 25, 0.05, 0.9, 0.05), brute, tolerance = 1e-14)
+  expect_lte(max(fisher_size(1000, 100, 0.05, seq(0.5, 0.999, by = 0.001))), 0.05)
 })
 
 test_that("the minimum detectable degradation reaches the target power exactly", {
-  d <- score_cc_minimum_detectable_degradation(1000, 100, 0.05, 0.95)
-  expect_equal(score_cc_power(1000, 100, 0.05, 0.95, d), 0.80, tolerance = 1e-8)
-  expect_lt(score_cc_power(1000, 100, 0.05, 0.95, d - 1e-6), 0.80)
-  expect_true(is.na(score_cc_minimum_detectable_degradation(10, 1, 0.001, 0.5)))
+  d <- fisher_minimum_detectable_degradation(1000, 100, 0.05, 0.95)
+  expect_equal(fisher_power(1000, 100, 0.05, 0.95, d), 0.80, tolerance = 1e-8)
+  expect_lt(fisher_power(1000, 100, 0.05, 0.95, d - 1e-6), 0.80)
+  expect_true(is.na(fisher_minimum_detectable_degradation(10, 1, 0.001, 0.5)))
+})
+
+test_that("the implied alpha is the smallest alpha at which the declared cutoff results", {
+  a <- fisher_implied_alpha(951, 1000, 100, 91)
+  expect_identical(fisher_cutoff(951, 1000, 100, a), 91L)
+  expect_identical(fisher_cutoff(951, 1000, 100, a * (1 - 1e-9)), 90L)
+  expect_lte(a, 0.05)
+  expect_identical(fisher_implied_alpha(951, 1000, 100, 0), 0)
 })
 
 test_that("compliance/exact-binomial reproduces every canonical case", {
@@ -161,12 +169,4 @@ test_that("the test rank is the nearest rank in integer arithmetic", {
   expect_identical(latency_test_rank(20, 0.95), 19L)
   expect_identical(latency_test_rank(1, 0.5), 1L)
   expect_error(latency_test_rank(10, 0.75), "p50, p90, p95, p99")
-})
-
-test_that("the calibration-tolerance rule is defined at the certified alphas only", {
-  expect_false(outside_calibration_tolerance(10000, 100, 0.05))
-  expect_false(outside_calibration_tolerance(10000, 100, 0.10))
-  expect_true(outside_calibration_tolerance(1000, 80, 0.01))
-  expect_false(outside_calibration_tolerance(1000, 81, 0.01))
-  expect_error(outside_calibration_tolerance(1000, 80, 0.02), "not certified")
 })

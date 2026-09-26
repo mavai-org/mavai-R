@@ -1,9 +1,9 @@
 #' Legacy: the v1.4.1 regression construction, `regression/wilson-reference` v1.
 #'
-#' Withdrawn as a decision rule by Statistical Companion 1.5.0, which
-#' replaces it with `regression/score-cc` (R/decision_rules.R). Kept, under
+#' Withdrawn as a decision rule by Statistical Companion 2.0.0, which
+#' replaces it with `regression/fisher` (R/decision_rules.R). Kept, under
 #' its legacy identifier, only to reproduce methodology-1.4.1 outputs and to
-#' compare the two generations; no 1.5.0 fixture is computed from it. The
+#' compare the two generations; no 2.0.0 fixture is computed from it. The
 #' 1.4.1 fixtures themselves are the immutable release assets of v0.10.13.
 #' @name legacy_wilson_reference
 NULL
