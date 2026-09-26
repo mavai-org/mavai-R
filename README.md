@@ -35,7 +35,7 @@ percentile based). For the full statistical treatment, see the
 model that these computations serve, see
 [Distributional Contracts](docs/DISTRIBUTIONAL-CONTRACTS.md).
 
-Three versioned decision rules decide every verdict, and each fixture file
+Four versioned decision rules decide every verdict, and each fixture file
 names the rules it depends on (`decisionRules`) and the methodology version
 it implements (`methodologyVersion`):
 
@@ -44,6 +44,7 @@ it implements (`methodologyVersion`):
 | `regression/fisher` v1 | Empirical regression against a baseline (one-sided Fisher exact test) | integer cutoff c; PASS iff K_t >= c |
 | `compliance/exact-binomial` v1 | Normative compliance with a given requirement (exact one-sided binomial test) | k_min; PASS iff K >= k_min |
 | `latency/precedence` v1 | Latency regression (precedence rank of the baseline latencies) | rank, or `saturated` (INCONCLUSIVE) |
+| `latency/compliance-exact-binomial` v1 | An explicit latency requirement (exact one-sided binomial test on the count of successful latencies within the threshold) | y_min; PASS iff Y >= y_min, or INCONCLUSIVE when too few latencies arrived |
 
 Configurations refused before any sample runs carry a `configuration_error`:
 `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`. The methodology-1.4.1 fixtures remain available as
@@ -59,8 +60,8 @@ the `v0.10.13` release assets.
 | Regression decision | `inst/cases/regression_decision.json` | Regression verdicts through the production path |
 | Compliance decision | `inst/cases/compliance_decision.json` | Compliance verdicts, VERIFICATION refusals and SMOKE outcomes |
 | Feasibility | `inst/cases/feasibility.json` | Whether a normative test of this size can PASS at all |
-| Power analysis | `inst/cases/power_analysis.json` | Exact compliance sizing, regression power and minimum detectable degradation |
-| Risk-driven sizing | `inst/cases/risk_driven_sizing.json` | Exact sizing of the regression rule against a declared tolerance, with refusals |
+| Power analysis | `inst/cases/power_analysis.json` | Exact compliance sizing (margin, midway or declared alternative), regression design power and resolved-test power, and minimum detectable degradation |
+| Risk-driven sizing | `inst/cases/risk_driven_sizing.json` | Exact sizing of the regression rule at a declared design alternative rate, with refusals |
 | Verdict | `inst/cases/verdict.json` | Verdicts under both ruled rules, including joint configurations |
 
 ### Latency conformance
@@ -69,7 +70,8 @@ the `v0.10.13` release assets.
 |---|---|---|
 | Latency percentile | `inst/cases/latency_percentile.json` | Nearest-rank empirical percentiles and summary statistics |
 | Latency threshold | `inst/cases/latency_threshold.json` | The precedence rank and threshold, or saturation |
-| Latency percentile minimums | `inst/cases/latency_percentile_minimums.json` | Emission minimums and the precedence existence gate |
+| Latency percentile minimums | `inst/cases/latency_percentile_minimums.json` | Emission minimums, precedence existence on the actual count, and the pre-run planning check |
+| Latency compliance decision | `inst/cases/latency_compliance_decision.json` | Explicit latency requirements: verdicts, refusals and INCONCLUSIVE outcomes, with the advisory percentile comparison |
 
 The multi-criteria suites (`criterion_verdict_*`, `composite_verdict`,
 `baseline_object`, `multi_criteria_scenario_consult_advice`) are

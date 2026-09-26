@@ -56,11 +56,18 @@ chk("10.3", "SE", sprintf("√(0.953 × 0.047 / 1000) ≈ %.5f", sqrt(0.953 * 0.
 chk("10.3", "Wilson CI", sprintf("[%.3f, %.3f]", wci$lower, wci$upper))
 chk("10.3", "integer cutoff", sprintf("c = %d   (one-sided Fisher", c_wf))
 chk("10.3", "Fisher p-value", sprintf("value:              ≈ %.3f", fisher_pvalue(953, 951, 1000, 1000)))
-chk("10.3", "achieved size", sprintf("A(0.951) ≈ %.4f", regression_fail_probability(cut, 1000, 1000, 0.951, 0.951)))
+chk("10.3", "size at the assumed common rate", sprintf("A(0.951) ≈ %.4f", regression_fail_probability(cut, 1000, 1000, 0.951, 0.951)))
 chk("10.3", "diagnostic plug-in tail", sprintf("P_{p = 0.951}(K_t < %d) ≈ %.4f", c_wf, pbinom(c_wf - 1, 1000, 0.951)))
-chk("10.3", "power at 0.925", sprintf("power ≈ %.3f", fisher_power(1000, 1000, 0.05, 0.951, 0.951 - 0.925)))
+dp <- fisher_power(1000, 1000, 0.05, 0.951, 0.951 - 0.925)
+rp <- pbinom(c_wf - 1, 1000, 0.925)
+chk("10.3", "design power at 0.925", sprintf("design power         ≈ %.3f", dp))
+chk("10.3", "resolved-test power at 0.925", sprintf("resolved-test power  ≈ %.3f", rp))
+chk("10.3", "resolved cutoff", sprintf("cutoff, c = %d)", c_wf))
+chk("10.3", "powers in the reading", sprintf("the design power, %.3f, averages over a baseline yet to be drawn, and the resolved-test power, %.3f,", dp, rp))
+chk("10.3", "resolved cutoff in the reading", sprintf("fixed at %d.", c_wf))
 mdd <- fisher_minimum_detectable_degradation(1000, 1000, 0.05, 0.951)
-chk("10.3", "MDD", sprintf("drop of %.4f (to ≈ %.3f)", mdd, 0.951 - mdd))
+chk("10.3", "MDD", sprintf("at a drop of %.4f", mdd))
+chk("10.3", "MDD rate", sprintf("(to ≈ %.3f)", 0.951 - mdd))
 chk("10.3", "layperson SE", sprintf("√(0.985 × 0.015 / 800) ≈ %.5f", sqrt(0.985 * 0.015 / 800)))
 chk("10.3", "layperson feasibility", sprintf("PASS possible from n = %d", exact_binomial_min_feasible_n(0.98, 0.001)))
 chk("10.3", "layperson k_min", sprintf("k_min = %d", k_lr))
@@ -139,7 +146,7 @@ for (pm in c(0.85, 0.90, 0.92)) {
 chk("5.4.1", "worked example n", sprintf("n_{\\text{req}} = %d", risk_sizing_required_n(0.87, 3000, 0.84, 0.05, 0.80)))
 chk("5.4.1", "worked example power", sprintf("\\text{Power}(1243) = %.4f", risk_sizing_power(1243, 0.87, 3000, 0.84, 0.05)))
 chk("5.4.1", "power at 891", sprintf("the exact power is %.3f", risk_sizing_power(891, 0.87, 3000, 0.84, 0.05)))
-chk("5.4.1", "detectable rate at 100", sprintf("p_{\\min} \\approx %.4f", risk_sizing_detectable_rate(100, 0.87, 3000, 0.05, 0.80)))
+chk("5.4.1", "detectable rate at 100", sprintf("p_{\\mathrm{design}} \\approx %.4f", risk_sizing_detectable_rate(100, 0.87, 3000, 0.05, 0.80)))
 for (n in c(50, 150)) {
   chk("5.4.1", sprintf("walk-through %d", n), sprintf("| %d | %d | %.2f |", n, fisher_cutoff(1920, 2000, n, 0.05),
                                                      risk_sizing_power(n, 0.96, 2000, 0.93, 0.05)))
@@ -148,6 +155,8 @@ nw <- risk_sizing_required_n(0.96, 2000, 0.93, 0.05, 0.80)
 chk("5.4.1", "walk-through required", sprintf("| **%d** | %d | **%.2f** |", nw, fisher_cutoff(1920, 2000, nw, 0.05),
                                               risk_sizing_power(nw, 0.96, 2000, 0.93, 0.05)))
 stopifnot(is.na(risk_sizing_required_n(0.96, 300, 0.93, 0.05, 0.80)))
+chk("5.4.1", "failure above the design rate", sprintf("a service truly at $0.94$ fails about half the time (%.2f), and one at $0.95$ about one time in five (%.2f)",
+    risk_sizing_power(nw, 0.96, 2000, 0.94, 0.05), risk_sizing_power(nw, 0.96, 2000, 0.95, 0.05)))
 s95 <- compliance_exact_sizing(0.95, 0.02, 0.05)
 chk("5.5", "95% sizing", sprintf("at $\\alpha = 0.05$: $n = %d$. Power first reaches 0.80 at %d samples", s95$required_samples, s95$first_crossing))
 chk("5.5", "99.5% midway sizing", sprintf("the exact size is $n = %d$", sz(0.995, 0.01)))
@@ -204,8 +213,27 @@ nte <- floor(200 * 0.80)
 chk("12.5.3", "expected successes", sprintf("expects $n_{t,\\text{expected}} = %d$", nte))
 chk("12.5.3", "test rank", sprintf("has $r = %d$", latency_test_rank(nte, 0.99)))
 stopifnot(latency_precedence_exists(400, nte, 0.99, 0.05)$saturated)
-chk("12.5.3", "gate threshold", sprintf("A baseline of at least %d latencies supports a threshold (rank %d at exactly %d)",
-    min_baseline(nte, 0.99), latency_precedence_rank(min_baseline(nte, 0.99), nte, 0.99, 0.05), min_baseline(nte, 0.99)))
+pl <- latency_precedence_planning(400, 200, 0.80, 0.99, 0.05)
+stopifnot(pl$warning, pl$expected_test_samples == nte, pl$minimum_baseline_trials == min_baseline(nte, 0.99))
+chk("12.5.3", "planning figure", sprintf("a baseline of at least %d latencies supports a threshold for %d (rank %d at exactly %d)",
+    min_baseline(nte, 0.99), nte, latency_precedence_rank(min_baseline(nte, 0.99), nte, 0.99, 0.05), min_baseline(nte, 0.99)))
+n_sat <- nte + 1L
+stopifnot(!latency_precedence_exists(min_baseline(nte, 0.99), nte, 0.99, 0.05)$saturated,
+          latency_precedence_exists(min_baseline(nte, 0.99), n_sat, 0.99, 0.05)$saturated)
+chk("12.5.3", "expectation is not a lower bound", sprintf("against a baseline of %d, a run that returns %d or more successful latencies finds no rank",
+    min_baseline(nte, 0.99), n_sat))
+
+# --- §12.3.4 explicit latency requirements ----------------------------------------
+chk("12.3.4", "raw percentile at the boundary", sprintf("$P(\\text{Bin}(100, 0.95) \\ge 95) = %.3f$", pbinom(94, 100, 0.95, lower.tail = FALSE)))
+lc <- latency_compliance_verdict(c(rep(400, 96), rep(700, 4)), 500, 0.95, 0.05)
+stopifnot(lc$verdict == "FAIL", lc$advisory_percentile_pass)
+chk("12.3.4", "y_min at p95 of 100", sprintf("$n_s = 100$ successful latencies): $y_{\\min} = %d$", lc$y_min))
+chk("12.3.4", "feasibility minimums", sprintf("— %d at p95 and $\\alpha = 0.05$, %d at p99",
+    exact_binomial_min_feasible_n(0.95, 0.05), exact_binomial_min_feasible_n(0.99, 0.05)))
+
+# --- §3.4 design policy: a test larger than its baseline gains power ---------------
+chk("3.4", "power beyond the baseline size", sprintf("the power is %.3f at $n_t = 100$ and %.3f at $n_t = 200$",
+    fisher_power(100, 100, 0.05, 0.95, 0.10), fisher_power(100, 200, 0.05, 0.95, 0.10)))
 
 # --- Worked numbers in the descriptive and planning sections ----------------------
 se <- sqrt(0.951 * 0.049 / 1000)

@@ -26,17 +26,17 @@ author: |
 | 13 | **2026-07** | **Self-consistent power for baseline-derived thresholds.** New §5.4.1: power, required sample size, and detectable-rate inversion computed against the §3.4 moving acceptance floor rather than a fixed threshold, with worked examples; defined for $p_{\min} < p_0$. Cross-references added in §5.4 and §5.6; no existing formula changes. Reference values to follow as the `risk_driven_sizing` fixture suite.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | 14 | **2026-07** | **Operational-approaches taxonomy reconciled (editorial; no formula change).** §6.3 adopts *threshold-first* as its primary name; §6 states the canonical qualifiers, the approach-versus-threshold-origin axis independence (with the common-pairing observation), and the planning-versus-operative layer split with pointers to §3.4, §3.2/§3.6, and §5.4.1; the duplicated implied-confidence computation consolidates into §6.3. |
 | 15 | **2026-08** | **The zero baseline is stated explicitly (§4.3.4).** §4.3.2 worked the perfect baseline ($k = n$) and gave it a closed form; its mirror, the baseline that observed no successes ($k = 0$), was addressed only implicitly by the §5.4.1 domain restriction. The new §4.3.4 states the consequence directly: the effective baseline rate is exactly $0$ at every $n$ and every confidence level, so threshold derivation degenerates and the sizing construction $p_{\min} < p_0$ has no solution — an inadmissible design that must be declined and named, never repaired by substituting a nominal rate. No formula, numerical result, or existing fixture expectation changes; the section makes an existing consequence of §4.3.1 and §5.4.1 explicit so that three implementations do not infer it separately. |
-| 16 | **2026-09** | **Methodology 1.5.0: the decision procedures change.** This is not a presentation-only correction. An independent statistical review found that the 1.4.1 decision rules did not control the error rates the text attributed to them, and the three verdict-producing procedures are replaced, each under a versioned identifier: empirical regression is decided by `regression/fisher` (the one-sided Fisher exact test as an integer cutoff, §3.4), normative compliance by `compliance/exact-binomial` (the exact one-sided binomial test, §3.6), and latency regression by `latency/precedence` (the precedence rank, §12.4). Cutoffs, ranks, sample sizes, feasibility decisions and verdicts may change against 1.4.1; every calibration claim now names the random experiment it calibrates, and the 1.4.1 claims that the rules did not support are withdrawn. The perfect-baseline map (§4.3) and the Wilson-at-test-size construction (§3.4) are withdrawn; the Wilson interval remains the descriptive interval and decides nothing. Two configuration errors are introduced (§5.7.1): `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`. Power and sizing are computed exactly against the operative rules (§§5.3–5.5). Every worked number is generated from, or checked against, the mavai-R oracle (`scripts/companion_numbers.R`). Historical outputs remain reproducible from the mavai-R `v0.10.13` fixture release and from the legacy identifiers `regression/wilson-reference`, `latency/order-statistic-bound` and `compliance/wilson-clearance`, which survive in mavai-R only. Milestone 15 appeared in the text while the title block still read 1.4.1 (last updated 2026-07-11); it belongs to that release. |
+| 16 | **2026-09** | **Methodology 1.5.0: the decision procedures change.** This is not a presentation-only correction. An independent statistical review found that the 1.4.1 decision rules did not control the error rates the text attributed to them, and the three verdict-producing procedures are replaced, each under a versioned identifier: empirical regression is decided by `regression/fisher` (the one-sided Fisher exact test as an integer cutoff, §3.4), normative compliance by `compliance/exact-binomial` (the exact one-sided binomial test, §3.6), latency regression by `latency/precedence` (the precedence rank, §12.4), and an enforced explicit latency requirement by `latency/compliance-exact-binomial` (the same exact binomial test on the count of latencies within the threshold, §12.3.4). One run has one sampling that every criterion shares, and differing input populations are separate tests (§1.4.2, §1.4.8). Cutoffs, ranks, sample sizes, feasibility decisions and verdicts may change against 1.4.1; every calibration claim now names the random experiment it calibrates, and the 1.4.1 claims that the rules did not support are withdrawn. The perfect-baseline map (§4.3) and the Wilson-at-test-size construction (§3.4) are withdrawn; the Wilson interval remains the descriptive interval and decides nothing. Two configuration errors are introduced (§5.7.1): `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`. Power and sizing are computed exactly against the operative rules (§§5.3–5.5). Every worked number is generated from, or checked against, the mavai-R oracle (`scripts/companion_numbers.R`). Historical outputs remain reproducible from the mavai-R `v0.10.13` fixture release and from the legacy identifiers `regression/wilson-reference`, `latency/order-statistic-bound` and `compliance/wilson-clearance`, which survive in mavai-R only. Milestone 15 appeared in the text while the title block still read 1.4.1 (last updated 2026-07-11); it belongs to that release. |
 
 Each milestone builds on the one before; each extends the scope of what the methodology claims except where it explicitly corrects or withdraws an over-reach (milestones 11 and 16). The Bernoulli/binomial model laid in Milestone 1 remains the model, and the Wilson score interval remains the descriptive interval; since milestone 16 Wilson no longer decides regression or compliance verdicts.
 
 ---
 
-## Forward Scope: Revisions Targeted for 1.4
+## Forward Scope
 
-The items identified for 1.4, deferred from 1.3 because each required coordination with downstream frameworks and fixtures, stand as follows after milestone 16:
+The items once targeted for 1.4, deferred from 1.3 because each required coordination with downstream frameworks and fixtures, stand as follows in 1.5.0:
 
-- **1.4-S1**: Baseline indexing carries experiment/sampling identity. Open.
+- **1.4-S1**: Baseline indexing carries sampling identity. Open. Under the model of §1.4.2 a baseline is one run over one sampling that all its criteria share, and differing input populations are separate contracts with their own baselines (§1.5.6); what remains is recording that sampling's identifier on the baseline.
 - **1.4-S2**: Threshold-notation cleanup separating the Wilson real-valued output, the integer cutoff, the displayed rate, and the compliance requirement. Resolved by milestone 16: no decision rule produces a real-valued Wilson output any more, and the binding artefacts — the regression cutoff $c$, the compliance count $k_{\min}$, the latency rank — are defined in §3.4, §3.6, §12.4.2 and Appendix A, with the displayed rate $c/n_t$ and the requirement $p_{\mathrm{req}}$ kept apart from them.
 - **1.4-S3**: Predictive / two-sample treatment of latency regression. Resolved by milestone 16, with `latency/precedence` (§12.4).
 
@@ -289,7 +289,7 @@ A service contract's postconditions defend against failure modes that vary along
 
 **Frequency.** Baselines of rate-bounded criteria span a wide range — parse-failure rates in the low single percents, register-mismatch rates higher still, other rate-bounded criteria potentially lower. The sample budget required to support strong evidential power scales inversely with the baseline, and rate-bounded peers with disparate baselines therefore make competing demands on the experiment's shared sampling. A thousand-sample sampling gives an interval around a 5%-baseline observation tight enough to support a binding evidential claim against a nearby threshold; as the baseline falls, the same pool gives an interval whose width relative to the observed rate grows — at a 0.1% baseline the Wilson interval spans several times the point estimate itself — and a criterion at that baseline either needs a larger pool to be binding under VERIFICATION intent, or must be declared SMOKE up front. Per-criterion feasibility gates surface this asymmetry honestly, where an aggregated stream absorbs it. The categorical clause sits off this axis: a 'zero-failures' failure mode is not admitted to the contract as a rate-bounded criterion at all, and so has no baseline to enter the comparison.
 
-**Input requirement.** A MEASURE experiment runs over a single sampling: every sample produces a response, and every criterion evaluates its postcondition(s) on the same response. The criteria share the input distribution because they share the inputs themselves. A sampling sized for parseability serves register and other rate-bounded judge-mediated criteria without trouble, because their baselines are commensurate. What it cannot do is discharge a 'zero-failures' failure mode: the rule-of-three bound on the failure rate with zero observed failures is $\approx 3/n$, which approaches zero only in the limit, and no $n$ reachable inside one experiment closes the gap. The zero-failures case is therefore discharged at the architectural layer (see *Clause Forms: Rate-Bounded and Categorical*); the architectural component is evaluated in a separate experiment over an adversarial sampling. The categorical postcondition may additionally be scored against the primary sampling as a SMOKE-intent diagnostic — the response is already produced, the judge is already running — giving a signal that complements the discharge (§1.4.5).
+**Input requirement.** A MEASURE experiment runs over a single sampling: every sample produces a response, and every criterion evaluates its postcondition(s) on the same response. The criteria share the input distribution because they share the inputs themselves. A sampling sized for parseability serves register and other rate-bounded judge-mediated criteria without trouble, because their baselines are commensurate. What it cannot do is discharge a 'zero-failures' failure mode: the rule-of-three bound on the failure rate with zero observed failures is $\approx 3/n$, which approaches zero only in the limit, and no $n$ reachable inside one experiment closes the gap. The zero-failures case is therefore discharged at the architectural layer (see *Clause Forms: Rate-Bounded and Categorical*); the architectural component is evaluated by a separate test, bound to its own contract, over an adversarial sampling. The categorical postcondition may additionally be scored against the primary sampling as a SMOKE-intent diagnostic — the response is already produced, the judge is already running — giving a signal that complements the discharge (§1.4.5).
 
 The methodology therefore partitions on two levels. *Within* the rate-bounded class, failure modes that differ along consequence, frequency, or input share are treated as **separately contractual** — each is its own hypothesis test, with its own threshold, its own confidence level, its own feasibility gate, sharing the experiment's sampling. *Across* the rate-bounded/categorical boundary, failure modes are routed out of the MEASURE experiment **for the purposes of contractual discharge** and into the architectural-commitment treatment; they may remain present in the experiment as SMOKE-intent diagnostic criteria, with the epistemic status set out in §1.4.5.
 
@@ -304,12 +304,13 @@ A representative example, threaded through the chapter, is a clinical-advice ser
 - $P_4$: *advice does not suggest self-harm* — **categorical**,
   catastrophic-consequence. Discharged by a dedicated guardrail
   component (e.g., a harm classifier interposed between the model
-  and the user); the guardrail's false-negative behaviour over an adversarial sampling
-  is reported as an observational zero-failures criterion, and may
+  and the user); the service's behaviour over an adversarial sampling
+  is reported as an observational zero-failures criterion in a separate
+  test, and may
   additionally be scored on the production sampling as a SMOKE-intent
   diagnostic (§1.4.5).
 
-The four postconditions are not interchangeable along the partition axes. A $P_4$ violation at any rate is clinically significant in a way a $P_1$ violation at $10^{-3}$ is not, *and* a $P_3$ violation at 5% is significant in a way a $P_1$ violation at 5% is not. The methodology evaluates the rate-bounded postconditions ($P_1$, $P_2$, $P_3$) each in its own statistical stream within the primary end-to-end MEASURE experiment, against its own threshold, at its own confidence level; $P_4$ is routed out of the primary end-to-end MEASURE experiment for contractual discharge. Its categorical obligation is discharged by the architectural commitment (§1.4.5); the guardrail's own rate-bounded criteria (normative or empirical in origin) may themselves be evaluated in separate MEASURE experiments over adversarial samplings (§1.4.8). The three primitives of §1.4.2 give the empirical partition its formal structure; the hiding result of §1.4.4 establishes that an aggregated stream over rate-bounded postconditions that differ along any of the three axes potentially obscures movement in a low-frequency, high-consequence, or designed-input criterion. Where rate-bounded postconditions defend against failure modes that are interchangeable along all three axes — equivalent consequences, comparable frequencies, the same input distribution — a single aggregated stream remains an adequate representation; the $m = 1$ instance of the per-criterion model recovers this case unchanged.
+The four postconditions are not interchangeable along the partition axes. A $P_4$ violation at any rate is clinically significant in a way a $P_1$ violation at $10^{-3}$ is not, *and* a $P_3$ violation at 5% is significant in a way a $P_1$ violation at 5% is not. The methodology evaluates the rate-bounded postconditions ($P_1$, $P_2$, $P_3$) each in its own statistical stream, against its own threshold, at its own confidence level: within the primary end-to-end MEASURE experiment where they share its input population, and in a separate test with its own sampling where a postcondition is to be evidenced over a designed input population, as $P_3$ is in §1.4.8. $P_4$ is routed out of the primary end-to-end MEASURE experiment for contractual discharge. Its categorical obligation is discharged by the architectural commitment (§1.4.5); the guardrail's own rate-bounded criteria (normative or empirical in origin) may themselves be evaluated in separate tests over adversarial samplings (§1.4.8). The three primitives of §1.4.2 give the empirical partition its formal structure; the hiding result of §1.4.4 establishes that an aggregated stream over rate-bounded postconditions that differ along any of the three axes potentially obscures movement in a low-frequency, high-consequence, or designed-input criterion. Where rate-bounded postconditions defend against failure modes that are interchangeable along all three axes — equivalent consequences, comparable frequencies, the same input distribution — a single aggregated stream remains an adequate representation; the $m = 1$ instance of the per-criterion model recovers this case unchanged.
 
 ---
 
@@ -317,7 +318,7 @@ The four postconditions are not interchangeable along the partition axes. A $P_4
 
 The decomposition rests on three primitives, each playing a distinct role in the statistical model.
 
-**Sampling.** The list of sample inputs posted to the service under test in a single experiment or test. A sampling has length $N \geq 1$; each *sample entry* in the list is presented once to the service, producing $N$ responses. The sampling is shared across every criterion (defined below) that the contract exercises in the run: a contract with multiple criteria produces a per-trial vector of per-criterion observations over a single shared sampling, and there is no notion of a "per-criterion sampling" within an experiment. A contract that requires evidence about a different input distribution runs a *separate experiment* with its own sampling. The inferential reach of a sampling is elaborated in §1.4.7.
+**Sampling.** The list of sample inputs posted to the service under test in a single experiment or test. A sampling has length $N \geq 1$; each *sample entry* in the list is presented once to the service, producing $N$ responses. The sampling is shared across every criterion (defined below) that the contract exercises in the run: a contract with multiple criteria produces a per-trial vector of per-criterion observations over a single shared sampling, and there is no notion of a "per-criterion sampling" within an experiment. One run has one sampling, and every criterion of its contract shares it. Evidence about a different input distribution comes from a *separate test*, bound to its own contract, with its own sampling. The inferential reach of a sampling is elaborated in §1.4.7.
 
 **Criterion.** The unit of statistical evaluation. A criterion is the partition unit of the functional dimension; each criterion is exercised against the sampling and yields its own sequence of per-trial pass/fail outcomes, modelled as a Bernoulli stream (§1.4.3), from which its own verdict is computed. A criterion declares the *mode* under which the test is conducted (inferential or observational, §1.4.5), the threshold and threshold origin where applicable, the confidence level $\alpha$, and the experiment or test in which the criterion is exercised (§1.4.7). It also hosts one or more postconditions (defined below), which together determine its per-trial outcome: a single-postcondition criterion produces a per-trial outcome equal to that postcondition's verdict; a multi-postcondition criterion produces a per-trial outcome equal to the *conjunction* of its hosted postconditions' verdicts (§1.4.3 makes this formal). Two postconditions whose failures carry materially different consequences are therefore addressed by two distinct criteria, never by sharing a stream.
 
@@ -514,7 +515,7 @@ That stronger end-to-end claim requires a separate estimate or bound on the upst
 - A **red-team-input sampling** — adversarial *inputs* submitted to the generator-plus-guardrail application (the $V_{\text{probe}}$ form of §1.4.8: prompts crafted to elicit prohibited content). Exercising it estimates the end-to-end behaviour of the composite under adversarial prompting, $P(\text{harm reaches user}\mid\text{adversarial prompt})$. It does not, by itself, isolate the guardrail's conditional sensitivity, because a clean run conflates "the generator rarely produced harmful candidates" with "the guardrail blocked the ones it did."
 - A **harmful-candidate sampling** — prohibited *candidate outputs* presented directly to the guardrail (the $V_{\mathrm{harm}}$ form of the worked example below). Exercising it estimates the conditional containment term $P(\text{guardrail misses}\mid\text{harmful candidate presented})$, which is exactly $p_{\mathrm{miss}\mid\mathrm{harm}}$. It says nothing about how often the generator emits such candidates.
 
-Both samplings are useful and both may appear in the same contract, but a sensitivity bound derived from the harmful-candidate sampling must not be reported as though it came from end-to-end adversarial probing, nor vice versa.
+Both samplings are useful and both may evidence the same guardrail, each in its own test with its own sampling, but a sensitivity bound derived from the harmful-candidate sampling must not be reported as though it came from end-to-end adversarial probing, nor vice versa.
 
 **Guardrail sensitivity and miss probability.** For a harmful challenge sampling of size $n_H$, let $K_B$ be the number of harmful candidate outputs correctly blocked by the guardrail. Define the guardrail sensitivity estimate
 
@@ -558,7 +559,7 @@ The experiment has bounded the containment term, $U_{\mathrm{miss}}(\alpha)$, no
 
 **Multiple boundaries.** Real architectures often interpose several boundaries in series — a prompt classifier, a retrieval filter, an output classifier, a schema gate, a deterministic deny-list, a human-escalation step. The containment term is then the conditional probability that *all* relevant boundaries miss given harm, $P(M_1\cap\cdots\cap M_r\mid H)$. The individual miss probabilities must not be multiplied: that step assumes conditional independence, which logical composition does not supply (the same adversarial content that defeats one classifier is exactly the content likely to defeat another). Absent a declared and justified conditional-independence model, the term must be evaluated by the chain rule $P(M_1\mid H)\,P(M_2\mid H,M_1)\cdots$, or — more practically — estimated end-to-end over a harmful-candidate sampling presented to the full boundary stack.
 
-**Relationship to observational zero-failures criteria.** The observational zero-failures criterion of §1.4.5 remains deterministic: it reports whether any miss was observed. It does not itself become an inferential criterion. Where a population-level statement about the guardrail's conditional miss probability is required, the contract may pair the observational criterion with an inferential guardrail-sensitivity criterion. The two need not — and typically do not — run over the same sampling: the observational criterion is naturally exercised over a red-team-input sampling (was any miss observed end-to-end under adversarial prompting?), while the inferential sensitivity criterion is exercised over a harmful-candidate sampling presented directly to the guardrail (what lower confidence bound is supported for the guardrail's sensitivity, and what upper bound follows for its miss probability?). When they are deliberately run over the same sampling, that shared sampling must be stated; it cannot be assumed.
+**Relationship to observational zero-failures criteria.** The observational zero-failures criterion of §1.4.5 remains deterministic: it reports whether any miss was observed. It does not itself become an inferential criterion. Where a population-level statement about the guardrail's conditional miss probability is required, the observational criterion may be paired with an inferential guardrail-sensitivity criterion. The two typically run over different samplings, and so in separate tests: the observational criterion is naturally exercised over a red-team-input sampling (was any miss observed end-to-end under adversarial prompting?), while the inferential sensitivity criterion is exercised over a harmful-candidate sampling presented directly to the guardrail (what lower confidence bound is supported for the guardrail's sensitivity, and what upper bound follows for its miss probability?). When they are deliberately run over one sampling, they are two criteria of one test and that shared sampling must be stated; it cannot be assumed.
 
 **False positives.** A guardrail that blocks every candidate output has perfect sensitivity but no practical utility. For this reason the guardrail's false-positive behaviour should be modelled separately over a non-harmful challenge sampling. Write $p_{\mathrm{fp}}$ for the false-positive probability — the probability that the guardrail blocks content given that the content is non-harmful — and $p_{\mathrm{specificity}} = 1 - p_{\mathrm{fp}}$ for the corresponding specificity.
 
@@ -722,7 +723,7 @@ A contract whose criteria are all of one kind reports the single corresponding e
 
 **Exact.** Each bound holds under arbitrary dependence among the per-criterion test statistics in its family; it is the union bound applied to the per-criterion Type-I events of that direction. It rests on each per-criterion error probability being at most its $\alpha_c$, which the exact decision rules of §3.4 and §3.6 guarantee (for regression, in the experiment in which the baseline and the test are both random). Observational criteria do not contribute to either envelope because their verdicts are deterministic on observation; they carry no $\alpha$.
 
-**Engineering guardrail.** Per-criterion $\alpha_c$ is set by the consequence of false acceptance for criterion $c$. A safety-class criterion at $\alpha = 0.001$ holds at that level because the consequence of falsely accepting a safety regression demands it. The envelope $\sum_c \alpha_c$ is reported on the composite verdict as a disclosed property; it is not a control target, and per-criterion $\alpha_c$ is not adjusted to control it. A uniform reduction $\alpha_c \mapsto \alpha_c / m$ would lower the per-criterion power proportionally — most consequentially in the safety case, where power to detect a true regression is the property the criterion most needs to preserve.
+**Engineering guardrail.** The two directions set $\alpha_c$ for different reasons. For a **compliance** criterion, $\alpha_c$ bounds the probability of declaring compliance that does not hold, so it is set by the consequence of a false compliance claim: a safety-class compliance criterion at $\alpha = 0.001$ holds at that level because a false claim of safety demands it. For a **regression** criterion, $\alpha_c$ bounds the probability of a false degradation alert, so it is set by the cost of a false alarm. The risk of missing a real degradation is not controlled by $\alpha_c$: it is governed by the power of the test — the degradation to be detected, the target power and the sample sizes (§5.3, §5.4.1) — and at a fixed sample size a smaller $\alpha_c$ makes it larger. A safety-class regression criterion therefore guards against missed degradation through its sizing, not through a small $\alpha_c$. The envelope $\sum_c \alpha_c$ is reported on the composite verdict as a disclosed property; it is not a control target, and per-criterion $\alpha_c$ is not adjusted to control it. A uniform reduction $\alpha_c \mapsto \alpha_c / m$ would lower each criterion's power — most consequentially for a regression criterion whose purpose is to detect a real degradation.
 
 Projects whose governance demands a uniform composite $\alpha$ may apply a Bonferroni reduction at the operator level. The methodology does not impose it.
 
@@ -732,23 +733,23 @@ The companion's §7.3 addresses **cross-test** family-wise inflation when multip
 
 #### 1.4.7 Inferential reach of the sampling
 
-An experiment or probabilistic test is bound to a specific contract; the only thing it varies is the **sampling** — the single list of $N$ samples it posts to the service. That one sampling is shared by every criterion the contract declares, and each criterion evaluates all $N$ samples independently (§1.4.2); there is no per-criterion sampling.
+An experiment or probabilistic test is bound to a specific contract; the only thing it varies is the **sampling** — the single list of $N$ samples it posts to the service. That one sampling is shared by every criterion the contract declares, and each criterion evaluates all $N$ samples separately (§1.4.2); there is no per-criterion sampling. The criteria's outcomes on a shared sample are not statistically independent of one another (§1.4.6).
 
 A criterion's verdict or evidence is, primarily, a claim about the sampling its experiment or test runs over (including observational PASS verdicts, which are claims about the samples observed rather than about a population). The descriptive Wilson interval, the regression integer cutoff, the compliance count $k_{\min}$, the observational PASS verdict — all are statements about the $N$ samples in the experiment's sampling and the responses the service produced for them. Extending the claim to a different input distribution (production traffic that the service ultimately faces, a hypothetical superpopulation the sampling is taken to represent) requires further evidence; the methodology does not sanction the extension implicitly. The finite-corpus and superpopulation framings of §8.4.6 set out the two interpretive moves available.
 
-Criteria within an experiment share the sampling and so share its inferential reach. Every per-criterion verdict in the experiment speaks to the same $N$ samples; differences between per-criterion verdicts arise from differences in postcondition definitions, thresholds and confidence levels, not from differences in the input distribution. A contract that requires evidence about a different input distribution runs a *separate experiment* whose sampling is drawn from that distribution; each experiment names its own sampling.
+Criteria within an experiment share the sampling and so share its inferential reach. Every per-criterion verdict in the experiment speaks to the same $N$ samples; differences between per-criterion verdicts arise from differences in postcondition definitions, thresholds and confidence levels, not from differences in the input distribution. Evidence about a different input distribution comes from a *separate test*, bound to its own contract, whose sampling is drawn from that distribution; each test names its own sampling. A view across such tests — every test of one service, say — is a matter of reporting: it lists each test's verdict beside its sampling, and it is not the verdict of one run.
 
 **Verdict surface.** Every per-criterion verdict names the sampling its experiment ran over — identifier, version, any policy-redaction metadata — so the reader knows exactly which $N$ samples produced the evidence. Extending the claim to anything other than that sampling is the reader's interpretive move, not the verdict's.
 
-**Clinical-advice illustration.** A contract that runs both a primary MEASURE experiment over a representative production sampling and an architectural-discharge experiment over an adversarial probe sampling holds two samplings — one per experiment. The discharge experiment's verdict ("no failure observed under adversarial probing of the self-harm failure mode across 200 samples") is a statement about that probe sampling; it does not extend to a claim about self-harm advice in production traffic. The latter claim, if needed, requires sentinel monitoring or a SMOKE-intent diagnostic on the production sampling (§1.4.5); the methodology does not infer it from the probe-experiment verdict.
+**Clinical-advice illustration.** Evidence over a representative production sampling and evidence over an adversarial probe sampling come from two tests, each bound to its own contract and each with one sampling. The probe test's verdict ("no failure observed under adversarial probing of the self-harm failure mode across 200 samples") is a statement about that probe sampling; it does not extend to a claim about self-harm advice in production traffic. The latter claim, if needed, requires sentinel monitoring or a SMOKE-intent diagnostic on the production sampling (§1.4.5); the methodology does not infer it from the probe test's verdict.
 
-**Sample-budget consequence.** A contract with $E$ experiments has $E$ samplings, each of size $N_e$. Criteria within an experiment share $N_e$ as their trial count (§1.4.5a); the limiting criterion within an experiment determines the experiment's required $N_e$. The total sample budget of the contract is bounded above by $\sum_e N_e$; the limiting criterion contract-wide is identified by per-experiment inspection, not by an aggregate sample count.
+**Sample-budget consequence.** $E$ tests over different input populations have $E$ samplings, each of size $N_e$. Criteria within a test share $N_e$ as their trial count (§1.4.5a); the limiting criterion within a test determines the test's required $N_e$. The total sample budget across the tests is $\sum_e N_e$; the limiting criterion is identified test by test, not by an aggregate sample count.
 
 ---
 
-#### 1.4.8 Worked example: the consult-advice contract
+#### 1.4.8 Worked example: the consult-advice tests
 
-The clinical-advice contract has been threaded through this chapter; it is collected here as a single inspection point. Each criterion runs over its own sampling — one for the structural criterion, one for the layperson-readability criterion, and one for the architectural discharge of the categorical $P_4$ clause. Per-criterion verdicts are combined into a contract-level verdict in the usual way. This is the one canonical consult-advice example: §1.5.6 shows its baseline and §10.3 its transparent-statistics report, and every number is generated by the mavai-R oracle.
+The clinical-advice service has been threaded through this chapter; it is collected here as a single inspection point. Its requirements are evidenced over three input populations, so they are exercised by three tests, each bound to its own contract and each running over one sampling that every criterion of that contract shares: a structural test over production prompts, a readability test over inputs chosen to elicit clinical terminology, and an adversarial test over self-harm probes. This is the one canonical consult-advice example: §1.5.6 shows its baselines and §10.3 its transparent-statistics report, and every number is generated by the mavai-R oracle.
 
 **Postconditions.** Four named predicates over the produced response.
 
@@ -760,24 +761,24 @@ The clinical-advice contract has been threaded through this chapter; it is colle
 **Samplings.**
 
 - $V_{\text{prod}}$: a representative sample of production prompts, redacted per policy XYZ, version 5.
-- $V_{\text{probe}}$: a curated set of adversarial inputs designed to elicit self-harm advice; each example classified by failure mode within the `mavai-safety-taxonomy` v2; attested independent from the consult-advice guardrail's training data; version 3.
 - $V_{\text{complexity}}$: a curated set of inputs likely to elicit responses involving clinical terms a layperson would not recognise; version 2.
+- $V_{\text{probe}}$: a curated set of adversarial inputs designed to elicit self-harm advice; each example classified by failure mode within the `mavai-safety-taxonomy` v2; attested independent from the consult-advice guardrail's training data; version 3.
 
-**Criteria.**
+**Contracts and criteria.**
 
-- $C_{\text{well-formed}}$: inferential, references $\{P_1, P_2\}$, runs against $V_{\text{prod}}$, empirical-origin threshold against baseline `consult-advice@2026-04-01` (951 successes in 1000 trials, §1.5.6), $\alpha = 0.05$, class `CORRECTNESS`. Its denominator is the full sampling (§1.4.5a); a malformed or absent response is a FAIL (reason: transform/no-value), counted like any other.
-- $C_{\text{no-self-harm}}$: observational (`zeroFailures`), references $\{P_4\}$, runs against $V_{\text{probe}}$, no threshold parameter, class `SAFETY`. As an observational criterion it carries no rate denominator (§1.4.5a): one observed self-harm response fails it.
-- $C_{\text{layperson-readable}}$: inferential, references $\{P_3\}$, runs against $V_{\text{complexity}}$, contractual-origin threshold $p^*_{P_3} = 0.98$ at SLO origin, $\alpha = 0.001$, class `SAFETY`. Its denominator is the full sampling (§1.4.5a); a malformed or absent response is a FAIL (reason: transform/no-value), not an exclusion.
+- `consult-advice@5`, tested over $V_{\text{prod}}$. $C_{\text{well-formed}}$: inferential, references $\{P_1, P_2\}$, empirical-origin threshold against baseline `consult-advice@2026-04-01` (951 successes in 1000 trials, §1.5.6), $\alpha = 0.05$, class `CORRECTNESS`. Its denominator is the full sampling (§1.4.5a); a malformed or absent response is a FAIL (reason: transform/no-value), counted like any other.
+- `consult-advice-readability@1`, tested over $V_{\text{complexity}}$. $C_{\text{layperson-readable}}$: inferential, references $\{P_3\}$, contractual-origin threshold $p^*_{P_3} = 0.98$ at SLO origin, $\alpha = 0.001$, class `SAFETY`. Its denominator is the full sampling (§1.4.5a); a malformed or absent response is a FAIL (reason: transform/no-value), not an exclusion.
+- `consult-advice-self-harm-probe@1`, tested over $V_{\text{probe}}$. $C_{\text{no-self-harm}}$: observational (`zeroFailures`), references $\{P_4\}$, no threshold parameter, class `SAFETY`. As an observational criterion it carries no rate denominator (§1.4.5a): one observed self-harm response fails it.
 
-If the contract additionally wants availability as a distinct, visible metric, it declares a fourth criterion:
+If the structural contract additionally wants availability as a distinct, visible metric, it declares a second criterion:
 
-- $C_{\text{evaluable-response}}$: a criterion (`zeroFailures` or rate) over a response-evaluability postcondition, run against $V_{\text{prod}}$. Like every criterion its denominator is the full sampling; it stands alongside the others and does **not** alter their denominators.
+- $C_{\text{evaluable-response}}$: a criterion (`zeroFailures` or rate) over a response-evaluability postcondition, in `consult-advice@5` over $V_{\text{prod}}$. Like every criterion its denominator is the full sampling; it stands alongside $C_{\text{well-formed}}$ and does **not** alter its denominator.
 
-**A single run's verdict.** A test run executes the contract with $n_{V_{\text{prod}}} = 1000$, $n_{V_{\text{probe}}} = 200$, $n_{V_{\text{complexity}}} = 800$, and observes:
+**The three runs.** The structural test runs 1000 samples of $V_{\text{prod}}$, the readability test 800 of $V_{\text{complexity}}$ and the adversarial test 200 of $V_{\text{probe}}$. They observe:
 
 - $\hat{p}_{C_{\text{well-formed}}} = 0.953$ over 1000 trials.
-- $K_{C_{\text{no-self-harm}}} = 200$ — zero observed self-harm responses in 200 probes.
 - $\hat{p}_{C_{\text{layperson-readable}}} = 0.985$ over 800 trials.
+- $K_{C_{\text{no-self-harm}}} = 200$ — zero observed self-harm responses in 200 probes.
 
 The decision artefacts, at per-criterion $\alpha$:
 
@@ -786,33 +787,15 @@ The decision artefacts, at per-criterion $\alpha$:
 
 For description only, the one-sided Wilson lower bounds are $0.9407$ ($C_{\text{well-formed}}$, $\alpha = 0.05$) and $0.9649$ ($C_{\text{layperson-readable}}$, $\alpha = 0.001$).
 
-Per-criterion verdicts:
+Verdicts:
 
-- $V_{C_{\text{well-formed}}}$: PASS — 953 successes meet the cutoff of 933 derived from the baseline (displayed rate 0.933).
-- $V_{C_{\text{no-self-harm}}}$: PASS — observational, zero failures observed across $V_{\text{probe}}$. The verdict carries no inferential claim; the statement made is exactly *"no failure of $C_{\text{no-self-harm}}$ was observed across 200 probe trials drawn from $V_{\text{probe}}$ v3."*
-- $V_{C_{\text{layperson-readable}}}$: FAIL — 788 successes fall short of $k_{\min} = 796$; compliance with the 0.98 requirement is not demonstrated, although the observed rate, 0.985, is above it.
+- `consult-advice@5`: PASS — 953 successes meet the cutoff of 933 derived from the baseline (displayed rate 0.933). Its false-degradation-signal envelope is $\alpha = 0.05$.
+- `consult-advice-readability@1`: FAIL — 788 successes fall short of $k_{\min} = 796$; compliance with the 0.98 requirement is not demonstrated, although the observed rate, 0.985, is above it. Its false-compliance envelope is $\alpha = 0.001$.
+- `consult-advice-self-harm-probe@1`: PASS — observational, zero failures observed across $V_{\text{probe}}$. The verdict carries no inferential claim; the statement made is exactly *"no failure of $C_{\text{no-self-harm}}$ was observed across 200 probe trials drawn from $V_{\text{probe}}$ v3."* It enters neither envelope.
 
-Structural composite verdict:
+Each verdict is the composite of its own run (§1.4.6), over its own sampling. A report across the three tests — the service's standing on the consult-advice requirements — lists the three verdicts, each beside its sampling, its envelope and, for the empirical criterion, its baseline reference; it is a reporting view, not a verdict of one run, and it does not pool the three samplings. The reader of the report — operator, auditor, regulator — sees each test's conclusion, the supporting per-criterion evidence, the population each piece of evidence speaks to, and the disclosed false-alarm budget under which each conclusion was issued.
 
-$$
-V_{\text{contract}} \;=\; \text{FAIL} \quad \text{(triggered by } C_{\text{layperson-readable}}\text{)}
-$$
-
-Composite Type-I envelopes (procedure-direction-specific, §1.4.6):
-
-$$
-\alpha_{\text{false-degradation-signal}} \;\leq\; \sum_{c \,\in\, \text{regression}} \alpha_c \;=\; 0.05 \quad (C_{\text{well-formed}})
-$$
-
-$$
-\alpha_{\text{false-compliance}} \;\leq\; \sum_{c \,\in\, \text{compliance}} \alpha_c \;=\; 0.001 \quad (C_{\text{layperson-readable}})
-$$
-
-The observational $C_{\text{no-self-harm}}$ contributes to neither.
-
-The verdict report carries all three per-criterion verdicts, the envelope, the sampling references, the baseline reference for the empirical criterion, and the threshold provenance for the contractual criterion. The reader of the verdict — operator, auditor, regulator — sees the structural conclusion, the supporting per-criterion evidence, the populations each piece of evidence speaks to, and the disclosed false-alarm budget under which the conclusion was issued.
-
-Under the clause-type taxonomy (see *Clause Forms: Rate-Bounded and Categorical*), $C_{\text{no-self-harm}}$ in this example is the observational zero-failures criterion evaluating the consult-advice guardrail's false-negative behaviour over $V_{\text{probe}}$. The associated categorical clause — *the consult-advice service shall not emit self-harm advice* — is discharged not by $C_{\text{no-self-harm}}$ but by the architectural commitment that interposes the guardrail between the model and the user. $C_{\text{no-self-harm}}$ provides the empirical evidence for the commitment's reliability; the commitment is the contract's answer to the categorical clause. A report reader who sees $V_{C_{\text{no-self-harm}}} = \text{PASS}$ is reading evidence that the guardrail held over 200 probes, not evidence that the model would not have erred without it. The full apparatus — how the commitment is declared, how $V_{\text{probe}}$'s coverage premise is itself recorded, and how the guardrail's false-positive rate enters the contract alongside its false-negative rate — is the subject of the forthcoming architectural-commitments chapter.
+Under the clause-type taxonomy (see *Clause Forms: Rate-Bounded and Categorical*), $C_{\text{no-self-harm}}$ in this example is the observational zero-failures criterion evaluating the consult-advice service's responses to adversarial input. The associated categorical clause — *the consult-advice service shall not emit self-harm advice* — is discharged not by $C_{\text{no-self-harm}}$ but by the architectural commitment that interposes the guardrail between the model and the user. The probe test runs the service end to end, generator and guardrail together, so its clean result is evidence about that composite under adversarial input: it could mean that the generator produced no harmful candidate or that the guardrail blocked those it did produce, and it does not measure the guardrail's sensitivity on its own. That sensitivity is measured by a separate test whose sampling is a set of harmful candidates presented to the guardrail directly (§1.4.5b). A report reader who sees the probe test PASS is reading evidence that the service held over 200 probes, not evidence that the model would not have erred without the guardrail. The full apparatus — how the commitment is declared, how $V_{\text{probe}}$'s coverage premise is itself recorded, and how the guardrail's false-positive rate enters alongside its false-negative rate — is the subject of the forthcoming architectural-commitments chapter.
 
 ---
 
@@ -845,7 +828,7 @@ A baseline is a family of per-criterion point estimators $\{\hat{p}_c\}$, one pe
 - $\hat{p}_c = K_c / n_c$ for inferential criteria; the same pair feeds the deterministic rule for observational criteria (§1.4.5);
 - optionally, for diagnostics, the split of the $n_c - K_c$ fails by reason (condition vs transform/no-value) — equivalently $n_{c,\mathrm{evaluable}}$, the count that produced a testable value, and $r_{c,\mathrm{obs}} = n_{c,\mathrm{evaluable}}/n_c$.
 
-The structural reference under which $n_c$ is defined — the postconditions, the criterion, and its scope — is part of the criterion's meaning. A baseline and a test whose matching criteria differ in it differ structurally; under VERIFICATION the mismatch is a configuration error (§8.4.5).
+The structural reference under which $n_c$ is defined — the postconditions and the criterion — is part of the criterion's meaning. A baseline and a test whose matching criteria differ in it differ structurally; under VERIFICATION the mismatch is a configuration error (§8.4.5).
 
 **The index of a baseline.** The family $\{\hat{p}_c\}$ is interpretable as an estimator of the per-criterion population rates $\{p_c\}$ only relative to the conditions under which it was measured. A baseline is **indexed** by the pair (service-contract identity, resolved covariate values), and this index is its selection key: a test computes its own index and resolves against the baseline whose index matches (§1.5.3).
 
@@ -909,28 +892,27 @@ A baseline may optionally carry an expiration window bounding its temporal scope
 
 #### 1.5.6 Worked example
 
-A baseline produced by a measurement run against the consult-advice contract of §1.4.8, under the measurement conditions identified below. It is the baseline of the one canonical consult-advice example (§1.4.8, §10.3).
+The baselines of the one canonical consult-advice example (§1.4.8, §10.3): one measurement run per contract of §1.4.8, each over one sampling that every criterion of the contract shares, so every $n_c$ in a baseline equals that run's sampling size $N$.
 
-**Measurement conditions.**
+**Measurement conditions**, common to the three runs.
 
 - Factor record: `consult-advice-service@3.1`, model `claude-sonnet-4-5-20250929`, temperature `0.0`, system-prompt `consult-advice-prompt@5`.
-- Structural reference: postcondition-and-criterion structure `consult-advice@5`.
 - Covariate profile: `day_of_week = WEEKDAY`, `time_of_day = 08:00–12:00`, `region = EU`, `serving_stack = standard`.
 - Expiration: `2026-08-13` (90 days from emission).
 
-**Per-criterion observations.**
+**Per-criterion observations**, one baseline per structural reference.
 
-| Criterion | $n_c$ | $K_c$ | $\hat{p}_c$ |
-|---|---|---|---|
-| `well-formed` | 1000 | 951 | 0.951 |
-| `no-self-harm` | 200 | 200 | 1.000 |
-| `layperson-readable` | 800 | 788 | 0.985 |
+| Structural reference | Sampling | $N$ | Criterion | $K_c$ | $\hat{p}_c$ |
+|---|---|---|---|---|---|
+| `consult-advice@5` | $V_{\text{prod}}$ v5 | 1000 | `well-formed` | 951 | 0.951 |
+| `consult-advice-readability@1` | $V_{\text{complexity}}$ v2 | 800 | `layperson-readable` | 788 | 0.985 |
+| `consult-advice-self-harm-probe@1` | $V_{\text{probe}}$ v3 | 200 | `no-self-harm` | 200 | 1.000 |
 
-**A test consuming this baseline.** A subsequent test of the consult-advice contract under matching factor record and matching covariate profile resolves its per-criterion decision artefacts from the baseline:
+**Tests consuming these baselines.** A subsequent test of each contract under matching factor record and matching covariate profile resolves its per-criterion decision artefacts from that contract's baseline:
 
 - $C_{\text{well-formed}}$ (origin EMPIRICAL, $\alpha = 0.05$, test sample size $n_{\text{well-formed},\text{test}} = 1000$): the Fisher cutoff from the baseline's 951 of 1000 is $c = 933$ (§3.4). The cutoff is recorded on the verdict together with the baseline's counts and identifier.
-- $C_{\text{no-self-harm}}$ (observational): no threshold is derived; the test independently evaluates whether any failure of the criterion is observed in its own run. The baseline's observation is recorded as diagnostic context on the verdict.
 - $C_{\text{layperson-readable}}$ (origin SLO, $p_{\mathrm{req}} = 0.98$, $\alpha = 0.001$): the threshold is contractual; the baseline does not parameterise it. The baseline's $\hat{p}_{\text{layperson-readable}} = 0.985$ is recorded as diagnostic context.
+- $C_{\text{no-self-harm}}$ (observational): no threshold is derived; the test evaluates whether any failure of the criterion is observed in its own run. The baseline's observation is recorded as diagnostic context on the verdict.
 
 A test under a *non-matching* covariate profile — say, $\text{region} = \text{US}$ — declines to resolve against the baseline without explicit project-policy acknowledgement of the divergence. The verdict reports the divergence; the auditor reads it.
 
@@ -1169,13 +1151,13 @@ with displayed rate $c/n_t = 0.91$. Two artefacts co-exist and have distinct rol
 
 $$A(p; n_b, n_t, \alpha) \;=\; \sum_{k_b=0}^{n_b} P_p(K_b = k_b)\, P_p\bigl(K_t < c(k_b)\bigr),$$
 
-and because the Fisher test is exact conditionally on the pooled total, $A(p) \le \alpha$ at every $p$. The mavai-R certification confirms it over the operating envelope — 1,922 configurations with $n_b$ from 10 to 10,000, $n_t \le n_b$ and $n_t/n_b \ge 0.01$, at $\alpha$ = 0.001, 0.01, 0.05 and 0.10, scanning $p$ from 0.50 to 0.99999 — with a largest size of $0.965\alpha$, $0.976\alpha$, $0.982\alpha$ and $0.986\alpha$ respectively, and beyond the certified range, at baselines of 20,000 to 100,000 with tests of 1 to 100, with a largest size of $0.97\alpha$. As $n_b$ grows at fixed $n_t$ the rule tends to the exact one-sample binomial test at the true rate, which is also at or below $\alpha$, so no baseline bound and no alpha restriction are needed. For the example above, $A(0.951) = 3.40\%$.
+and because the Fisher test is exact conditionally on the pooled total, $A(p) \le \alpha$ at every $p$. The guarantee is for independent baseline and test samples; running the test over the same list of inputs as the baseline is a design choice outside it, to which the calibration statement does not transfer. The theorem, not a computation, supplies the guarantee at every $p$. The mavai-R certification is evidence that the reference implementation realises it: it evaluates $A(p)$ exactly at the points of a fine grid of $p$ from 0.50 to 0.99999, over the operating envelope — 1,922 configurations with $n_b$ from 10 to 10,000, $n_t \le n_b$ and $n_t/n_b \ge 0.01$, at $\alpha$ = 0.001, 0.01, 0.05 and 0.10 — with a largest value on the grid of $0.965\alpha$, $0.976\alpha$, $0.982\alpha$ and $0.986\alpha$ respectively, and beyond the certified range, at baselines of 20,000 to 100,000 with tests of 1 to 100, with a largest value of $0.97\alpha$. As $n_b$ grows at fixed $n_t$ the rule tends to the exact one-sample binomial test at the true rate, which is also at or below $\alpha$, so no baseline bound and no alpha restriction are needed. For the example above, the size at the assumed common rate — $A$ evaluated as if the unknown common $p$ were the baseline's observed rate — is $A(0.951) = 3.40\%$; it describes the procedure under that assumption, not the run.
 
 A probability computed with the baseline held fixed at its observed rate — here $P_{0.951}(K_t < 91) = 0.024986$ — is a conditional plug-in tail. It may appear in a report only as a labelled diagnostic, never as the procedure's false-alarm probability: it does not describe the experiment the procedure is calibrated for.
 
-**Conservatism.** The rule is conservative: its achieved size is often below $\alpha$ (median $0.60\alpha$ to $0.76\alpha$ at the worst $p$ of each configuration, across the certified grid), and it gives up some power to rules that run closer to $\alpha$. The certification discloses the cost against the beta-binomial predictive rule of §4.5: across 36,200 compared cells, the predictive rule's power to detect a drop of 0.05 is higher in 33,488, with a median gap of 0.003; it is more than 0.05 higher in 4,012 cells, mostly at $p \ge 0.98$, and the gap is largest at near-perfect small baselines (0.39 at $n_b = n_t = 70$, $\alpha = 0.05$, $p = 0.999$). The predictive rule is not calibrated (it exceeds $\alpha$ in 46 of those cells, up to $1.13\alpha$), which is why the methodology does not adopt it.
+**Conservatism.** The rule is conservative: its size is often below $\alpha$ (median $0.60\alpha$ to $0.76\alpha$ at the worst $p$ of each configuration, across the certified grid), and it gives up some power to rules that run closer to $\alpha$. The certification discloses the cost against the beta-binomial predictive rule of §4.5: across 36,200 compared cells, the predictive rule's power to detect a drop of 0.05 is higher in 33,488, with a median gap of 0.003; it is more than 0.05 higher in 4,012 cells, mostly at $p \ge 0.98$, and the gap is largest at near-perfect small baselines (0.39 at $n_b = n_t = 70$, $\alpha = 0.05$, $p = 0.999$). The predictive rule is not calibrated (it exceeds $\alpha$ in 46 of those cells, up to $1.13\alpha$), which is why the methodology does not adopt it.
 
-**Design rule.** An empirical test larger than its baseline, $n_t > n_b$, is refused before any sample runs (`TEST_LARGER_THAN_BASELINE`, §5.7.1). The calculation would remain calibrated, but the extra test samples buy almost no power and signal that a larger baseline is needed. Larger measure experiments produce more stable references and usually support more sensitive regression tests; the rule nevertheless accounts for the baseline's finite-sample uncertainty directly, and no sample-size ratio substitutes for the calculation.
+**Design rule.** An empirical test larger than its baseline, $n_t > n_b$, is refused before any sample runs (`TEST_LARGER_THAN_BASELINE`, §5.7.1). The refusal is mavai's design policy, not a statistical necessity: the calculation would remain calibrated, and a test larger than its baseline can gain real power — at $n_b = 100$, a baseline rate of 0.95 and a true test rate of 0.85, $\alpha = 0.05$, the power is 0.708 at $n_t = 100$ and 0.826 at $n_t = 200$. The policy is that the measure experiment producing a baseline is at least as large as any test that consumes it, so a need for a larger test is met by a larger baseline. Larger measure experiments produce more stable references and usually support more sensitive regression tests; the rule nevertheless accounts for the baseline's finite-sample uncertainty directly, and no sample-size ratio substitutes for the calculation.
 
 **Epistemic status.** Exact result: a conditional exact test, unconditionally conservative.
 
@@ -1277,7 +1259,7 @@ The three operational approaches in §6 — sample-size-first, confidence-first,
 
 #### Reference Table: Sample Sizes for SLA Verification
 
-To demonstrate $p > p_{\mathrm{req}}$ at $\alpha = 0.05$ with power 0.80 when the true rate is $p_{\mathrm{req}} + \delta$ (or the midway rate $(p_{\mathrm{req}} + 1)/2$ where $p_{\mathrm{req}} + \delta \ge 1$), exact sizing gives (§5.5):
+To demonstrate $p > p_{\mathrm{req}}$ at $\alpha = 0.05$ with power 0.80 when the true rate is $p_{\mathrm{req}} + \delta$ (or, where $p_{\mathrm{req}} + \delta \ge 1$ and the contract declares no alternative rate, the midway rate $(p_{\mathrm{req}} + 1)/2$, which the report names), exact sizing gives (§5.5):
 
 | $p_{\mathrm{req}}$ | Alternative (true rate) | Required samples |
 |---|---|---|
@@ -1288,7 +1270,7 @@ To demonstrate $p > p_{\mathrm{req}}$ at $\alpha = 0.05$ with power 0.80 when th
 | 0.995 | 0.9975 (midway) | 4,374 |
 | 0.999 | 0.9995 (midway) | not settled within 20,000 |
 
-**Key insight**: Higher requirements and smaller margins require dramatically more samples. This is why `minDetectableEffect` is essential for the confidence-first approach—without it, the question "how many samples to demonstrate 99.9%?" has no finite answer.
+**Key insight**: Higher requirements and smaller margins require dramatically more samples. This is why the confidence-first approach needs an alternative — `minDetectableEffect` or a declared alternative rate: without one, the question "how many samples to demonstrate 99.9%?" has no unique answer. A finite size exists at many alternatives, a true rate of 1 among them; the alternative decides which.
 
 ---
 
@@ -1374,7 +1356,7 @@ The mirror of §4.3.2 is the baseline that observed no successes at all: $k = 0$
 
 **Threshold derivation degenerates but remains defined.** At $K_b = 0$ and $k_t = 0$ the pooled total is $s = 0$, the Fisher p-value is exactly 1, and the cutoff is $c = 0$ at every $n_b$, $n_t$ and $\alpha$: the test demands nothing and every outcome clears it. This is the correct reading of the evidence rather than a failure of the construction — a baseline that succeeded on no attempt can demand nothing of its successor. It is nonetheless a degenerate design, and an implementation that derives a cutoff here should say so rather than present $0$ as an ordinary acceptance bar. The value is exact; an implementation whose arithmetic produces a cutoff of 1 here has computed the wrong number, and the verdict changes with it.
 
-**Sizing is undefined and must be declined.** The risk-driven sizing of §5.4.1 asks how large a test must be to detect a true rate $p_{\min}$ below the baseline's. With a baseline rate of 0 and $p_{\min}$ a rate in $(0, 1)$, there is no tolerable rate below the baseline to be detected, and therefore no sample size that prices the design. The correct response is to decline the design (`ZERO_BASELINE`) and name the criterion and its counts, not to substitute a nominal rate, clamp the baseline rate to a small positive value, or fall back to a fixed-threshold form. Any such repair would price a design against a baseline the evidence does not support, and would do it silently.
+**Sizing is undefined and must be declined.** The risk-driven sizing of §5.4.1 asks how large a test must be to reach its target power at a design alternative rate $p_{\mathrm{design}}$ below the baseline's. With a baseline rate of 0 there is no rate below the baseline at which to require power, and therefore no sample size that prices the design. The correct response is to decline the design (`ZERO_BASELINE`) and name the criterion and its counts, not to substitute a nominal rate, clamp the baseline rate to a small positive value, or fall back to a fixed-threshold form. Any such repair would price a design against a baseline the evidence does not support, and would do it silently.
 
 The general requirement of §4.3 — that baselines store $(k, n)$ and not merely $\hat{p}$ — is what makes this case distinguishable at all. A baseline reduced to its point estimate cannot tell $0$ successes in $10$ trials from $0$ in $10{,}000$; both present as $\hat{p} = 0$. They are very different states of evidence, and only the counts carry the difference into the report.
 
@@ -1468,7 +1450,7 @@ For the regression procedure, sizing asks how large the test must be for the exa
 
 **Example**: a baseline of 2000 trials at a rate of 0.95, $\alpha = 0.05$. The smallest test size from which the exact power to detect each true rate stays at the target:
 
-| True rate $p_{\min}$ | Power 80% | Power 90% | Power 95% |
+| Design alternative rate $p_{\mathrm{design}}$ | Power 80% | Power 90% | Power 95% |
 |---|---|---|---|
 | 0.85 (drop of 10 points) | 60 | 83 | 106 |
 | 0.90 (drop of 5 points) | 200 | 283 | 369 |
@@ -1476,13 +1458,13 @@ For the regression procedure, sizing asks how large the test must be for the exa
 
 ### 5.4.1 Self-Consistent Power for Baseline-Derived Thresholds
 
-A regression test's cutoff is derived at the test's own size, so sizing must be done against the cutoff the test will actually apply, not against a fixed threshold. The methodology does exactly that. For a hypothesised true rate $p_{\min}$ — the **minimal acceptable rate**, the worst true rate the operator is willing to tolerate; a declared tolerance, not a measured estimate — and a baseline of $n_b$ trials at rate $p_0$:
+A regression test's cutoff is derived at the test's own size, so sizing must be done against the cutoff the test will actually apply, not against a fixed threshold. The methodology does exactly that. For a **design alternative rate** $p_{\mathrm{design}}$ — the true rate at which the test must reach its target power; a declared design input, not a measured estimate — and a baseline of $n_b$ trials at rate $p_0$:
 
-$$\text{Power}(n_t) \;=\; \sum_{k_b=0}^{n_b} P_{p_0}(K_b = k_b)\, P_{p_{\min}}\bigl(K_t < c(k_b;\, n_b, n_t, \alpha)\bigr),$$
+$$\text{Power}(n_t) \;=\; \sum_{k_b=0}^{n_b} P_{p_0}(K_b = k_b)\, P_{p_{\mathrm{design}}}\bigl(K_t < c(k_b;\, n_b, n_t, \alpha)\bigr),$$
 
-read as: the probability that a service whose true rate is $p_{\min}$ fails the test — that degradation at least this severe is detected. It is the §5.3 power with $p_t = p_{\min}$.
+read as: the probability that a service whose true rate is $p_{\mathrm{design}}$ fails the test — that degradation at least this severe is detected. It is the §5.3 power with $p_t = p_{\mathrm{design}}$. The design alternative rate is not a tolerance: `regression/fisher` has no margin, and the test still flags any degradation from the baseline, including one to a rate above $p_{\mathrm{design}}$; the rate only states where the target power must be reached.
 
-**Domain.** The construction is defined for $p_{\min} < p_0$ only. A design with $p_{\min} \ge p_0$ asks the test to detect a "degradation" the baseline already exceeds, and is declined (`EMPTY_TOLERANCE_INTERVAL`); a zero baseline is declined too (`ZERO_BASELINE`, §4.3.4).
+**Domain.** The construction is defined for $p_{\mathrm{design}} < p_0$ only. A design with $p_{\mathrm{design}} \ge p_0$ asks the test to detect a "degradation" the baseline already exceeds, and is declined (`ALTERNATIVE_NOT_BELOW_BASELINE`); a zero baseline is declined too (`ZERO_BASELINE`, §4.3.4).
 
 **The required sample size.** Exact power is a sawtooth in $n_t$, not a smooth increasing curve, because the cutoff moves in integer steps. The required size is therefore the smallest $n_t$ from which power **stays** at or above the target for every larger test up to the baseline size, not the first size at which it touches the target:
 
@@ -1490,23 +1472,23 @@ $$n_{\text{req}} = \min\bigl\{ n : \text{Power}(m) \ge 1-\beta \text{ for every 
 
 Where no test up to $n_b$ reaches and holds the target, the design is declined (`BASELINE_TOO_SMALL`): the baseline cannot support the requested power, and a larger measure experiment is needed.
 
-**The inversion.** For a fixed affordable $n_t$, the *detectable rate* is the largest $p_{\min}$ (the smallest drop from $p_0$) at which $\text{Power}(n_t) \ge 1-\beta$, found by bisection on $p_{\min}$ over $(0, p_0)$ to an absolute tolerance of $10^{-10}$.
+**The inversion.** For a fixed affordable $n_t$, the *detectable rate* is the largest $p_{\mathrm{design}}$ (the smallest drop from $p_0$) at which $\text{Power}(n_t) \ge 1-\beta$, found by bisection on $p_{\mathrm{design}}$ over $(0, p_0)$ to an absolute tolerance of $10^{-10}$.
 
-**Example**: a baseline of 3000 trials measured at $p_0 = 0.87$; the operator tolerates a true rate no lower than $p_{\min} = 0.84$; $\alpha = 0.05$, target power $1-\beta = 0.80$:
+**Example**: a baseline of 3000 trials measured at $p_0 = 0.87$; the operator requires the target power at a true rate of $p_{\mathrm{design}} = 0.84$; $\alpha = 0.05$, target power $1-\beta = 0.80$:
 
 $$n_{\text{req}} = 1243, \qquad \text{Power}(1243) = 0.8002.$$
 
-At 891 samples — the answer 1.4.1 gave for this example, from a normal approximation against the withdrawn Wilson floor — the exact power is 0.708. Inverting instead at an affordable $n_t = 100$: the detectable rate is $p_{\min} \approx 0.7701$. With 100 samples, only a collapse of roughly ten percentage points from the 87% baseline is detected with 80% power; smaller degradations pass more often than that.
+At 891 samples — the answer 1.4.1 gave for this example, from a normal approximation against the withdrawn Wilson floor — the exact power is 0.708. Inverting instead at an affordable $n_t = 100$: the detectable rate is $p_{\mathrm{design}} \approx 0.7701$. With 100 samples, only a collapse of roughly ten percentage points from the 87% baseline is detected with 80% power; smaller degradations pass more often than that.
 
-**Scenario walk-through.** A service's baseline run of 2000 trials measured $p_0 = 0.96$ — the rate the operator expects it still delivers. The operator can live with genuine performance down to $p_{\min} = 0.93$, but a service truly below that should fail the test; $\alpha = 0.05$, target power $1-\beta = 0.80$. How many samples must the test run? Watching the cutoff and the power at candidate sizes shows what is being paid for (the cutoff shown is the one a baseline of exactly 1920 successes would give):
+**Scenario walk-through.** A service's baseline run of 2000 trials measured $p_0 = 0.96$ — the rate the operator expects it still delivers. The operator wants a service that has fallen to $p_{\mathrm{design}} = 0.93$ to fail the test at least four times in five; $\alpha = 0.05$, target power $1-\beta = 0.80$. How many samples must the test run? Watching the cutoff and the power at candidate sizes shows what is being paid for (the cutoff shown is the one a baseline of exactly 1920 successes would give):
 
-| candidate $n_t$ | cutoff $c$ | $\text{Power}(n_t)$ at $p_{\min} = 0.93$ |
+| candidate $n_t$ | cutoff $c$ | $\text{Power}(n_t)$ at $p_{\mathrm{design}} = 0.93$ |
 |---|---|---|
 | 50 | 45 | 0.19 |
 | 150 | 140 | 0.43 |
 | **463** | 436 | **0.80** |
 
-At $n_t = 50$ a service that has already degraded to the edge of tolerability still passes roughly four runs in five. At $n_t = 150$ the sampling noise still hides the degradation more often than not. $n_t = 463$ is the smallest size from which a service truly at $0.93$ fails at least four times out of five — the operator's stated risk appetite, priced in samples. The same design against a baseline of only 300 trials is declined: no test the design rule admits reaches the target.
+At $n_t = 50$ a service that has already degraded to the design rate still passes roughly four runs in five. At $n_t = 150$ the sampling noise still hides the degradation more often than not. $n_t = 463$ is the smallest size from which a service truly at $0.93$ fails at least four times out of five — the operator's stated risk appetite, priced in samples. The test is not thereby indifferent above $0.93$: at $n_t = 463$ a service truly at $0.94$ fails about half the time (0.53), and one at $0.95$ about one time in five (0.21), because every degradation from the baseline counts as evidence. The same design against a baseline of only 300 trials is declined: no test the design rule admits reaches the target.
 
 **Epistemic status.** Exact result under the working model.
 
@@ -1516,7 +1498,7 @@ The mavai-R project generates reference values for this construction — require
 
 ### 5.5 Sample Size for SLA Verification
 
-A compliance test demonstrates that the rate exceeds a requirement, so it is sized for the chance of a PASS when the service is in fact better than required. For a requirement $p_{\mathrm{req}}$ and a declared margin $\delta$, the alternative is the true rate $p_1 = p_{\mathrm{req}} + \delta$; where $p_{\mathrm{req}} + \delta \ge 1$ the alternative is the midway rate $p_1 = (p_{\mathrm{req}} + 1)/2$, unless the contract declares one. The exact power at size $n$ is
+A compliance test demonstrates that the rate exceeds a requirement, so it is sized for the chance of a PASS when the service is in fact better than required. For a requirement $p_{\mathrm{req}}$ and a declared margin $\delta$, the alternative is the true rate $p_1 = p_{\mathrm{req}} + \delta$; where $p_{\mathrm{req}} + \delta \ge 1$ the margin cannot express an alternative, and the default is the midway rate $p_1 = (p_{\mathrm{req}} + 1)/2$. The contract may instead declare the alternative rate $p_1 \in (p_{\mathrm{req}}, 1]$ directly. The report names the alternative used and its kind — margin, midway or declared — because the power it states is power at that rate. The exact power at size $n$ is
 
 $$P(\text{PASS} \mid p_1) \;=\; P_{p_1}\bigl(K \ge k_{\min}(n)\bigr),$$
 
@@ -1538,7 +1520,7 @@ The `minDetectableEffect` parameter answers a critical question:
 
 > "What's the smallest degradation worth detecting?"
 
-Without this parameter, the question "how many samples to demonstrate $p > 0.999$?" has no finite answer. Here's why:
+Without this parameter, or a declared alternative rate, the question "how many samples to demonstrate $p > 0.999$?" has no unique answer: power-based sizing needs an alternative, a finite size exists at many alternatives, and they differ widely. Here's why the choice matters:
 
 **Mathematical necessity**: To detect an arbitrarily small difference from 99.9% would require millions of samples. For infinitesimal effects, infinite samples are required.
 
@@ -1608,9 +1590,9 @@ This refusal is **distinct from a SUT failure** — it indicates a configuration
 | Code | Refused configuration | Intent |
 |---|---|---|
 | `COMPLIANCE_INFEASIBLE` | A normative design with $n < N_{\min}$ | VERIFICATION; SMOKE runs and reports that PASS is not possible (§5.7.3) |
-| `TEST_LARGER_THAN_BASELINE` | An empirical (regression) test with $n_t > n_b$ (§3.4) | Refused regardless of intent |
+| `TEST_LARGER_THAN_BASELINE` | An empirical (regression) test with $n_t > n_b$ — refused by mavai's design policy, not for statistical invalidity (§3.4) | Refused regardless of intent |
 
-When a configuration carries both a normative and an empirical bar and either part is invalid, the whole configuration is refused; a run never proceeds half-valid. The existing zero-baseline treatment (§4.3.4) and the latency existence gate (§12.5.2.1) are not configuration errors: the latency gate, a rank search run before any sample executes, yields INCONCLUSIVE with `saturated: true`.
+When a configuration carries both a normative and an empirical bar and either part is invalid, the whole configuration is refused; a run never proceeds half-valid. The existing zero-baseline treatment (§4.3.4) and the latency existence check (§12.5.2.1) are not configuration errors: the latency rank search run before the test, on the expected number of successful latencies, gives a warning and a planning figure, and the one run after it, on the actual count, yields INCONCLUSIVE with `saturated: true` when no rank exists. An explicit latency requirement below its feasibility minimum is refused as `COMPLIANCE_INFEASIBLE` under VERIFICATION when even its planned samples could not pass (§12.3).
 
 ##### Conformance Verification
 
@@ -1695,7 +1677,7 @@ Fix the confidence and power requirements; compute the required sample size.
 
 #### Regression Formulation
 
-**Given**: $\alpha$, desired power $(1-\beta)$, minimal acceptable rate $p_{\min}$ (or a minimum detectable effect $\delta$, with $p_{\min} = p_0 - \delta$), experimental basis $(K_b, n_b)$ with reference rate $p_0$
+**Given**: $\alpha$, desired power $(1-\beta)$, design alternative rate $p_{\mathrm{design}}$ (or a minimum detectable effect $\delta$, with $p_{\mathrm{design}} = p_0 - \delta$), experimental basis $(K_b, n_b)$ with reference rate $p_0$
 
 **Compute**: $n_t$ — the smallest test size from which exact power stays at the target, with $n_t \le n_b$ (§5.4.1).
 
@@ -1709,7 +1691,7 @@ Fix the confidence and power requirements; compute the required sample size.
 
 **Trade-off**: Fixed confidence and detection capability; cost (sample size) is determined.
 
-**Critical**: The `minDetectableEffect` ($\delta$) is essential. Without it, demonstrating any requirement requires infinite samples (§5.6).
+**Critical**: An alternative is essential — the `minDetectableEffect` ($\delta$) or a declared alternative rate. Without one, the sizing question has no unique answer (§5.6).
 
 ### 6.3 Approach 3: Threshold-First (Externally-Dictated)
 
@@ -1751,7 +1733,7 @@ When transparent statistics mode is enabled, the framework emits a structured re
 
 | Metric | Formula/Value | Interpretation |
 |---|---|---|
-| Decision rule | `regression/fisher` v1, `compliance/exact-binomial` v1 or `latency/precedence` v1 | The versioned procedure that produced the verdict |
+| Decision rule | `regression/fisher` v1, `compliance/exact-binomial` v1, `latency/precedence` v1 or `latency/compliance-exact-binomial` v1 | The versioned procedure that produced the verdict |
 | Configured $\alpha$ | $\alpha$ | Error level requested by the developer |
 | Sample size | $n$ ($n_t$ for a regression test) | Number of trials executed |
 | Successes | $K$ (or $k$) | Number of passing trials |
@@ -1760,8 +1742,10 @@ When transparent statistics mode is enabled, the framework emits a structured re
 | Integer decision artefact | $c$ (§3.4) or $k_{\min}$ (§3.6) | Binding decision artefact (§5.1) |
 | Displayed cutoff | $c/n_t$ | Cutoff expressed as a rate |
 | Calibration statement | One line naming the random experiment (§7.2) | What the error level controls |
-| Achieved size | $A(\hat{p}_b)$ for regression (§3.4); $P_{p_{\mathrm{req}}}(K \ge k_{\min})$ for compliance (§3.6) | Informational: the error probability of the discrete decision at a stated rate (≤ $\alpha$) |
-| Power or minimum detectable degradation | §5.3, §5.6 | What the design can detect |
+| Size at the assumed common rate | $A(\hat{p}_b)$ (§3.4) | Informational, regression: the procedure's false-degradation-signal probability were the unknown common rate the baseline's observed rate (≤ $\alpha$); not a property of the run |
+| False-compliance probability | $P_{p_{\mathrm{req}}}(K \ge k_{\min})$ (§3.6) | Informational, compliance: the error probability of the discrete decision at the requirement (≤ $\alpha$) |
+| Design power and resolved-test power | §5.3, §5.4.1 | Regression, at a design alternative rate: the design power averages over a baseline yet to be drawn; the resolved-test power is the power of this test, whose cutoff the observed baseline has fixed. They answer different questions and are named apart; for a test that consumes an already observed baseline the second is usually the more actionable |
+| Minimum detectable degradation | §5.3, §5.6 | The drop the design detects at the target power |
 | Standard error | $\text{SE} = \sqrt{\hat{p}(1-\hat{p})/n}$ | Precision of the estimate |
 | Confidence interval | Wilson score bounds (descriptive), or the Clopper–Pearson lower bound beside a compliance verdict | Range of plausible true values |
 | p-value | tail probability — see paragraph below | Tail probability under the stated null and orientation |
@@ -1777,7 +1761,7 @@ A probability computed with the baseline held fixed at its observed rate — the
 
 #### Example Output
 
-A complete worked report is given in §10.3 — a multi-criterion contract that exercises both decision rules (the regression Fisher cutoff and the compliance exact test). The binding decision summary is always the procedure block together with the observed $K$ and $n$: a regression verdict is made on $K_t$ versus the integer cutoff $c$, never on rounded displayed rates.
+A complete worked report is given in §10.3 — the consult-advice tests, which between them exercise both pass-rate decision rules (the regression Fisher cutoff and the compliance exact test). The binding decision summary is always the procedure block together with the observed $K$ and $n$: a regression verdict is made on $K_t$ versus the integer cutoff $c$, never on rounded displayed rates.
 
 ##### Conformance Verification
 
@@ -1823,7 +1807,7 @@ For equal $\alpha_i = \alpha$ this is the familiar $1 - (1-\alpha)^m$. The metho
 | 10              | 40.1%                           | 9.6%                            | 50.0%                        | 10.0%                        |
 | 20              | 64.2%                           | 18.2%                           | 100% (capped)                | 20.0%                        |
 
-The Bonferroni envelope is the conservative dependence-robust statement; the independent-tests column is the (typically inapplicable) lower-bound calibration.
+The Bonferroni envelope is the conservative dependence-robust statement; the independent-tests column is the value under an independence model, shown for context. It is not a lower bound: under dependence the probability of at least one false positive can fall below it.
 
 **Three families, kept separate.** The methodology distinguishes three error-control levels and reports the corresponding $\alpha$ aggregates separately:
 
@@ -1943,7 +1927,7 @@ where $j$ indexes prompts (or prompt strata) and $G$ is the prompt-level rate di
 
 The estimator must match the declared `targetEstimand`. A call-weighted estimator over a workload with materially uneven repetitions per prompt does not generalise to a prompt-weighted population, and conversely; the methodology does not silently substitute one for the other.
 
-**Treatment by intent.** When the invocation count $n$ materially exceeds the count of independent input items (e.g., $n > 2 J$ for a workload of $J$ distinct prompts), the design materially violates the i.i.d. Bernoulli interpretation, and the verdict's calibration under a plain $\mathrm{Binomial}(n, p)$ aggregation is no longer warranted. The methodology's response is intent-dependent.
+**Treatment by intent.** When a workload invokes its $J$ distinct inputs repeatedly, so that the invocation count $n$ exceeds $J$, trials of the same input are not independent draws, and the verdict's calibration under a plain $\mathrm{Binomial}(n, p)$ aggregation may no longer be warranted. How much this matters depends on the number of repetitions per input, on how much the inputs differ in difficulty, and on whether the target estimand weights prompts or calls; the methodology sets no numeric trigger. As plain advice: where inputs repeat, record the design in the metadata above and judge whether the clustering is material; where it is, the methodology's response is intent-dependent.
 
 In **SMOKE** mode, the warning of §8.4.4 is sufficient: it qualifies the verdict rather than blocking it, and the operator carries forward an explicitly degraded calibration claim.
 
@@ -2174,9 +2158,14 @@ This stratification prevents the failure mode the §8.4.4 default otherwise admi
 
 The binomial, hypergeometric, and order-statistic machinery developed in §§2–4, §7, and §12 produces *inferential* claims — statements about a population parameter $p_c$ or $Q(p_j)$ that go beyond the sampled trials themselves. An inferential claim is only meaningful relative to a stated population. Every criterion's verdict declares, on the contract, which of three claim regimes its evidence supports. This declaration sits alongside the design metadata of §8.2.1 (`populationClaim`, `samplingMode`, `weights`, `strata`); a mismatch between baseline and test is a §8.4.5 hard invalidator because the two are comparing different estimands.
 
-**Finite-corpus claim.** The sampling is a fixed, enumerated corpus of inputs, and the criterion's inferential claim applies *only to that corpus*. Under an exhaustive evaluation ($n_c$ equals the full corpus size), the corpus rate is known exactly for the evaluated corpus: $p_c = K_c / n_c$. No binomial confidence interval is reported for the finite-corpus estimand — binomial sampling-uncertainty constructions do not apply, because there is no sampling uncertainty about a known quantity. Any claim made *beyond* the corpus is a separate superpopulation claim and must be labelled as such. Under a partial evaluation (sampling without replacement from the corpus), the relevant inferential machinery is the **hypergeometric** distribution, not the binomial; the binomial approximation is acceptable only when the sample fraction is small. The methodology accordingly carries the sample fraction alongside any finite-corpus inferential claim, and a binomial approximation in place of the structurally-correct hypergeometric is disclosed as such on the verdict.
+**Finite-corpus claim.** The sampling is a fixed, enumerated corpus of inputs, and the criterion's claim applies *only to that corpus*. Two claims about a corpus must be kept apart, because the service's response to an input is itself random: invoking the same input again can succeed where it failed.
 
-**Superpopulation claim.** The sampling is treated as a *sample* from a conceptual population — the adversarial-probe distribution, the production input distribution, the red-team-corpus generator, or whichever distribution the criterion intends $p_c$ to characterise. Under a superpopulation claim, the binomial / hypergeometric inferential machinery is the right tool, and the decision rules, descriptive intervals, sample-size budgets, and feasibility gates all carry their usual interpretations. The claim is *only as strong as the argument that the sample is representative of the named superpopulation*; the methodology does not validate this argument, but it does require the named superpopulation to be recorded on the verdict (§1.4.7, `populationClaim` field of §8.2.1).
+- **Realised-run claim.** Under an exhaustive evaluation, each of the corpus's inputs invoked once, the run's rate $K_c/n_c$ is known exactly — "the service passed $K_c$ of these $n_c$ invocations" — and there is no uncertainty about that realised observation, so no binomial interval is reported for it.
+- **Corpus expected-performance claim.** With $\theta_j$ the probability that the service succeeds on input $j$, the corpus's expected rate is $\bar{\theta} = \frac{1}{J}\sum_{j=1}^{J} \theta_j$. One run is a single realisation of it and does not know it exactly: a claim about $\bar{\theta}$ keeps the response uncertainty, and in general needs repeated invocation of the inputs or a model that accounts for them (§8.2.1).
+
+The hypergeometric distribution describes sampling without replacement only when each item's outcome is fixed before sampling — a corpus of already-labelled items. When each sampled input triggers a new random response from the service, the count of successes is not hypergeometric, and partial evaluation of a corpus against a live service is not modelled by it. Any claim made *beyond* the corpus is a separate superpopulation claim and must be labelled as such.
+
+**Superpopulation claim.** The sampling is treated as a *sample* from a conceptual population — the adversarial-probe distribution, the production input distribution, the red-team-corpus generator, or whichever distribution the criterion intends $p_c$ to characterise. Under a superpopulation claim, the binomial inferential machinery is the right tool, and the decision rules, descriptive intervals, sample-size budgets, and feasibility gates all carry their usual interpretations. The claim is *only as strong as the argument that the sample is representative of the named superpopulation*; the methodology does not validate this argument, but it does require the named superpopulation to be recorded on the verdict (§1.4.7, `populationClaim` field of §8.2.1).
 
 **No-generalisation claim.** The trials are convenience evaluations — ad hoc, illustrative, exploratory. No inferential claim is made beyond the specific trials run. PASS / FAIL labels on a no-generalisation criterion describe the run, not a population, and the framework reports them as such. A no-generalisation claim is appropriate for early-stage development, smoke testing, and diagnostic probes; it is **not** appropriate for compliance, regression, or release-gating evidence.
 
@@ -2216,8 +2205,8 @@ The methodology does not impose a particular sequential procedure. Operators who
 - the monitoring horizon $H$;
 - the per-run nominal $\alpha$;
 - the horizon-level false-alarm bound under the stated reference
-  ($H \alpha$ as the dependence-robust statement; the independence
-  value as a contextual lower bound where it is computable);
+  ($H \alpha$ as the dependence-robust statement; the value under an
+  independence model, shown for context, where it is computable);
 - the reference-state epoch the verdict belongs to.
 
 A run-level PASS/FAIL stripped of these annotations is not a horizon-level claim; reporting it as one inverts the relationship between per-run and horizon-level calibration.
@@ -2235,13 +2224,14 @@ Every formula below is tagged with its **epistemic status**:
 - **Heuristic** — a rule of thumb, useful operationally, not a confidence statement.
 - **Non-parametric / distribution-free** — exact for any continuous $F$ under i.i.d. sampling.
 
-### The three decision rules
+### The four decision rules
 
 | Rule | Decides | Binding artefact | Epistemic status | Section |
 |---|---|---|---|---|
 | `regression/fisher` v1 | Empirical regression | Integer cutoff $c$; PASS iff $K_t \ge c$ | Exact conditional test; unconditionally conservative ($A(p) \le \alpha$) | §3.4 |
 | `compliance/exact-binomial` v1 | Normative compliance | $k_{\min}$; PASS iff $K \ge k_{\min}$ | Exact | §3.6 |
 | `latency/precedence` v1 | Latency regression | Rank $k$, or `saturated` (INCONCLUSIVE) | Exact under continuity; conservative under ties | §12.4.2 |
+| `latency/compliance-exact-binomial` v1 | An explicit latency requirement | $y_{\min}$; PASS iff $Y \ge y_{\min}$, $Y$ the successful latencies at or below $\tau$ | Exact | §12.3.4 |
 
 ### Estimation *(Exact — MLE)*
 
@@ -2257,7 +2247,13 @@ PASS iff $K_t \ge c$. False-degradation-signal probability, baseline and test bo
 
 ### Regression Power *(Exact)*
 
-$$\text{Power} = \sum_{k_b} P_{p_b}(K_b = k_b)\, P_{p_b - \delta}\bigl(K_t < c(k_b)\bigr)$$
+Design power, baseline and test both yet to be drawn, at the design alternative rate $p_{\mathrm{design}} = p_b - \delta$:
+
+$$\text{Power}_{\text{design}} = \sum_{k_b} P_{p_b}(K_b = k_b)\, P_{p_{\mathrm{design}}}\bigl(K_t < c(k_b)\bigr)$$
+
+Resolved-test power, the baseline observed at $K_b$ and its cutoff fixed:
+
+$$\text{Power}_{\text{resolved}} = P_{p_{\mathrm{design}}}\bigl(K_t < c(K_b)\bigr)$$
 
 ### Compliance Decision *(Exact — `compliance/exact-binomial`)*
 
@@ -2272,6 +2268,8 @@ $$N_{\min} = \left\lceil \frac{\log\alpha}{\log p_{\mathrm{req}}} \right\rceil$$
 ### Compliance Power and Sizing *(Exact)*
 
 $$P(\text{PASS} \mid p_1) = P_{p_1}\bigl(K \ge k_{\min}(n)\bigr), \qquad n_{\text{req}} = \text{the smallest } n \text{ from which this stays} \ge 1-\beta$$
+
+$p_1$ is the declared alternative rate, else $p_{\mathrm{req}} + \delta$, else the midway rate $(p_{\mathrm{req}} + 1)/2$; the report names which.
 
 ### Wald Confidence Interval (two-sided) *(Asymptotic — pedagogical, not used by the methodology)*
 
@@ -2301,7 +2299,11 @@ $$Q(p) = t_{(\lceil p \cdot n_s \rceil)}, \quad t_{(1)} \leq \cdots \leq t_{(n_s
 
 $$r = \lceil P\, n_t / 100 \rceil, \qquad \text{breach}(k) = \sum_{j=0}^{r-1} \binom{n_t}{j} \frac{B(k + j,\; n_b - k + 1 + n_t - j)}{B(k,\; n_b - k + 1)}$$
 
-The rank is the smallest $k \le n_b$ with $\text{breach}(k) \le \alpha$, and the threshold is $t_{(k)}$, an observed integer-millisecond value. If no $k \le n_b$ achieves $\alpha$, the result is INCONCLUSIVE with `saturated: true` (§12.4.2).
+The rank is the smallest $k \le n_b$ with $\text{breach}(k) \le \alpha$, and the threshold is $t_{(k)}$, an observed integer-millisecond value. If no $k \le n_b$ achieves $\alpha$ for the actual number of successful latencies, the result is INCONCLUSIVE with `saturated: true` (§12.4.2).
+
+### Explicit Latency Requirement *(Exact — `latency/compliance-exact-binomial`)*
+
+$$Y = \#\{i : t_i \le \tau\}, \qquad y_{\min} = \min\bigl\{y : P_{p}(Y \ge y) \le \alpha\bigr\}, \quad Y \sim \text{Bin}(n_s, p), \qquad \text{PASS iff } Y \ge y_{\min}$$
 
 ---
 
@@ -2318,7 +2320,7 @@ Transparent Statistics Mode exposes the complete statistical reasoning behind ev
 
 ### 10.2 Output Structure
 
-Under criterion decomposition (§1.4), a contract's verdict is a structured tuple over its per-criterion verdicts. Transparent Statistics Mode exposes the contract-level composite at the top, followed by a per-criterion analysis block for each criterion declared on the contract.
+Under criterion decomposition (§1.4), a run's verdict is a structured tuple over the per-criterion verdicts of its contract, all over the run's one sampling. Transparent Statistics Mode exposes the contract-level composite at the top, followed by a per-criterion analysis block for each criterion declared on the contract. A view across several tests over different samplings — every test of one service, say — is a reporting matter (§1.4.7): it presents each test's report beside its sampling and forms no composite verdict of its own.
 
 **Contract-level header.**
 
@@ -2335,7 +2337,7 @@ Under criterion decomposition (§1.4), a contract's verdict is a structured tupl
 | **Hypothesis Test**       | $H_0$, $H_1$, test type, $\alpha_c$                                                                                                                                                                                                                 | Mode declaration ("observational"); no $H_0$/$H_1$                                                                                                |
 | **Observed Data**         | Denominator: $n_c = N$ (the sampling size, §1.4.5a), $K_c$, $\hat{p}_c = K_c/n_c$; diagnostics $n_{c,\mathrm{evaluable}}$ and $r_{c,\mathrm{obs}} = n_{c,\mathrm{evaluable}}/n_c$ (the transform/no-value share), and the FAIL breakdown by reason. | Denominator: $n_c = N$, $K_c$, failures observed; diagnostics $n_{c,\mathrm{evaluable}}$, $r_{c,\mathrm{obs}}$, and the FAIL breakdown by reason. |
 | **Threshold Reference**   | Threshold origin and derivation (see below)                                                                                                                                                                                                         | *(omitted — no threshold)*                                                                                                                        |
-| **Statistical Inference** | Decision rule and version, SE, descriptive CI, integer artefact ($c$ or $k_{\min}$), displayed cutoff $c/n_t$, calibration statement, informational achieved size, power or minimum detectable degradation, p-value (per §7.1 alignment rule) | *(omitted — verdict is deterministic on the observation)* |
+| **Statistical Inference** | Decision rule and version, SE, descriptive CI, integer artefact ($c$ or $k_{\min}$), displayed cutoff $c/n_t$, calibration statement, informational size at the assumed common rate (regression) or false-compliance probability (compliance), design power and resolved-test power named apart (regression) or the sizing alternative and its kind (compliance), minimum detectable degradation, p-value (per §7.1 alignment rule) | *(omitted — verdict is deterministic on the observation)* |
 | **Verdict**               | Three strands: statistical / observed-rate / operational                                                                                                                                                                                            | Zero-failure assertion with explicit "no population claim" caveat                                                                                 |
 
 The denominator $n_c$ is the size $N$ of the sampling (§1.4.5a): every trial counts, a trial with no testable value being a FAIL (reason: transform/no-value), never excluded.
@@ -2359,7 +2361,7 @@ Observational criteria do not carry the three strands; their verdict is determin
 
 | Field                    | Content                                                                                                                                                                                                   | Purpose                                                                                                                                                             |
 |--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `referenceDataVersion`   | The mavai-R fixture release tag consumed at runtime, e.g. `v0.7.0`.                                                                                                                                       | Identifies the conformance oracle the report was checked against.                                                                                                   |
+| `referenceDataVersion`   | The mavai-R fixture release tag consumed at runtime, e.g. `v0.11.0`.                                                                                                                                       | Identifies the conformance oracle the report was checked against.                                                                                                   |
 | `quantileSource` | The implementation source of the normal quantile $z_{1-\alpha}$ used in the descriptive Wilson interval — e.g. `R::qnorm`, `Apache Commons Math NormalDistribution`, `statrs::distribution::Normal::inverse_cdf`. | Different libraries can disagree in the last few ulp of $z_{1-\alpha}$; this names the source for cross-language conformance reproduction. |
 | `intervalImplementation` | The Wilson formula variant in use: `closed-form score-inversion` or `iterative` with the solver tolerance.                                                                                                | The closed-form Wilson interval is exact-arithmetic up to floating-point; an iterative variant introduces a tolerance that must be disclosed.                       |
 | `sortStable`             | Boolean — whether the sort algorithm used on the latency stream is stable.                                                                                                                                | Pairs with `tiePolicy`; see §12.8. Stability does not change percentile *values* but does change which trial-record is bound to a given rank when ties are present. |
@@ -2367,29 +2369,33 @@ Observational criteria do not carry the three strands; their verdict is determin
 
 These fields are emitted whether or not the contract under test exercises the latency dimension; the latency-specific fields (`sortStable`, `tiePolicy`) carry their declared values even on pass-rate-only contracts so that the report's reproducibility shape does not depend on the contract's content. The reproducibility block is part of the audit trail, not a verdict input — it carries no PASS/FAIL semantics of its own. The forward-looking calibration fixtures of §10.6 are checked against the same `referenceDataVersion`.
 
-### 10.3 Example output: a multi-criteria contract
+### 10.3 Example output: the consult-advice tests
 
-The consult-advice contract of §1.4.8 declares three criteria of differing origins — one EMPIRICAL inferential, one observational, one SLO inferential — and one test run exercises them, each criterion over its own sampling. This is the one canonical consult-advice example; §1.4.8 and §1.5.6 describe the same run, and every number below is generated by the mavai-R oracle (`scripts/companion_numbers.R`). The transparent-statistics output shows the contract-level composite first, then one analysis block per criterion. Inferential blocks carry the three-strand verdict; the observational block reports a single deterministic assertion.
+The consult-advice requirements of §1.4.8 are evidenced over three input populations, so they are exercised by three tests, each bound to its own contract and running over one sampling: an EMPIRICAL inferential criterion over production prompts, an SLO inferential criterion over inputs chosen to elicit clinical terminology, and an observational criterion over adversarial probes. This is the one canonical consult-advice example; §1.4.8 and §1.5.6 describe the same runs, and every number below is generated by the mavai-R oracle (`scripts/companion_numbers.R`). The output opens with a reporting view that lists the three verdicts, then gives each test's report: its composite verdict and envelope, then one analysis block per criterion. Inferential blocks carry the three-strand verdict; the observational block reports a single deterministic assertion.
 
 ```
 ══════════════════════════════════════════════════════════════════════════════
-STATISTICAL ANALYSIS: ConsultAdviceContract
+CONSULT-ADVICE: REPORTING VIEW ACROSS THREE TESTS
+  (each test is one run over one sampling; this view is a summary of
+   three verdicts, not a verdict of one run)
+══════════════════════════════════════════════════════════════════════════════
+
+  Test 1  consult-advice@5                  V_prod        PASS
+  Test 2  consult-advice-readability@1      V_complexity  FAIL
+  Test 3  consult-advice-self-harm-probe@1  V_probe       PASS
+
+══════════════════════════════════════════════════════════════════════════════
+TEST 1 of 3: consult-advice@5
 ══════════════════════════════════════════════════════════════════════════════
 
 COMPOSITE VERDICT
-  Contract verdict:           FAIL  (triggered by C_layperson-readable)
-  Per-criterion:              C_well-formed           PASS  (inferential, EMPIRICAL)
-                              C_no-self-harm          PASS  (observational)
-                              C_layperson-readable    FAIL  (inferential, SLO)
-  Type-I envelopes (by procedure direction, §1.4.6):
-    False-degradation-signal envelope:
-      regression criteria     ∑ α_c  ≤  0.05    (C_well-formed)
-    False-compliance envelope:
-      compliance criteria     ∑ α_c  ≤  0.001   (C_layperson-readable)
-    (Observational criteria — C_no-self-harm — contribute to neither.)
+  Test verdict:               PASS
+  Sampling:                   V_prod v5, 1000 samples
+  Type-I envelope (§1.4.6):
+    False-degradation-signal  ∑ α_c  ≤  0.05    (C_well-formed)
 
 ──────────────────────────────────────────────────────────────────────────────
-CRITERION 1 of 3: C_well-formed  (inferential, EMPIRICAL)
+CRITERION 1 of 1: C_well-formed  (inferential, EMPIRICAL)
 ──────────────────────────────────────────────────────────────────────────────
 
 HYPOTHESIS TEST
@@ -2425,7 +2431,9 @@ STATISTICAL INFERENCE
     value:              ≈ 0.623
   Calibration:          false-degradation-signal probability ≤ 0.05, with the
                         baseline and the test both random under an unchanged p
-  Achieved size:        A(0.951) ≈ 0.0404   (informational, §3.4)
+  Size at the assumed common rate:
+                        A(0.951) ≈ 0.0404   (informational, §3.4: the
+                        procedure's size were the common rate 0.951)
   Diagnostic only:      P_{p = 0.951}(K_t < 933) ≈ 0.0048   (baseline held at its
                         observed rate; not the procedure's false-alarm probability)
 
@@ -2440,43 +2448,27 @@ VERDICT
                         statistical verdict agree.
 
   Operational caution:  CHECK POWER
-                        With the baseline at 0.951, the test detects a drop
-                        to 0.925 with power ≈ 0.753, and reaches 80% power
-                        at a drop of 0.0278 (to ≈ 0.923). Watch for downward
-                        drift over the baseline's validity window.
+                        At the design alternative rate 0.925:
+                          design power         ≈ 0.753  (baseline and test
+                                                         both redrawn)
+                          resolved-test power  ≈ 0.815  (this baseline's
+                                                         cutoff, c = 933)
+                        The design reaches 80% power at a drop of 0.0278
+                        (to ≈ 0.923). Watch for downward drift over the
+                        baseline's validity window.
+
+══════════════════════════════════════════════════════════════════════════════
+TEST 2 of 3: consult-advice-readability@1
+══════════════════════════════════════════════════════════════════════════════
+
+COMPOSITE VERDICT
+  Test verdict:               FAIL  (triggered by C_layperson-readable)
+  Sampling:                   V_complexity v2, 800 samples
+  Type-I envelope (§1.4.6):
+    False-compliance          ∑ α_c  ≤  0.001   (C_layperson-readable)
 
 ──────────────────────────────────────────────────────────────────────────────
-CRITERION 2 of 3: C_no-self-harm  (observational)
-──────────────────────────────────────────────────────────────────────────────
-
-HYPOTHESIS TEST
-  Mode:        Observational  (no threshold, no α, no inferential claim)
-  Question:    Was any failure of C_no-self-harm observed in the run?
-  Sampling:    V_probe  v3  (adversarial self-harm probes,
-                             independent of guardrail's training data,
-                             per mavai-safety-taxonomy v2)
-
-OBSERVED DATA
-  Attempted trials:           200
-  Evaluable trials:           200
-  Observation rate (r_obs):   1.000
-  Effective denominator (n_c): 200
-  Successes (K_c):            200
-  Failures observed:          0
-
-VERDICT
-  Result:      PASS  (observational)
-  Statement:   No failure of C_no-self-harm was observed across
-               200 probe trials drawn from V_probe v3.
-
-  No population claim: This verdict makes no inferential claim about the
-                       population rate of self-harm responses. A population-
-                       level claim would need a separate inferential criterion
-                       at adequate sample size, or architectural discharge
-                       (§1.4.5b).
-
-──────────────────────────────────────────────────────────────────────────────
-CRITERION 3 of 3: C_layperson-readable  (inferential, SLO)
+CRITERION 1 of 1: C_layperson-readable  (inferential, SLO)
 ──────────────────────────────────────────────────────────────────────────────
 
 HYPOTHESIS TEST
@@ -2530,21 +2522,60 @@ VERDICT
   Operational caution:  INCREASE SAMPLE OR REVISIT α
                         At α_c = 0.001 the requirement is demanding;
                         to demonstrate compliance with power 0.80 for
-                        a service truly at 0.985, the test needs
-                        n_c = 11250 (§5.5). Alternatively re-examine
+                        a service truly at 0.985 (alternative: margin
+                        0.005), the test needs n_c = 11250 (§5.5). Alternatively re-examine
                         the contract's choice of α against the
                         consequence the SLO defends against (§1.4.6).
+
+══════════════════════════════════════════════════════════════════════════════
+TEST 3 of 3: consult-advice-self-harm-probe@1
+══════════════════════════════════════════════════════════════════════════════
+
+COMPOSITE VERDICT
+  Test verdict:               PASS
+  Sampling:                   V_probe v3, 200 samples
+  Type-I envelopes:          none  (observational criterion only)
+
+──────────────────────────────────────────────────────────────────────────────
+CRITERION 1 of 1: C_no-self-harm  (observational)
+──────────────────────────────────────────────────────────────────────────────
+
+HYPOTHESIS TEST
+  Mode:        Observational  (no threshold, no α, no inferential claim)
+  Question:    Was any failure of C_no-self-harm observed in the run?
+  Sampling:    V_probe  v3  (adversarial self-harm probes,
+                             independent of guardrail's training data,
+                             per mavai-safety-taxonomy v2)
+
+OBSERVED DATA
+  Attempted trials:           200
+  Evaluable trials:           200
+  Observation rate (r_obs):   1.000
+  Effective denominator (n_c): 200
+  Successes (K_c):            200
+  Failures observed:          0
+
+VERDICT
+  Result:      PASS  (observational)
+  Statement:   No failure of C_no-self-harm was observed across
+               200 probe trials drawn from V_probe v3.
+
+  No population claim: This verdict makes no inferential claim about the
+                       population rate of self-harm responses. It is evidence
+                       about the service, generator and guardrail together,
+                       under adversarial input, not about the guardrail's
+                       sensitivity on its own (§1.4.5b).
 
 ══════════════════════════════════════════════════════════════════════════════
 ```
 
 **Reading the example.**
 
-- The composite verdict is FAIL, triggered by C_layperson-readable. The two passing criteria are reported in full alongside; the methodology does not collapse the contract to a single FAIL label without disclosing per-criterion evidence.
-- The Type-I envelopes are disclosed properties of the composite, not control targets (§1.4.6), and are split by procedure direction. The false-degradation-signal envelope is $\sum_{c \in \text{regression}} \alpha_c \leq 0.05$ (C_well-formed); the false-compliance envelope is $\sum_{c \in \text{compliance}} \alpha_c \leq 0.001$ (C_layperson-readable). The observational criterion contributes to neither.
+- Each test's verdict is the composite of its own run; the view across the three is a summary for the reader and pools nothing. The readability test FAILs; the two passing tests are reported in full alongside, and the methodology does not collapse the three to a single label without disclosing each test's evidence.
+- The Type-I envelopes are disclosed properties of each test's composite, not control targets (§1.4.6), and are labelled by procedure direction: $\alpha \leq 0.05$ against a false degradation signal in the structural test (C_well-formed) and $\alpha \leq 0.001$ against false compliance in the readability test (C_layperson-readable). The observational criterion contributes to neither.
 - C_well-formed and C_layperson-readable demonstrate the two **Threshold Reference** shapes: EMPIRICAL (baseline counts, covariate-match disclosure and the Fisher cutoff) versus SLO (contract-referenced, normative, with $k_{\min}$). The blocks share otherwise-identical structure; only the threshold's provenance and the decision rule differ.
-- C_well-formed's calibration line names its random experiment, and the only probability computed at the baseline's observed rate is labelled as a diagnostic. The operational caution states the power the design has, not the power it was hoped to have: the 1.4.1 version of this example claimed power 0.80 at 0.925, which its own rule did not have.
-- C_layperson-readable's verdict shows the three strands disagreeing — statistical FAIL, observed-rate above threshold. The disclosure is the point of the three-strand format: an overloaded "FAIL (close to threshold)" label would lose the information that the point estimate sits above the SLO but the evidence at α = 0.001 does not demonstrate compliance.
+- C_well-formed's calibration line names its random experiment; the plug-in tail, which holds the baseline fixed at its observed rate, is labelled as a diagnostic, and the size at the assumed common rate is labelled as the procedure's size under that assumption. The operational caution names two powers apart at the design alternative rate 0.925: the design power, 0.753, averages over a baseline yet to be drawn, and the resolved-test power, 0.815, is the power of this test, whose cutoff the observed baseline fixed at 933. For a test consuming an already observed baseline the second is usually the more actionable. The 1.4.1 version of this example claimed power 0.80 at 0.925 from a rule that did not have it.
+- C_layperson-readable's verdict shows the three strands disagreeing — statistical FAIL, observed-rate above threshold. The disclosure is the point of the three-strand format: an overloaded "FAIL (close to threshold)" label would lose the information that the point estimate sits above the SLO but the evidence at α = 0.001 does not demonstrate compliance. Its sizing caution names the alternative the power refers to.
 - C_no-self-harm omits Threshold Reference and Statistical Inference entirely; its verdict is the zero-failure assertion of §1.4.5, with the explicit non-claim about population rates that the methodology requires of observational verdicts.
 
 ### 10.4 Mathematical Notation
@@ -2579,11 +2610,11 @@ The published mavai-R fixtures (`inst/cases/*.json`, fetched by the frameworks' 
 
 Arithmetic agreement is necessary, but it does not by itself show that the error rates a procedure *claims* are the ones it *achieves*. For that, mavai-R publishes, with each release from fixtures 0.11.0, a separate **calibration certification** asset, never inside the case files. It contains:
 
-- **Regression calibration.** For `regression/fisher`, the worst-case exact unconditional false-degradation-signal probability $A(p)$ over a fine grid of $p$ from 0.50 to 0.99999, for 1,922 configurations of baseline and test size ($n_b$ from 10 to 10,000, $n_t \le n_b$, $n_t/n_b \ge 0.01$) at $\alpha$ = 0.001, 0.01, 0.05 and 0.10, and the same beyond the certified range at baselines of 20,000 to 100,000; exact power at drops of 0.01 to 0.10; and, as disclosure, the power of the beta-binomial predictive rule beside it. The certification fails if any size exceeds $\alpha$.
+- **Regression calibration.** For `regression/fisher`, the exact unconditional false-degradation-signal probability $A(p)$ at each point of a fine grid of $p$ from 0.50 to 0.99999, and its largest value on the grid, for 1,922 configurations of baseline and test size ($n_b$ from 10 to 10,000, $n_t \le n_b$, $n_t/n_b \ge 0.01$) at $\alpha$ = 0.001, 0.01, 0.05 and 0.10, and the same beyond the certified range at baselines of 20,000 to 100,000; exact power at drops of 0.01 to 0.10; and, as disclosure, the power of the beta-binomial predictive rule beside it. The certification fails if any value on the grid exceeds $\alpha$. The grid gives exact values at its points; the guarantee at every $p$ comes from the theorem of §3.4, and the grid is evidence that the reference implementation realises it.
 - **Latency calibration.** For `latency/precedence`, the rank, the exact breach probability at it and one rank below, and saturation, for baselines of 10 to 2,000 latencies, tests no larger than the baseline, the four supported percentiles and four $\alpha$ values.
-- **Compliance calibration.** For `compliance/exact-binomial`, the false-compliance probability at $p = p_{\mathrm{req}}$ for nine requirements and sizes up to 20,000, and the exact sizing table.
+- **Compliance calibration.** For `compliance/exact-binomial`, the false-compliance probability at $p = p_{\mathrm{req}}$ for nine requirements and sizes up to 20,000, and the exact sizing table. `latency/compliance-exact-binomial` applies the same test to the within-threshold count, so the same table certifies it.
 
-Because every rule is exact, a framework whose integer decision artefacts agree with the decision-rule fixtures computes the same decisions as the certified rule, and inherits its calibration: the certification is a property of the rule, published so that it can be audited, not a second computation each framework must repeat. A framework that reports calibration must nevertheless say which certification asset it relies on.
+Calibration is established at three levels, which are kept apart. The theorems of §3.4, §3.6 and §12.4.2 establish the rules' statistical properties. The mavai-R certification shows that the reference implementation realises them, over the published surfaces and boundary cases. A downstream framework may claim conformance to a rule's calibration provided it implements the named algorithm and passes the prescribed decision-rule fixtures, their exact-boundary cases included; agreement on a finite set of fixtures is evidence that it implements the same rule, not a proof that it does so for every input, and its own tests and review of the implementation carry the rest of that argument. A framework that reports calibration must say which certification asset it relies on.
 
 **Composite envelopes.** The §1.4.6 envelopes are union bounds over per-criterion sizes that are each at most $\alpha_c$; they hold under arbitrary dependence and need no separate calibration fixture.
 
@@ -2611,11 +2642,12 @@ A conformant implementation of this companion is one for which the following hol
 
 - Compliance and regression verdicts are kept separate, and each verdict carries the procedure type and the versioned decision rule alongside the null, the alternative, and the decision artefact (§3.2, §7.1).
 - Decisions are made on integer artefacts — the Fisher cutoff $c$ (regression) or $k_{\min}$ (compliance) — not on rounded displayed rates (§3.4, §3.6).
-- Every error-rate statement names the random experiment it calibrates; a probability computed at the baseline's observed rate appears only as a labelled diagnostic (§3.4, §7.1, §7.2).
-- A regression report states power against the declared margin, or the minimum detectable degradation at 80% power where none is declared (§5.6).
+- Every error-rate statement names the random experiment it calibrates; a probability computed with the baseline held at its observed rate appears only as a labelled diagnostic, and the size at the assumed common rate is labelled as such (§3.4, §7.1, §7.2).
+- A regression report states the design power and the resolved-test power at the design alternative rate, named apart, or the minimum detectable degradation at 80% power where no alternative is declared (§5.3, §5.6); a compliance sizing names its alternative and its kind (§5.5).
 - Configurations are refused before any sample runs with the named codes `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE` (the latter under VERIFICATION only); a configuration with an invalid part is refused whole (§5.7.1).
 - When a p-value is reported, it carries its method, null, alternative, and tail, and matches the orientation of the decision rule that produced the verdict (§7.1, §10.2).
-- A latency threshold for which no rank achieves $\alpha$ is reported as INCONCLUSIVE with `saturated: true`, never as a threshold (§12.4.2).
+- A latency threshold for which no rank achieves $\alpha$ at the actual number of successful latencies is reported as INCONCLUSIVE with `saturated: true`, never as a threshold; before the run the same search gives only a warning and a planning figure (§12.4.2, §12.5.3).
+- An enforced explicit latency requirement is decided by `latency/compliance-exact-binomial`; the comparison of the observed percentile with the threshold is reported only as an advisory figure (§12.3).
 - For clustered or repeated-prompt designs, the report either applies an approved estimator matched to the declared `targetEstimand`, or demotes the claim to a no-generalisation / finite-corpus claim, or returns INCONCLUSIVE for population-level VERIFICATION (§8.2.1, §8.4.6).
 - A criterion's denominator is **the full sampling** $N$ (§1.4.5a): a trial is a success only on a clean PASS; a transform/no-value failure is a counted FAIL (carrying that reason), not an exclusion. There is no per-criterion denominator policy and no `CONDITIONAL`/`MARGINAL` enum; no input is filtered out, since every sample is seen by every criterion.
 - Availability, when wanted as a distinct metric, is its own criterion; it does not gate or alter another criterion's denominator (§1.4.5a, §10.2).
@@ -2649,7 +2681,7 @@ Two points are worth naming plainly.
 
 ## 12. Latency: Empirical Percentile Analysis
 
-> **Epistemic status of this section.** The percentile estimator (§12.2.2) is an exact definition, and the precedence rank that decides latency regression (§12.4.2) is an **exact distribution-free result** for i.i.d. samples from a continuous latency distribution: with no degradation, the probability that the test's nearest-rank percentile exceeds the threshold is at most $\alpha$. The distinction the section keeps is between that *predictive* threshold for a future test's percentile and an upper confidence bound on the baseline's true quantile — a valid theorem, but not a calibrated test threshold (§12.4.3). The feasibility gate (§12.5.3) and the enforcement-mode split (§12.6) are **design policies**, not theorems.
+> **Epistemic status of this section.** The percentile estimator (§12.2.2) is an exact definition, and the precedence rank that decides latency regression (§12.4.2) is an **exact distribution-free result** for i.i.d. samples from a continuous latency distribution: with no degradation, the probability that the test's nearest-rank percentile exceeds the threshold is at most $\alpha$. The distinction the section keeps is between that *predictive* threshold for a future test's percentile and an upper confidence bound on the baseline's true quantile — a valid theorem, but not a calibrated test threshold (§12.4.3). An enforced explicit requirement is decided by the exact one-sided binomial test on the count of latencies within the threshold (§12.3.4), also an **exact result**. The feasibility gate (§12.5.3) and the enforcement-mode split (§12.6) are **design policies**, not theorems.
 
 ### 12.1 The Statistical Challenge of Latency
 
@@ -2722,17 +2754,17 @@ The mean and the percentiles (including the maximum, which is $Q(1.0)$) characte
 
 A latency assertion specifies a set of percentile constraints:
 
-$$\mathcal{C} = \{ (p_j, \tau_j) : j = 1, \ldots, m \}$$
+$$\mathcal{C} = \{ (p_j, \tau_j, \text{mode}_j) : j = 1, \ldots, m \}$$
 
-where $p_j$ is a percentile level (one of $\{0.50, 0.90, 0.95, 0.99\}$) and $\tau_j$ is the corresponding threshold in milliseconds.
+where $p_j$ is a percentile level (one of $\{0.50, 0.90, 0.95, 0.99\}$), $\tau_j$ is the corresponding threshold in milliseconds, explicit or derived from a baseline (§12.3.3), and $\text{mode}_j$ is **enforced** or **advisory** (§12.6).
 
-For each constraint, the assertion evaluates:
+An **enforced** constraint is decided by the rule for its threshold source: an explicit threshold by `latency/compliance-exact-binomial` (§12.3.4), a baseline-derived threshold by `latency/precedence` (§12.4.2). The latency assertion passes if and only if every enforced constraint passes:
 
-$$\text{PASS}_j \iff Q(p_j) \leq \tau_j$$
+$$\text{PASS}_{\text{latency}} = \bigwedge_{j \,\in\, \text{enforced}} \text{PASS}_j$$
 
-The overall latency assertion passes if and only if all individual constraints pass:
+An **advisory** constraint compares the observed percentile with its threshold, $Q(p_j) \le \tau_j$, and reports a warning when it does not hold. It never enters the conjunction and never changes the verdict.
 
-$$\text{PASS}_{\text{latency}} = \bigwedge_{j=1}^{m} \text{PASS}_j$$
+**Envelope.** Each enforced constraint is decided at its own level $\alpha_j$. As for functional criteria (§1.4.6), the family of enforced constraints discloses a union-bound envelope, split by direction: the probability of one or more false latency degradation signals is at most $\sum_{j} \alpha_j$ over the enforced baseline-derived constraints, and the probability of one or more false latency compliance claims is at most $\sum_{j} \alpha_j$ over the enforced explicit constraints. Both bounds hold under arbitrary dependence among the percentiles, which, computed from the same latencies, are strongly dependent. Advisory constraints contribute to neither.
 
 #### 12.3.2 Combined Verdict
 
@@ -2740,18 +2772,40 @@ Pass-rate and latency are **distinct** quality dimensions (orthogonal as concern
 
 $$\text{PASS}_{\text{test}} = \text{PASS}_{\text{rate}} \wedge \text{PASS}_{\text{latency}}$$
 
-This reflects the operational reality that a service must be both *correct* and *responsive*. A payment API that succeeds 99.5% of the time but takes 30 seconds for 1% of requests fails its SLA just as surely as one that returns incorrect results.
+with $\text{PASS}_{\text{latency}}$ over the enforced constraints only. This reflects the operational reality that a service must be both *correct* and *responsive*. A payment API that succeeds 99.5% of the time but takes 30 seconds for 1% of requests fails its SLA just as surely as one that returns incorrect results.
 
 #### 12.3.3 Threshold Sources
 
 Latency thresholds can originate from two sources:
 
-| Source               | Symbol                     | How specified               | Statistical question                                |
-|----------------------|----------------------------|-----------------------------|-----------------------------------------------------|
-| **Explicit**         | $\tau_j$ (given)           | Annotation or configuration | "Does the system meet the declared latency target?" |
-| **Baseline-derived** | $\hat{\tau}_j$ (estimated) | Automatic from spec         | "Has latency degraded from the measured baseline?"  |
+| Source               | Symbol                     | How specified               | Statistical question                                | Rule when enforced |
+|----------------------|----------------------------|-----------------------------|-----------------------------------------------------|--------------------|
+| **Explicit**         | $\tau_j$ (given)           | Annotation or configuration | "Does the system meet the declared latency target?" | `latency/compliance-exact-binomial` (§12.3.4) |
+| **Baseline-derived** | $\hat{\tau}_j$ (estimated) | Automatic from spec         | "Has latency degraded from the measured baseline?"  | `latency/precedence` (§12.4.2) |
 
-This mirrors the compliance vs. regression dichotomy for pass-rate thresholds (Section 3). Explicit thresholds are normative claims; baseline-derived thresholds are derived by the precedence rank of §12.4.2, calibrated for the test that will run.
+This mirrors the compliance vs. regression dichotomy for pass-rate thresholds (Section 3). Explicit thresholds are normative claims, decided like a pass-rate requirement; baseline-derived thresholds are derived by the precedence rank of §12.4.2, calibrated for the test that will run.
+
+#### 12.3.4 Explicit Requirements: `latency/compliance-exact-binomial`
+
+An explicit requirement "the $p$-th percentile of successful latencies is at most $\tau$" is the statement $F(\tau) \ge p$, with $F$ the distribution function of a successful latency. Comparing the observed percentile with $\tau$ does not support that claim at any stated level: $Q(p) \le \tau$ holds exactly when at least $\lceil p\, n_s \rceil$ of the $n_s$ latencies are at or below $\tau$, and at the boundary $F(\tau) = p$ that happens often. At p95 over 100 latencies it happens with probability $P(\text{Bin}(100, 0.95) \ge 95) = 0.616$.
+
+The methodology decides an enforced explicit requirement with `latency/compliance-exact-binomial`, version 1: the exact one-sided binomial test of §3.6, unchanged, applied to the count of latencies within the threshold. With
+
+$$Y = \#\{i : t_i \le \tau\}, \qquad H_0: F(\tau) \le p, \qquad H_1: F(\tau) > p,$$
+
+the smallest passing count is
+
+$$y_{\min} \;=\; \min\bigl\{y : P_{p}(Y \ge y) \le \alpha\bigr\}, \qquad Y \sim \text{Bin}(n_s, p),$$
+
+and the decision is PASS iff $Y \ge y_{\min}$. A latency equal to $\tau$ counts as within it. The false-compliance probability is at most $\alpha$, exactly as for a pass rate, and the exact-boundary convention of §10.6 applies. The Clopper–Pearson lower bound on $F(\tau)$ may be reported beside the verdict.
+
+**Example** (p95 $\le$ 500 ms, $\alpha = 0.05$, $n_s = 100$ successful latencies): $y_{\min} = 99$. If 96 of the 100 latencies are at or below 500 ms, the observed p95 is within the threshold — the advisory comparison passes — but compliance is not demonstrated, and the enforced verdict is FAIL.
+
+**How many latencies.** The number of successful latencies $n_s$ is known only after the run. PASS is possible only if $n_s \ge \lceil \log\alpha / \log p \rceil$ — 59 at p95 and $\alpha = 0.05$, 299 at p99. A VERIFICATION test whose planned samples are below that minimum is refused before it runs (`COMPLIANCE_INFEASIBLE`), since no count could pass even if every sample succeeded. A run whose actual number of successful latencies falls below it is INCONCLUSIVE: too few latencies to decide.
+
+**Advisory and SMOKE use.** The raw comparison $Q(p) \le \tau$ stays available for advisory constraints and for SMOKE-intent runs, and is labelled as a raw percentile comparison wherever it appears. It supports no compliance claim.
+
+**Epistemic status.** Exact result: $Y$ is binomial with success probability $F(\tau)$ for i.i.d. successful latencies, whatever their distribution.
 
 ### 12.4 Threshold Derivation from Baselines
 
@@ -2783,14 +2837,14 @@ It follows from the Beta distribution of the order statistic's coverage, $F(t_{(
 
 **The rank.** $\text{breach}(k)$ decreases as $k$ grows. The operative rank is the smallest $k \le n_b$ with $\text{breach}(k) \le \alpha$, and the threshold is $\tau = t_{(k)}$, an observed latency in integer milliseconds. The test PASSes iff its nearest-rank percentile is at most $\tau$; a test percentile equal to the threshold is not a breach.
 
-**Existence.** If no $k \le n_b$ achieves $\text{breach}(k) \le \alpha$, the baseline cannot support a calibrated threshold for a test of this size at this percentile. The result is INCONCLUSIVE, reported with `saturated: true` and no threshold; no rank is clamped to $n_b$ to manufacture one. Because the search needs only $n_b$, $n_t$, the percentile and $\alpha$, it is run before the test as the existence gate (§12.5.2.1, §12.5.3), with the test's expected number of successful samples, and again on the actual count after the run.
+**Existence.** If no $k \le n_b$ achieves $\text{breach}(k) \le \alpha$, the baseline cannot support a calibrated threshold for a test of this size at this percentile. The result is INCONCLUSIVE, reported with `saturated: true` and no threshold; no rank is clamped to $n_b$ to manufacture one. The decision is made after the run, with $n_t$ the actual number of successful latencies. Before the run the same search on the expected number gives a warning and a planning figure (§12.5.2.1, §12.5.3); the expected number is not a lower bound, so the pre-run result decides nothing.
 
 **Properties**:
 
 - **Integer-ms by construction**: $\tau$ is an observed latency. No rounding, no ceiling, no artefacts.
 - **Monotone in $\alpha$**: a smaller $\alpha$ gives a higher rank and hence a looser (more conservative) threshold.
 - **Depends on the test size**: a smaller test's percentile is more variable, so it needs a higher rank; the threshold is derived for the test that will run, as the regression cutoff is (§3.4).
-- **Calibrated**: with no degradation, the probability that the test breaches the threshold is $\text{breach}(k) \le \alpha$, exactly; the certification confirms it over 1,792 cells of baseline size, test size, percentile and $\alpha$ (§10.6).
+- **Calibrated**: with no degradation, the probability that the test breaches the threshold is $\text{breach}(k) \le \alpha$, exactly; the certification evaluates it at the rank over 1,792 cells of baseline size, test size, percentile and $\alpha$, as evidence that the reference implementation realises the result (§10.6).
 
 **Continuity and ties.** The exactness argument above assumes a continuous latency distribution. In practice, wall-clock latencies are reported in integer milliseconds, which induces ties; with ties, a test percentile equal to the threshold is not a breach, and the breach probability can only fall. The threshold stays valid and becomes **conservative**, not anti-conservative. Heavy ties — a mock service recording 0 ms for every call, say — are stated in the report. Practitioners who care about the tightness gap should report latencies at higher resolution (microseconds) before applying the construction.
 
@@ -2842,11 +2896,11 @@ The methodology enforces minimum sample counts for each percentile level based o
 
 These thresholds ensure that the percentile estimate is not degenerate (i.e., not simply the minimum or maximum of the sample). They are a **non-degeneracy gate** only — they do not by themselves guarantee that a calibrated threshold exists for the test that will run. That second condition is given by the existence gate below (§12.5.2.1).
 
-#### 12.5.2.1 Confidence-Bound Existence Gate
+#### 12.5.2.1 Existence of the Precedence Rank
 
-A non-degenerate empirical percentile is necessary but **not sufficient** for the precedence rank of §12.4.2 to exist. The existence condition is the one §12.4.2 states: some rank $k \le n_b$ must achieve $\text{breach}(k) \le \alpha$ for the test that will run. Because $\text{breach}(k)$ decreases in $k$, a rank exists exactly when the top rank does, $\text{breach}(n_b) \le \alpha$. The condition depends on the baseline size, the test size, the percentile and $\alpha$ together, and all four are known before the run, so the rank search is itself the pre-run gate (§12.5.3). At p95 and $\alpha = 0.05$, a baseline of 100 latencies cannot support a threshold for a test of 15, and a baseline of 1000 can (rank 998).
+A non-degenerate empirical percentile is necessary but **not sufficient** for the precedence rank of §12.4.2 to exist. The existence condition is the one §12.4.2 states: some rank $k \le n_b$ must achieve $\text{breach}(k) \le \alpha$ for the test that will run. Because $\text{breach}(k)$ decreases in $k$, a rank exists exactly when the top rank does, $\text{breach}(n_b) \le \alpha$. The condition depends on the baseline size, the test size, the percentile and $\alpha$ together. The test size that decides is the actual number of successful latencies, known after the run; before the run the search on the expected number serves planning (§12.5.3). At p95 and $\alpha = 0.05$, a baseline of 100 latencies cannot support a threshold for a test of 15, and a baseline of 1000 can (rank 998).
 
-The Wilks (1941) table of minimum sample sizes that stood here, $n_s \ge \lceil \log\alpha / \log p \rceil$, is withdrawn: it was the existence condition of the withdrawn confidence bound of §12.4.3, and it is neither necessary nor sufficient for the precedence rank.
+The Wilks (1941) table of minimum sample sizes that stood here, $n_s \ge \lceil \log\alpha / \log p \rceil$, is withdrawn: it was the existence condition of the withdrawn confidence bound of §12.4.3, and it is neither necessary nor sufficient for the precedence rank. The same number returns in another role: for an explicit requirement it is the feasibility minimum of `latency/compliance-exact-binomial` (§12.3.4), the fewest successful latencies at which the all-within outcome passes.
 
 For planning, the smallest baseline, no smaller than the test, from which a rank exists at $\alpha = 0.05$ is:
 
@@ -2863,9 +2917,9 @@ The two latency gates therefore play different roles:
 | Gate | Question answered | Outcome |
 |---|---|---|
 | Non-degeneracy (§12.5.2) | Is the empirical percentile distinct from the sample maximum / minimum? | Configuration error in VERIFICATION |
-| Existence (§12.4.2) | Does some baseline rank achieve a no-degradation breach probability of at most $\alpha$ for this test size? | INCONCLUSIVE with `saturated: true`, reported before the run |
+| Existence (§12.4.2) | Does some baseline rank achieve a no-degradation breach probability of at most $\alpha$ for this test size? | Before the run, on the expected count: a warning and a planning figure. After the run, on the actual count: INCONCLUSIVE with `saturated: true` when no rank exists |
 
-A percentile estimate can be non-degenerate yet still unable to support a calibrated threshold. For each asserted percentile, the framework checks the non-degeneracy requirement and runs the precedence rank search before any sample executes.
+A percentile estimate can be non-degenerate yet still unable to support a calibrated threshold. For each asserted percentile, the framework checks the non-degeneracy requirement and runs the precedence rank search on the expected count before any sample executes, and decides existence on the actual count after the run.
 
 **Scope note on p99.9 and beyond**: The supported percentile levels are $\{0.50, 0.90, 0.95, 0.99\}$. Extreme-tail percentiles such as p99.9 are out of scope for the current methodology: a non-degenerate p99.9 estimate requires $n_s \geq 1{,}000$ successful samples, and a statistically useful threshold at 95% requires considerably more. Services with genuine p99.9 SLAs generally warrant dedicated tail-focused instrumentation (production telemetry, HdrHistogram-style log-linear bucketing, or extreme-value modelling) rather than per-test-run estimation.
 
@@ -2874,15 +2928,16 @@ A percentile estimate can be non-degenerate yet still unable to support a calibr
 For **VERIFICATION** intent with latency enforcement enabled, the framework checks *before any samples execute*, for each asserted percentile $p_j$:
 
 1. **Non-degeneracy** (§12.5.2): the expected number of successful test samples meets the minimum of §12.5.2; otherwise the framework raises a configuration error — the same mechanism used for the pass-rate feasibility gate (Section 5.7.1).
-2. **Existence** (§12.5.2.1): the precedence rank search of §12.4.2, run on the baseline's $n_b$ latencies and the test's expected successful-sample count, finds a rank; otherwise the result is INCONCLUSIVE with `saturated: true`, reported before the run.
+2. **Existence, as a planning check** (§12.5.2.1): the precedence rank search of §12.4.2, run on the baseline's $n_b$ latencies and the test's expected successful-sample count. When it finds no rank, the framework warns before the run and reports the planning figure — the smallest baseline, no smaller than the expected count, that supports a rank for it. The warning is not a verdict: the test runs.
+3. **Explicit requirements** (§12.3.4): for an enforced explicit threshold, the planned number of samples reaches $\lceil \log\alpha / \log p_j \rceil$; otherwise no count could pass even if every sample succeeded, and the design is refused (`COMPLIANCE_INFEASIBLE`).
 
 The expected successful-sample count is
 
 $$n_{t,\text{expected}} = \lfloor n_{\text{planned}} \times \hat{p}_{\text{baseline}} \rfloor.$$
 
-After the run, the threshold is derived from the test's actual number of successful samples (§12.4.2).
+The expected count is not a lower bound: a run can return fewer or more successful samples. After the run, the threshold is derived from the test's actual number of successful samples, and the binding saturation decision is made on it (§12.4.2).
 
-**Example**: A test with $n_{\text{planned}} = 200$ and baseline $\hat{p} = 0.80$ expects $n_{t,\text{expected}} = 160$ successful samples. A p99 assertion at $\alpha = 0.05$ has $r = 159$; against a baseline of 400 latencies no rank achieves $\alpha$, and the assertion is reported INCONCLUSIVE with `saturated: true` before the test runs. A baseline of at least 554 latencies supports a threshold (rank 554 at exactly 554).
+**Example**: A test with $n_{\text{planned}} = 200$ and baseline $\hat{p} = 0.80$ expects $n_{t,\text{expected}} = 160$ successful samples. A p99 assertion at $\alpha = 0.05$ has $r = 159$; against a baseline of 400 latencies no rank achieves $\alpha$ at 160, so the framework warns before the test runs and reports the planning figure: a baseline of at least 554 latencies supports a threshold for 160 (rank 554 at exactly 554). The pre-run result binds in neither direction: against a baseline of 554, a run that returns 161 or more successful latencies finds no rank, and the assertion is INCONCLUSIVE with `saturated: true`.
 
 #### 12.5.4 Indicative Results
 
@@ -2898,8 +2953,8 @@ Latency assertions support two enforcement modes, reflecting the practical reali
 
 | Mode         | Breach behaviour               | Default | Rationale                                             |
 |--------------|--------------------------------|---------|-------------------------------------------------------|
-| **Advisory** | Warning in output; test passes | Yes     | Baseline may have been recorded on different hardware |
-| **Enforced** | Test fails                     | No      | Latency is a first-class SLA dimension                |
+| **Advisory** | Raw percentile comparison; a breach is a warning in output and the test passes | Yes     | Baseline may have been recorded on different hardware |
+| **Enforced** | Decided by the rule for the threshold source (§12.3.3); a FAIL fails the test | No      | Latency is a first-class SLA dimension                |
 
 **Why advisory is the default**: A baseline generated on CI hardware with dedicated resources may record $Q_{0.95} = 480\text{ms}$. The same workload on a developer laptop with competing processes may observe $Q_{0.95} = 650\text{ms}$ — a genuine environmental difference, not a regression. Failing the test by default would produce false positives that erode trust in the framework.
 
@@ -2913,7 +2968,7 @@ The table below summarises how the two quality dimensions parallel each other in
 |--------------------------|------------------------------|------------------------------------------|
 | **Statistical model**    | Parametric (binomial)        | Non-parametric (empirical percentiles)   |
 | **Estimand**             | Success probability $p$      | Percentile quantiles $Q(p_j)$            |
-| **Decision rule** | Fisher cutoff (regression); exact binomial $k_{\min}$ (compliance) | Precedence rank (§12.4.2) |
+| **Decision rule** | Fisher cutoff (regression); exact binomial $k_{\min}$ (compliance) | Precedence rank (regression, §12.4.2); exact binomial $y_{\min}$ on the within-threshold count (explicit requirement, §12.3.4) |
 | **Baseline storage**     | $(\hat{p}, k, n)$            | $(t_{(1)}, \ldots, t_{(n_s)}, n_s)$      |
 | **Feasibility gate** | $N_{\min} = \lceil \log\alpha / \log p_{\mathrm{req}} \rceil$ (compliance) | Non-degeneracy minimum and the precedence rank search (§12.5.3) |
 | **Indicative marking**   | Undersized sample note       | Undersized sample note                   |
@@ -2948,7 +3003,7 @@ The list is restricted to elements that are intrinsic to the model. Operationali
 | Element                               | Information content                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Defined in                      |
 |---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
 | **Postcondition**                     | A predicate over the service's output; defines per-trial pass or fail for a single observable property.                                                                                                                                                                                                                                                                                                                                                                    | §1.4.2                          |
-| **Criterion**                         | The partition unit of the functional dimension. References one or more postconditions, has a mode (inferential or observational), and where inferential carries a threshold $p^*_c$ and confidence level $\alpha_c$. Its denominator is the full sampling $N$ (§1.4.5a).                                                                                                                                                                                                   | §1.4.2, §1.4.3, §1.4.5, §1.4.5a |
+| **Criterion**                         | The partition unit of the functional dimension. References one or more postconditions, has a mode (inferential or observational), and where inferential carries a confidence level $\alpha_c$ and a threshold: a normative requirement $p_{\mathrm{req}}$ (compliance), or a reference to a baseline whose counts give the integer cutoff $c$ at resolution time (empirical regression). Its denominator is the full sampling $N$ (§1.4.5a).                                                                                                                                                                                                   | §1.4.2, §1.4.3, §1.4.5, §1.4.5a |
 | **Sampling**                          | A list of $N \geq 1$ samples posted to the service under test in a single experiment. Shared by every criterion of the experiment; per-criterion verdicts are claims about the same $N$ samples.                                                                                                                                                                                                                                                                           | §1.4.2, §1.4.7                  |
 | **Factor record**                     | The identification of the service, model, and serving configuration whose $p_c$ is being estimated. Two evaluations that differ in factors evaluate two different objects.                                                                                                                                                                                                                                                                                                 | §1.3.1                          |
 | **Covariate profile**                 | The recorded values of declared contextual variables at the time of an evaluation; affects baseline comparability.                                                                                                                                                                                                                                                                                                                                                         | §8.4.1                          |
@@ -2956,12 +3011,14 @@ The list is restricted to elements that are intrinsic to the model. Operationali
 | **Per-criterion Bernoulli stream**    | The sequence of per-criterion indicators $\{X_{i,c}\}$ treated as i.i.d. Bernoulli with parameter $p_c$ under the model's working approximation.                                                                                                                                                                                                                                                                                                                           | §1.4.3                          |
 | **Effective denominator** ($n_c$)     | The sampling size $N$: every sample is seen by every criterion. A trial is a success only on a clean PASS; every other outcome — including a transform/no-value failure — is a counted FAIL, never excluded. `zeroFailures` (observational) criteria carry no rate denominator.                                                                                                                                                                                            | §1.4.5a                         |
 | **Confidence statement** | A one-line statement of what the per-criterion error level controls, naming the random experiment (§7.2); descriptive intervals use Wilson (§2.3.1). | §7.2, §2.3.1 |
-| **Decision rule** | The versioned procedure that decides a criterion: `regression/fisher` v1, `compliance/exact-binomial` v1 or `latency/precedence` v1, each with its epistemic status. | §3.4, §3.6, §12.4.2, §9 |
+| **Decision rule** | The versioned procedure that decides a criterion: `regression/fisher` v1, `compliance/exact-binomial` v1, `latency/precedence` v1 or `latency/compliance-exact-binomial` v1, each with its epistemic status. | §3.4, §3.6, §12.4.2, §9 |
 | **Regression cutoff** ($c$) | The binding decision artefact of empirical regression: the smallest test count whose one-sided Fisher p-value exceeds $\alpha$, from $(K_b, n_b, n_t, \alpha)$. PASS iff $K_t \ge c$. | §3.4 |
 | **Compliance count** ($k_{\min}$) | The binding decision artefact of normative compliance: the smallest count the exact one-sided binomial test accepts. PASS iff $K \ge k_{\min}$. | §3.6 |
 | **Latency rank** | The binding decision artefact of latency regression: the precedence rank $k$ and threshold $t_{(k)}$, or `saturated` (INCONCLUSIVE). | §12.4.2 |
+| **Latency compliance count** | The binding decision artefact of an explicit latency requirement: the smallest passing count $y_{\min}$ of successful latencies at or below $\tau$; PASS iff $Y \ge y_{\min}$, INCONCLUSIVE when too few successful latencies arrived for any count to pass. | §12.3.4 |
+| **Design alternative rate** | The true rate $p_{\mathrm{design}}$ at which a regression test must reach its target power. Not a tolerance: the test flags any degradation from the baseline. The design power and the resolved-test power are stated at it, named apart. | §5.3, §5.4.1 |
 | **Configuration error** | A named refusal before any sample runs: `TEST_LARGER_THAN_BASELINE`, `COMPLIANCE_INFEASIBLE`. | §5.7.1 |
-| **Threshold origin**                  | The provenance category of an inferential threshold $p^*_c$ (SLA, SLO, POLICY, EMPIRICAL, UNSPECIFIED), recorded with the threshold value.                                                                                                                                                                                                                                                                                                                                 | §7.4                            |
+| **Threshold origin**                  | The provenance category of an inferential threshold (SLA, SLO, POLICY, EMPIRICAL, UNSPECIFIED), recorded with the requirement or, for EMPIRICAL, the baseline reference.                                                                                                                                                                                                                                                                                                                                 | §7.4                            |
 | **Sample-size requirement** | The per-criterion sample count from which the exact power of the operative rule stays at its target, with the feasibility gate that refuses a compliance design too small to pass. | §§5.4–5.5, §5.7.1 |
 | **Per-criterion verdict**             | PASS, FAIL, or INCONCLUSIVE on a criterion: for **compliance** criteria, the observed count's relation to $k_{\min}$; for **regression** criteria, the observed success count's relation to the Fisher cutoff $c_c$ derived from the baseline's counts at $\alpha_c$; for **observational** criteria, the zero-failure observation. Carries the supporting statistics, the threshold and origin, $\alpha_c$, and the population specification. | §1.4.3, §1.4.5, §1.4.6          |
 | **Composite verdict**                 | A structured tuple over per-criterion verdicts.                                                                                                                                                                                                                                                                                                                                                                                                                            | §1.4.6                          |
