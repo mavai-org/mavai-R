@@ -1058,6 +1058,17 @@ $$n = \frac{1.96^2 \times 0.95 \times 0.05}{0.02^2} = \frac{0.1825}{0.0004} \app
 | ±2%                       | 456                           |
 | ±1%                       | 1,825                         |
 
+
+### 2.5 Two Binomial Counts Given Their Total
+
+A regression test compares two samples of the same binomial model: the baseline's $K_b \sim \text{Bin}(n_b, p_b)$ and the test's $K_t \sim \text{Bin}(n_t, p_t)$, independent. When the two success probabilities are equal, $p_b = p_t = p$, the conditional law of the test's count given the two counts' combined total $s = K_b + K_t$ does not depend on $p$:
+
+$$P(K_t = x \mid K_b + K_t = s) \;=\; \frac{\binom{s}{x}\binom{n_b + n_t - s}{n_t - x}}{\binom{n_b + n_t}{n_t}},$$
+
+the hypergeometric distribution — the probability that $x$ of the $s$ pooled successes fall among the test's $n_t$ of the $n_b + n_t$ trials. It follows from the binomial model alone: the factors $p^s(1-p)^{n_b + n_t - s}$ cancel between the joint probability and the probability of the total. Its lower tail is the one-sided Fisher p-value on which the regression rule of §3.4 rests; no estimate of $p$ is needed, because none enters.
+
+**Epistemic status.** Exact result under the binomial model.
+
 ---
 
 ## 3. Threshold Derivation for Regression Testing
@@ -1134,7 +1145,7 @@ Empirical regression is decided by `regression/fisher`, version 1: the one-sided
 
 $$P(X \le k_t) \;=\; \sum_{x \le k_t} \frac{\binom{s}{x}\binom{n_b + n_t - s}{n_t - x}}{\binom{n_b + n_t}{n_t}}.$$
 
-The hypergeometric tail is the conditional law of two binomial counts given their combined total: if $K_b \sim \text{Bin}(n_b, p)$ and $K_t \sim \text{Bin}(n_t, p)$ independently, then given $K_b + K_t = s$ the test's count $K_t$ follows this distribution whatever the common $p$ is, so the p-value needs no estimate of $p$.
+The hypergeometric tail is the conditional law of two binomial counts given their combined total: if $K_b \sim \text{Bin}(n_b, p)$ and $K_t \sim \text{Bin}(n_t, p)$ independently, then given $K_b + K_t = s$ the test's count $K_t$ follows this distribution whatever the common $p$ is (§2.5), so the p-value needs no estimate of $p$.
 
 A test count $k_t$ FAILs iff its p-value is at most $\alpha$. The p-value is non-decreasing in $k_t$, so the FAIL region is $\{0, \ldots, c - 1\}$ and the **integer cutoff** $c$ is the smallest $k_t$ whose p-value exceeds $\alpha$ ($c = 0$ when $k_t = 0$ already exceeds it). The decision is:
 
