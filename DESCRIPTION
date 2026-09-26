@@ -28,5 +28,6 @@ Suggests:
     pwr,
     jsonvalidate,
     yaml,
-    xml2
+    xml2,
+    withr
 Config/testthat/edition: 3

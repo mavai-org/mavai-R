@@ -40,6 +40,9 @@ jobs:
       - name: Run the testthat suite
         run: Rscript -e 'testthat::test_local(reporter = "summary", stop_on_failure = TRUE)'
 
+      - name: Check the companion's numbers against the oracle
+        run: Rscript scripts/companion_numbers.R
+
       - name: Validate interchange schemas and worked examples
         run: Rscript scripts/validate_interchange.R
 
