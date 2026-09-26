@@ -47,6 +47,14 @@ jobs:
           cd ../inst/interchange
           zip -g "../../interchange-${{ steps.version.outputs.tag }}.zip" *.yaml *.xml README.md
 
+      - name: Certify the decision rules over the operating envelope
+        run: Rscript scripts/certify.R --out certification --cores 2
+
+      - name: Package the certification surfaces (a separate asset, never in the cases bundle)
+        run: |
+          cd certification
+          zip "../certification-${{ steps.version.outputs.tag }}.zip" *.csv SUMMARY.md
+
       - name: Package format schemas with conformance corpus
         run: |
           cd inst/formats
@@ -59,4 +67,5 @@ jobs:
             cases-${{ steps.version.outputs.tag }}.zip
             interchange-${{ steps.version.outputs.tag }}.zip
             formats-${{ steps.version.outputs.tag }}.zip
+            certification-${{ steps.version.outputs.tag }}.zip
           generate_release_notes: true

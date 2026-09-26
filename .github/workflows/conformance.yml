@@ -1,0 +1,47 @@
+name: Conformance fixtures
+
+# The committed fixtures in inst/cases/ are the public API of this
+# repository. This job regenerates them from the generators and fails on
+# any difference, so a fixture can only change together with the code
+# that produces it; then it runs the testthat suite and validates the
+# interchange and format schemas.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.5.3'
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: any::pkgload
+
+      - name: Regenerate fixtures
+        run: Rscript scripts/generate_all.R
+
+      - name: Fail on any difference from the committed fixtures
+        run: |
+          git status --porcelain inst/cases
+          git diff --exit-code --stat inst/cases
+          test -z "$(git status --porcelain inst/cases)"
+
+      - name: Run the testthat suite
+        run: Rscript -e 'testthat::test_local(reporter = "summary", stop_on_failure = TRUE)'
+
+      - name: Validate interchange schemas and worked examples
+        run: Rscript scripts/validate_interchange.R
+
+      - name: Validate format schemas and conformance corpus
+        run: Rscript scripts/validate_formats.R
