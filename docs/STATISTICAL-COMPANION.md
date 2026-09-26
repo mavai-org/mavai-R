@@ -528,7 +528,7 @@ $$
 \hat{q} = 1 - \hat{s}.
 $$
 
-An inferential guardrail-sensitivity criterion reports the one-sided Clopper–Pearson lower bound
+An inferential guardrail-sensitivity criterion reports the one-sided Clopper–Pearson lower bound (§2.3.3)
 
 $$
 L_s(\alpha)
@@ -1038,6 +1038,12 @@ Statistics textbooks often present guidelines for when Wald is acceptable:
 | $n < 10$                                             | Wilson required; Wald inappropriate |
 
 Rather than implement conditional method selection, the methodology uses Wilson for every descriptive interval. This simplifies implementation while giving well-defined results in all cases—including the edge cases where Wald fails.
+
+#### 2.3.3 Clopper–Pearson Interval (Exact)
+
+The Clopper–Pearson method is an “exact” frequentist method for calculating a confidence interval for an unknown binomial proportion, such as a success or event rate observed over a fixed number of trials. It obtains the lower and upper limits by inverting binomial tests, rather than using a normal approximation, so it remains valid with small samples or proportions near 0 or 1. Its guaranteed coverage is at least the stated confidence level, which can make the resulting interval conservative.
+
+The methodology uses it where a claim is affirmative or safety-class and must hold at the configured level exactly: its one-sided lower bound exceeds $p_{\mathrm{req}}$ exactly when the exact one-sided binomial test of §3.6 passes, so it is the interval form of the compliance decision, and it gives the guardrail bounds of §1.4.5b. Wilson (§2.3.1) remains the descriptive interval everywhere else.
 
 ### 2.4 Sample Size Determination
 
