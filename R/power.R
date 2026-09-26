@@ -1,4 +1,4 @@
-#' Exact power and sizing under the 1.5.0 decision rules.
+#' Exact power and sizing under the 2.0.0 decision rules.
 #'
 #' Three approaches, each an exact finite computation against the
 #' operative decision rule (no normal approximation):
@@ -9,9 +9,9 @@
 #'     to n = 20000 with the feasibility gate inside the search. The
 #'     alternative is p_req + delta, or the midway rate (p_req + 1)/2
 #'     where p_req + delta >= 1.
-#'   - `regression_power` (regression/score-cc): the exact power at a
+#'   - `regression_power` (regression/fisher): the exact power at a
 #'     declared margin, sum_k P_{p_b}(K_b = k) P_{p_b - delta}(K_t < c(k)).
-#'   - `regression_mdd` (regression/score-cc): where no margin is declared,
+#'   - `regression_mdd` (regression/fisher): where no margin is declared,
 #'     the minimum detectable degradation at the target power (default
 #'     0.80), null when no degradation reaches it.
 
@@ -31,21 +31,21 @@ compliance_sizing_case <- function(name, threshold, delta, alpha, power = 0.80) 
 #' @keywords internal
 regression_power_case <- function(name, n_b, n_t, alpha, baseline_rate, delta) {
   list(
-    name = name, approach = "regression_power", decisionRule = "regression/score-cc",
+    name = name, approach = "regression_power", decisionRule = "regression/fisher",
     inputs = list(baseline_trials = as.integer(n_b), test_samples = as.integer(n_t),
                   alpha = alpha, baseline_rate = baseline_rate, min_detectable_effect = delta),
-    expected = list(achieved_power = score_cc_power(n_b, n_t, alpha, baseline_rate, delta))
+    expected = list(achieved_power = fisher_power(n_b, n_t, alpha, baseline_rate, delta))
   )
 }
 
 #' @keywords internal
 regression_mdd_case <- function(name, n_b, n_t, alpha, baseline_rate, power = 0.80) {
   list(
-    name = name, approach = "regression_mdd", decisionRule = "regression/score-cc",
+    name = name, approach = "regression_mdd", decisionRule = "regression/fisher",
     inputs = list(baseline_trials = as.integer(n_b), test_samples = as.integer(n_t),
                   alpha = alpha, baseline_rate = baseline_rate, power = power),
     expected = list(minimum_detectable_degradation =
-                      score_cc_minimum_detectable_degradation(n_b, n_t, alpha, baseline_rate, power))
+                      fisher_minimum_detectable_degradation(n_b, n_t, alpha, baseline_rate, power))
   )
 }
 
@@ -80,7 +80,7 @@ generate_power_analysis_cases <- function() {
     description = paste(
       "Exact power and sizing against the operative decision rules. compliance_sizing: the",
       "smallest n from which exact power at the alternative stays at or above target",
-      "(compliance/exact-binomial). regression_power: exact power of regression/score-cc at a",
+      "(compliance/exact-binomial). regression_power: exact power of regression/fisher at a",
       "declared margin. regression_mdd: the minimum detectable degradation at the target power",
       "when no margin is declared. Each case names its rule in decisionRule."
     ),
@@ -90,7 +90,7 @@ generate_power_analysis_cases <- function() {
       "required_samples = 1 + the largest n <= 20000 with power(n) < target (null if that is",
       "20000); first_crossing = the smallest n with power(n) >= target.",
       "regression_power: sum_k dbinom(k, n_b, p_b) P_{p_b - delta}(K_t < c(k)), c the",
-      "regression/score-cc cutoff. regression_mdd: the smallest delta in (0, p_b] with that power",
+      "regression/fisher cutoff. regression_mdd: the smallest delta in (0, p_b] with that power",
       ">= target (bisection to 1e-12), null when delta = p_b falls short."
     ),
     tolerance = 1e-9,

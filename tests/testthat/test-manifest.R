@@ -4,10 +4,10 @@ suites_for_test <- function() {
     wilson_lower = generate_wilson_lower_cases(),
     threshold_derivation = generate_threshold_derivation_cases(),
     regression_decision = generate_regression_decision_cases(),
-    calibration_tolerance_rule = generate_calibration_tolerance_rule_cases(),
     compliance_decision = generate_compliance_decision_cases(),
     feasibility = generate_feasibility_cases(),
     power_analysis = generate_power_analysis_cases(),
+    risk_driven_sizing = generate_risk_driven_sizing_cases(),
     verdict = generate_verdict_cases(),
     latency_percentile = generate_latency_percentile_cases(),
     latency_threshold = generate_latency_threshold_cases(),
@@ -37,16 +37,16 @@ test_that("the manifest reflects the suites exactly", {
 test_that("the manifest and every suite carry the methodology and fixture-schema versions", {
   suites <- suites_for_test()
   manifest <- generate_manifest(suites, "0.0.0-test")
-  expect_identical(manifest$methodologyVersion, "1.5.0")
+  expect_identical(manifest$methodologyVersion, "2.0.0")
   expect_identical(manifest$fixtureSchemaVersion, 2L)
   expect_identical(manifest$manifestVersion, 2L)
   expect_setequal(manifest$configurationErrors,
-                  c("TEST_LARGER_THAN_BASELINE", "OUTSIDE_CALIBRATION_TOLERANCE", "COMPLIANCE_INFEASIBLE"))
+                  c("TEST_LARGER_THAN_BASELINE", "COMPLIANCE_INFEASIBLE"))
   expect_setequal(vapply(manifest$decisionRules, `[[`, character(1), "id"),
-                  c("regression/score-cc", "compliance/exact-binomial", "latency/precedence"))
+                  c("regression/fisher", "compliance/exact-binomial", "latency/precedence"))
   for (s in suites) {
     expect_identical(names(s)[1:4], c("suite", "methodologyVersion", "fixtureSchemaVersion", "decisionRules"))
-    expect_identical(s$methodologyVersion, "1.5.0")
+    expect_identical(s$methodologyVersion, "2.0.0")
   }
 })
 

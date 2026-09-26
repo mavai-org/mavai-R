@@ -1,10 +1,11 @@
-#' Empirical regression under regression/score-cc: derivation and verdict.
+#' Empirical regression under regression/fisher: derivation and verdict.
 #'
 #' Two suites, two layers of the same rule (companion §3.4):
 #'
 #'   - `threshold_derivation` — the decision-rule layer:
 #'     (K_b, n_b, n_t, alpha) -> the integer cutoff c, or the
-#'     configuration error that refuses the configuration.
+#'     configuration error that refuses the configuration; and the
+#'     threshold-first inversion, a declared cutoff -> its implied alpha.
 #'   - `regression_decision` — the end-to-end layer: the same derivation
 #'     composed into a verdict on an observed test count, PASS iff
 #'     K_t >= c. Frameworks run these cases through their production
@@ -18,16 +19,16 @@
 
 #' The derivation block for one configuration.
 #' @keywords internal
-score_cc_expected_block <- function(baseline_successes, baseline_trials, test_samples, alpha) {
-  err <- regression_configuration_error(baseline_trials, test_samples, alpha)
+fisher_expected_block <- function(baseline_successes, baseline_trials, test_samples, alpha) {
+  err <- regression_configuration_error(baseline_trials, test_samples)
   if (!is.na(err)) {
     return(list(cutoff_integer = NA_integer_, configuration_error = err,
                 threshold_real = NA_real_, displayed_rate = NA_real_,
                 achieved_size = NA_real_))
   }
-  cut <- score_cc_cutoffs(baseline_trials, test_samples, alpha)
+  cut <- fisher_cutoffs(baseline_trials, test_samples, alpha)
   c_int <- cut[baseline_successes + 1L]
-  stopifnot(c_int == score_cc_cutoff(baseline_successes, baseline_trials, test_samples, alpha))
+  stopifnot(c_int == fisher_cutoff(baseline_successes, baseline_trials, test_samples, alpha))
   p_hat <- baseline_successes / baseline_trials
   list(
     cutoff_integer = c_int,
@@ -35,20 +36,20 @@ score_cc_expected_block <- function(baseline_successes, baseline_trials, test_sa
     threshold_real = c_int / test_samples,
     displayed_rate = round(c_int / test_samples, 6),
     achieved_size = if (p_hat %in% c(0, 1)) NA_real_ else
-      score_cc_fail_probability(cut, baseline_trials, test_samples, p_hat, p_hat)
+      regression_fail_probability(cut, baseline_trials, test_samples, p_hat, p_hat)
   )
 }
 
 #' @keywords internal
 derivation_case <- function(name, baseline_successes, baseline_trials, test_samples, alpha,
                             description = NULL) {
-  case <- list(name = name)
+  case <- list(name = name, approach = "sample_size_first")
   if (!is.null(description)) case$description <- description
   c(case, list(
     inputs = list(baseline_successes = as.integer(baseline_successes),
                   baseline_trials = as.integer(baseline_trials),
                   test_samples = as.integer(test_samples), alpha = alpha),
-    expected = score_cc_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
+    expected = fisher_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
   ))
 }
 
@@ -57,7 +58,7 @@ derivation_case <- function(name, baseline_successes, baseline_trials, test_samp
 regression_decision_case <- function(name, baseline_successes, baseline_trials,
                                      test_samples, alpha, observed_successes,
                                      description = NULL) {
-  block <- score_cc_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
+  block <- fisher_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
   verdict <- if (!is.na(block$configuration_error)) NA_character_ else
     if (observed_successes >= block$cutoff_integer) "PASS" else "FAIL"
   case <- list(name = name)
@@ -72,17 +73,31 @@ regression_decision_case <- function(name, baseline_successes, baseline_trials,
 }
 
 REGRESSION_METHOD <- paste0(
-  "regression/score-cc v1: for k_t = 0..n_t, d = k_t/n_t - K_b/n_b, d_cc = min(0, d + ",
-  "(1/n_b + 1/n_t)/2), p_bar = (K_b + k_t)/(n_b + n_t), v = p_bar (1 - p_bar) (1/n_b + 1/n_t), ",
-  "z = d_cc / sqrt(v) (z = 0 when v = 0); c = the smallest k_t with z >= -qnorm(1 - alpha). ",
-  "Configuration errors, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b; ",
-  "OUTSIDE_CALIBRATION_TOLERANCE when the published calibration-tolerance rule ",
-  "(suite calibration_tolerance_rule) refuses (n_b, n_t, alpha). Informational: ",
-  "threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = ",
+  "regression/fisher v1: for k_t = 0..n_t, the one-sided Fisher p-value is the hypergeometric ",
+  "lower tail P(X <= k_t) = phyper(k_t, s, n_b + n_t - s, n_t) with s = K_b + k_t pooled ",
+  "successes; k_t FAILs iff the p-value <= alpha; c = the smallest k_t whose p-value exceeds ",
+  "alpha. Configuration error, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b. ",
+  "Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = ",
   "sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1})."
 )
 
-#' Generate the regression/score-cc derivation cases
+#' One threshold-first case: a declared cutoff and its implied alpha.
+#' @keywords internal
+threshold_first_case <- function(name, baseline_successes, baseline_trials, test_samples,
+                                 declared_cutoff, description = NULL) {
+  a <- fisher_implied_alpha(baseline_successes, baseline_trials, test_samples, declared_cutoff)
+  case <- list(name = name, approach = "threshold_first")
+  if (!is.null(description)) case$description <- description
+  c(case, list(
+    inputs = list(baseline_successes = as.integer(baseline_successes),
+                  baseline_trials = as.integer(baseline_trials),
+                  test_samples = as.integer(test_samples),
+                  declared_cutoff = as.integer(declared_cutoff)),
+    expected = list(implied_alpha = a, is_sound = if (is.na(a)) NA else a <= 0.20)
+  ))
+}
+
+#' Generate the regression/fisher derivation cases
 #'
 #' @return A list suitable for JSON serialisation.
 #' @export
@@ -102,7 +117,7 @@ generate_threshold_derivation_cases <- function() {
     derivation_case("zero_baseline_0_of_100_test50_a05", 0, 100, 50, 0.05,
                     "c = 0 at K_b = 0: a baseline that succeeded on nothing demands nothing."),
     derivation_case("small_baseline_27_of_30_test25_a05", 27, 30, 25, 0.05),
-    derivation_case("alpha001_inside_tolerance_951_of_1000_test1000", 951, 1000, 1000, 0.01),
+    derivation_case("alpha001_951_of_1000_test1000", 951, 1000, 1000, 0.01),
     # Further sizes and levels.
     derivation_case("baseline_95_of_100_test50_a05", 95, 100, 50, 0.05),
     derivation_case("baseline_95_of_100_test50_a01", 95, 100, 50, 0.01),
@@ -117,37 +132,51 @@ generate_threshold_derivation_cases <- function() {
                     "n_t > n_b: refused whatever the counts."),
     derivation_case("refused_test_larger_than_baseline_zero_0_of_10_test50", 0, 10, 50, 0.05,
                     "n_t > n_b is refused even at a zero baseline."),
-    derivation_case("refused_outside_tolerance_951_of_1000_test25_a01", 951, 1000, 25, 0.01,
-                    "Worst-case size 1.313% at p near 0.977 against a tolerance of 1.2%."),
-    derivation_case("refused_outside_tolerance_9500_of_10000_test100_a001", 9500, 10000, 100, 0.001)
+    # Small tests against large baselines at small alpha: no calibration
+    # refusal, since the rule never exceeds alpha.
+    derivation_case("small_test_large_baseline_951_of_1000_test25_a01", 951, 1000, 25, 0.01),
+    derivation_case("small_test_large_baseline_9500_of_10000_test100_a001", 9500, 10000, 100, 0.001),
+    # Threshold-first (§6.3): the implied alpha of a declared cutoff, the
+    # smallest alpha at which the rule yields it.
+    threshold_first_case("tf_951_of_1000_test100_cutoff91", 951, 1000, 100, 91L,
+      "The cutoff the rule yields at alpha 0.05; its implied alpha is at most 0.05."),
+    threshold_first_case("tf_951_of_1000_test100_cutoff90", 951, 1000, 100, 90L),
+    threshold_first_case("tf_951_of_1000_test100_cutoff94", 951, 1000, 100, 94L,
+      "A cutoff close to the baseline rate: implied alpha above 0.20, unsound."),
+    threshold_first_case("tf_95_of_100_test100_cutoff85", 95, 100, 100, 85L),
+    threshold_first_case("tf_zero_cutoff", 95, 100, 100, 0L,
+      "Cutoff 0 results at every alpha below the p-value of k_t = 0; the infimum is 0.")
   )
 
   list(
     suite = "threshold_derivation",
     description = paste(
-      "The decision-rule layer of empirical regression (companion §3.4): from baseline evidence",
-      "(K_b, n_b), a test size n_t and alpha, the integer cutoff c of regression/score-cc, or the",
-      "configuration error that refuses the configuration before any sample runs. The cutoff",
-      "is the binding artefact; configuration_error is binding (null when the configuration is",
-      "valid); threshold_real, displayed_rate and achieved_size are informational report values."
+      "The decision-rule layer of empirical regression (companion §3.4). approach",
+      "sample_size_first: from baseline evidence (K_b, n_b), a test size n_t and alpha, the integer",
+      "cutoff c of regression/fisher, or the configuration error that refuses the configuration",
+      "before any sample runs; the cutoff and configuration_error are binding, threshold_real,",
+      "displayed_rate and achieved_size informational. approach threshold_first (§6.3): the implied",
+      "alpha of a declared cutoff, the smallest alpha at which the rule yields it (null when no",
+      "alpha does), and is_sound = implied_alpha <= 0.20."
     ),
-    method = REGRESSION_METHOD,
+    method = paste(REGRESSION_METHOD, "threshold_first: implied_alpha = P(X <= c - 1) with",
+                   "s = K_b + c - 1 (0 at c = 0), null when P(X <= c - 1) = P(X <= c)."),
     tolerance = 1e-10,
     cases = cases
   )
 }
 
-#' Generate the regression/score-cc verdict cases
+#' Generate the regression/fisher verdict cases
 #'
 #' @return A list suitable for JSON serialisation.
 #' @export
 generate_regression_decision_cases <- function() {
-  worked_c <- score_cc_cutoff(951, 1000, 100, 0.05)
-  small_c <- score_cc_cutoff(27, 30, 25, 0.05)
-  near_c <- score_cc_cutoff(99, 100, 100, 0.05)
-  perfect_c <- score_cc_cutoff(100, 100, 100, 0.05)
-  equal_c <- score_cc_cutoff(951, 1000, 1000, 0.05)
-  a01_c <- score_cc_cutoff(951, 1000, 1000, 0.01)
+  worked_c <- fisher_cutoff(951, 1000, 100, 0.05)
+  small_c <- fisher_cutoff(27, 30, 25, 0.05)
+  near_c <- fisher_cutoff(99, 100, 100, 0.05)
+  perfect_c <- fisher_cutoff(100, 100, 100, 0.05)
+  equal_c <- fisher_cutoff(951, 1000, 1000, 0.05)
+  a01_c <- fisher_cutoff(951, 1000, 1000, 0.01)
 
   cases <- list(
     # The §3.4 rate: baseline 951/1000, n_t = 100, c = 91.
@@ -170,12 +199,16 @@ generate_regression_decision_cases <- function() {
     # n_t = n_b, the boundary of the design rule.
     regression_decision_case("boundary_equal_sizes_pass_at_cutoff", 951, 1000, 1000, 0.05, equal_c),
     regression_decision_case("boundary_equal_sizes_fail_below_cutoff", 951, 1000, 1000, 0.05, equal_c - 1L),
-    # alpha 0.01 inside the calibration tolerance.
+    # alpha 0.01.
     regression_decision_case("alpha001_pass_at_cutoff", 951, 1000, 1000, 0.01, a01_c),
     regression_decision_case("alpha001_fail_below_cutoff", 951, 1000, 1000, 0.01, a01_c - 1L),
     # Refusals: no verdict is produced.
     regression_decision_case("refused_test_larger_than_baseline", 95, 100, 200, 0.05, 190L),
-    regression_decision_case("refused_outside_calibration_tolerance", 951, 1000, 25, 0.01, 25L),
+    # A small test against a large baseline at alpha 0.01: admitted.
+    regression_decision_case("small_test_large_baseline_pass_at_cutoff", 951, 1000, 25, 0.01,
+                             fisher_cutoff(951, 1000, 25, 0.01)),
+    regression_decision_case("small_test_large_baseline_fail_below_cutoff", 951, 1000, 25, 0.01,
+                             fisher_cutoff(951, 1000, 25, 0.01) - 1L),
     # The conflation detector: this observation PASSes the regression rule;
     # compliance_decision's conflation_detector_compliance_fail FAILs the
     # same observation against c / n_t taken as a given requirement.
@@ -185,7 +218,7 @@ generate_regression_decision_cases <- function() {
   list(
     suite = "regression_decision",
     description = paste(
-      "End-to-end verdicts of empirical regression under regression/score-cc (companion §3.4):",
+      "End-to-end verdicts of empirical regression under regression/fisher (companion §3.4):",
       "the cutoff c derived from (K_b, n_b, n_t, alpha) and PASS iff the observed test count",
       "K_t >= c. Refused configurations carry their configuration_error and no verdict.",
       "Binding: cutoff_integer, configuration_error, verdict. Informational: threshold_real,",

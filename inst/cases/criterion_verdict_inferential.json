@@ -1,6 +1,6 @@
 {
   "suite": "criterion_verdict_inferential",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "2.0.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
@@ -8,18 +8,18 @@
       "version": 1
     },
     {
-      "id": "regression/score-cc",
+      "id": "regression/fisher",
       "version": 1
     }
   ],
-  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/score-cc and decides K_c >= c; a configuration the design rule or the calibration-tolerance rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The effective denominator n_c is derived from the §1.4.5a policy. Each case carries the three-strand verdict.",
-  "method": "REGRESSION: regression/score-cc cutoff c from (K_b, n_b, n_c, alpha), decision K_c >= c; configuration errors checked on (n_b, n_attempted, alpha). COMPLIANCE: compliance/exact-binomial k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c), INCONCLUSIVE when no count of n_c can pass.",
+  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/fisher and decides K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The effective denominator n_c is derived from the §1.4.5a policy. Each case carries the three-strand verdict.",
+  "method": "REGRESSION: regression/fisher cutoff c from (K_b, n_b, n_c, alpha), decision K_c >= c; TEST_LARGER_THAN_BASELINE checked on (n_b, n_attempted). COMPLIANCE: compliance/exact-binomial k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c), INCONCLUSIVE when no count of n_c can pass.",
   "tolerance": 1e-09,
   "cases": [
     {
       "name": "regression_clear_pass_consult_advice_well_formed",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -47,7 +47,7 @@
     {
       "name": "regression_clear_fail_K_far_below_cutoff",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -74,7 +74,7 @@
     {
       "name": "regression_borderline_pass_K_equals_cutoff",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 100,
@@ -102,7 +102,7 @@
     {
       "name": "regression_borderline_fail_K_one_below_cutoff",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 100,
@@ -130,7 +130,7 @@
     {
       "name": "regression_inconclusive_zero_evaluable",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 0,
@@ -155,9 +155,9 @@
       }
     },
     {
-      "name": "regression_refused_outside_calibration_tolerance",
+      "name": "regression_tiny_test_near_perfect_baseline",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 5,
@@ -171,20 +171,20 @@
       "expected": {
         "n_c": 5,
         "r_obs": 1,
-        "p_hat_c": null,
-        "cutoff_integer": null,
-        "displayed_rate": null,
-        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
-        "verdict": null,
-        "statistical_verdict": null,
-        "observed_rate_status": "NOT_APPLICABLE",
-        "operational_caution_category": "CONFIGURATION_REFUSED"
+        "p_hat_c": 1,
+        "cutoff_integer": 4,
+        "displayed_rate": 0.8,
+        "configuration_error": null,
+        "verdict": "PASS",
+        "statistical_verdict": "PASS",
+        "observed_rate_status": "ABOVE_THRESHOLD",
+        "operational_caution_category": "ADEQUATE_POWER"
       }
     },
     {
       "name": "regression_policy_diff_conditional",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -212,7 +212,7 @@
     {
       "name": "regression_policy_diff_marginal",
       "procedure": "REGRESSION",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,

@@ -88,7 +88,7 @@ per_criterion_verdict_block <- function(test_obs) {
       procedure = "REGRESSION",
       denominator_policy = test_obs$denominator_policy,
       alpha = test_obs$alpha,
-      decisionRule = "regression/score-cc",
+      decisionRule = "regression/fisher",
       n_c = rv$n_c, r_obs = rv$r_obs,
       p_hat_c = rv$p_hat_c,
       cutoff_integer = rv$cutoff_integer,
@@ -376,8 +376,8 @@ generate_multi_criteria_scenario_cases <- function() {
   list(
     suite = "multi_criteria_scenario_consult_advice",
     description = paste(
-      "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0",
-      "decision rules (regression/score-cc, compliance/exact-binomial). Each case",
+      "End-to-end scenarios per companion §10.3 and §10.6 under the 2.0.0",
+      "decision rules (regression/fisher, compliance/exact-binomial). Each case",
       "ties together a baseline, a test run, and the expected scenario",
       "output (per-criterion verdicts, composite verdict, both",
       "procedure-direction envelopes, conformance-status metadata).",

@@ -1,6 +1,6 @@
 {
   "suite": "multi_criteria_scenario_consult_advice",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "2.0.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
@@ -8,11 +8,11 @@
       "version": 1
     },
     {
-      "id": "regression/score-cc",
+      "id": "regression/fisher",
       "version": 1
     }
   ],
-  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0 decision rules (regression/score-cc, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). Case 1 is the one canonical consult-advice example: the run 953 of 1000 against the baseline 951 of 1000 (C_well_formed) and 788 of 800 against the 0.98 requirement at alpha 0.001 (C_layperson_readable); composite FAIL. Every consult-advice number in the companion is generated from it. Case 2 is the passing counterfactual; case 3 exercises the structural- composition pattern (availability sibling + conditional content via availability_criterion_ref); case 4 exercises the cross- policy structural-error refusal.",
+  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 2.0.0 decision rules (regression/fisher, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). Case 1 is the one canonical consult-advice example: the run 953 of 1000 against the baseline 951 of 1000 (C_well_formed) and 788 of 800 against the 0.98 requirement at alpha 0.001 (C_layperson_readable); composite FAIL. Every consult-advice number in the companion is generated from it. Case 2 is the passing counterfactual; case 3 exercises the structural- composition pattern (availability sibling + conditional content via availability_criterion_ref); case 4 exercises the cross- policy structural-error refusal.",
   "method": "Per-criterion verdicts computed by regression_verdict / compliance_verdict / observational_verdict and composed by composite_verdict. The §10.6 conformance_status block names formula_value_fixtures: passed and calibration_fixtures: not-published, anchoring the conformance contract a downstream framework is expected to replicate.",
   "tolerance": 1e-09,
   "cases": [
@@ -137,7 +137,7 @@
             "procedure": "REGRESSION",
             "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
             "alpha": 0.05,
-            "decisionRule": "regression/score-cc",
+            "decisionRule": "regression/fisher",
             "n_c": 1000,
             "r_obs": 1,
             "p_hat_c": 0.953,
@@ -316,7 +316,7 @@
             "procedure": "REGRESSION",
             "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
             "alpha": 0.05,
-            "decisionRule": "regression/score-cc",
+            "decisionRule": "regression/fisher",
             "n_c": 1000,
             "r_obs": 1,
             "p_hat_c": 0.953,

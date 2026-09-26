@@ -30,14 +30,14 @@ test_that("Regression verdict: K one below cutoff fails", {
   expect_equal(result$verdict, "FAIL")
 })
 
-test_that("Regression refused outside the calibration tolerance", {
+test_that("Regression: a tiny test against a near-perfect baseline is admitted", {
   result <- regression_verdict(
     n_attempted = 5, n_evaluable = 5, K_c = 5, alpha = 0.001,
     denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 999, baseline_trials = 1000
   )
-  expect_true(is.na(result$verdict))
-  expect_identical(result$configuration_error, "OUTSIDE_CALIBRATION_TOLERANCE")
+  expect_identical(result$verdict, "PASS")
+  expect_true(is.na(result$configuration_error))
 })
 
 test_that("Compliance verdict: clear PASS well above p_req", {

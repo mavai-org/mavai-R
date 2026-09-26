@@ -1,6 +1,6 @@
 {
   "suite": "verdict",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "2.0.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
@@ -8,12 +8,12 @@
       "version": 1
     },
     {
-      "id": "regression/score-cc",
+      "id": "regression/fisher",
       "version": 1
     }
   ],
-  "description": "Verdict evaluation under the two ruled rules: regression/score-cc for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A configuration carrying both bars (approach joint) is refused whole when either part is invalid. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error. Informational: observed_rate.",
-  "method": "regression/score-cc: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision). compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision). Configuration errors are checked first, for every part of the configuration.",
+  "description": "Verdict evaluation under the two ruled rules: regression/fisher for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A configuration carrying both bars (approach joint) is refused whole when either part is invalid. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error. Informational: observed_rate.",
+  "method": "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision). compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision). Configuration errors are checked first, for every part of the configuration.",
   "tolerance": 1e-10,
   "cases": [
     {
@@ -149,7 +149,7 @@
     },
     {
       "name": "regression_pass_91_of_100_baseline_951_of_1000",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "successes": 91,
         "trials": 100,
@@ -165,7 +165,7 @@
     },
     {
       "name": "regression_fail_90_of_100_baseline_951_of_1000",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "successes": 90,
         "trials": 100,
@@ -181,7 +181,7 @@
     },
     {
       "name": "regression_pass_95_of_100_baseline_99_of_100",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "successes": 95,
         "trials": 100,
@@ -198,7 +198,7 @@
     {
       "name": "regression_fail_95_of_100_baseline_100_of_100",
       "description": "The cutoff is monotone in the baseline count: a perfect baseline demands more than 99 of 100.",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "successes": 95,
         "trials": 100,
@@ -214,7 +214,7 @@
     },
     {
       "name": "regression_refused_test_larger_than_baseline",
-      "decisionRule": "regression/score-cc",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "successes": 190,
         "trials": 200,
@@ -229,8 +229,9 @@
       }
     },
     {
-      "name": "regression_refused_outside_calibration_tolerance",
-      "decisionRule": "regression/score-cc",
+      "name": "regression_pass_25_of_25_baseline_951_of_1000_alpha001",
+      "description": "A small test against a large baseline at alpha 0.01 is admitted: the rule never exceeds alpha.",
+      "decisionRule": "regression/fisher",
       "inputs": {
         "successes": 25,
         "trials": 25,
@@ -239,8 +240,8 @@
         "alpha": 0.01
       },
       "expected": {
-        "verdict": null,
-        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
+        "verdict": "PASS",
+        "configuration_error": null,
         "observed_rate": 1
       }
     },
@@ -250,7 +251,7 @@
       "approach": "joint",
       "decisionRule": [
         "compliance/exact-binomial",
-        "regression/score-cc"
+        "regression/fisher"
       ],
       "inputs": {
         "successes": 190,
@@ -273,7 +274,7 @@
       "approach": "joint",
       "decisionRule": [
         "compliance/exact-binomial",
-        "regression/score-cc"
+        "regression/fisher"
       ],
       "inputs": {
         "successes": 100,

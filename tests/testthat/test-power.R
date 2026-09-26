@@ -27,7 +27,7 @@ test_that("regression power and the minimum detectable degradation are consisten
   for (case in generate_power_analysis_cases()$cases) {
     i <- case$inputs
     if (case$approach == "regression_mdd" && !is.na(case$expected$minimum_detectable_degradation)) {
-      pw <- score_cc_power(i$baseline_trials, i$test_samples, i$alpha, i$baseline_rate,
+      pw <- fisher_power(i$baseline_trials, i$test_samples, i$alpha, i$baseline_rate,
                            case$expected$minimum_detectable_degradation)
       expect_equal(pw, i$power, tolerance = 1e-8, info = case$name)
     }

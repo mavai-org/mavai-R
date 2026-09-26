@@ -1,7 +1,7 @@
 #' Inferential-criterion verdict (companion §1.4.5, §1.4.6, §3.4, §3.6)
 #'
 #' Per-inferential-criterion verdict generation, separated by procedure
-#' direction (REGRESSION vs COMPLIANCE), each decided by its 1.5.0
+#' direction (REGRESSION vs COMPLIANCE), each decided by its 2.0.0
 #' decision rule. An informational suite: no framework is obliged to
 #' consume it.
 #'
@@ -16,12 +16,12 @@
 #'   - Inconclusive outcomes: n_c == 0; for COMPLIANCE also an n_c too
 #'     small for any count to pass (feasibility gate REFUSE).
 #'
-#' REGRESSION (regression/score-cc):
+#' REGRESSION (regression/fisher):
 #'   H_0: p_c >= p_b (no degradation); H_1: p_c < p_b
-#'   c = the score-cc cutoff from (K_b, n_b, n_c, alpha); PASS iff K_c >= c.
+#'   c = the Fisher cutoff from (K_b, n_b, n_c, alpha); PASS iff K_c >= c.
 #'   The configured test (n_attempted trials) is first checked for the
-#'   configuration errors TEST_LARGER_THAN_BASELINE and
-#'   OUTSIDE_CALIBRATION_TOLERANCE; a refused configuration has no verdict.
+#'   configuration error TEST_LARGER_THAN_BASELINE; a refused
+#'   configuration has no verdict.
 #'   The observed-rate strand compares p_hat_c with c / n_c.
 #'
 #' COMPLIANCE (compliance/exact-binomial):
@@ -58,7 +58,7 @@ regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   )
 
   if (n_attempted > 0) {
-    err <- regression_configuration_error(baseline_trials, n_attempted, alpha)
+    err <- regression_configuration_error(baseline_trials, n_attempted)
     if (!is.na(err)) {
       empty$configuration_error <- err
       empty$verdict <- NA_character_
@@ -69,7 +69,7 @@ regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   }
   if (n_c == 0) return(empty)
 
-  cutoff <- score_cc_cutoff(baseline_successes, baseline_trials, n_c, alpha)
+  cutoff <- fisher_cutoff(baseline_successes, baseline_trials, n_c, alpha)
   verdict <- if (K_c >= cutoff) "PASS" else "FAIL"
   p_hat_c <- K_c / n_c
   displayed <- cutoff / n_c
@@ -169,7 +169,7 @@ generate_criterion_verdict_inferential_cases <- function() {
     case <- list(
       name = name,
       procedure = "REGRESSION",
-      decisionRule = "regression/score-cc",
+      decisionRule = "regression/fisher",
       inputs = list(
         procedure = "REGRESSION",
         n_attempted = as.integer(n_attempted),
@@ -244,10 +244,9 @@ generate_criterion_verdict_inferential_cases <- function() {
              policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000),
 
-    # REGRESSION — refused configuration: a 5-trial test against a
-    # 1000-trial baseline at alpha 0.001 is outside the calibration
-    # tolerance, so no verdict is produced.
-    reg_case("regression_refused_outside_calibration_tolerance",
+    # REGRESSION — a 5-trial test against a near-perfect 1000-trial
+    # baseline at alpha 0.001: admitted; 5 of 5 clears the cutoff of 4.
+    reg_case("regression_tiny_test_near_perfect_baseline",
              n_attempted = 5, n_evaluable = 5, K_c = 5, alpha = 0.001,
              policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 999, baseline_trials = 1000),
@@ -307,17 +306,16 @@ generate_criterion_verdict_inferential_cases <- function() {
     description = paste(
       "Per-inferential-criterion verdict cases (informational), partitioned",
       "by procedure direction. REGRESSION tests for degradation from a",
-      "baseline (H_1: p_c < p_b) under regression/score-cc and decides",
-      "K_c >= c; a configuration the design rule or the calibration-tolerance",
-      "rule refuses has no verdict. COMPLIANCE tests whether the rate clears",
+      "baseline (H_1: p_c < p_b) under regression/fisher and decides",
+      "K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears",
       "a requirement (H_1: p_c > p_req) under compliance/exact-binomial and",
       "decides K_c >= k_min. The effective denominator n_c is derived from",
       "the §1.4.5a policy. Each case carries the three-strand verdict."
     ),
     method = paste(
-      "REGRESSION: regression/score-cc cutoff c from (K_b, n_b, n_c,",
-      "alpha), decision K_c >= c; configuration errors checked on",
-      "(n_b, n_attempted, alpha). COMPLIANCE: compliance/exact-binomial",
+      "REGRESSION: regression/fisher cutoff c from (K_b, n_b, n_c,",
+      "alpha), decision K_c >= c; TEST_LARGER_THAN_BASELINE checked on",
+      "(n_b, n_attempted). COMPLIANCE: compliance/exact-binomial",
       "k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c),",
       "INCONCLUSIVE when no count of n_c can pass."
     ),

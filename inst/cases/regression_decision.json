@@ -1,15 +1,15 @@
 {
   "suite": "regression_decision",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "2.0.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
-      "id": "regression/score-cc",
+      "id": "regression/fisher",
       "version": 1
     }
   ],
-  "description": "End-to-end verdicts of empirical regression under regression/score-cc (companion §3.4): the cutoff c derived from (K_b, n_b, n_t, alpha) and PASS iff the observed test count K_t >= c. Refused configurations carry their configuration_error and no verdict. Binding: cutoff_integer, configuration_error, verdict. Informational: threshold_real, displayed_rate, achieved_size. Frameworks MUST evaluate these cases through their production verdict path. The conflation_detector case pairs with compliance_decision's conflation_detector_compliance_fail: one observation, opposite verdicts under the two rules.",
-  "method": "regression/score-cc v1: for k_t = 0..n_t, d = k_t/n_t - K_b/n_b, d_cc = min(0, d + (1/n_b + 1/n_t)/2), p_bar = (K_b + k_t)/(n_b + n_t), v = p_bar (1 - p_bar) (1/n_b + 1/n_t), z = d_cc / sqrt(v) (z = 0 when v = 0); c = the smallest k_t with z >= -qnorm(1 - alpha). Configuration errors, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b; OUTSIDE_CALIBRATION_TOLERANCE when the published calibration-tolerance rule (suite calibration_tolerance_rule) refuses (n_b, n_t, alpha). Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1}). PASS iff K_t >= c.",
+  "description": "End-to-end verdicts of empirical regression under regression/fisher (companion §3.4): the cutoff c derived from (K_b, n_b, n_t, alpha) and PASS iff the observed test count K_t >= c. Refused configurations carry their configuration_error and no verdict. Binding: cutoff_integer, configuration_error, verdict. Informational: threshold_real, displayed_rate, achieved_size. Frameworks MUST evaluate these cases through their production verdict path. The conflation_detector case pairs with compliance_decision's conflation_detector_compliance_fail: one observation, opposite verdicts under the two rules.",
+  "method": "regression/fisher v1: for k_t = 0..n_t, the one-sided Fisher p-value is the hypergeometric lower tail P(X <= k_t) = phyper(k_t, s, n_b + n_t - s, n_t) with s = K_b + k_t pooled successes; k_t FAILs iff the p-value <= alpha; c = the smallest k_t whose p-value exceeds alpha. Configuration error, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b. Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1}). PASS iff K_t >= c.",
   "tolerance": 1e-10,
   "cases": [
     {
@@ -26,7 +26,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0386303312503997,
+        "achieved_size": 0.0339673926250216,
         "verdict": "PASS"
       }
     },
@@ -44,7 +44,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0386303312503997,
+        "achieved_size": 0.0339673926250216,
         "verdict": "FAIL"
       }
     },
@@ -62,7 +62,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0386303312503997,
+        "achieved_size": 0.0339673926250216,
         "verdict": "PASS"
       }
     },
@@ -80,7 +80,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0386303312503997,
+        "achieved_size": 0.0339673926250216,
         "verdict": "FAIL"
       }
     },
@@ -243,7 +243,7 @@
         "configuration_error": null,
         "threshold_real": 0.933,
         "displayed_rate": 0.933,
-        "achieved_size": 0.0403532934176465,
+        "achieved_size": 0.0403533182561198,
         "verdict": "PASS"
       }
     },
@@ -261,7 +261,7 @@
         "configuration_error": null,
         "threshold_real": 0.933,
         "displayed_rate": 0.933,
-        "achieved_size": 0.0403532934176465,
+        "achieved_size": 0.0403533182561198,
         "verdict": "FAIL"
       }
     },
@@ -279,7 +279,7 @@
         "configuration_error": null,
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
-        "achieved_size": 0.00741688523188998,
+        "achieved_size": 0.0074842242031557,
         "verdict": "PASS"
       }
     },
@@ -297,7 +297,7 @@
         "configuration_error": null,
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
-        "achieved_size": 0.00741688523188998,
+        "achieved_size": 0.0074842242031557,
         "verdict": "FAIL"
       }
     },
@@ -320,21 +320,39 @@
       }
     },
     {
-      "name": "refused_outside_calibration_tolerance",
+      "name": "small_test_large_baseline_pass_at_cutoff",
       "inputs": {
         "baseline_successes": 951,
         "baseline_trials": 1000,
         "test_samples": 25,
         "alpha": 0.01,
-        "observed_successes": 25
+        "observed_successes": 21
       },
       "expected": {
-        "cutoff_integer": null,
-        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
-        "threshold_real": null,
-        "displayed_rate": null,
-        "achieved_size": null,
-        "verdict": null
+        "cutoff_integer": 21,
+        "configuration_error": null,
+        "threshold_real": 0.84,
+        "displayed_rate": 0.84,
+        "achieved_size": 0.00480241920852723,
+        "verdict": "PASS"
+      }
+    },
+    {
+      "name": "small_test_large_baseline_fail_below_cutoff",
+      "inputs": {
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "test_samples": 25,
+        "alpha": 0.01,
+        "observed_successes": 20
+      },
+      "expected": {
+        "cutoff_integer": 21,
+        "configuration_error": null,
+        "threshold_real": 0.84,
+        "displayed_rate": 0.84,
+        "achieved_size": 0.00480241920852723,
+        "verdict": "FAIL"
       }
     },
     {
@@ -351,7 +369,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0386303312503997,
+        "achieved_size": 0.0339673926250216,
         "verdict": "PASS"
       }
     }

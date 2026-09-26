@@ -18,7 +18,7 @@
 
 MANIFEST_VERSION <- 2L
 
-# Suites every mavai implementation must support under methodology 1.5.0.
+# Suites every mavai implementation must support under methodology 2.0.0.
 FAMILY_MANDATORY_SUITES <- c(
   "wilson_ci",
   "wilson_lower",
@@ -34,23 +34,22 @@ FAMILY_MANDATORY_SUITES <- c(
 # decision that lives only in a design document is a decision consumers
 # cannot see.
 TIER_RATIONALE <- paste0(
-  "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. ",
+  "Methodology 2.0.0 replaces the three decision rules and the mandatory roster with them. ",
   "The roster is the methodological spine of the three rules: the Wilson interval and lower ",
   "bound (kept as descriptive primitives; no rule decides with them), the empirical-regression ",
-  "verdict (regression/score-cc), the normative-compliance verdict (compliance/exact-binomial), ",
+  "verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), ",
   "the latency threshold (latency/precedence), the feasibility gate and exact sizing of the ",
   "compliance rule, the exact power of the regression rule, and the verdict suite encoding ",
-  "both ruled rules. Every mandatory decision suite carries its refusal cases, so the three ",
-  "configuration errors are binding through them; the calibration-tolerance rule that ",
-  "OUTSIDE_CALIBRATION_TOLERANCE applies is published as data in calibration_tolerance_rule. ",
-  "threshold_derivation (the regression cutoff without a verdict) and latency_percentile ",
-  "(the nearest-rank primitive) remain published and are exercised by the mandatory suites ",
-  "that compose them. criterion_verdict_inferential, criterion_verdict_observational, ",
-  "composite_verdict, baseline_object and multi_criteria_scenario_consult_advice are ",
-  "informational. Withdrawn with the 1.4.1 rules: latency_threshold_bootstrap (a comparison ",
-  "of the withdrawn order-statistic bound) and risk_driven_sizing (sizing built on the ",
-  "withdrawn Wilson floor); the 1.4.1 fixtures remain reproducible from the v0.10.13 release ",
-  "assets."
+  "both ruled rules. Every mandatory decision suite carries its refusal cases, so both ",
+  "configuration errors are binding through them. threshold_derivation (the regression cutoff ",
+  "without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of ",
+  "the regression rule against a declared tolerance, with its refusals), latency_percentile ",
+  "(the nearest-rank primitive) and latency_percentile_minimums remain published and optional: ",
+  "a framework that implements the feature must consume the suite. ",
+  "criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, ",
+  "baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with ",
+  "the 1.4.1 rules: latency_threshold_bootstrap (a comparison of the withdrawn order-statistic ",
+  "bound); the 1.4.1 fixtures remain reproducible from the v0.10.13 release assets."
 )
 
 # Expected fields documented as informational (report obligations, not
@@ -68,16 +67,16 @@ INFORMATIONAL_FIELDS <- list(
 # The decision rules each suite's expectations depend on (none for the
 # descriptive and structural suites).
 SUITE_DECISION_RULES <- list(
-  threshold_derivation = "regression/score-cc",
-  regression_decision = "regression/score-cc",
-  calibration_tolerance_rule = "regression/score-cc",
+  threshold_derivation = "regression/fisher",
+  regression_decision = "regression/fisher",
+  risk_driven_sizing = "regression/fisher",
   compliance_decision = "compliance/exact-binomial",
   feasibility = "compliance/exact-binomial",
   latency_threshold = "latency/precedence",
-  power_analysis = c("compliance/exact-binomial", "regression/score-cc"),
-  verdict = c("compliance/exact-binomial", "regression/score-cc"),
-  criterion_verdict_inferential = c("compliance/exact-binomial", "regression/score-cc"),
-  multi_criteria_scenario_consult_advice = c("compliance/exact-binomial", "regression/score-cc")
+  power_analysis = c("compliance/exact-binomial", "regression/fisher"),
+  verdict = c("compliance/exact-binomial", "regression/fisher"),
+  criterion_verdict_inferential = c("compliance/exact-binomial", "regression/fisher"),
+  multi_criteria_scenario_consult_advice = c("compliance/exact-binomial", "regression/fisher")
 )
 
 #' The decisionRules entry of a suite: a list of {id, version}.

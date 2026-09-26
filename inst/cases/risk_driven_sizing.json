@@ -1,0 +1,270 @@
+{
+  "suite": "risk_driven_sizing",
+  "methodologyVersion": "2.0.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [
+    {
+      "id": "regression/fisher",
+      "version": 1
+    }
+  ],
+  "description": "Risk-driven sizing (companion §5.4.1) against the operative regression rule, regression/fisher: the exact power of the rule against a declared minimal acceptable rate p_min, with the baseline's n_b trials at rate p0. POWER_AT gives the power at a candidate n_t; REQUIRED_N the smallest n_t <= n_b from which power stays at or above the target up to n_b; DETECTABLE_RATE the largest p_min detectable at the target with n_t samples. Designs outside the domain are published as refusals: sizing_gate REFUSE, every numeric expectation null, refusal_category ZERO_BASELINE, EMPTY_TOLERANCE_INTERVAL, TEST_LARGER_THAN_BASELINE or BASELINE_TOO_SMALL (the target is not reached and held within n_t <= n_b).",
+  "method": "Power(n_t) = sum_k dbinom(k, n_b, p0) pbinom(c(k) - 1, n_t, p_min), c the regression/fisher cutoff at (k, n_b, n_t, alpha), over the baseline counts from qbinom(1e-17, n_b, p0) to qbinom(1 - 1e-17, n_b, p0); required_n = 1 + the largest n_t <= n_b with Power < target (refused when that is n_b); detectable_rate by bisection on p_min over (0, p0) to 1e-10.",
+  "tolerance": 1e-06,
+  "cases": [
+    {
+      "name": "companion_worked_example",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.87,
+        "baseline_trials": 3000,
+        "minimum_acceptable_rate": 0.84,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 1243,
+        "achieved_power": 0.800205956478356
+      }
+    },
+    {
+      "name": "companion_scenario_walkthrough",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 2000,
+        "minimum_acceptable_rate": 0.93,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 463,
+        "achieved_power": 0.801382673611577
+      }
+    },
+    {
+      "name": "higher_power_costs_samples",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 2000,
+        "minimum_acceptable_rate": 0.93,
+        "alpha": 0.05,
+        "target_power": 0.9
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 697,
+        "achieved_power": 0.900805124869345
+      }
+    },
+    {
+      "name": "smaller_alpha_costs_samples",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 2000,
+        "minimum_acceptable_rate": 0.93,
+        "alpha": 0.01,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 843,
+        "achieved_power": 0.800312972339846
+      }
+    },
+    {
+      "name": "wide_tolerance_is_cheap",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.9,
+        "baseline_trials": 1000,
+        "minimum_acceptable_rate": 0.8,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 91,
+        "achieved_power": 0.800203564465043
+      }
+    },
+    {
+      "name": "baseline_too_small_for_tolerance",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 300,
+        "minimum_acceptable_rate": 0.93,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "BASELINE_TOO_SMALL",
+        "required_n": null,
+        "achieved_power": null
+      }
+    },
+    {
+      "name": "walkthrough_candidate_50",
+      "approach": "power_at",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 2000,
+        "minimum_acceptable_rate": 0.93,
+        "alpha": 0.05,
+        "test_samples": 50
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "power": 0.194625949230233
+      }
+    },
+    {
+      "name": "walkthrough_candidate_150",
+      "approach": "power_at",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 2000,
+        "minimum_acceptable_rate": 0.93,
+        "alpha": 0.05,
+        "test_samples": 150
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "power": 0.429662855980919
+      }
+    },
+    {
+      "name": "worked_example_at_891",
+      "approach": "power_at",
+      "inputs": {
+        "baseline_rate": 0.87,
+        "baseline_trials": 3000,
+        "minimum_acceptable_rate": 0.84,
+        "alpha": 0.05,
+        "test_samples": 891
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "power": 0.707820921501856
+      }
+    },
+    {
+      "name": "inversion_at_100",
+      "approach": "detectable_rate",
+      "inputs": {
+        "baseline_rate": 0.87,
+        "baseline_trials": 3000,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "test_samples": 100
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "detectable_rate": 0.770139832415152
+      }
+    },
+    {
+      "name": "inversion_at_400",
+      "approach": "detectable_rate",
+      "inputs": {
+        "baseline_rate": 0.96,
+        "baseline_trials": 2000,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "test_samples": 400
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "detectable_rate": 0.927832706384361
+      }
+    },
+    {
+      "name": "zero_baseline_required_n_refused",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0,
+        "baseline_trials": 1000,
+        "minimum_acceptable_rate": 0.9,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "ZERO_BASELINE",
+        "required_n": null,
+        "achieved_power": null
+      }
+    },
+    {
+      "name": "zero_baseline_power_at_refused",
+      "approach": "power_at",
+      "inputs": {
+        "baseline_rate": 0,
+        "baseline_trials": 1000,
+        "minimum_acceptable_rate": 0.9,
+        "alpha": 0.05,
+        "test_samples": 100
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "ZERO_BASELINE",
+        "power": null
+      }
+    },
+    {
+      "name": "zero_baseline_detectable_rate_refused",
+      "approach": "detectable_rate",
+      "inputs": {
+        "baseline_rate": 0,
+        "baseline_trials": 1000,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "test_samples": 100
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "ZERO_BASELINE",
+        "detectable_rate": null
+      }
+    },
+    {
+      "name": "tolerance_at_baseline_refused",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.9,
+        "baseline_trials": 1000,
+        "minimum_acceptable_rate": 0.9,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "EMPTY_TOLERANCE_INTERVAL",
+        "required_n": null,
+        "achieved_power": null
+      }
+    },
+    {
+      "name": "test_larger_than_baseline_refused",
+      "approach": "power_at",
+      "inputs": {
+        "baseline_rate": 0.9,
+        "baseline_trials": 100,
+        "minimum_acceptable_rate": 0.8,
+        "alpha": 0.05,
+        "test_samples": 200
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "TEST_LARGER_THAN_BASELINE",
+        "power": null
+      }
+    }
+  ]
+}

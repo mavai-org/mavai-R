@@ -1,7 +1,7 @@
-#' Evaluate a test verdict under the 1.5.0 decision rules
+#' Evaluate a test verdict under the 2.0.0 decision rules
 #'
 #' The verdict of one test run under the rule its threshold's origin
-#' selects: `regression/score-cc` for a baseline-derived (empirical)
+#' selects: `regression/fisher` for a baseline-derived (empirical)
 #' threshold, `compliance/exact-binomial` for a given (normative) one.
 #' A configuration that carries both bars is evaluated as one: if either
 #' part is invalid the whole configuration is refused and no verdict is
@@ -24,7 +24,7 @@ evaluate_verdict <- function(successes, trials, alpha,
   normative <- !is.null(threshold)
   if (!empirical && !normative) stop("a verdict needs a baseline or a threshold", call. = FALSE)
   errs <- c(
-    if (empirical) regression_configuration_error(baseline_trials, trials, alpha),
+    if (empirical) regression_configuration_error(baseline_trials, trials),
     if (normative) compliance_configuration_error(threshold, trials, alpha, intent)
   )
   errs <- errs[!is.na(errs)]
@@ -35,7 +35,7 @@ evaluate_verdict <- function(successes, trials, alpha,
               observed_rate = successes / trials)
   if (length(errs)) return(out)
   reg <- if (empirical) {
-    c_int <- score_cc_cutoff(baseline_successes, baseline_trials, trials, alpha)
+    c_int <- fisher_cutoff(baseline_successes, baseline_trials, trials, alpha)
     if (successes >= c_int) "PASS" else "FAIL"
   }
   cmp <- if (normative) {
@@ -68,7 +68,7 @@ verdict_case <- function(name, rule, inputs, description = NULL) {
 #' @return A list suitable for JSON serialisation.
 #' @export
 generate_verdict_cases <- function() {
-  R <- "regression/score-cc"
+  R <- "regression/fisher"
   C <- "compliance/exact-binomial"
   cmp <- function(successes, trials, threshold, alpha = 0.05, intent = "VERIFICATION") {
     list(successes = as.integer(successes), trials = as.integer(trials), threshold = threshold,
@@ -92,15 +92,16 @@ generate_verdict_cases <- function() {
       "n = 50 is below the feasibility minimum of 59: refused under VERIFICATION."),
     verdict_case("compliance_smoke_50_of_50_threshold_95", C, cmp(50, 50, 0.95, intent = "SMOKE"),
       "SMOKE runs the undersized design; it cannot PASS."),
-    # Empirical bar: the continuity-corrected pooled score cutoff.
+    # Empirical bar: the one-sided Fisher cutoff.
     verdict_case("regression_pass_91_of_100_baseline_951_of_1000", R, reg(91, 100, 951, 1000)),
     verdict_case("regression_fail_90_of_100_baseline_951_of_1000", R, reg(90, 100, 951, 1000)),
     verdict_case("regression_pass_95_of_100_baseline_99_of_100", R, reg(95, 100, 99, 100)),
     verdict_case("regression_fail_95_of_100_baseline_100_of_100", R, reg(95, 100, 100, 100),
       "The cutoff is monotone in the baseline count: a perfect baseline demands more than 99 of 100."),
     verdict_case("regression_refused_test_larger_than_baseline", R, reg(190, 200, 95, 100)),
-    verdict_case("regression_refused_outside_calibration_tolerance", R,
-      reg(25, 25, 951, 1000, alpha = 0.01)),
+    verdict_case("regression_pass_25_of_25_baseline_951_of_1000_alpha001", R,
+      reg(25, 25, 951, 1000, alpha = 0.01),
+      "A small test against a large baseline at alpha 0.01 is admitted: the rule never exceeds alpha."),
     # Both bars on one configuration: an invalid part refuses the whole.
     verdict_case("joint_refused_empirical_part_test_larger_than_baseline", c(C, R),
       c(cmp(190, 200, 0.90), list(baseline_successes = 95L, baseline_trials = 100L)),
@@ -113,7 +114,7 @@ generate_verdict_cases <- function() {
   list(
     suite = "verdict",
     description = paste(
-      "Verdict evaluation under the two ruled rules: regression/score-cc for a baseline-derived",
+      "Verdict evaluation under the two ruled rules: regression/fisher for a baseline-derived",
       "threshold and compliance/exact-binomial for a given one; each case names its rule in",
       "decisionRule. A configuration carrying both bars (approach joint) is refused whole when",
       "either part is invalid. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and",
@@ -121,7 +122,7 @@ generate_verdict_cases <- function() {
       "observed_rate."
     ),
     method = paste(
-      "regression/score-cc: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision).",
+      "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision).",
       "compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision).",
       "Configuration errors are checked first, for every part of the configuration."
     ),

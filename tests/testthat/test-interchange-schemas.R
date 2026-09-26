@@ -405,7 +405,7 @@ test_that("the verdict-1.7 XSD requires the methodology version", {
   skip_if_not_installed("xml2")
   xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
   body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
-  mutated <- sub(' methodology-version="1.5.0"', "", body, fixed = TRUE)
+  mutated <- sub(' methodology-version="2.0.0"', "", body, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 
@@ -413,7 +413,7 @@ test_that("the verdict-1.7 XSD refuses an unknown decision rule or configuration
   skip_if_not_installed("xml2")
   xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
   typical <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
-  mutated <- gsub('decision-rule="regression/score-cc"', 'decision-rule="regression/wilson-reference"', typical, fixed = TRUE)
+  mutated <- gsub('decision-rule="regression/fisher"', 'decision-rule="regression/score-cc"', typical, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
   refused <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-refused.xml"))
   mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE"', 'configuration-error="TOO_SMALL"', refused, fixed = TRUE)
