@@ -223,6 +223,16 @@ stopifnot(!latency_precedence_exists(min_baseline(nte, 0.99), nte, 0.99, 0.05)$s
 chk("12.5.3", "expectation is not a lower bound", sprintf("against a baseline of %d, a run that returns %d or more successful latencies finds no rank",
     min_baseline(nte, 0.99), n_sat))
 
+nd <- latency_nondegeneracy_planning(0.99, 110, 0.80)
+stopifnot(nd$warning, !latency_nondegeneracy_planning(0.99, nd$planned_samples_needed, 0.80)$warning)
+chk("12.5.3", "non-degeneracy expected count", sprintf("$n_{\\text{planned}} = 110$ and baseline $\\hat{p} = 0.80$ expects %d successful samples, below the p99 minimum of %d",
+    nd$expected_test_samples, nd$minimum_contributing_samples))
+chk("12.5.3", "non-degeneracy planning figure", sprintf("%d planned samples give an expected %d", nd$planned_samples_needed,
+    latency_nondegeneracy_planning(0.99, nd$planned_samples_needed, 0.80)$expected_test_samples))
+stopifnot(latency_nondegeneracy_decision(0.99, 100, "VERIFICATION", TRUE)$outcome == "DECIDED",
+          latency_nondegeneracy_decision(0.99, 99, "VERIFICATION", TRUE)$outcome == "INCONCLUSIVE")
+chk("12.5.3", "non-degeneracy after the run", "a run that returns 100 successful latencies is decided, and one that returns 99 is INCONCLUSIVE")
+
 # --- §12.3.4 explicit latency requirements ----------------------------------------
 chk("12.3.4", "raw percentile at the boundary", sprintf("$P(\\text{Bin}(100, 0.95) \\ge 95) = %.3f$", pbinom(94, 100, 0.95, lower.tail = FALSE)))
 lc <- latency_compliance_verdict(c(rep(400, 96), rep(700, 4)), 500, 0.95, 0.05)

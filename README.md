@@ -46,8 +46,11 @@ it implements (`methodologyVersion`):
 | `latency/precedence` v1 | Latency regression (precedence rank of the baseline latencies) | rank, or `saturated` (INCONCLUSIVE) |
 | `latency/compliance-exact-binomial` v1 | An explicit latency requirement (exact one-sided binomial test on the count of successful latencies within the threshold) | y_min; PASS iff Y >= y_min, or INCONCLUSIVE when too few latencies arrived |
 
-Configurations refused before any sample runs carry a `configuration_error`:
-`TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`. The methodology-1.4.1 fixtures remain available as
+Configurations refused before any sample runs carry `configuration_error`, the
+list of every applicable code in the fixed order `TEST_LARGER_THAN_BASELINE`,
+`COMPLIANCE_INFEASIBLE` (empty when the configuration is valid). A criterion
+carrying both a normative and an empirical bar reports each bar's verdict and
+their structural composite. The methodology-1.4.1 fixtures remain available as
 the `v0.10.13` release assets.
 
 ### Pass-rate conformance

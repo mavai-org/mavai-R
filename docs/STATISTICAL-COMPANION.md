@@ -169,7 +169,9 @@ The regression-side prose of §§3–5 also uses a displayed rate: $c/n_t$, the 
 
 The three remaining operational differences are the **source** of the threshold (given vs. derived), the **interpretation** of failure (requirement not demonstrated vs. degradation signal), and the **prerequisite step** (none vs. MEASURE).
 
-Two configurations are refused before any sample runs (§5.7.1): a compliance design too small for PASS to be possible, under VERIFICATION intent, and an empirical test larger than its baseline.
+Two configurations are refused before any sample runs (§5.7.1): a compliance design too small for PASS to be possible, under VERIFICATION intent, and a test planned larger than the baseline it consumes.
+
+**Both bars on one criterion.** A criterion may carry a normative bar and an empirical bar at once — a contractual requirement and a baseline — and the two answer different questions: the normative bar asks whether the requirement is met, the empirical bar whether the service has degraded since its baseline. A service can meet its requirement with room to spare while its baseline shows it slipping, and the reverse. Each bar is decided by its own rule, `compliance/exact-binomial` or `regression/fisher`, at its own $\alpha$, on the same observations, and both verdicts are reported. The criterion's verdict combines them by the structural composite rule of §1.4.6: PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise. A FAIL names the bar that failed, so the reader knows which question was answered against the service.
 
 ---
 
@@ -701,7 +703,7 @@ V_{\text{contract}} \;=\; \begin{cases}
 \end{cases}
 $$
 
-with the per-criterion verdicts retained in full on the composite artefact. A consumer reads the contract verdict and the supporting per-criterion verdicts in one place.
+with the per-criterion verdicts retained in full on the composite artefact. The same rule combines the two verdicts of a criterion that carries both a normative and an empirical bar (see *Two Testing Paradigms*): the criterion passes if both bars pass, fails if either fails — the report naming the failing bar — and is INCONCLUSIVE otherwise, with both bars' verdicts, rules and $\alpha$ reported. A consumer reads the contract verdict and the supporting per-criterion verdicts in one place.
 
 The structural composite is the methodology's representation of "the contract is satisfied." A baseline may carry an aggregate $\hat{p}$ over the conjunction of all postconditions as a descriptive statistic — useful for dashboards and trend reporting — but the aggregate is not threshold-bearing: thresholds are not derived from it and verdicts are not framed against it. The hiding result of §1.4.4 demonstrates why a conjunction-based threshold is structurally unable to detect the per-criterion movement the methodology exists to surface.
 
@@ -1157,7 +1159,7 @@ A probability computed with the baseline held fixed at its observed rate — her
 
 **Conservatism.** The rule is conservative: its size is often below $\alpha$ (median $0.60\alpha$ to $0.76\alpha$ at the grid's worst $p$ for each configuration, across the certified grid), and it gives up some power to rules that run closer to $\alpha$. The certification discloses the cost against the beta-binomial predictive rule of §4.5: across 36,200 compared cells, the predictive rule's power to detect a drop of 0.05 is higher in 33,488, with a median gap of 0.003; it is more than 0.05 higher in 4,012 cells, mostly at $p \ge 0.98$, and the gap is largest at near-perfect small baselines (0.39 at $n_b = n_t = 70$, $\alpha = 0.05$, $p = 0.999$). The predictive rule is not calibrated (it exceeds $\alpha$ in 46 of those cells, up to $1.13\alpha$), which is why the methodology does not adopt it.
 
-**Design rule.** An empirical test larger than its baseline, $n_t > n_b$, is refused before any sample runs (`TEST_LARGER_THAN_BASELINE`, §5.7.1). The refusal is mavai's design policy, not a statistical necessity: the calculation would remain calibrated, and a test larger than its baseline can gain real power — at $n_b = 100$, a baseline rate of 0.95 and a true test rate of 0.85, $\alpha = 0.05$, the power is 0.708 at $n_t = 100$ and 0.826 at $n_t = 200$. The policy is that the measure experiment producing a baseline is at least as large as any test that consumes it, so a need for a larger test is met by a larger baseline. Larger measure experiments produce more stable references and usually support more sensitive regression tests; the rule nevertheless accounts for the baseline's finite-sample uncertainty directly, and no sample-size ratio substitutes for the calculation.
+**Design rule.** A test planned larger than the baseline it consumes is refused before any sample runs (`TEST_LARGER_THAN_BASELINE`, §5.7.1). The comparison is made once, on the two samplings: the test's planned sample size $N_t$ against the baseline run's sample size $N_b$, for every criterion the test carries, pass-rate and latency alike. For a pass-rate criterion these are $n_t$ and $n_b$. The refusal is mavai's design policy, not a statistical necessity: the calculation would remain calibrated, and a test larger than its baseline can gain real power — at $n_b = 100$, a baseline rate of 0.95 and a true test rate of 0.85, $\alpha = 0.05$, the power is 0.708 at $n_t = 100$ and 0.826 at $n_t = 200$. The policy is that the measure experiment producing a baseline is at least as large as any test that consumes it, so a need for a larger test is met by a larger baseline. Larger measure experiments produce more stable references and usually support more sensitive regression tests; the rule nevertheless accounts for the baseline's finite-sample uncertainty directly, and no sample-size ratio substitutes for the calculation.
 
 **Epistemic status.** Exact result: a conditional exact test, unconditionally conservative.
 
@@ -1589,10 +1591,10 @@ This refusal is **distinct from a SUT failure** — it indicates a configuration
 
 | Code | Refused configuration | Intent |
 |---|---|---|
+| `TEST_LARGER_THAN_BASELINE` | A test whose planned sample size $N_t$ exceeds the sample size $N_b$ of the baseline it consumes — judged once on the two samplings, for every criterion the test carries, pass-rate and latency alike; refused by mavai's design policy, not for statistical invalidity (§3.4) | Refused regardless of intent |
 | `COMPLIANCE_INFEASIBLE` | A normative design with $n < N_{\min}$ | VERIFICATION; SMOKE runs and reports that PASS is not possible (§5.7.3) |
-| `TEST_LARGER_THAN_BASELINE` | An empirical (regression) test with $n_t > n_b$ — refused by mavai's design policy, not for statistical invalidity (§3.4) | Refused regardless of intent |
 
-When a configuration carries both a normative and an empirical bar and either part is invalid, the whole configuration is refused; a run never proceeds half-valid. The existing zero-baseline treatment (§4.3.4) and the latency existence check (§12.5.2.1) are not configuration errors: the latency rank search run before the test, on the expected number of successful latencies, gives a warning and a planning figure, and the one run after it, on the actual count, yields INCONCLUSIVE with `saturated: true` when no rank exists. An explicit latency requirement below its feasibility minimum is refused as `COMPLIANCE_INFEASIBLE` under VERIFICATION when even its planned samples could not pass (§12.3).
+The latency success counts are never compared with each other for this rule: they are not known before the run, and they cannot exceed $N_t$. When a configuration carries both a normative and an empirical bar and any part is invalid, the whole configuration is refused; a run never proceeds half-valid. Every applicable code is reported, as a list in the fixed order of the table — `TEST_LARGER_THAN_BASELINE`, then `COMPLIANCE_INFEASIBLE` — so that a configuration with two invalid parts names both and the developer can correct both at once. A valid configuration with both bars is decided bar by bar and combined as *Two Testing Paradigms* describes. The existing zero-baseline treatment (§4.3.4) and the latency existence check (§12.5.2.1) are not configuration errors: the latency rank search run before the test, on the expected number of successful latencies, gives a warning and a planning figure, and the one run after it, on the actual count, yields INCONCLUSIVE with `saturated: true` when no rank exists. An explicit latency requirement below its feasibility minimum is refused as `COMPLIANCE_INFEASIBLE` under VERIFICATION when even its planned samples could not pass (§12.3).
 
 ##### Conformance Verification
 
@@ -2611,7 +2613,7 @@ The published mavai-R fixtures (`inst/cases/*.json`, fetched by the frameworks' 
 Arithmetic agreement is necessary, but it does not by itself show that the error rates a procedure *claims* are the ones it *achieves*. For that, mavai-R publishes, with each release from fixtures 0.11.0, a separate **calibration certification** asset, never inside the case files. It contains:
 
 - **Regression calibration.** For `regression/fisher`, the exact unconditional false-degradation-signal probability $A(p)$ at each point of a fine grid of $p$ from 0.50 to 0.99999, and its largest value on the grid, for 1,922 configurations of baseline and test size ($n_b$ from 10 to 10,000, $n_t \le n_b$, $n_t/n_b \ge 0.01$) at $\alpha$ = 0.001, 0.01, 0.05 and 0.10, and the same beyond the certified range at baselines of 20,000 to 100,000; exact power at drops of 0.01 to 0.10; and, as disclosure, the power of the beta-binomial predictive rule beside it. The certification fails if any value on the grid exceeds $\alpha$. The grid gives exact values at its points; the guarantee at every $p$ comes from the theorem of §3.4, and the grid is evidence that the reference implementation realises it.
-- **Latency calibration.** For `latency/precedence`, the rank, the exact breach probability at it and one rank below, and saturation, for baselines of 10 to 2,000 latencies, tests no larger than the baseline, the four supported percentiles and four $\alpha$ values.
+- **Latency calibration.** For `latency/precedence`, the rank, the exact breach probability at it and one rank below, and saturation, for baselines of 10 to 2,000 latencies, tests of no more successful latencies than the baseline's, the four supported percentiles and four $\alpha$ values.
 - **Compliance calibration.** For `compliance/exact-binomial`, the false-compliance probability at $p = p_{\mathrm{req}}$ for nine requirements and sizes up to 20,000, and the exact sizing table. `latency/compliance-exact-binomial` applies the same test to the within-threshold count, so the same table certifies it.
 
 Calibration is established at three levels, which are kept apart. The theorems of §3.4, §3.6 and §12.4.2 establish the rules' statistical properties. The mavai-R certification shows that the reference implementation realises them, over the published surfaces and boundary cases. A downstream framework may claim conformance to a rule's calibration provided it implements the named algorithm and passes the prescribed decision-rule fixtures, their exact-boundary cases included; agreement on a finite set of fixtures is evidence that it implements the same rule, not a proof that it does so for every input, and its own tests and review of the implementation carry the rest of that argument. A framework that reports calibration must say which certification asset it relies on.
@@ -2644,7 +2646,8 @@ A conformant implementation of this companion is one for which the following hol
 - Decisions are made on integer artefacts — the Fisher cutoff $c$ (regression) or $k_{\min}$ (compliance) — not on rounded displayed rates (§3.4, §3.6).
 - Every error-rate statement names the random experiment it calibrates; a probability computed with the baseline held at its observed rate appears only as a labelled diagnostic, and the size at the assumed common rate is labelled as such (§3.4, §7.1, §7.2).
 - A regression report states the design power and the resolved-test power at the design alternative rate, named apart, or the minimum detectable degradation at 80% power where no alternative is declared (§5.3, §5.6); a compliance sizing names its alternative and its kind (§5.5).
-- Configurations are refused before any sample runs with the named codes `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE` (the latter under VERIFICATION only); a configuration with an invalid part is refused whole (§5.7.1).
+- Configurations are refused before any sample runs with the named codes `TEST_LARGER_THAN_BASELINE` (judged on the planned test size against the baseline run's size, for every criterion including latency) and `COMPLIANCE_INFEASIBLE` (under VERIFICATION only); a configuration with an invalid part is refused whole, and every applicable code is reported in that fixed order (§5.7.1).
+- A criterion carrying both a normative and an empirical bar reports both verdicts, each with its rule and $\alpha$, and its verdict is their structural composite, a FAIL naming the failing bar (*Two Testing Paradigms*, §1.4.6).
 - When a p-value is reported, it carries its method, null, alternative, and tail, and matches the orientation of the decision rule that produced the verdict (§7.1, §10.2).
 - A latency threshold for which no rank achieves $\alpha$ at the actual number of successful latencies is reported as INCONCLUSIVE with `saturated: true`, never as a threshold; before the run the same search gives only a warning and a planning figure (§12.4.2, §12.5.3).
 - An enforced explicit latency requirement is decided by `latency/compliance-exact-binomial`; the comparison of the observed percentile with the threshold is reported only as an advisory figure (§12.3).
@@ -2894,7 +2897,7 @@ The methodology enforces minimum sample counts for each percentile level based o
 | p95        | 0.95 | 20            | $\lceil 0.95 \cdot 20 \rceil = 19$: 19th order statistic of 20; one value above                            |
 | p99        | 0.99 | 100           | $\lceil 0.99 \cdot 100 \rceil = 99$: 99th order statistic of 100; one value above. Below 100, p99 = max    |
 
-These thresholds ensure that the percentile estimate is not degenerate (i.e., not simply the minimum or maximum of the sample). They are a **non-degeneracy gate** only — they do not by themselves guarantee that a calibrated threshold exists for the test that will run. That second condition is given by the existence gate below (§12.5.2.1).
+These thresholds ensure that the percentile estimate is not degenerate (i.e., not simply the minimum or maximum of the sample). They are a **non-degeneracy gate** only — they do not by themselves guarantee that a calibrated threshold exists for the test that will run. That second condition is given by the existence gate below (§12.5.2.1). Like the existence check, the gate is decided on the actual number of successful latencies after the run; before the run it is a planning check on the expected number (§12.5.3).
 
 #### 12.5.2.1 Existence of the Precedence Rank
 
@@ -2916,18 +2919,20 @@ The two latency gates therefore play different roles:
 
 | Gate | Question answered | Outcome |
 |---|---|---|
-| Non-degeneracy (§12.5.2) | Is the empirical percentile distinct from the sample maximum / minimum? | Configuration error in VERIFICATION |
+| Non-degeneracy (§12.5.2) | Is the empirical percentile distinct from the sample maximum / minimum? | Before the run, on the expected count: a warning and a planning figure. After the run, on the actual count: INCONCLUSIVE for an enforced assertion under VERIFICATION, indicative otherwise (§12.5.4) |
 | Existence (§12.4.2) | Does some baseline rank achieve a no-degradation breach probability of at most $\alpha$ for this test size? | Before the run, on the expected count: a warning and a planning figure. After the run, on the actual count: INCONCLUSIVE with `saturated: true` when no rank exists |
 
-A percentile estimate can be non-degenerate yet still unable to support a calibrated threshold. For each asserted percentile, the framework checks the non-degeneracy requirement and runs the precedence rank search on the expected count before any sample executes, and decides existence on the actual count after the run.
+A percentile estimate can be non-degenerate yet still unable to support a calibrated threshold. For each asserted percentile, the framework runs both checks on the expected count before any sample executes, as warnings, and decides both on the actual count after the run.
 
 **Scope note on p99.9 and beyond**: The supported percentile levels are $\{0.50, 0.90, 0.95, 0.99\}$. Extreme-tail percentiles such as p99.9 are out of scope for the current methodology: a non-degenerate p99.9 estimate requires $n_s \geq 1{,}000$ successful samples, and a statistically useful threshold at 95% requires considerably more. Services with genuine p99.9 SLAs generally warrant dedicated tail-focused instrumentation (production telemetry, HdrHistogram-style log-linear bucketing, or extreme-value modelling) rather than per-test-run estimation.
 
 #### 12.5.3 The Feasibility Gate
 
-For **VERIFICATION** intent with latency enforcement enabled, the framework checks *before any samples execute*, for each asserted percentile $p_j$:
+**Test size** (§5.7.1). Whatever the intent, the framework first checks that the test's planned sample size $N_t$ does not exceed the sample size $N_b$ of the baseline run whose latencies it consumes; otherwise the configuration is refused (`TEST_LARGER_THAN_BASELINE`). This is the same check, made once on the two samplings, that applies to the test's pass-rate criteria; the numbers of successful latencies, $n_t$ and $n_b$, are not compared.
 
-1. **Non-degeneracy** (§12.5.2): the expected number of successful test samples meets the minimum of §12.5.2; otherwise the framework raises a configuration error — the same mechanism used for the pass-rate feasibility gate (Section 5.7.1).
+For **VERIFICATION** intent with latency enforcement enabled, the framework then checks *before any samples execute*, for each asserted percentile $p_j$:
+
+1. **Non-degeneracy, as a planning check** (§12.5.2): the expected number of successful test samples against the minimum of §12.5.2. When it falls short, the framework warns before the run and reports the planning figure — the smallest planned sample size whose expected count reaches the minimum. The warning is not a refusal: the test runs.
 2. **Existence, as a planning check** (§12.5.2.1): the precedence rank search of §12.4.2, run on the baseline's $n_b$ latencies and the test's expected successful-sample count. When it finds no rank, the framework warns before the run and reports the planning figure — the smallest baseline, no smaller than the expected count, that supports a rank for it. The warning is not a verdict: the test runs.
 3. **Explicit requirements** (§12.3.4): for an enforced explicit threshold, the planned number of samples reaches $\lceil \log\alpha / \log p_j \rceil$; otherwise no count could pass even if every sample succeeded, and the design is refused (`COMPLIANCE_INFEASIBLE`).
 
@@ -2935,13 +2940,15 @@ The expected successful-sample count is
 
 $$n_{t,\text{expected}} = \lfloor n_{\text{planned}} \times \hat{p}_{\text{baseline}} \rfloor.$$
 
-The expected count is not a lower bound: a run can return fewer or more successful samples. After the run, the threshold is derived from the test's actual number of successful samples, and the binding saturation decision is made on it (§12.4.2).
+The expected count is not a lower bound: a run can return fewer or more successful samples. After the run, both decisions are made on the test's actual number of successful samples: below the non-degeneracy minimum the enforced assertion is INCONCLUSIVE (under SMOKE intent or in advisory mode the percentile is evaluated and marked indicative, §12.5.4); otherwise the threshold is derived from the actual count, and the binding saturation decision is made on it (§12.4.2).
+
+**Example (non-degeneracy)**: A p99 assertion with $n_{\text{planned}} = 110$ and baseline $\hat{p} = 0.80$ expects 88 successful samples, below the p99 minimum of 100. The framework warns before the run and reports the planning figure: 125 planned samples give an expected 100. The warning binds in neither direction: a run that returns 100 successful latencies is decided, and one that returns 99 is INCONCLUSIVE.
 
 **Example**: A test with $n_{\text{planned}} = 200$ and baseline $\hat{p} = 0.80$ expects $n_{t,\text{expected}} = 160$ successful samples. A p99 assertion at $\alpha = 0.05$ has $r = 159$; against a baseline of 400 latencies no rank achieves $\alpha$ at 160, so the framework warns before the test runs and reports the planning figure: a baseline of at least 554 latencies supports a threshold for 160 (rank 554 at exactly 554). The pre-run result binds in neither direction: against a baseline of 554, a run that returns 161 or more successful latencies finds no rank, and the assertion is INCONCLUSIVE with `saturated: true`.
 
 #### 12.5.4 Indicative Results
 
-When sample size falls below the minimum but the test is not subject to the feasibility gate (SMOKE intent, or advisory mode), the framework still evaluates the percentile but marks the result as **indicative**:
+When the actual number of successful latencies falls below the minimum and the assertion is not enforced under VERIFICATION (SMOKE intent, or advisory mode), the framework still evaluates the percentile but marks the result as **indicative**:
 
 > "The p99 result is based on $n_s = 40$ samples (minimum recommended: 100). This result is indicative — a directional signal, not a statistically reliable estimate."
 
@@ -3017,7 +3024,7 @@ The list is restricted to elements that are intrinsic to the model. Operationali
 | **Latency rank** | The binding decision artefact of latency regression: the precedence rank $k$ and threshold $t_{(k)}$, or `saturated` (INCONCLUSIVE). | §12.4.2 |
 | **Latency compliance count** | The binding decision artefact of an explicit latency requirement: the smallest passing count $y_{\min}$ of successful latencies at or below $\tau$; PASS iff $Y \ge y_{\min}$, INCONCLUSIVE when too few successful latencies arrived for any count to pass. | §12.3.4 |
 | **Design alternative rate** | The true rate $p_{\mathrm{design}}$ at which a regression test must reach its target power. Not a tolerance: the test flags any degradation from the baseline. The design power and the resolved-test power are stated at it, named apart. | §5.3, §5.4.1 |
-| **Configuration error** | A named refusal before any sample runs: `TEST_LARGER_THAN_BASELINE`, `COMPLIANCE_INFEASIBLE`. | §5.7.1 |
+| **Configuration error** | A named refusal before any sample runs: `TEST_LARGER_THAN_BASELINE`, `COMPLIANCE_INFEASIBLE`; every applicable code is reported, in that order. | §5.7.1 |
 | **Threshold origin**                  | The provenance category of an inferential threshold (SLA, SLO, POLICY, EMPIRICAL, UNSPECIFIED), recorded with the requirement or, for EMPIRICAL, the baseline reference.                                                                                                                                                                                                                                                                                                                                 | §7.4                            |
 | **Sample-size requirement** | The per-criterion sample count from which the exact power of the operative rule stays at its target, with the feasibility gate that refuses a compliance design too small to pass. | §§5.4–5.5, §5.7.1 |
 | **Per-criterion verdict**             | PASS, FAIL, or INCONCLUSIVE on a criterion: for **compliance** criteria, the observed count's relation to $k_{\min}$; for **regression** criteria, the observed success count's relation to the Fisher cutoff $c_c$ derived from the baseline's counts at $\alpha_c$; for **observational** criteria, the zero-failure observation. Carries the supporting statistics, the threshold and origin, $\alpha_c$, and the population specification. | §1.4.3, §1.4.5, §1.4.6          |
