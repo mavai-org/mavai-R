@@ -8,8 +8,8 @@
       "version": 1
     }
   ],
-  "description": "Minimum sample sizes and the existence gate for empirical latency percentiles (p50/p90/p95/p99). Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 minimums for emitting a percentile in experiment artefacts (baseline, exploration, optimization) and verdicts: below the minimum the percentile key is omitted entirely and renderers display a placeholder. Cases with approach 'precedence_existence' carry the §12.5.2.1 existence gate of latency/precedence, computed before the run from the baseline size, the test size, the percentile and alpha: saturated (no rank achieves alpha, the result is INCONCLUSIVE) and otherwise the rank. The withdrawn Wilks minimums are no longer published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly (the test percentile is the test maximum); the inclusive rule admits the rank, and double precision alone does not: implementations follow the exact-boundary convention (companion §10.6). Conformance is exact equality (tolerance: 0).",
-  "method": "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for p50/p90/p95/p99); existence per §12.5.2.1: a rank exists iff breach(n_b) <= alpha, with breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1) and r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1).",
+  "description": "Minimum sample sizes and the existence gate for empirical latency percentiles (p50/p90/p95/p99). Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 minimums for emitting a percentile in experiment artefacts (baseline, exploration, optimization) and verdicts: below the minimum the percentile key is omitted entirely and renderers display a placeholder. Cases with approach 'precedence_existence' carry the §12.5.2.1 existence condition of latency/precedence from the baseline size, the test's number of successful latencies, the percentile and alpha: saturated (no rank achieves alpha) and otherwise the rank; on the actual count after the run it is the binding saturation decision, and saturated is INCONCLUSIVE. Cases with approach 'precedence_planning' carry the §12.5.3 pre-run check: the same search on the expected successful count floor(planned_samples * baseline_success_rate), an expectation and not a lower bound, giving a warning (no rank at the expected count), the planning rank and the smallest baseline at least as large as the expected count that supports a rank; it decides nothing. The withdrawn Wilks minimums are no longer published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly (the test percentile is the test maximum); the inclusive rule admits the rank, and double precision alone does not: implementations follow the exact-boundary convention (companion §10.6). Conformance is exact equality (tolerance: 0).",
+  "method": "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for p50/p90/p95/p99); existence per §12.5.2.1: a rank exists iff breach(n_b) <= alpha, with breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1) and r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1). Planning: expected_test_samples = floor(planned_samples * baseline_success_rate); warning = no rank at that count; planning_rank = the rank at it (null under a warning); minimum_baseline_trials = the smallest n_b >= expected_test_samples with a rank.",
   "tolerance": 0,
   "cases": [
     {
@@ -320,6 +320,95 @@
       "expected": {
         "saturated": false,
         "rank": 494
+      }
+    },
+    {
+      "name": "p99_554_test161_saturated",
+      "approach": "precedence_existence",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 554,
+        "test_samples": 161,
+        "percentile": 0.99,
+        "alpha": 0.05
+      },
+      "expected": {
+        "saturated": true,
+        "rank": null
+      }
+    },
+    {
+      "name": "p99_400_planned200_rate080_warning",
+      "approach": "precedence_planning",
+      "decisionRule": "latency/precedence",
+      "description": "The §12.5.3 example: 160 expected successful latencies, no rank at a baseline of 400; a warning and the planning figure 554, not a verdict.",
+      "inputs": {
+        "baseline_trials": 400,
+        "planned_samples": 200,
+        "baseline_success_rate": 0.8,
+        "percentile": 0.99,
+        "alpha": 0.05
+      },
+      "expected": {
+        "expected_test_samples": 160,
+        "warning": true,
+        "planning_rank": null,
+        "minimum_baseline_trials": 554
+      }
+    },
+    {
+      "name": "p99_554_planned200_rate080_no_warning",
+      "approach": "precedence_planning",
+      "decisionRule": "latency/precedence",
+      "description": "A rank exists at the expected 160; if the run returns 161 or more successful latencies the post-run decision is saturated (p99_554_test161_saturated).",
+      "inputs": {
+        "baseline_trials": 554,
+        "planned_samples": 200,
+        "baseline_success_rate": 0.8,
+        "percentile": 0.99,
+        "alpha": 0.05
+      },
+      "expected": {
+        "expected_test_samples": 160,
+        "warning": false,
+        "planning_rank": 554,
+        "minimum_baseline_trials": 554
+      }
+    },
+    {
+      "name": "p95_1000_planned20_rate075",
+      "approach": "precedence_planning",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 1000,
+        "planned_samples": 20,
+        "baseline_success_rate": 0.75,
+        "percentile": 0.95,
+        "alpha": 0.05
+      },
+      "expected": {
+        "expected_test_samples": 15,
+        "warning": false,
+        "planning_rank": 998,
+        "minimum_baseline_trials": 285
+      }
+    },
+    {
+      "name": "p90_30_planned12_rate090_warning",
+      "approach": "precedence_planning",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 30,
+        "planned_samples": 12,
+        "baseline_success_rate": 0.9,
+        "percentile": 0.9,
+        "alpha": 0.05
+      },
+      "expected": {
+        "expected_test_samples": 10,
+        "warning": true,
+        "planning_rank": null,
+        "minimum_baseline_trials": 33
       }
     }
   ]

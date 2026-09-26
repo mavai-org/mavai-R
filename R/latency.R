@@ -134,11 +134,12 @@ latency_bound_existence_min_samples <- function(p, confidence) {
   as.integer(ceiling(log(alpha) / log(p)))
 }
 
-#' Existence of a latency/precedence threshold, before the run
+#' Existence of a latency/precedence threshold for a test of n_t latencies
 #'
 #' A rank exists iff the top rank achieves it, breach(n_b) <= alpha,
-#' because breach(k) decreases in k. The inputs are all known before the
-#' test runs, so this is the pre-run existence gate.
+#' because breach(k) decreases in k. Run on the actual number of
+#' successful latencies after the test, this is the binding saturation
+#' decision: saturated means INCONCLUSIVE.
 #'
 #' @return A list: saturated (TRUE when no rank achieves alpha) and rank
 #'   (the precedence rank, or NA when saturated).
@@ -146,6 +147,30 @@ latency_bound_existence_min_samples <- function(p, confidence) {
 latency_precedence_exists <- function(baseline_trials, test_samples, p, alpha) {
   k <- latency_precedence_rank(baseline_trials, test_samples, p, alpha)
   list(saturated = is.na(k), rank = k)
+}
+
+#' Pre-run planning check for a latency/precedence assertion
+#'
+#' Before the run the number of successful latencies is not known; the
+#' expected count floor(planned_samples * baseline_success_rate) is an
+#' expectation, not a lower bound. The rank search on it gives a warning
+#' (no rank at the expected count) and planning figures: the rank at the
+#' expected count, and the smallest baseline, at least as large as the
+#' expected count, that supports a rank for it. Nothing here is binding:
+#' saturation is decided after the run from the actual count
+#' (`latency_precedence_exists()`).
+#'
+#' @return A list: expected_test_samples, warning, planning_rank,
+#'   minimum_baseline_trials.
+#' @export
+latency_precedence_planning <- function(baseline_trials, planned_samples, baseline_success_rate,
+                                        p, alpha) {
+  n_exp <- as.integer(floor(planned_samples * baseline_success_rate + 1e-9))
+  e <- latency_precedence_exists(baseline_trials, n_exp, p, alpha)
+  n_b <- n_exp
+  while (is.na(latency_precedence_rank(n_b, n_exp, p, alpha))) n_b <- n_b + 1L
+  list(expected_test_samples = n_exp, warning = e$saturated, planning_rank = e$rank,
+       minimum_baseline_trials = as.integer(n_b))
 }
 
 #' Generate latency percentile minimum-sample-size and existence cases
@@ -157,10 +182,15 @@ latency_precedence_exists <- function(baseline_trials, test_samples, p, alpha) {
 #'     artefacts and verdicts at all (below the minimum the key is
 #'     omitted, renderers show a dash). One case per supported level.
 #'
-#' (2) **precedence_existence** — the companion §12.5.2.1 existence gate:
-#'     whether a latency/precedence rank exists for a baseline of n_b
-#'     latencies, a test of n_t, a percentile and alpha, and the rank.
-#'     Computed before the run; saturated means INCONCLUSIVE.
+#' (2) **precedence_existence** — the companion §12.5.2.1 existence
+#'     condition: whether a latency/precedence rank exists for a baseline
+#'     of n_b latencies, a test of n_t successful latencies, a percentile
+#'     and alpha, and the rank. On the actual count after the run it is the
+#'     binding saturation decision; saturated means INCONCLUSIVE.
+#'
+#' (3) **precedence_planning** — the §12.5.3 pre-run check: the same
+#'     search on the expected successful count, giving a warning and
+#'     planning figures, never a verdict.
 #'
 #' @return A list suitable for JSON serialisation.
 #' @export
@@ -205,7 +235,27 @@ generate_latency_percentile_minimums_cases <- function() {
     existence_case("p99_553_test160_saturated", 553, 160, 0.99, 0.05),
     existence_case("p99_554_test160_first_rank", 554, 160, 0.99, 0.05),
     existence_case("p50_20_test10", 20, 10, 0.50, 0.05),
-    existence_case("p95_500_test100_alpha001", 500, 100, 0.95, 0.01)
+    existence_case("p95_500_test100_alpha001", 500, 100, 0.95, 0.01),
+    existence_case("p99_554_test161_saturated", 554, 161, 0.99, 0.05)
+  )
+
+  planning_case <- function(name, n_b, planned, rate, p, alpha, description = NULL) {
+    e <- latency_precedence_planning(n_b, planned, rate, p, alpha)
+    case <- list(name = name, approach = "precedence_planning", decisionRule = "latency/precedence")
+    if (!is.null(description)) case$description <- description
+    c(case, list(
+      inputs = list(baseline_trials = as.integer(n_b), planned_samples = as.integer(planned),
+                    baseline_success_rate = rate, percentile = p, alpha = alpha),
+      expected = e
+    ))
+  }
+  planning_cases <- list(
+    planning_case("p99_400_planned200_rate080_warning", 400, 200, 0.80, 0.99, 0.05,
+      "The §12.5.3 example: 160 expected successful latencies, no rank at a baseline of 400; a warning and the planning figure 554, not a verdict."),
+    planning_case("p99_554_planned200_rate080_no_warning", 554, 200, 0.80, 0.99, 0.05,
+      "A rank exists at the expected 160; if the run returns 161 or more successful latencies the post-run decision is saturated (p99_554_test161_saturated)."),
+    planning_case("p95_1000_planned20_rate075", 1000, 20, 0.75, 0.95, 0.05),
+    planning_case("p90_30_planned12_rate090_warning", 30, 12, 0.90, 0.90, 0.05)
   )
 
   list(
@@ -216,9 +266,15 @@ generate_latency_percentile_minimums_cases <- function() {
       "minimums for emitting a percentile in experiment artefacts (baseline, exploration, ",
       "optimization) and verdicts: below the minimum the percentile key is omitted entirely ",
       "and renderers display a placeholder. Cases with approach 'precedence_existence' carry the ",
-      "§12.5.2.1 existence gate of latency/precedence, computed before the run from the baseline ",
-      "size, the test size, the percentile and alpha: saturated (no rank achieves alpha, the ",
-      "result is INCONCLUSIVE) and otherwise the rank. The withdrawn Wilks minimums are no longer ",
+      "§12.5.2.1 existence condition of latency/precedence from the baseline size, the test's ",
+      "number of successful latencies, the percentile and alpha: saturated (no rank achieves ",
+      "alpha) and otherwise the rank; on the actual count after the run it is the binding ",
+      "saturation decision, and saturated is INCONCLUSIVE. Cases with approach ",
+      "'precedence_planning' carry the §12.5.3 pre-run check: the same search on the expected ",
+      "successful count floor(planned_samples * baseline_success_rate), an expectation and not a ",
+      "lower bound, giving a warning (no rank at the expected count), the planning rank and the ",
+      "smallest baseline at least as large as the expected count that supports a rank; it ",
+      "decides nothing. The withdrawn Wilks minimums are no longer ",
       "published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly ",
       "(the test percentile is the test maximum); the inclusive rule admits the rank, and double ",
       "precision alone does not: implementations follow the exact-boundary convention (companion ",
@@ -228,10 +284,13 @@ generate_latency_percentile_minimums_cases <- function() {
       "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for ",
       "p50/p90/p95/p99); existence per §12.5.2.1: a rank exists iff breach(n_b) <= alpha, with ",
       "breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1) and ",
-      "r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1)."
+      "r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1). ",
+      "Planning: expected_test_samples = floor(planned_samples * baseline_success_rate); warning = ",
+      "no rank at that count; planning_rank = the rank at it (null under a warning); ",
+      "minimum_baseline_trials = the smallest n_b >= expected_test_samples with a rank."
     ),
     tolerance = 0,
-    cases = c(emission_cases, existence_cases)
+    cases = c(emission_cases, existence_cases, planning_cases)
   )
 }
 

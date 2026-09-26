@@ -195,3 +195,14 @@ test_that("percentile minimums suite publishes the emission minimums and the exi
   expect_false(any(vapply(existence, function(c) c$inputs$test_samples > c$inputs$baseline_trials, logical(1))))
 })
 
+
+test_that("the pre-run check warns and plans; saturation is decided on the actual count", {
+  pl <- latency_precedence_planning(400, 200, 0.80, 0.99, 0.05)
+  expect_identical(pl$expected_test_samples, 160L)
+  expect_true(pl$warning)
+  expect_identical(pl$minimum_baseline_trials, 554L)
+  ok <- latency_precedence_planning(554, 200, 0.80, 0.99, 0.05)
+  expect_false(ok$warning)
+  # The expectation is not a lower bound: 161 successful latencies saturate.
+  expect_true(latency_precedence_exists(554, 161, 0.99, 0.05)$saturated)
+})
