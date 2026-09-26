@@ -12,11 +12,12 @@
 #   --cores  worker processes (default: all)
 #
 # Surfaces:
-#   regression_size.csv       worst-case unconditional size of regression/fisher over p,
-#                             per (n_b, n_t, alpha), on two interleaved grids
+#   regression_size.csv       largest exact unconditional size of regression/fisher at the
+#                             points of the p grid, per (n_b, n_t, alpha), on two
+#                             interleaved grids (the guarantee at every p is the theorem's)
 #   regression_beyond.csv     the same beyond the certified range (n_b 20,000-100,000,
 #                             n_t 1-100)
-#   regression_settling.csv   worst-case size as n_b grows at fixed n_t
+#   regression_settling.csv   the largest size on the p grid as n_b grows at fixed n_t
 #   regression_power.csv      exact power of regression/fisher at p - delta, and the
 #                             beta-binomial predictive rule's power at delta 0.05 beside it
 #                             (a comparison disclosing the rule's conservatism, never a rule)
@@ -91,7 +92,7 @@ scan <- function(cfg) {
 }
 
 # ---------------------------------------------------------------------------
-# Regression: worst-case unconditional size over p, in and beyond the range.
+# Regression: the largest unconditional size on the p grid, in and beyond the range.
 # ---------------------------------------------------------------------------
 say("regression: %d configurations x %d alpha over %d p values, %d cores",
     nrow(CFG), length(ALPHAS), length(CERTIFICATION_P_GRID), cores)
