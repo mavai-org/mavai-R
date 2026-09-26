@@ -7,7 +7,7 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 
 ## [0.11.0] — unreleased
 
-**Breaking: the fixtures implement Statistical Companion 2.0.0.** The three verdict-producing procedures change, so cutoffs, ranks, sample sizes, feasibility and verdicts change against methodology 1.4.1. Every fixture file and the manifest now say which methodology they implement. The 1.4.1 fixtures remain reproducible from the `v0.10.13` release assets, which are not changed.
+**Breaking: the fixtures implement Statistical Companion 1.5.0.** The three verdict-producing procedures change, so cutoffs, ranks, sample sizes, feasibility and verdicts change against methodology 1.4.1. Every fixture file and the manifest now say which methodology they implement. The 1.4.1 fixtures remain reproducible from the `v0.10.13` release assets, which are not changed.
 
 *New decision rules*, each with a versioned identifier carried by the fixtures that depend on it:
 

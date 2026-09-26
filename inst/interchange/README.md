@@ -31,7 +31,7 @@ record carries a first-class `<postcondition-standings>` element (descriptive
 per-check tallies with the partial-credit facts stated verbatim); the
 `verdict-1.3-typical.xml` example here is validated against the XSD by the
 same build step that validates the YAML examples. From 1.7
-(Statistical Companion 2.0.0) the record states the methodology version
+(Statistical Companion 1.5.0) the record states the methodology version
 whose decision rules produced it, the verdict names the versioned rule that
 decided (`regression/fisher`, `compliance/exact-binomial`,
 `latency/precedence`), and a configuration refused before any sample ran

@@ -2,7 +2,7 @@
 <!-- Worked example: a typical verdict-1.7 record.
 
      1.7 names the decision behind the verdict (Statistical Companion
-     2.0.0). The record states the methodology whose rules produced it, and
+     1.5.0). The record states the methodology whose rules produced it, and
      the verdict states the versioned rule that decided.
 
      The run below is an empirical regression test: a baseline of 951
@@ -15,7 +15,7 @@
 
      A configuration refused before any sample ran is shown in
      verdict-1.7-refused.xml. -->
-<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="2.0.0" timestamp="2026-09-26T12:00:00+00:00" generator="worked-example">
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-26T12:00:00+00:00" generator="worked-example">
   <identity use-case-id="offer-extraction" />
   <execution planned-samples="100" samples-executed="100" successes="93" failures="7" elapsed-ms="148200" intent="VERIFICATION" confidence="0.95" />
   <statistics confidence-level="0.95" standard-error="0.0255" wilson-lower="0.8757" threshold="0.91" threshold-origin="EMPIRICAL" />

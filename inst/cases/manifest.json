@@ -1,7 +1,7 @@
 {
   "manifestVersion": 2,
   "fixtureVersion": "0.11.0",
-  "methodologyVersion": "2.0.0",
+  "methodologyVersion": "1.5.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
@@ -19,7 +19,7 @@
   ],
   "configurationErrors": ["TEST_LARGER_THAN_BASELINE", "COMPLIANCE_INFEASIBLE"],
   "familyMandatory": ["wilson_ci", "wilson_lower", "regression_decision", "compliance_decision", "latency_threshold", "feasibility", "power_analysis", "verdict"],
-  "familyMandatoryRationale": "Methodology 2.0.0 replaces the three decision rules and the mandatory roster with them. The roster is the methodological spine of the three rules: the Wilson interval and lower bound (kept as descriptive primitives; no rule decides with them), the empirical-regression verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), the latency threshold (latency/precedence), the feasibility gate and exact sizing of the compliance rule, the exact power of the regression rule, and the verdict suite encoding both ruled rules. Every mandatory decision suite carries its refusal cases, so both configuration errors are binding through them. threshold_derivation (the regression cutoff without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of the regression rule against a declared tolerance, with its refusals), latency_percentile (the nearest-rank primitive) and latency_percentile_minimums remain published and optional: a framework that implements the feature must consume the suite. criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with the 1.4.1 rules: latency_threshold_bootstrap (a comparison of the withdrawn order-statistic bound); the 1.4.1 fixtures remain reproducible from the v0.10.13 release assets.",
+  "familyMandatoryRationale": "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. The roster is the methodological spine of the three rules: the Wilson interval and lower bound (kept as descriptive primitives; no rule decides with them), the empirical-regression verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), the latency threshold (latency/precedence), the feasibility gate and exact sizing of the compliance rule, the exact power of the regression rule, and the verdict suite encoding both ruled rules. Every mandatory decision suite carries its refusal cases, so both configuration errors are binding through them. threshold_derivation (the regression cutoff without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of the regression rule against a declared tolerance, with its refusals), latency_percentile (the nearest-rank primitive) and latency_percentile_minimums remain published and optional: a framework that implements the feature must consume the suite. criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with the 1.4.1 rules: latency_threshold_bootstrap (a comparison of the withdrawn order-statistic bound); the 1.4.1 fixtures remain reproducible from the v0.10.13 release assets.",
   "suites": {
     "baseline_object": {
       "file": "baseline_object.json",
@@ -29,7 +29,7 @@
       "cases": ["consult_advice_eu_weekday", "guardrail_sentinel_observational_only", "consult_advice_us_weekend_divergent", "perfect_baseline_moderate_n", "consult_advice_cross_policy_counterexample", "paired_evaluability_content_pattern"],
       "bindingFields": [],
       "informationalFields": {},
-      "md5": "17662dda8757b4cc14f539d3aa1ec0ff"
+      "md5": "5a934739fb9749f2c708aced04e08849"
     },
     "compliance_decision": {
       "file": "compliance_decision.json",
@@ -44,7 +44,7 @@
       "cases": ["headline_995_n477_verification_refused", "headline_995_n477_smoke_pass_not_possible", "p95_n150_pass_at_k_min", "p95_n150_fail_below_k_min", "p95_n150_smoke_pass_at_k_min", "p99_n793_pass_at_k_min", "p99_n793_fail_below_k_min", "p999_n2995_zero_failures_pass", "p999_n2995_one_failure_fail", "p999_n2994_verification_refused", "compliance_pass_clear_margin", "compliance_fail_not_demonstrated", "alpha001_p90_n60_pass_at_k_min", "alpha001_p90_n60_fail_below_k_min", "alpha0001_p98_n800_fail", "conflation_detector_compliance_fail"],
       "bindingFields": ["configuration_error", "k_min", "pass_possible", "verdict"],
       "informationalFields": ["clopper_pearson_lower", "false_compliance"],
-      "md5": "34a282657dd5f7635503659a0ae2df55"
+      "md5": "ba325b81813e6a972b7923544a65f0ce"
     },
     "composite_verdict": {
       "file": "composite_verdict.json",
@@ -54,7 +54,7 @@
       "cases": ["all_pass_regression_only", "all_pass_compliance_only", "consult_advice_fail_single_trigger", "fail_multi_trigger_mixed_procedures", "inconclusive_some_pass_some_inconclusive", "inconclusive_all_inconclusive", "mixed_observational_excluded_from_envelopes", "observational_only_pass", "observational_only_fail"],
       "bindingFields": ["composite_verdict", "false_compliance_envelope", "false_degradation_signal_envelope", "triggering_criteria"],
       "informationalFields": {},
-      "md5": "6e2ff48fda3edaa3bbc88de392f78e87"
+      "md5": "e5046b807c2ebfbcf5d5291eb4f63695"
     },
     "criterion_verdict_inferential": {
       "file": "criterion_verdict_inferential.json",
@@ -73,7 +73,7 @@
       "cases": ["regression_clear_pass_consult_advice_well_formed", "regression_clear_fail_K_far_below_cutoff", "regression_borderline_pass_K_equals_cutoff", "regression_borderline_fail_K_one_below_cutoff", "regression_inconclusive_zero_evaluable", "regression_tiny_test_near_perfect_baseline", "regression_policy_diff_conditional", "regression_policy_diff_marginal", "compliance_clear_pass", "compliance_clear_fail", "compliance_strands_disagree_consult_advice_layperson", "compliance_inconclusive_zero_evaluable", "compliance_inconclusive_feasibility_refused"],
       "bindingFields": ["clopper_pearson_lower", "configuration_error", "cutoff_integer", "displayed_rate", "feasibility_gate", "k_min", "n_c", "observed_rate_status", "operational_caution_category", "p_hat_c", "p_value", "p_value_method", "p_value_tail", "r_obs", "statistical_verdict", "verdict"],
       "informationalFields": {},
-      "md5": "16988ff8038e9a712111ec4097a65c7f"
+      "md5": "1192714cfb75859c2b866006dcf4bf7c"
     },
     "criterion_verdict_observational": {
       "file": "criterion_verdict_observational.json",
@@ -83,7 +83,7 @@
       "cases": ["pass_200_probes_zero_failures_conditional", "pass_200_probes_zero_failures_marginal", "pass_sentinel_scale_10_million_marginal", "fail_one_failure_in_1000_conditional", "fail_one_failure_in_1000_marginal", "inconclusive_zero_attempts_conditional", "inconclusive_zero_attempts_marginal", "policy_diff_950_evaluable_conditional_passes", "policy_diff_950_evaluable_marginal_fails"],
       "bindingFields": ["n_c", "r_obs", "statement", "verdict"],
       "informationalFields": {},
-      "md5": "5d60fb4f72c681584e830f7d9be77ec2"
+      "md5": "a527058eedd007474f600db94c5a5e09"
     },
     "feasibility": {
       "file": "feasibility.json",
@@ -98,7 +98,7 @@
       "cases": ["fair_coin_n5_a05", "fair_coin_n4_a05_undersized", "high_rate_n30_a05", "high_rate_n20_a05_undersized", "very_high_rate_n55_a05_undersized", "very_high_rate_n150_a05", "high_rate_n30_a01_undersized", "high_rate_n60_a01", "two_nines_n793_a05", "headline_995_n477_a05_undersized", "headline_995_n598_a05_at_minimum", "three_nines_n2995_a05_at_minimum", "three_nines_n2994_a05_undersized", "near_perfect_n100_a05_undersized", "high_rate_n22_a10", "high_rate_n66_a001"],
       "bindingFields": ["criterion", "feasible", "minimum_samples"],
       "informationalFields": {},
-      "md5": "91c559938adf67c11eb1a2473e2b025f"
+      "md5": "f4235e76428f7bae0b510902f677f772"
     },
     "latency_percentile": {
       "file": "latency_percentile.json",
@@ -108,7 +108,7 @@
       "cases": ["typical_skewed_p50", "typical_skewed_p90", "typical_skewed_p95", "typical_skewed_p99", "uniform_p50", "uniform_p95", "heavy_tail_p90", "heavy_tail_p95", "heavy_tail_p99", "minimal_sample_p50", "single_observation_p50", "single_observation_p99", "identical_values_p95", "large_sample_p50", "large_sample_p90", "large_sample_p95", "large_sample_p99", "typical_skewed_summary", "heavy_tail_summary", "large_sample_summary", "single_observation_summary", "identical_values_summary"],
       "bindingFields": ["max", "mean", "value"],
       "informationalFields": {},
-      "md5": "77cc4229d0dbbc05ecdedfb0bbeb7ef8"
+      "md5": "c2f9eaccef671c2838e7f266fede6a40"
     },
     "latency_percentile_minimums": {
       "file": "latency_percentile_minimums.json",
@@ -118,7 +118,7 @@
       "cases": ["emission_minimum_p50", "emission_minimum_p90", "emission_minimum_p95", "emission_minimum_p99", "bound_existence_minimum_p50_c95", "bound_existence_minimum_p90_c95", "bound_existence_minimum_p95_c95", "bound_existence_minimum_p99_c95", "bound_existence_minimum_p50_c99", "bound_existence_minimum_p90_c99", "bound_existence_minimum_p95_c99", "bound_existence_minimum_p99_c99"],
       "bindingFields": ["minimum_baseline_samples", "minimum_contributing_samples"],
       "informationalFields": {},
-      "md5": "22e9b86eaf8afe9eb037aaa537569286"
+      "md5": "a548e46ba769b82fcae02a7a2fe49591"
     },
     "latency_threshold": {
       "file": "latency_threshold.json",
@@ -133,7 +133,7 @@
       "cases": ["worked_example_p95_935_samples_test192", "boundary_equal_sizes_p95_935_test935", "p90_200_samples_test200", "p50_200_samples_test50", "large_baseline_small_test_p95_1000_test15", "saturated_p95_100_test15", "saturated_p99_300_test100", "small_baseline_p95_50_test50", "large_baseline_p95_5000_test500", "alpha001_p95_500_test100", "identical_values_p95_100_test50", "heavy_tailed_p99_100_test100"],
       "bindingFields": ["rank", "saturated", "threshold"],
       "informationalFields": ["baseline_percentile", "breach_probability", "n", "test_rank"],
-      "md5": "45cfcd5f41a17fc915830a97278790c7"
+      "md5": "b1d7497f01a02cd35107c7ae51b71948"
     },
     "multi_criteria_scenario_consult_advice": {
       "file": "multi_criteria_scenario_consult_advice.json",
@@ -152,7 +152,7 @@
       "cases": ["consult_advice_locked_section_10_3", "consult_advice_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch"],
       "bindingFields": ["composite_verdict", "conformance_status", "false_compliance_envelope", "false_degradation_signal_envelope", "per_criterion_verdicts", "structural_error", "triggering_criteria"],
       "informationalFields": {},
-      "md5": "2e5eb67bca99ed155d9c33e7ade347dd"
+      "md5": "bc0d5a27b5809ecdc5eb4b2519f5c4a3"
     },
     "power_analysis": {
       "file": "power_analysis.json",
@@ -171,7 +171,7 @@
       "cases": ["compliance_p95_delta002_a05", "compliance_p95_delta001_a05", "compliance_p90_delta005_a05", "compliance_p80_delta010_a01", "compliance_p50_delta010_a10", "compliance_p95_delta005_a05_midway", "compliance_p99_delta002_a05_midway", "compliance_p95_delta002_a05_power95", "regression_nb1000_nt100_p95_delta005_a05", "regression_nb1000_nt1000_p95_delta002_a05", "regression_nb2000_nt1000_p951_delta0026_a05", "regression_nb100_nt100_p99_delta005_a01", "regression_nb30_nt25_p90_delta010_a05", "regression_mdd_nb1000_nt100_p95_a05", "regression_mdd_nb1000_nt1000_p95_a05", "regression_mdd_nb30_nt25_p90_a05", "regression_mdd_nb100_nt100_p100_a05", "regression_mdd_nb10_nt1_p50_a001_none"],
       "bindingFields": ["achieved_power", "alternative_kind", "alternative_rate", "minimum_detectable_degradation", "required_samples"],
       "informationalFields": "first_crossing",
-      "md5": "0517fe1c4737c20d54907864cb383910"
+      "md5": "d53cb5454d16998b1dc5042cb76ed757"
     },
     "regression_decision": {
       "file": "regression_decision.json",
@@ -186,7 +186,7 @@
       "cases": ["worked_example_pass_at_cutoff", "worked_example_fail_below_cutoff", "worked_example_pass_above_cutoff", "worked_example_fail_deep_degradation", "small_test_pass_at_cutoff", "small_test_fail_below_cutoff", "near_perfect_baseline_pass_at_cutoff", "near_perfect_baseline_fail_below_cutoff", "perfect_baseline_pass_at_cutoff", "perfect_baseline_fail_below_cutoff", "zero_baseline_pass_on_nothing_observed", "zero_baseline_pass_at_test_200", "boundary_equal_sizes_pass_at_cutoff", "boundary_equal_sizes_fail_below_cutoff", "alpha001_pass_at_cutoff", "alpha001_fail_below_cutoff", "refused_test_larger_than_baseline", "small_test_large_baseline_pass_at_cutoff", "small_test_large_baseline_fail_below_cutoff", "conflation_detector_regression_pass"],
       "bindingFields": ["configuration_error", "cutoff_integer", "verdict"],
       "informationalFields": ["achieved_size", "displayed_rate", "threshold_real"],
-      "md5": "ac9547f14aa7dcf50a94c48dfcd01da0"
+      "md5": "5444793b907f052e4b9b72bc16f3ebc4"
     },
     "risk_driven_sizing": {
       "file": "risk_driven_sizing.json",
@@ -201,7 +201,7 @@
       "cases": ["companion_worked_example", "companion_scenario_walkthrough", "higher_power_costs_samples", "smaller_alpha_costs_samples", "wide_tolerance_is_cheap", "baseline_too_small_for_tolerance", "walkthrough_candidate_50", "walkthrough_candidate_150", "worked_example_at_891", "inversion_at_100", "inversion_at_400", "zero_baseline_required_n_refused", "zero_baseline_power_at_refused", "zero_baseline_detectable_rate_refused", "tolerance_at_baseline_refused", "test_larger_than_baseline_refused"],
       "bindingFields": ["achieved_power", "detectable_rate", "power", "refusal_category", "required_n", "sizing_gate"],
       "informationalFields": {},
-      "md5": "3ee113bdc17c976f70e4306a3e5eb2e1"
+      "md5": "0ce3120e92434bb10e1d1e3b944246c9"
     },
     "threshold_derivation": {
       "file": "threshold_derivation.json",
@@ -216,7 +216,7 @@
       "cases": ["ordinary_951_of_1000_test100_a05", "ordinary_larger_baseline_1902_of_2000_test100_a05", "boundary_equal_sizes_951_of_1000_test1000_a05", "large_baseline_small_test_9510_of_10000_test100_a05", "near_perfect_99_of_100_test100_a05", "perfect_100_of_100_test100_a05", "perfect_large_1000_of_1000_test100_a05", "zero_baseline_0_of_100_test50_a05", "small_baseline_27_of_30_test25_a05", "alpha001_951_of_1000_test1000", "baseline_95_of_100_test50_a05", "baseline_95_of_100_test50_a01", "baseline_950_of_1000_test50_a05", "baseline_950_of_1000_test200_a05", "baseline_950_of_1000_test200_a10", "baseline_9_of_10_test10_a05", "zero_baseline_0_of_1000_test200_a05", "zero_baseline_0_of_100_test85_a01", "refused_test_larger_than_baseline_95_of_100_test200", "refused_test_larger_than_baseline_zero_0_of_10_test50", "small_test_large_baseline_951_of_1000_test25_a01", "small_test_large_baseline_9500_of_10000_test100_a001", "tf_951_of_1000_test100_cutoff91", "tf_951_of_1000_test100_cutoff90", "tf_951_of_1000_test100_cutoff94", "tf_95_of_100_test100_cutoff85", "tf_zero_cutoff"],
       "bindingFields": ["configuration_error", "cutoff_integer", "implied_alpha", "is_sound"],
       "informationalFields": ["achieved_size", "displayed_rate", "threshold_real"],
-      "md5": "71515848a5d92b208e24f2570080fcc0"
+      "md5": "4354369f5acac55f26b0a4d09cb19b3b"
     },
     "verdict": {
       "file": "verdict.json",
@@ -235,7 +235,7 @@
       "cases": ["compliance_fail_48_of_50_threshold_90", "compliance_pass_49_of_50_threshold_90", "compliance_fail_40_of_50_threshold_90", "compliance_fail_45_of_50_threshold_90", "compliance_fail_0_of_50_threshold_90", "compliance_pass_920_of_1000_threshold_90", "compliance_refused_50_of_50_threshold_95", "compliance_smoke_50_of_50_threshold_95", "regression_pass_91_of_100_baseline_951_of_1000", "regression_fail_90_of_100_baseline_951_of_1000", "regression_pass_95_of_100_baseline_99_of_100", "regression_fail_95_of_100_baseline_100_of_100", "regression_refused_test_larger_than_baseline", "regression_pass_25_of_25_baseline_951_of_1000_alpha001", "joint_refused_empirical_part_test_larger_than_baseline", "joint_refused_normative_part_infeasible"],
       "bindingFields": ["configuration_error", "verdict"],
       "informationalFields": "observed_rate",
-      "md5": "7954537fd76b66794f7a5d1db8eef958"
+      "md5": "aadecf20a7db853a4faa8d43adcf84b2"
     },
     "wilson_ci": {
       "file": "wilson_ci.json",
@@ -245,7 +245,7 @@
       "cases": ["fair_coin_100_trials_95pct", "high_rate_95_of_100_95pct", "perfect_baseline_100_of_100_95pct", "zero_successes_0_of_100_95pct", "small_sample_3_of_5_95pct", "large_sample_950_of_1000_95pct", "fair_coin_100_trials_90pct", "fair_coin_100_trials_99pct", "low_rate_2_of_100_95pct", "single_trial_success_95pct"],
       "bindingFields": ["lower", "point", "upper"],
       "informationalFields": {},
-      "md5": "2d46ce4b8dfaed244343a33258413d6c"
+      "md5": "cee38c554d97e8fea4acf5a76f0f097b"
     },
     "wilson_lower": {
       "file": "wilson_lower.json",
@@ -255,7 +255,7 @@
       "cases": ["baseline_95_of_100_95pct", "perfect_baseline_100_of_100_95pct", "baseline_950_of_1000_95pct", "baseline_95_of_100_99pct", "baseline_95_of_100_90pct", "fair_coin_50_of_100_95pct", "small_sample_5_of_5_95pct", "zero_successes_0_of_100_95pct", "zero_successes_0_of_5_95pct", "zero_successes_0_of_100_99pct", "single_trial_failure_0_of_1_95pct", "single_trial_success_1_of_1_95pct"],
       "bindingFields": "lower_bound",
       "informationalFields": {},
-      "md5": "5ff5ff2b06d160ab25a701f2075a2b09"
+      "md5": "146550b57bdc830067c3c3af2549412f"
     }
   }
 }

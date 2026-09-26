@@ -376,7 +376,7 @@ generate_multi_criteria_scenario_cases <- function() {
   list(
     suite = "multi_criteria_scenario_consult_advice",
     description = paste(
-      "End-to-end scenarios per companion §10.3 and §10.6 under the 2.0.0",
+      "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0",
       "decision rules (regression/fisher, compliance/exact-binomial). Each case",
       "ties together a baseline, a test run, and the expected scenario",
       "output (per-criterion verdicts, composite verdict, both",

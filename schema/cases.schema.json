@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mavai-org/mavai-R/schema/cases.schema.json",
   "title": "mavai-R conformance case suite",
-  "description": "Schema for statistical conformance reference datasets produced by mavai-R, fixture schema version 2. Each JSON file represents one suite of test cases. Top-level shape is uniform across suites; the inputs/expected payloads vary per suite. See R/*.R generators for the per-suite payload shape. Version 2 (methodology 2.0.0) adds methodologyVersion, fixtureSchemaVersion and decisionRules at suite level and an optional decisionRule per case.",
+  "description": "Schema for statistical conformance reference datasets produced by mavai-R, fixture schema version 2. Each JSON file represents one suite of test cases. Top-level shape is uniform across suites; the inputs/expected payloads vary per suite. See R/*.R generators for the per-suite payload shape. Version 2 (methodology 1.5.0) adds methodologyVersion, fixtureSchemaVersion and decisionRules at suite level and an optional decisionRule per case.",
   "type": "object",
   "required": [
     "suite",
@@ -23,7 +23,7 @@
     "methodologyVersion": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-      "description": "The Statistical Companion methodology version the suite's expected values implement (e.g. '2.0.0')."
+      "description": "The Statistical Companion methodology version the suite's expected values implement (e.g. '1.5.0')."
     },
     "fixtureSchemaVersion": {
       "const": 2,
@@ -121,7 +121,7 @@
         "compliance/exact-binomial",
         "latency/precedence"
       ],
-      "description": "A versioned decision rule of methodology 2.0.0."
+      "description": "A versioned decision rule of methodology 1.5.0."
     },
     "decisionRuleVersion": {
       "type": "object",

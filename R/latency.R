@@ -437,8 +437,8 @@ bootstrap_upper <- function(baseline, p, confidence, B = 10000L, seed = 1L) {
 #'
 #' The comparison behind companion §12.4.4 between the v1.4.1 order-
 #' statistic bound (legacy `latency/order-statistic-bound`) and a
-#' percentile bootstrap. Since methodology 2.0.0 it is no longer published
-#' as a fixture suite — the bound it compares is not the 2.0.0 latency
+#' percentile bootstrap. Since methodology 1.5.0 it is no longer published
+#' as a fixture suite — the bound it compares is not the 1.5.0 latency
 #' decision rule — and survives only for scripts/bootstrap_compare.R.
 #' Its former roles:
 #'

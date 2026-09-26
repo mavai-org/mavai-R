@@ -18,7 +18,7 @@
 
 MANIFEST_VERSION <- 2L
 
-# Suites every mavai implementation must support under methodology 2.0.0.
+# Suites every mavai implementation must support under methodology 1.5.0.
 FAMILY_MANDATORY_SUITES <- c(
   "wilson_ci",
   "wilson_lower",
@@ -34,7 +34,7 @@ FAMILY_MANDATORY_SUITES <- c(
 # decision that lives only in a design document is a decision consumers
 # cannot see.
 TIER_RATIONALE <- paste0(
-  "Methodology 2.0.0 replaces the three decision rules and the mandatory roster with them. ",
+  "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. ",
   "The roster is the methodological spine of the three rules: the Wilson interval and lower ",
   "bound (kept as descriptive primitives; no rule decides with them), the empirical-regression ",
   "verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), ",

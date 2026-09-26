@@ -1,4 +1,4 @@
-# The Statistical Companion 2.0.0 decision rules: canonical cases and
+# The Statistical Companion 1.5.0 decision rules: canonical cases and
 # structural properties.
 
 test_that("regression/fisher reproduces every canonical cutoff", {

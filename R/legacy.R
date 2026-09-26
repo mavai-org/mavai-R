@@ -1,11 +1,11 @@
 #' Legacy decision rules of methodology 1.4.1, under their own identifiers.
 #'
-#' Statistical Companion 2.0.0 withdraws these three constructions as
+#' Statistical Companion 1.5.0 withdraws these three constructions as
 #' decision rules. They survive in mavai-R only — never in a framework —
 #' to reproduce methodology-1.4.1 outputs and to compare the two
-#' generations. No 2.0.0 fixture is computed from them; the 1.4.1
+#' generations. No 1.5.0 fixture is computed from them; the 1.4.1
 #' fixtures are the immutable release assets of v0.10.13. None of these
-#' identifiers claims 2.0.0 calibration.
+#' identifiers claims 1.5.0 calibration.
 #'
 #'   - `regression/wilson-reference` v1 — the Wilson lower bound of the
 #'     baseline rate evaluated at the test size, with the perfect-baseline

@@ -28,7 +28,7 @@ independently. No need to trust a Java or Rust implementation.
 ## What's covered
 
 The reference data implements the decision rules of Statistical Companion
-2.0.0 over two quality dimensions of the mavai methodology: **pass-rate
+1.5.0 over two quality dimensions of the mavai methodology: **pass-rate
 analysis** (binomial) and **latency analysis** (non-parametric, empirical
 percentile based). For the full statistical treatment, see the
 [Statistical Companion](docs/STATISTICAL-COMPANION.md). For the contract
@@ -113,7 +113,7 @@ Each suite file contains:
 ```json
 {
   "suite": "wilson_ci",
-  "methodologyVersion": "2.0.0",
+  "methodologyVersion": "1.5.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
   "description": "Wilson score confidence intervals (two-sided)",

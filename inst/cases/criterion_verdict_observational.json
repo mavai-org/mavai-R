@@ -1,6 +1,6 @@
 {
   "suite": "criterion_verdict_observational",
-  "methodologyVersion": "2.0.0",
+  "methodologyVersion": "1.5.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
   "description": "Per-observational-criterion verdict cases per the statistical companion §1.4.5 (observational verdict rule) and §1.4.5a (denominator policy). The effective denominator n_c is derived from the declared policy: n_evaluable under CONDITIONAL_ON_EVALUABLE, n_attempted under MARGINAL_COUNT_UNEVALUABLE_AS_FAIL. The verdict is deterministic on (n_c, K_c): PASS if K_c == n_c and n_c > 0; FAIL if K_c < n_c; INCONCLUSIVE if n_c == 0. Observational criteria carry no Wilson construction and no alpha.",

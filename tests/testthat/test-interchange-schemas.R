@@ -405,7 +405,7 @@ test_that("the verdict-1.7 XSD requires the methodology version", {
   skip_if_not_installed("xml2")
   xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
   body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
-  mutated <- sub(' methodology-version="2.0.0"', "", body, fixed = TRUE)
+  mutated <- sub(' methodology-version="1.5.0"', "", body, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 

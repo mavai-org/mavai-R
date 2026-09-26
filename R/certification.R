@@ -1,4 +1,4 @@
-#' Calibration certification machinery for the 2.0.0 decision rules.
+#' Calibration certification machinery for the 1.5.0 decision rules.
 #'
 #' These functions produce the certification surfaces (published as a
 #' separate release asset by `scripts/certify.R`, never in inst/cases/).

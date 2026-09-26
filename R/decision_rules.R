@@ -1,4 +1,4 @@
-#' The Statistical Companion 2.0.0 decision rules.
+#' The Statistical Companion 1.5.0 decision rules.
 #'
 #' Three verdict-producing procedures, each with a versioned identifier
 #' that travels in every fixture it governs:
@@ -20,7 +20,7 @@
 #' functions (`phyper`, `dbinom`/`pbinom`, `qbeta`, `lchoose`/`lbeta`);
 #' nothing is simulated.
 
-METHODOLOGY_VERSION <- "2.0.0"
+METHODOLOGY_VERSION <- "1.5.0"
 
 # Version of the fixture file shape (cases.schema.json and the manifest).
 # 1 was the unversioned shape up to fixtures 0.10.13; 2 adds

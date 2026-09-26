@@ -1,7 +1,7 @@
 #' Inferential-criterion verdict (companion §1.4.5, §1.4.6, §3.4, §3.6)
 #'
 #' Per-inferential-criterion verdict generation, separated by procedure
-#' direction (REGRESSION vs COMPLIANCE), each decided by its 2.0.0
+#' direction (REGRESSION vs COMPLIANCE), each decided by its 1.5.0
 #' decision rule. An informational suite: no framework is obliged to
 #' consume it.
 #'

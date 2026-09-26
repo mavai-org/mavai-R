@@ -1,6 +1,6 @@
 {
   "suite": "latency_percentile_minimums",
-  "methodologyVersion": "2.0.0",
+  "methodologyVersion": "1.5.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
   "description": "Minimum sample sizes for empirical latency percentiles (p50/p90/p95/p99) — the single published standard every mavai framework's gating table must equal exactly. Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 minimums for emitting a percentile in experiment artefacts (baseline, exploration, optimization) and verdicts: below the minimum the percentile key is omitted entirely and renderers display a placeholder. Cases with approach 'bound_existence' carry the §12.5.2.1 minimums for the exact binomial order-statistic construction to admit a non-saturated one-sided upper confidence bound on the p-quantile at the stated confidence — judgement-time minimums for latency-criterion evaluation, not emission rules. All values are integers; conformance is exact equality (tolerance: 0).",

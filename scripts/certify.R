@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 #
-# Calibration certification of the Statistical Companion 2.0.0 decision
+# Calibration certification of the Statistical Companion 1.5.0 decision
 # rules over the operating envelope. Writes the certification surfaces as
 # CSV plus a markdown summary; the release workflow attaches them as a
 # separate asset (certification-vX.Y.Z.zip), never inside inst/cases/.
@@ -206,7 +206,7 @@ checks <- c(
     all(LAT$breach_at_rank_minus_1 > LAT$alpha, na.rm = TRUE),
   compliance_bound = all(CMP$false_compliance <= CMP$alpha))
 summary_lines <- c(
-  "# Calibration certification, Statistical Companion 2.0.0", "",
+  "# Calibration certification, Statistical Companion 1.5.0", "",
   sprintf("mavai-R %s; methodology %s; R %s; %s.", read.dcf("DESCRIPTION")[1, "Version"],
           METHODOLOGY_VERSION, getRversion(), format(Sys.Date())), "",
   "## regression/fisher", "",

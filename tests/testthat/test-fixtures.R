@@ -13,7 +13,7 @@ test_that("every committed suite validates against cases.schema.json", {
 
 test_that("the committed manifest matches the committed files", {
   m <- jsonlite::fromJSON(file.path(case_dir, "manifest.json"), simplifyVector = FALSE)
-  expect_identical(m$methodologyVersion, "2.0.0")
+  expect_identical(m$methodologyVersion, "1.5.0")
   files <- sort(setdiff(list.files(case_dir, pattern = "\\.json$"), "manifest.json"))
   expect_identical(unname(sort(vapply(m$suites, `[[`, character(1), "file"))), files)
   for (s in m$suites) {

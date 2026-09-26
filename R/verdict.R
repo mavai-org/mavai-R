@@ -1,4 +1,4 @@
-#' Evaluate a test verdict under the 2.0.0 decision rules
+#' Evaluate a test verdict under the 1.5.0 decision rules
 #'
 #' The verdict of one test run under the rule its threshold's origin
 #' selects: `regression/fisher` for a baseline-derived (empirical)

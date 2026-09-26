@@ -1,4 +1,4 @@
-#' Exact power and sizing under the 2.0.0 decision rules.
+#' Exact power and sizing under the 1.5.0 decision rules.
 #'
 #' Three approaches, each an exact finite computation against the
 #' operative decision rule (no normal approximation):
