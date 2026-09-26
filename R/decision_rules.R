@@ -343,11 +343,17 @@ clopper_pearson_lower <- function(successes, n, alpha) {
 
 #' The sizing alternative for compliance/exact-binomial
 #'
-#' p_req + delta, or the midway rate (p_req + 1)/2 where p_req + delta >= 1
-#' and the contract declares no alternative.
+#' The contract's declared alternative rate when it declares one (kind
+#' DECLARED); otherwise p_req + delta (MARGIN), or the midway rate
+#' (p_req + 1)/2 where p_req + delta >= 1 (MIDWAY), which the report names.
 #' @export
-compliance_sizing_alternative <- function(threshold, delta) {
-  if (threshold + delta < 1) {
+compliance_sizing_alternative <- function(threshold, delta, alternative_rate = NULL) {
+  if (!is.null(alternative_rate)) {
+    if (alternative_rate <= threshold || alternative_rate > 1) {
+      stop("a declared alternative rate must lie in (p_req, 1]", call. = FALSE)
+    }
+    list(rate = alternative_rate, kind = "DECLARED")
+  } else if (threshold + delta < 1) {
     list(rate = threshold + delta, kind = "MARGIN")
   } else {
     list(rate = (threshold + 1) / 2, kind = "MIDWAY")
@@ -367,11 +373,15 @@ compliance_sizing_alternative <- function(threshold, delta) {
 #' @param alpha One-sided level.
 #' @param power Target power.
 #' @param n_max Search horizon.
+#' @param alternative_rate A declared alternative rate in (p_req, 1], used
+#'   instead of the one derived from `delta` (kind DECLARED).
 #' @return A list: required_samples, first_crossing, achieved_power,
-#'   alternative_rate, alternative_kind.
+#'   alternative_rate, alternative_kind (MARGIN, MIDWAY or DECLARED; the
+#'   report names it).
 #' @export
-compliance_exact_sizing <- function(threshold, delta, alpha, power = 0.80, n_max = 20000L) {
-  alt <- compliance_sizing_alternative(threshold, delta)
+compliance_exact_sizing <- function(threshold, delta, alpha, power = 0.80, n_max = 20000L,
+                                    alternative_rate = NULL) {
+  alt <- compliance_sizing_alternative(threshold, delta, alternative_rate)
   ns <- seq_len(n_max)
   k <- exact_binomial_k_min_vec(ns, threshold, alpha)
   pw <- ifelse(is.na(k), 0, pbinom(k - 1, ns, alt$rate, lower.tail = FALSE))

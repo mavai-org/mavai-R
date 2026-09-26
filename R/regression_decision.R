@@ -13,9 +13,11 @@
 #'
 #' Binding: cutoff_integer, configuration_error, verdict. Informational
 #' (report obligations): threshold_real = c / n_t, displayed_rate =
-#' round(c / n_t, 6), and achieved_size = the exact unconditional
-#' false-degradation-signal probability A(p) at p = K_b / n_b (null when
-#' K_b / n_b is 0 or 1, where A is degenerate).
+#' round(c / n_t, 6), and size_at_assumed_common_rate = the exact
+#' unconditional false-degradation-signal probability A(p) at p = K_b / n_b:
+#' the size of the procedure were the unknown common rate equal to the
+#' baseline's observed rate, not a property of the run (null when K_b / n_b
+#' is 0 or 1, where A is degenerate).
 
 #' The derivation block for one configuration.
 #' @keywords internal
@@ -24,7 +26,7 @@ fisher_expected_block <- function(baseline_successes, baseline_trials, test_samp
   if (!is.na(err)) {
     return(list(cutoff_integer = NA_integer_, configuration_error = err,
                 threshold_real = NA_real_, displayed_rate = NA_real_,
-                achieved_size = NA_real_))
+                size_at_assumed_common_rate = NA_real_))
   }
   cut <- fisher_cutoffs(baseline_trials, test_samples, alpha)
   c_int <- cut[baseline_successes + 1L]
@@ -35,7 +37,7 @@ fisher_expected_block <- function(baseline_successes, baseline_trials, test_samp
     configuration_error = NA_character_,
     threshold_real = c_int / test_samples,
     displayed_rate = round(c_int / test_samples, 6),
-    achieved_size = if (p_hat %in% c(0, 1)) NA_real_ else
+    size_at_assumed_common_rate = if (p_hat %in% c(0, 1)) NA_real_ else
       regression_fail_probability(cut, baseline_trials, test_samples, p_hat, p_hat)
   )
 }
@@ -77,7 +79,7 @@ REGRESSION_METHOD <- paste0(
   "lower tail P(X <= k_t) = phyper(k_t, s, n_b + n_t - s, n_t) with s = K_b + k_t pooled ",
   "successes; k_t FAILs iff the p-value <= alpha; c = the smallest k_t whose p-value exceeds ",
   "alpha. Configuration error, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b. ",
-  "Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = ",
+  "Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); size_at_assumed_common_rate = ",
   "sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1})."
 )
 
@@ -163,7 +165,7 @@ generate_threshold_derivation_cases <- function() {
       "sample_size_first: from baseline evidence (K_b, n_b), a test size n_t and alpha, the integer",
       "cutoff c of regression/fisher, or the configuration error that refuses the configuration",
       "before any sample runs; the cutoff and configuration_error are binding, threshold_real,",
-      "displayed_rate and achieved_size informational. approach threshold_first (§6.3): the implied",
+      "displayed_rate and size_at_assumed_common_rate informational. approach threshold_first (§6.3): the implied",
       "alpha of a declared cutoff, the smallest alpha at which the rule yields it (null when no",
       "alpha does), and is_sound = implied_alpha <= 0.20."
     ),
@@ -234,7 +236,7 @@ generate_regression_decision_cases <- function() {
       "the cutoff c derived from (K_b, n_b, n_t, alpha) and PASS iff the observed test count",
       "K_t >= c. Refused configurations carry their configuration_error and no verdict.",
       "Binding: cutoff_integer, configuration_error, verdict. Informational: threshold_real,",
-      "displayed_rate, achieved_size. Frameworks MUST evaluate these cases through their",
+      "displayed_rate, size_at_assumed_common_rate. Frameworks MUST evaluate these cases through their",
       "production verdict path. The conflation_detector case pairs with compliance_decision's",
       "conflation_detector_compliance_fail: one observation, opposite verdicts under the two rules."
     ),

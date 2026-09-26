@@ -379,6 +379,21 @@
     <xs:attribute name="threshold-origin" type="tns:ThresholdOriginEnum" use="required"/>
     <xs:attribute name="test-statistic"   type="xs:double"               use="optional"/>
     <xs:attribute name="p-value"          type="xs:double"               use="optional"/>
+    <!-- 1.7, regression/fisher only, all informational:
+         @size-at-assumed-common-rate — the procedure's unconditional
+         false-degradation-signal probability were the unknown common rate
+         equal to the baseline's observed rate; not a property of the run.
+         @design-alternative-rate — the true rate at which the test is to
+         reach its target power (the test still flags any degradation from
+         the baseline). @design-power — the power at that rate with the
+         baseline and the test both yet to be drawn. @resolved-test-power —
+         the power at that rate of the test resolved against the observed
+         baseline, whose cutoff is fixed. The two powers answer different
+         questions and are named apart. -->
+    <xs:attribute name="size-at-assumed-common-rate" type="xs:double" use="optional"/>
+    <xs:attribute name="design-alternative-rate"     type="xs:double" use="optional"/>
+    <xs:attribute name="design-power"                type="xs:double" use="optional"/>
+    <xs:attribute name="resolved-test-power"         type="xs:double" use="optional"/>
   </xs:complexType>
 
   <xs:simpleType name="ThresholdOriginEnum">

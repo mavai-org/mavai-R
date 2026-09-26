@@ -5,7 +5,7 @@ test_that("the §3.4 rate is reproduced exactly under regression/fisher", {
   expect_identical(worked$expected$cutoff_integer, 91L)
   expect_equal(worked$expected$threshold_real, 0.91)
   expect_equal(worked$expected$displayed_rate, 0.91)
-  expect_lte(worked$expected$achieved_size, 0.05)
+  expect_lte(worked$expected$size_at_assumed_common_rate, 0.05)
   expect_identical(worked$expected$verdict, "PASS")
   expect_true(is.na(worked$expected$configuration_error))
 })
@@ -62,7 +62,7 @@ test_that("the derivation suite carries every canonical cutoff", {
   expect_lte(tf$implied_alpha, 0.05)
   expect_true(tf$is_sound)
   expect_false(cases[["tf_951_of_1000_test100_cutoff94"]]$expected$is_sound)
-  expect_true(is.na(cases[["perfect_100_of_100_test100_a05"]]$expected$achieved_size))
+  expect_true(is.na(cases[["perfect_100_of_100_test100_a05"]]$expected$size_at_assumed_common_rate))
 })
 
 test_that("the conflation detector pair carries opposite verdicts across the two rules", {

@@ -32,7 +32,27 @@ test_that("regression power and the minimum detectable degradation are consisten
       expect_equal(pw, i$power, tolerance = 1e-8, info = case$name)
     }
     if (case$approach == "regression_power") {
-      expect_gt(case$expected$achieved_power, i$alpha)
+      expect_gt(case$expected$design_power, i$alpha)
     }
   }
+})
+
+test_that("a declared alternative rate replaces the derived one and is named", {
+  cases <- by_name(generate_power_analysis_cases())
+  d <- cases[["compliance_p95_declared_alternative_098_a05"]]$expected
+  expect_identical(d$alternative_kind, "DECLARED")
+  expect_equal(d$alternative_rate, 0.98)
+  m <- cases[["compliance_p95_delta002_a05"]]$expected
+  expect_identical(m$alternative_kind, "MARGIN")
+  expect_lt(d$required_samples, m$required_samples)
+  expect_error(compliance_exact_sizing(0.95, 0.02, 0.05, alternative_rate = 0.95))
+})
+
+test_that("resolved-test power and design power answer different questions", {
+  cases <- by_name(generate_power_analysis_cases())
+  r <- cases[["resolved_kb951_nb1000_nt1000_at0925_a05"]]$expected
+  expect_identical(r$cutoff_integer, 933L)
+  expect_equal(r$resolved_test_power, pbinom(932, 1000, 0.925), tolerance = 1e-14)
+  expect_equal(r$resolved_test_power, 0.815, tolerance = 1e-3)
+  expect_equal(fisher_power(1000, 1000, 0.05, 0.951, 0.951 - 0.925), 0.753, tolerance = 1e-3)
 })

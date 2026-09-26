@@ -58,8 +58,8 @@ TIER_RATIONALE <- paste0(
 # conformance targets). Everything not listed here is binding. Authored
 # here, beside the generators, so classification travels with the release.
 INFORMATIONAL_FIELDS <- list(
-  threshold_derivation = c("threshold_real", "displayed_rate", "achieved_size"),
-  regression_decision = c("threshold_real", "displayed_rate", "achieved_size"),
+  threshold_derivation = c("threshold_real", "displayed_rate", "size_at_assumed_common_rate"),
+  regression_decision = c("threshold_real", "displayed_rate", "size_at_assumed_common_rate"),
   compliance_decision = c("false_compliance", "clopper_pearson_lower"),
   latency_threshold = c("breach_probability", "test_rank", "n", "baseline_percentile"),
   latency_compliance_decision = c("false_compliance", "clopper_pearson_lower",

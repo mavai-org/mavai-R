@@ -13,6 +13,14 @@
      threshold is c / n_t = 0.91, the rate the cutoff corresponds to; the
      Wilson lower bound is descriptive and decides nothing.
 
+     The statistics element names two powers apart at the design
+     alternative rate 0.90: the design power (0.550), with the baseline
+     and the test both yet to be drawn, and the power of this resolved
+     test (0.549), whose cutoff the observed baseline fixed. The size at
+     the assumed common rate 0.951 is 0.0340, the procedure's
+     false-degradation-signal probability were the common rate the
+     baseline's observed rate.
+
      The test also carries two explicit latency requirements over its 93
      successful latencies. p90 <= 800 ms is enforced (strict) and decided
      by latency/compliance-exact-binomial: 91 of the 93 latencies are at
@@ -26,7 +34,7 @@
 <verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-26T12:00:00+00:00" generator="worked-example">
   <identity use-case-id="offer-extraction" />
   <execution planned-samples="100" samples-executed="100" successes="93" failures="7" elapsed-ms="148200" intent="VERIFICATION" confidence="0.95" />
-  <statistics confidence-level="0.95" standard-error="0.0255" wilson-lower="0.8757" threshold="0.91" threshold-origin="EMPIRICAL" />
+  <statistics confidence-level="0.95" standard-error="0.0255" wilson-lower="0.8757" threshold="0.91" threshold-origin="EMPIRICAL" size-at-assumed-common-rate="0.0340" design-alternative-rate="0.90" design-power="0.550" resolved-test-power="0.549" />
   <covariates aligned="true" />
   <inputs>
     <input index="0" excerpt="offer-letter-standard.pdf" />

@@ -8,8 +8,8 @@
       "version": 1
     }
   ],
-  "description": "The decision-rule layer of empirical regression (companion §3.4). approach sample_size_first: from baseline evidence (K_b, n_b), a test size n_t and alpha, the integer cutoff c of regression/fisher, or the configuration error that refuses the configuration before any sample runs; the cutoff and configuration_error are binding, threshold_real, displayed_rate and achieved_size informational. approach threshold_first (§6.3): the implied alpha of a declared cutoff, the smallest alpha at which the rule yields it (null when no alpha does), and is_sound = implied_alpha <= 0.20.",
-  "method": "regression/fisher v1: for k_t = 0..n_t, the one-sided Fisher p-value is the hypergeometric lower tail P(X <= k_t) = phyper(k_t, s, n_b + n_t - s, n_t) with s = K_b + k_t pooled successes; k_t FAILs iff the p-value <= alpha; c = the smallest k_t whose p-value exceeds alpha. Configuration error, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b. Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1}). threshold_first: implied_alpha = P(X <= c - 1) with s = K_b + c - 1 (0 at c = 0), null when P(X <= c - 1) = P(X <= c).",
+  "description": "The decision-rule layer of empirical regression (companion §3.4). approach sample_size_first: from baseline evidence (K_b, n_b), a test size n_t and alpha, the integer cutoff c of regression/fisher, or the configuration error that refuses the configuration before any sample runs; the cutoff and configuration_error are binding, threshold_real, displayed_rate and size_at_assumed_common_rate informational. approach threshold_first (§6.3): the implied alpha of a declared cutoff, the smallest alpha at which the rule yields it (null when no alpha does), and is_sound = implied_alpha <= 0.20.",
+  "method": "regression/fisher v1: for k_t = 0..n_t, the one-sided Fisher p-value is the hypergeometric lower tail P(X <= k_t) = phyper(k_t, s, n_b + n_t - s, n_t) with s = K_b + k_t pooled successes; k_t FAILs iff the p-value <= alpha; c = the smallest k_t whose p-value exceeds alpha. Configuration error, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b. Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); size_at_assumed_common_rate = sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1}). threshold_first: implied_alpha = P(X <= c - 1) with s = K_b + c - 1 (0 at c = 0), null when P(X <= c - 1) = P(X <= c).",
   "tolerance": 1e-10,
   "cases": [
     {
@@ -26,7 +26,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0339673926250216
+        "size_at_assumed_common_rate": 0.0339673926250216
       }
     },
     {
@@ -43,7 +43,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.032910216682927
+        "size_at_assumed_common_rate": 0.032910216682927
       }
     },
     {
@@ -61,7 +61,7 @@
         "configuration_error": null,
         "threshold_real": 0.933,
         "displayed_rate": 0.933,
-        "achieved_size": 0.0403533182561198
+        "size_at_assumed_common_rate": 0.0403533182561198
       }
     },
     {
@@ -78,7 +78,7 @@
         "configuration_error": null,
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
-        "achieved_size": 0.0325386957467103
+        "size_at_assumed_common_rate": 0.0325386957467103
       }
     },
     {
@@ -95,7 +95,7 @@
         "configuration_error": null,
         "threshold_real": 0.94,
         "displayed_rate": 0.94,
-        "achieved_size": 0.00128278211655939
+        "size_at_assumed_common_rate": 0.00128278211655939
       }
     },
     {
@@ -113,7 +113,7 @@
         "configuration_error": null,
         "threshold_real": 0.96,
         "displayed_rate": 0.96,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -130,7 +130,7 @@
         "configuration_error": null,
         "threshold_real": 0.99,
         "displayed_rate": 0.99,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -148,7 +148,7 @@
         "configuration_error": null,
         "threshold_real": 0,
         "displayed_rate": 0,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -165,7 +165,7 @@
         "configuration_error": null,
         "threshold_real": 0.72,
         "displayed_rate": 0.72,
-        "achieved_size": 0.0175146837307742
+        "size_at_assumed_common_rate": 0.0175146837307742
       }
     },
     {
@@ -182,7 +182,7 @@
         "configuration_error": null,
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
-        "achieved_size": 0.0074842242031557
+        "size_at_assumed_common_rate": 0.0074842242031557
       }
     },
     {
@@ -199,7 +199,7 @@
         "configuration_error": null,
         "threshold_real": 0.86,
         "displayed_rate": 0.86,
-        "achieved_size": 0.0271145043470716
+        "size_at_assumed_common_rate": 0.0271145043470716
       }
     },
     {
@@ -216,7 +216,7 @@
         "configuration_error": null,
         "threshold_real": 0.82,
         "displayed_rate": 0.82,
-        "achieved_size": 0.00336361675798863
+        "size_at_assumed_common_rate": 0.00336361675798863
       }
     },
     {
@@ -233,7 +233,7 @@
         "configuration_error": null,
         "threshold_real": 0.9,
         "displayed_rate": 0.9,
-        "achieved_size": 0.0299689584879597
+        "size_at_assumed_common_rate": 0.0299689584879597
       }
     },
     {
@@ -250,7 +250,7 @@
         "configuration_error": null,
         "threshold_real": 0.92,
         "displayed_rate": 0.92,
-        "achieved_size": 0.0353227375058836
+        "size_at_assumed_common_rate": 0.0353227375058836
       }
     },
     {
@@ -267,7 +267,7 @@
         "configuration_error": null,
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
-        "achieved_size": 0.077495050628482
+        "size_at_assumed_common_rate": 0.077495050628482
       }
     },
     {
@@ -284,7 +284,7 @@
         "configuration_error": null,
         "threshold_real": 0.5,
         "displayed_rate": 0.5,
-        "achieved_size": 0.00452011138810319
+        "size_at_assumed_common_rate": 0.00452011138810319
       }
     },
     {
@@ -301,7 +301,7 @@
         "configuration_error": null,
         "threshold_real": 0,
         "displayed_rate": 0,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -318,7 +318,7 @@
         "configuration_error": null,
         "threshold_real": 0,
         "displayed_rate": 0,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -336,7 +336,7 @@
         "configuration_error": "TEST_LARGER_THAN_BASELINE",
         "threshold_real": null,
         "displayed_rate": null,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -354,7 +354,7 @@
         "configuration_error": "TEST_LARGER_THAN_BASELINE",
         "threshold_real": null,
         "displayed_rate": null,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -372,7 +372,7 @@
         "configuration_error": null,
         "threshold_real": 0.75,
         "displayed_rate": 0.75,
-        "achieved_size": null
+        "size_at_assumed_common_rate": null
       }
     },
     {
@@ -390,7 +390,7 @@
         "configuration_error": null,
         "threshold_real": 0.5,
         "displayed_rate": 0.5,
-        "achieved_size": 0.0190376278407176
+        "size_at_assumed_common_rate": 0.0190376278407176
       }
     },
     {
@@ -407,7 +407,7 @@
         "configuration_error": null,
         "threshold_real": 0.84,
         "displayed_rate": 0.84,
-        "achieved_size": 0.00480241920852723
+        "size_at_assumed_common_rate": 0.00480241920852723
       }
     },
     {
@@ -424,7 +424,7 @@
         "configuration_error": null,
         "threshold_real": 0.87,
         "displayed_rate": 0.87,
-        "achieved_size": 0.000568164806283709
+        "size_at_assumed_common_rate": 0.000568164806283709
       }
     },
     {

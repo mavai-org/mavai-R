@@ -55,7 +55,7 @@ test_that("report values are informational and decision artefacts binding", {
   manifest <- generate_manifest(suites_for_test(), "0.0.0-test")
   for (name in c("threshold_derivation", "regression_decision")) {
     e <- manifest$suites[[name]]
-    expect_setequal(e$informationalFields, c("threshold_real", "displayed_rate", "achieved_size"))
+    expect_setequal(e$informationalFields, c("threshold_real", "displayed_rate", "size_at_assumed_common_rate"))
     expect_true(all(c("cutoff_integer", "configuration_error") %in% e$bindingFields))
   }
   expect_true("verdict" %in% manifest$suites$regression_decision$bindingFields)

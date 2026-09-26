@@ -138,11 +138,11 @@
           "version": 1
         }
       ],
-      "caseCount": 22,
-      "cases": ["emission_minimum_p50", "emission_minimum_p90", "emission_minimum_p95", "emission_minimum_p99", "p95_100_test15_saturated", "p95_1000_test15", "p99_300_test100_saturated", "p95_935_test192", "p90_32_test10_saturated", "p90_33_test10_first_rank", "p95_85_test25_saturated", "p95_86_test25_first_rank", "p99_949_test50_saturated", "p99_950_test50_first_rank_exact_boundary", "p95_189_test10_saturated", "p95_190_test10_first_rank_exact_boundary", "p99_474_test25_saturated", "p99_475_test25_first_rank_exact_boundary", "p99_553_test160_saturated", "p99_554_test160_first_rank", "p50_20_test10", "p95_500_test100_alpha001"],
-      "bindingFields": ["minimum_contributing_samples", "rank", "saturated"],
+      "caseCount": 27,
+      "cases": ["emission_minimum_p50", "emission_minimum_p90", "emission_minimum_p95", "emission_minimum_p99", "p95_100_test15_saturated", "p95_1000_test15", "p99_300_test100_saturated", "p95_935_test192", "p90_32_test10_saturated", "p90_33_test10_first_rank", "p95_85_test25_saturated", "p95_86_test25_first_rank", "p99_949_test50_saturated", "p99_950_test50_first_rank_exact_boundary", "p95_189_test10_saturated", "p95_190_test10_first_rank_exact_boundary", "p99_474_test25_saturated", "p99_475_test25_first_rank_exact_boundary", "p99_553_test160_saturated", "p99_554_test160_first_rank", "p50_20_test10", "p95_500_test100_alpha001", "p99_554_test161_saturated", "p99_400_planned200_rate080_warning", "p99_554_planned200_rate080_no_warning", "p95_1000_planned20_rate075", "p90_30_planned12_rate090_warning"],
+      "bindingFields": ["expected_test_samples", "minimum_baseline_trials", "minimum_contributing_samples", "planning_rank", "rank", "saturated", "warning"],
       "informationalFields": {},
-      "md5": "87744a864e4368b57b0eb856565ea8fe"
+      "md5": "db9ba382c575bdd4841dfd869408e520"
     },
     "latency_threshold": {
       "file": "latency_threshold.json",
@@ -191,11 +191,11 @@
           "version": 1
         }
       ],
-      "caseCount": 18,
-      "cases": ["compliance_p95_delta002_a05", "compliance_p95_delta001_a05", "compliance_p90_delta005_a05", "compliance_p80_delta010_a01", "compliance_p50_delta010_a10", "compliance_p95_delta005_a05_midway", "compliance_p99_delta002_a05_midway", "compliance_p95_delta002_a05_power95", "regression_nb1000_nt100_p95_delta005_a05", "regression_nb1000_nt1000_p95_delta002_a05", "regression_nb2000_nt1000_p951_delta0026_a05", "regression_nb100_nt100_p99_delta005_a01", "regression_nb30_nt25_p90_delta010_a05", "regression_mdd_nb1000_nt100_p95_a05", "regression_mdd_nb1000_nt1000_p95_a05", "regression_mdd_nb30_nt25_p90_a05", "regression_mdd_nb100_nt100_p100_a05", "regression_mdd_nb10_nt1_p50_a001_none"],
-      "bindingFields": ["achieved_power", "alternative_kind", "alternative_rate", "minimum_detectable_degradation", "required_samples"],
+      "caseCount": 24,
+      "cases": ["compliance_p95_delta002_a05", "compliance_p95_delta001_a05", "compliance_p90_delta005_a05", "compliance_p80_delta010_a01", "compliance_p50_delta010_a10", "compliance_p95_delta005_a05_midway", "compliance_p99_delta002_a05_midway", "compliance_p95_delta002_a05_power95", "compliance_p95_declared_alternative_098_a05", "compliance_p98_declared_alternative_0985_a0001", "regression_nb1000_nt100_p95_delta005_a05", "regression_nb1000_nt1000_p95_delta002_a05", "regression_nb2000_nt1000_p951_delta0026_a05", "regression_nb100_nt100_p99_delta005_a01", "regression_nb30_nt25_p90_delta010_a05", "resolved_kb951_nb1000_nt1000_at0925_a05", "resolved_kb951_nb1000_nt100_at090_a05", "resolved_kb100_nb100_nt100_at090_a05", "resolved_kb1920_nb2000_nt463_at093_a05", "regression_mdd_nb1000_nt100_p95_a05", "regression_mdd_nb1000_nt1000_p95_a05", "regression_mdd_nb30_nt25_p90_a05", "regression_mdd_nb100_nt100_p100_a05", "regression_mdd_nb10_nt1_p50_a001_none"],
+      "bindingFields": ["achieved_power", "alternative_kind", "alternative_rate", "cutoff_integer", "design_power", "minimum_detectable_degradation", "required_samples", "resolved_test_power"],
       "informationalFields": "first_crossing",
-      "md5": "d53cb5454d16998b1dc5042cb76ed757"
+      "md5": "2d1ff2a0f7e5ab16d105a38916a7f41c"
     },
     "regression_decision": {
       "file": "regression_decision.json",
@@ -209,8 +209,8 @@
       "caseCount": 22,
       "cases": ["worked_example_pass_at_cutoff", "worked_example_fail_below_cutoff", "worked_example_pass_above_cutoff", "worked_example_fail_deep_degradation", "small_test_pass_at_cutoff", "small_test_fail_below_cutoff", "near_perfect_baseline_pass_at_cutoff", "near_perfect_baseline_fail_below_cutoff", "perfect_baseline_pass_at_cutoff", "perfect_baseline_fail_below_cutoff", "zero_baseline_pass_on_nothing_observed", "zero_baseline_pass_at_test_200", "boundary_equal_sizes_pass_at_cutoff", "boundary_equal_sizes_fail_below_cutoff", "alpha001_pass_at_cutoff", "alpha001_fail_below_cutoff", "refused_test_larger_than_baseline", "exact_boundary_fail_at_alpha", "exact_boundary_pass_at_cutoff", "small_test_large_baseline_pass_at_cutoff", "small_test_large_baseline_fail_below_cutoff", "conflation_detector_regression_pass"],
       "bindingFields": ["configuration_error", "cutoff_integer", "verdict"],
-      "informationalFields": ["achieved_size", "displayed_rate", "threshold_real"],
-      "md5": "70d465140b1e1d7f94c7c4c5ddb2310e"
+      "informationalFields": ["displayed_rate", "size_at_assumed_common_rate", "threshold_real"],
+      "md5": "823356b4951096ccccd10a2ffbd2b712"
     },
     "risk_driven_sizing": {
       "file": "risk_driven_sizing.json",
@@ -222,10 +222,10 @@
         }
       ],
       "caseCount": 16,
-      "cases": ["companion_worked_example", "companion_scenario_walkthrough", "higher_power_costs_samples", "smaller_alpha_costs_samples", "wide_tolerance_is_cheap", "baseline_too_small_for_tolerance", "walkthrough_candidate_50", "walkthrough_candidate_150", "worked_example_at_891", "inversion_at_100", "inversion_at_400", "zero_baseline_required_n_refused", "zero_baseline_power_at_refused", "zero_baseline_detectable_rate_refused", "tolerance_at_baseline_refused", "test_larger_than_baseline_refused"],
+      "cases": ["companion_worked_example", "companion_scenario_walkthrough", "higher_power_costs_samples", "smaller_alpha_costs_samples", "large_design_drop_is_cheap", "baseline_too_small_for_design", "walkthrough_candidate_50", "walkthrough_candidate_150", "worked_example_at_891", "inversion_at_100", "inversion_at_400", "zero_baseline_required_n_refused", "zero_baseline_power_at_refused", "zero_baseline_detectable_rate_refused", "design_alternative_at_baseline_refused", "test_larger_than_baseline_refused"],
       "bindingFields": ["achieved_power", "detectable_rate", "power", "refusal_category", "required_n", "sizing_gate"],
       "informationalFields": {},
-      "md5": "0ce3120e92434bb10e1d1e3b944246c9"
+      "md5": "e630457a31811bb710060b8ed93b2742"
     },
     "threshold_derivation": {
       "file": "threshold_derivation.json",
@@ -239,8 +239,8 @@
       "caseCount": 29,
       "cases": ["ordinary_951_of_1000_test100_a05", "ordinary_larger_baseline_1902_of_2000_test100_a05", "boundary_equal_sizes_951_of_1000_test1000_a05", "large_baseline_small_test_9510_of_10000_test100_a05", "near_perfect_99_of_100_test100_a05", "perfect_100_of_100_test100_a05", "perfect_large_1000_of_1000_test100_a05", "zero_baseline_0_of_100_test50_a05", "small_baseline_27_of_30_test25_a05", "alpha001_951_of_1000_test1000", "baseline_95_of_100_test50_a05", "baseline_95_of_100_test50_a01", "baseline_950_of_1000_test50_a05", "baseline_950_of_1000_test200_a05", "baseline_950_of_1000_test200_a10", "baseline_9_of_10_test10_a05", "zero_baseline_0_of_1000_test200_a05", "zero_baseline_0_of_100_test85_a01", "refused_test_larger_than_baseline_95_of_100_test200", "refused_test_larger_than_baseline_zero_0_of_10_test50", "exact_boundary_12_of_12_test4_a05", "exact_boundary_19_of_23_test2_a05", "small_test_large_baseline_951_of_1000_test25_a01", "small_test_large_baseline_9500_of_10000_test100_a001", "tf_951_of_1000_test100_cutoff91", "tf_951_of_1000_test100_cutoff90", "tf_951_of_1000_test100_cutoff94", "tf_95_of_100_test100_cutoff85", "tf_zero_cutoff"],
       "bindingFields": ["configuration_error", "cutoff_integer", "implied_alpha", "is_sound"],
-      "informationalFields": ["achieved_size", "displayed_rate", "threshold_real"],
-      "md5": "b347ef92b67275042e4c4c082073a7df"
+      "informationalFields": ["displayed_rate", "size_at_assumed_common_rate", "threshold_real"],
+      "md5": "2fa62f364c9d8d933cfa479351c7831d"
     },
     "verdict": {
       "file": "verdict.json",
