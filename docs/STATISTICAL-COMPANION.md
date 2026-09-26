@@ -2587,6 +2587,8 @@ Because every rule is exact, a framework whose integer decision artefacts agree 
 
 **Composite envelopes.** The §1.4.6 envelopes are union bounds over per-criterion sizes that are each at most $\alpha_c$; they hold under arbitrary dependence and need no separate calibration fixture.
 
+**Exact boundaries.** Every exact rule compares a probability with $\alpha$ by an inclusive rule: a Fisher p-value at most $\alpha$ FAILs the test count, a binomial upper tail at most $\alpha$ admits the count (compliance and latency compliance), a breach probability at most $\alpha$ admits the latency rank. At an exact boundary the probability equals $\alpha$, and double-precision evaluation can land on either side of it — the Fisher p-value of 2 test successes in 4 against a baseline of 12 in 12 is exactly 1/20 but computes as slightly above 0.05. Implementations therefore follow one convention: compute the probability with the standard library; when $|\text{value} - \alpha| \le 10^{-9}\,\alpha$, recompute it exactly in rational arithmetic from the declared inputs, reading declared rates and levels as the exact decimals they are written as (0.05 is 1/20, 0.995 is 199/200); apply the inclusive rule to the exact value. Each probability is a finite sum of rationals — hypergeometric terms for Fisher, binomial terms for the tails, and ratios of factorials for the breach probability, which at the top rank with $r = n_t$ is simply $n_t/(n_b + n_t)$. The mavai-R fixtures carry cases at exact boundaries, named as such, so that an implementation that compares doubles alone fails them.
+
 **Two conformance statuses.** The methodology keeps two conformance statuses apart:
 
 - **Formula-value conformance.** The implementation's decision artefacts, quantiles and descriptive intervals agree with the mavai-R fixtures within the stated tolerance. This demonstrates arithmetic agreement with the oracle on the inputs covered by the fixtures.
@@ -2851,10 +2853,10 @@ For planning, the smallest baseline, no smaller than the test, from which a rank
 | Percentile | $n_t = 10$ | $n_t = 25$ | $n_t = 50$ | $n_t = 100$ | $n_t = 200$ |
 |---|---|---|---|---|---|
 | p90 | 33 | 42 | 50 | 100 | 200 |
-| p95 | 191 | 86 | 84 | 100 | 200 |
-| p99 | 191 | 476 | 951 | 346 | 342 |
+| p95 | 190 | 86 | 84 | 100 | 200 |
+| p99 | 190 | 475 | 950 | 346 | 342 |
 
-The requirement is not monotone in the test size, because the test's nearest rank $r$ moves in integer steps: a p99 test of 50 has $r = 50$, its own maximum, so the baseline must make even the test's largest value unlikely to exceed the threshold. At p50 a baseline of 5 suffices for every test size in the table.
+The requirement is not monotone in the test size, because the test's nearest rank $r$ moves in integer steps: a p99 test of 50 has $r = 50$, its own maximum, so the baseline must make even the test's largest value unlikely to exceed the threshold. Where $r = n_t$ the breach probability at the top rank is exactly $n_t / (n_b + n_t)$, so a test of 10, 25 or 50 at its maximum needs a baseline of exactly 190, 475 or 950 at $\alpha = 0.05$ — boundaries where the breach probability equals $\alpha$ and the exact-boundary convention of §10.6 decides. At p50 a baseline as large as the test suffices at every test size in the table.
 
 The two latency gates therefore play different roles:
 

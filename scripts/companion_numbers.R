@@ -193,9 +193,13 @@ for (pp in c(0.90, 0.95, 0.99)) {
       sprintf("| p%g | %s |", 100 * pp, paste(mins, collapse = " | ")))
 }
 chk("12.5.2.1", "p99 test of 50", sprintf("a p99 test of 50 has $r = %d$", latency_test_rank(50, 0.99)))
-stopifnot(all(vapply(c(10L, 25L, 50L, 100L, 200L), function(nt)
-  latency_precedence_exists(5, nt, 0.50, 0.05)$saturated == FALSE && latency_precedence_exists(4, nt, 0.50, 0.05)$saturated, logical(1))))
-chk("12.5.2.1", "p50 minimum", "At p50 a baseline of 5 suffices for every test size in the table")
+stopifnot(all(vapply(c(10L, 25L, 50L, 100L, 200L), function(nt) min_baseline(nt, 0.50) == nt, logical(1))))
+chk("12.5.2.1", "p50 minimum", "At p50 a baseline as large as the test suffices at every test size in the table")
+chk("12.5.2.1", "exact boundaries at the top rank", sprintf("needs a baseline of exactly %d, %d or %d",
+    min_baseline(10L, 0.99), min_baseline(25L, 0.99), min_baseline(50L, 0.99)))
+stopifnot(breach_exact(190, 190, 10, 10) == gmp::as.bigq(1, 20), breach_exact(950, 950, 50, 50) == gmp::as.bigq(1, 20))
+stopifnot(fisher_pvalue_exact(2, 12, 12, 4) == gmp::as.bigq(1, 20), fisher_pvalue(2, 12, 12, 4) > 0.05)
+chk("10.6", "Fisher exact-boundary example", "2 test successes in 4 against a baseline of 12 in 12 is exactly 1/20")
 nte <- floor(200 * 0.80)
 chk("12.5.3", "expected successes", sprintf("expects $n_{t,\\text{expected}} = %d$", nte))
 chk("12.5.3", "test rank", sprintf("has $r = %d$", latency_test_rank(nte, 0.99)))
