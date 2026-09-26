@@ -43,7 +43,8 @@ test_that("the manifest and every suite carry the methodology and fixture-schema
   expect_setequal(manifest$configurationErrors,
                   c("TEST_LARGER_THAN_BASELINE", "COMPLIANCE_INFEASIBLE"))
   expect_setequal(vapply(manifest$decisionRules, `[[`, character(1), "id"),
-                  c("regression/fisher", "compliance/exact-binomial", "latency/precedence"))
+                  c("regression/fisher", "compliance/exact-binomial", "latency/precedence",
+                      "latency/compliance-exact-binomial"))
   for (s in suites) {
     expect_identical(names(s)[1:4], c("suite", "methodologyVersion", "fixtureSchemaVersion", "decisionRules"))
     expect_identical(s$methodologyVersion, "1.5.0")

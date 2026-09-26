@@ -44,7 +44,9 @@ TIER_RATIONALE <- paste0(
   "configuration errors are binding through them. threshold_derivation (the regression cutoff ",
   "without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of ",
   "the regression rule against a declared tolerance, with its refusals), latency_percentile ",
-  "(the nearest-rank primitive) and latency_percentile_minimums remain published and optional: ",
+  "(the nearest-rank primitive), latency_percentile_minimums and latency_compliance_decision ",
+  "(explicit latency requirements enforced under latency/compliance-exact-binomial) remain ",
+  "published and optional: ",
   "a framework that implements the feature must consume the suite. ",
   "criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, ",
   "baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with ",
@@ -60,6 +62,8 @@ INFORMATIONAL_FIELDS <- list(
   regression_decision = c("threshold_real", "displayed_rate", "achieved_size"),
   compliance_decision = c("false_compliance", "clopper_pearson_lower"),
   latency_threshold = c("breach_probability", "test_rank", "n", "baseline_percentile"),
+  latency_compliance_decision = c("false_compliance", "clopper_pearson_lower",
+                                  "observed_percentile_ms", "advisory_percentile_pass"),
   verdict = c("observed_rate"),
   power_analysis = c("first_crossing")
 )
@@ -74,6 +78,7 @@ SUITE_DECISION_RULES <- list(
   feasibility = "compliance/exact-binomial",
   latency_threshold = "latency/precedence",
   latency_percentile_minimums = "latency/precedence",
+  latency_compliance_decision = "latency/compliance-exact-binomial",
   power_analysis = c("compliance/exact-binomial", "regression/fisher"),
   verdict = c("compliance/exact-binomial", "regression/fisher"),
   criterion_verdict_inferential = c("compliance/exact-binomial", "regression/fisher"),

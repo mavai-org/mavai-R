@@ -15,11 +15,15 @@
     {
       "id": "latency/precedence",
       "version": 1
+    },
+    {
+      "id": "latency/compliance-exact-binomial",
+      "version": 1
     }
   ],
   "configurationErrors": ["TEST_LARGER_THAN_BASELINE", "COMPLIANCE_INFEASIBLE"],
   "familyMandatory": ["wilson_ci", "wilson_lower", "regression_decision", "compliance_decision", "latency_threshold", "feasibility", "power_analysis", "verdict"],
-  "familyMandatoryRationale": "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. The roster is the methodological spine of the three rules: the Wilson interval and lower bound (kept as descriptive primitives; no rule decides with them), the empirical-regression verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), the latency threshold (latency/precedence), the feasibility gate and exact sizing of the compliance rule, the exact power of the regression rule, and the verdict suite encoding both ruled rules. Every mandatory decision suite carries its refusal cases, so both configuration errors are binding through them. threshold_derivation (the regression cutoff without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of the regression rule against a declared tolerance, with its refusals), latency_percentile (the nearest-rank primitive) and latency_percentile_minimums remain published and optional: a framework that implements the feature must consume the suite. criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with the 1.4.1 rules: latency_threshold_bootstrap (a comparison of the withdrawn order-statistic bound); the 1.4.1 fixtures remain reproducible from the v0.10.13 release assets.",
+  "familyMandatoryRationale": "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. The roster is the methodological spine of the three rules: the Wilson interval and lower bound (kept as descriptive primitives; no rule decides with them), the empirical-regression verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), the latency threshold (latency/precedence), the feasibility gate and exact sizing of the compliance rule, the exact power of the regression rule, and the verdict suite encoding both ruled rules. Every mandatory decision suite carries its refusal cases, so both configuration errors are binding through them. threshold_derivation (the regression cutoff without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of the regression rule against a declared tolerance, with its refusals), latency_percentile (the nearest-rank primitive), latency_percentile_minimums and latency_compliance_decision (explicit latency requirements enforced under latency/compliance-exact-binomial) remain published and optional: a framework that implements the feature must consume the suite. criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with the 1.4.1 rules: latency_threshold_bootstrap (a comparison of the withdrawn order-statistic bound); the 1.4.1 fixtures remain reproducible from the v0.10.13 release assets.",
   "suites": {
     "baseline_object": {
       "file": "baseline_object.json",
@@ -99,6 +103,21 @@
       "bindingFields": ["criterion", "feasible", "minimum_samples"],
       "informationalFields": {},
       "md5": "92516604716044935ec39e86755b6ae2"
+    },
+    "latency_compliance_decision": {
+      "file": "latency_compliance_decision.json",
+      "tolerance": 1e-10,
+      "decisionRules": [
+        {
+          "id": "latency/compliance-exact-binomial",
+          "version": 1
+        }
+      ],
+      "caseCount": 15,
+      "cases": ["p95_n100_pass_at_y_min", "p95_n100_fail_below_y_min", "p95_n100_advisory_pass_not_demonstrated", "p95_n100_advisory_fail", "tie_at_threshold_counts_within", "p95_plan_58_verification_refused", "p95_plan_58_smoke_inconclusive", "p95_plan_60_realised_58_inconclusive", "p95_n59_zero_exceedances_pass", "p99_n500_pass_at_y_min", "p99_n500_fail_below_y_min", "p90_n200_alpha001_pass_at_y_min", "p90_n200_alpha001_fail_below_y_min", "p50_n40_pass_at_y_min", "exact_boundary_p50_n5"],
+      "bindingFields": ["configuration_error", "pass_possible", "test_samples", "verdict", "within_threshold", "y_min"],
+      "informationalFields": ["advisory_percentile_pass", "clopper_pearson_lower", "false_compliance", "observed_percentile_ms"],
+      "md5": "b95c69c103aa98350c83db639caa9397"
     },
     "latency_percentile": {
       "file": "latency_percentile.json",

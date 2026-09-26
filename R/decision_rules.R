@@ -1,6 +1,6 @@
 #' The Statistical Companion 1.5.0 decision rules.
 #'
-#' Three verdict-producing procedures, each with a versioned identifier
+#' Four verdict-producing procedures, each with a versioned identifier
 #' that travels in every fixture it governs:
 #'
 #'   - `regression/fisher` v1 — empirical regression: the one-sided
@@ -12,6 +12,11 @@
 #'   - `latency/precedence` v1 — latency regression: the smallest baseline
 #'     rank whose exact no-degradation breach probability for the test's
 #'     nearest-rank percentile is at most alpha (companion §12.4).
+#'   - `latency/compliance-exact-binomial` v1 — an explicit latency
+#'     requirement (the p-th percentile at or below tau): the count of
+#'     successful latencies at or below tau, judged by the exact one-sided
+#'     binomial test of compliance/exact-binomial with p_req = p
+#'     (companion §12.3).
 #'
 #' Plus the two configuration errors refused before any sample runs:
 #' `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`.
@@ -30,7 +35,8 @@ FIXTURE_SCHEMA_VERSION <- 2L
 DECISION_RULES <- list(
   "regression/fisher" = list(id = "regression/fisher", version = 1L),
   "compliance/exact-binomial" = list(id = "compliance/exact-binomial", version = 1L),
-  "latency/precedence" = list(id = "latency/precedence", version = 1L)
+  "latency/precedence" = list(id = "latency/precedence", version = 1L),
+  "latency/compliance-exact-binomial" = list(id = "latency/compliance-exact-binomial", version = 1L)
 )
 
 CONFIGURATION_ERRORS <- c(
@@ -480,5 +486,55 @@ latency_precedence_threshold <- function(baseline_latencies, test_samples, p, al
     test_rank = latency_test_rank(test_samples, p),
     n = as.integer(n_b),
     baseline_percentile = nearest_rank_percentile(sorted, p)
+  )
+}
+
+# ===========================================================================
+# latency/compliance-exact-binomial, version 1
+# ===========================================================================
+
+#' Explicit latency compliance under latency/compliance-exact-binomial
+#'
+#' An explicit requirement "the p-th percentile is at most tau" is, for a
+#' continuous latency distribution F, the statement F(tau) >= p. The rule
+#' tests H0: F(tau) <= p against H1: F(tau) > p with the exact one-sided
+#' binomial test of compliance/exact-binomial, unchanged: Y is the number
+#' of successful latencies at or below tau (ties at tau count as within),
+#' y_min = min{y : P_p(Y >= y) <= alpha} over the n_s successful
+#' latencies, and PASS iff Y >= y_min.
+#'
+#' The number of successful latencies is known only after the run. When
+#' no count can pass at the realised n_s (n_s below the feasibility
+#' minimum ceiling(log(alpha) / log(p))) the verdict is INCONCLUSIVE: too
+#' few successful latencies to decide. The raw comparison of the observed
+#' nearest-rank percentile with tau is reported beside the verdict as an
+#' advisory figure; it decides nothing.
+#'
+#' @param latencies Successful latencies (ms).
+#' @param threshold_ms The declared threshold tau.
+#' @param p Percentile as a fraction (0.50, 0.90, 0.95, 0.99).
+#' @param alpha One-sided level.
+#' @return A list: test_samples, within_threshold, y_min, pass_possible,
+#'   verdict, false_compliance, clopper_pearson_lower,
+#'   observed_percentile_ms, advisory_percentile_pass.
+#' @export
+latency_compliance_verdict <- function(latencies, threshold_ms, p, alpha) {
+  latency_percentile_P(p)
+  check_alpha(alpha)
+  n_s <- length(latencies)
+  y <- sum(latencies <= threshold_ms)
+  y_min <- if (n_s == 0) NA_integer_ else exact_binomial_k_min(p, n_s, alpha)
+  possible <- !is.na(y_min)
+  observed <- if (n_s == 0) NA_real_ else sort(latencies)[latency_test_rank(n_s, p)]
+  list(
+    test_samples = as.integer(n_s),
+    within_threshold = as.integer(y),
+    y_min = y_min,
+    pass_possible = possible,
+    verdict = if (!possible) "INCONCLUSIVE" else if (y >= y_min) "PASS" else "FAIL",
+    false_compliance = if (possible) pbinom(y_min - 1, n_s, p, lower.tail = FALSE) else NA_real_,
+    clopper_pearson_lower = if (n_s == 0) NA_real_ else clopper_pearson_lower(y, n_s, alpha),
+    observed_percentile_ms = observed,
+    advisory_percentile_pass = if (n_s == 0) NA else observed <= threshold_ms
   )
 }

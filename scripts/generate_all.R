@@ -31,6 +31,7 @@ suites <- list(
   latency_percentile = generate_latency_percentile_cases(),
   latency_threshold = generate_latency_threshold_cases(),
   latency_percentile_minimums = generate_latency_percentile_minimums_cases(),
+  latency_compliance_decision = generate_latency_compliance_decision_cases(),
   # Multi-criteria model fixtures (informational):
   criterion_verdict_observational =
     generate_criterion_verdict_observational_cases(),

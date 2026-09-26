@@ -13,6 +13,14 @@
      threshold is c / n_t = 0.91, the rate the cutoff corresponds to; the
      Wilson lower bound is descriptive and decides nothing.
 
+     The test also carries two explicit latency requirements over its 93
+     successful latencies. p90 <= 800 ms is enforced (strict) and decided
+     by latency/compliance-exact-binomial: 91 of the 93 latencies are at
+     or below 800 ms, and at alpha 0.05 at least 89 must be for compliance
+     to be demonstrated, so it passes. p99 <= 900 ms is advisory: the
+     observed p99 is compared with the threshold, the breach is a warning,
+     and it does not enter the verdict.
+
      A configuration refused before any sample ran is shown in
      verdict-1.7-refused.xml. -->
 <verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-26T12:00:00+00:00" generator="worked-example">
@@ -32,6 +40,16 @@
       <check name="states the premium amount" count="7" kind="evaluated" />
     </failure-distribution>
   </functional>
+  <latency successful-samples="93" strict-violations="0" advisory-violations="1">
+    <observed>
+      <percentile label="p90" value-ms="640" />
+      <percentile label="p99" value-ms="1400" />
+    </observed>
+    <evaluations>
+      <evaluation percentile="p90" observed-ms="640" threshold-ms="800" provenance="explicit" mode="strict" status="PASS" decision-rule="latency/compliance-exact-binomial" decision-rule-version="1" within-threshold="91" required-within="89" />
+      <evaluation percentile="p99" observed-ms="1400" threshold-ms="900" provenance="explicit" mode="advisory" status="ADVISORY_WARN" />
+    </evaluations>
+  </latency>
   <per-criterion>
     <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" />
     <composite value="PASS" />

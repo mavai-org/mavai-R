@@ -119,7 +119,8 @@
       "enum": [
         "regression/fisher",
         "compliance/exact-binomial",
-        "latency/precedence"
+        "latency/precedence",
+        "latency/compliance-exact-binomial"
       ],
       "description": "A versioned decision rule of methodology 1.5.0."
     },
