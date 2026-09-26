@@ -8,10 +8,10 @@ test_that("required n is where power stays at target up to n_b", {
   i <- e$inputs
   expect_gte(e$expected$achieved_power, i$target_power)
   expect_lt(risk_sizing_power(n - 1L, i$baseline_rate, i$baseline_trials,
-                              i$minimum_acceptable_rate, i$alpha), i$target_power)
+                              i$design_alternative_rate, i$alpha), i$target_power)
   for (m in c(n + 1L, n + 50L, i$baseline_trials)) {
     expect_gte(risk_sizing_power(m, i$baseline_rate, i$baseline_trials,
-                                 i$minimum_acceptable_rate, i$alpha), i$target_power)
+                                 i$design_alternative_rate, i$alpha), i$target_power)
   }
 })
 
@@ -37,9 +37,9 @@ test_that("the inversion round-trips: power at the detectable rate meets the tar
 
 test_that("inadmissible designs are published as refusals", {
   expect_identical(cases[["zero_baseline_required_n_refused"]]$expected$refusal_category, "ZERO_BASELINE")
-  expect_identical(cases[["tolerance_at_baseline_refused"]]$expected$refusal_category, "EMPTY_TOLERANCE_INTERVAL")
+  expect_identical(cases[["design_alternative_at_baseline_refused"]]$expected$refusal_category, "ALTERNATIVE_NOT_BELOW_BASELINE")
   expect_identical(cases[["test_larger_than_baseline_refused"]]$expected$refusal_category, "TEST_LARGER_THAN_BASELINE")
-  r <- cases[["baseline_too_small_for_tolerance"]]$expected
+  r <- cases[["baseline_too_small_for_design"]]$expected
   expect_identical(r$sizing_gate, "REFUSE")
   expect_identical(r$refusal_category, "BASELINE_TOO_SMALL")
   expect_true(is.na(r$required_n))

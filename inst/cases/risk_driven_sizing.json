@@ -8,8 +8,8 @@
       "version": 1
     }
   ],
-  "description": "Risk-driven sizing (companion §5.4.1) against the operative regression rule, regression/fisher: the exact power of the rule against a declared minimal acceptable rate p_min, with the baseline's n_b trials at rate p0. POWER_AT gives the power at a candidate n_t; REQUIRED_N the smallest n_t <= n_b from which power stays at or above the target up to n_b; DETECTABLE_RATE the largest p_min detectable at the target with n_t samples. Designs outside the domain are published as refusals: sizing_gate REFUSE, every numeric expectation null, refusal_category ZERO_BASELINE, EMPTY_TOLERANCE_INTERVAL, TEST_LARGER_THAN_BASELINE or BASELINE_TOO_SMALL (the target is not reached and held within n_t <= n_b).",
-  "method": "Power(n_t) = sum_k dbinom(k, n_b, p0) pbinom(c(k) - 1, n_t, p_min), c the regression/fisher cutoff at (k, n_b, n_t, alpha), over the baseline counts from qbinom(1e-17, n_b, p0) to qbinom(1 - 1e-17, n_b, p0); required_n = 1 + the largest n_t <= n_b with Power < target (refused when that is n_b); detectable_rate by bisection on p_min over (0, p0) to 1e-10.",
+  "description": "Risk-driven sizing (companion §5.4.1) against the operative regression rule, regression/fisher: the exact power of the rule at a declared design alternative rate p_design - the true rate at which the test must reach its target power; the test still flags any degradation from the baseline - with the baseline's n_b trials at rate p0. POWER_AT gives the power at a candidate n_t; REQUIRED_N the smallest n_t <= n_b from which power stays at or above the target up to n_b; DETECTABLE_RATE the largest p_design detectable at the target with n_t samples. Designs outside the domain are published as refusals: sizing_gate REFUSE, every numeric expectation null, refusal_category ZERO_BASELINE, ALTERNATIVE_NOT_BELOW_BASELINE, TEST_LARGER_THAN_BASELINE or BASELINE_TOO_SMALL (the target is not reached and held within n_t <= n_b).",
+  "method": "Power(n_t) = sum_k dbinom(k, n_b, p0) pbinom(c(k) - 1, n_t, p_design), c the regression/fisher cutoff at (k, n_b, n_t, alpha), over the baseline counts from qbinom(1e-17, n_b, p0) to qbinom(1 - 1e-17, n_b, p0); required_n = 1 + the largest n_t <= n_b with Power < target (refused when that is n_b); detectable_rate by bisection on p_design over (0, p0) to 1e-10.",
   "tolerance": 1e-06,
   "cases": [
     {
@@ -18,7 +18,7 @@
       "inputs": {
         "baseline_rate": 0.87,
         "baseline_trials": 3000,
-        "minimum_acceptable_rate": 0.84,
+        "design_alternative_rate": 0.84,
         "alpha": 0.05,
         "target_power": 0.8
       },
@@ -34,7 +34,7 @@
       "inputs": {
         "baseline_rate": 0.96,
         "baseline_trials": 2000,
-        "minimum_acceptable_rate": 0.93,
+        "design_alternative_rate": 0.93,
         "alpha": 0.05,
         "target_power": 0.8
       },
@@ -50,7 +50,7 @@
       "inputs": {
         "baseline_rate": 0.96,
         "baseline_trials": 2000,
-        "minimum_acceptable_rate": 0.93,
+        "design_alternative_rate": 0.93,
         "alpha": 0.05,
         "target_power": 0.9
       },
@@ -66,7 +66,7 @@
       "inputs": {
         "baseline_rate": 0.96,
         "baseline_trials": 2000,
-        "minimum_acceptable_rate": 0.93,
+        "design_alternative_rate": 0.93,
         "alpha": 0.01,
         "target_power": 0.8
       },
@@ -77,12 +77,12 @@
       }
     },
     {
-      "name": "wide_tolerance_is_cheap",
+      "name": "large_design_drop_is_cheap",
       "approach": "required_n",
       "inputs": {
         "baseline_rate": 0.9,
         "baseline_trials": 1000,
-        "minimum_acceptable_rate": 0.8,
+        "design_alternative_rate": 0.8,
         "alpha": 0.05,
         "target_power": 0.8
       },
@@ -93,12 +93,12 @@
       }
     },
     {
-      "name": "baseline_too_small_for_tolerance",
+      "name": "baseline_too_small_for_design",
       "approach": "required_n",
       "inputs": {
         "baseline_rate": 0.96,
         "baseline_trials": 300,
-        "minimum_acceptable_rate": 0.93,
+        "design_alternative_rate": 0.93,
         "alpha": 0.05,
         "target_power": 0.8
       },
@@ -115,7 +115,7 @@
       "inputs": {
         "baseline_rate": 0.96,
         "baseline_trials": 2000,
-        "minimum_acceptable_rate": 0.93,
+        "design_alternative_rate": 0.93,
         "alpha": 0.05,
         "test_samples": 50
       },
@@ -130,7 +130,7 @@
       "inputs": {
         "baseline_rate": 0.96,
         "baseline_trials": 2000,
-        "minimum_acceptable_rate": 0.93,
+        "design_alternative_rate": 0.93,
         "alpha": 0.05,
         "test_samples": 150
       },
@@ -145,7 +145,7 @@
       "inputs": {
         "baseline_rate": 0.87,
         "baseline_trials": 3000,
-        "minimum_acceptable_rate": 0.84,
+        "design_alternative_rate": 0.84,
         "alpha": 0.05,
         "test_samples": 891
       },
@@ -190,7 +190,7 @@
       "inputs": {
         "baseline_rate": 0,
         "baseline_trials": 1000,
-        "minimum_acceptable_rate": 0.9,
+        "design_alternative_rate": 0.9,
         "alpha": 0.05,
         "target_power": 0.8
       },
@@ -207,7 +207,7 @@
       "inputs": {
         "baseline_rate": 0,
         "baseline_trials": 1000,
-        "minimum_acceptable_rate": 0.9,
+        "design_alternative_rate": 0.9,
         "alpha": 0.05,
         "test_samples": 100
       },
@@ -234,18 +234,18 @@
       }
     },
     {
-      "name": "tolerance_at_baseline_refused",
+      "name": "design_alternative_at_baseline_refused",
       "approach": "required_n",
       "inputs": {
         "baseline_rate": 0.9,
         "baseline_trials": 1000,
-        "minimum_acceptable_rate": 0.9,
+        "design_alternative_rate": 0.9,
         "alpha": 0.05,
         "target_power": 0.8
       },
       "expected": {
         "sizing_gate": "REFUSE",
-        "refusal_category": "EMPTY_TOLERANCE_INTERVAL",
+        "refusal_category": "ALTERNATIVE_NOT_BELOW_BASELINE",
         "required_n": null,
         "achieved_power": null
       }
@@ -256,7 +256,7 @@
       "inputs": {
         "baseline_rate": 0.9,
         "baseline_trials": 100,
-        "minimum_acceptable_rate": 0.8,
+        "design_alternative_rate": 0.8,
         "alpha": 0.05,
         "test_samples": 200
       },
