@@ -88,15 +88,12 @@ per_criterion_verdict_block <- function(test_obs) {
       procedure = "REGRESSION",
       denominator_policy = test_obs$denominator_policy,
       alpha = test_obs$alpha,
+      decisionRule = "regression/score-cc",
       n_c = rv$n_c, r_obs = rv$r_obs,
       p_hat_c = rv$p_hat_c,
-      wilson_lower_real = rv$wilson_lower_real,
       cutoff_integer = rv$cutoff_integer,
-      achieved_size = rv$achieved_size,
-      p_value = rv$p_value,
-      p_value_method = rv$p_value_method,
-      p_value_tail = rv$p_value_tail,
-      feasibility_gate = rv$feasibility_gate,
+      displayed_rate = rv$displayed_rate,
+      configuration_error = rv$configuration_error,
       verdict = rv$verdict,
       statistical_verdict = rv$statistical_verdict,
       observed_rate_status = rv$observed_rate_status,
@@ -114,9 +111,11 @@ per_criterion_verdict_block <- function(test_obs) {
       denominator_policy = test_obs$denominator_policy,
       alpha = test_obs$alpha,
       p_req = test_obs$p_req,
+      decisionRule = "compliance/exact-binomial",
       n_c = cv$n_c, r_obs = cv$r_obs,
       p_hat_c = cv$p_hat_c,
-      wilson_lower_real = cv$wilson_lower_real,
+      k_min = cv$k_min,
+      clopper_pearson_lower = cv$clopper_pearson_lower,
       p_value = cv$p_value,
       p_value_method = cv$p_value_method,
       p_value_tail = cv$p_value_tail,
@@ -257,9 +256,9 @@ generate_multi_criteria_scenario_cases <- function() {
   )
 
   # --- Case 2: passing counterfactual.
-  # Bump K_c on layperson-readable enough to clear Wilson LB at α=0.001.
-  # Need wilson_lower(K/800, 800, 0.999) > 0.98. Empirically K = 798
-  # (p_hat = 0.9975) yields wlr ≈ 0.985 > 0.98. Verify in R.
+  # Bump K_c on layperson-readable enough to demonstrate compliance at
+  # α = 0.001: the exact test's k_min at n = 800, p_req = 0.98 is 796,
+  # so K = 798 (p_hat = 0.9975) PASSes.
   case_2_test_run <- case_1_test_run
   case_2_test_run$criteria_observations[[3]]$K_c <- 798L
   case_2_per_crit <- lapply(case_2_test_run$criteria_observations,
@@ -269,8 +268,9 @@ generate_multi_criteria_scenario_cases <- function() {
     name = "consult_advice_passing_counterfactual",
     description = paste(
       "Same contract and baseline as case 1, with K_c on",
-      "C_layperson_readable increased to 798 so the Wilson lower bound",
-      "at α = 0.001 clears the SLO requirement of 0.98. Composite PASS."
+      "C_layperson_readable increased to 798, at or above k_min = 796, so",
+      "compliance with the SLO requirement of 0.98 is demonstrated at",
+      "α = 0.001. Composite PASS."
     ),
     inputs = list(
       baseline = consult_advice_baseline,
@@ -376,12 +376,16 @@ generate_multi_criteria_scenario_cases <- function() {
   list(
     suite = "multi_criteria_scenario_consult_advice",
     description = paste(
-      "End-to-end scenarios per companion §10.3 and §10.6. Each case",
+      "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0",
+      "decision rules (regression/score-cc, compliance/exact-binomial). Each case",
       "ties together a baseline, a test run, and the expected scenario",
       "output (per-criterion verdicts, composite verdict, both",
       "procedure-direction envelopes, conformance-status metadata).",
-      "Case 1 mirrors the locked §10.3 example (composite FAIL); case 2",
-      "is the passing counterfactual; case 3 exercises the structural-",
+      "Case 1 is the one canonical consult-advice example: the run 953 of",
+      "1000 against the baseline 951 of 1000 (C_well_formed) and 788 of 800",
+      "against the 0.98 requirement at alpha 0.001 (C_layperson_readable);",
+      "composite FAIL. Every consult-advice number in the companion is",
+      "generated from it. Case 2 is the passing counterfactual; case 3 exercises the structural-",
       "composition pattern (availability sibling + conditional content",
       "via availability_criterion_ref); case 4 exercises the cross-",
       "policy structural-error refusal."

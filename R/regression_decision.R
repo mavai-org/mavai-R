@@ -1,174 +1,199 @@
-#' The composed decision rule, as end-to-end scenario cases.
+#' Empirical regression under regression/score-cc: derivation and verdict.
 #'
-#' The formula-value suites validate each computation in isolation; this
-#' suite validates the *decision* they compose into, per companion §3.4:
-#' for a baseline-derived (regression) test the binding artefact is the
-#' integer cutoff c = ceiling(n_test * p*), p* the sample-size-first
-#' Wilson lower bound, and the verdict is PASS iff the raw observed
-#' success count K >= c. A compliance sibling group (threshold given,
-#' not derived; verdict via the test sample's own Wilson lower bound
-#' clearing it, §3.2/§3.6) is included so the two procedures' difference
-#' is itself fixture-visible: a framework that conflates them fails the
-#' suite even when every component computation is arithmetically
-#' conformant.
+#' Two suites, two layers of the same rule (companion §3.4):
 #'
-#' Consuming frameworks must run these cases through their production
-#' verdict path, not a reimplementation.
+#'   - `threshold_derivation` — the decision-rule layer:
+#'     (K_b, n_b, n_t, alpha) -> the integer cutoff c, or the
+#'     configuration error that refuses the configuration.
+#'   - `regression_decision` — the end-to-end layer: the same derivation
+#'     composed into a verdict on an observed test count, PASS iff
+#'     K_t >= c. Frameworks run these cases through their production
+#'     verdict path, not a reimplementation.
+#'
+#' Binding: cutoff_integer, configuration_error, verdict. Informational
+#' (report obligations): threshold_real = c / n_t, displayed_rate =
+#' round(c / n_t, 6), and achieved_size = the exact unconditional
+#' false-degradation-signal probability A(p) at p = K_b / n_b (null when
+#' K_b / n_b is 0 or 1, where A is degenerate).
 
-#' One regression-procedure scenario: derived cutoff, verdict on K >= c.
+#' The derivation block for one configuration.
+#' @keywords internal
+score_cc_expected_block <- function(baseline_successes, baseline_trials, test_samples, alpha) {
+  err <- regression_configuration_error(baseline_trials, test_samples, alpha)
+  if (!is.na(err)) {
+    return(list(cutoff_integer = NA_integer_, configuration_error = err,
+                threshold_real = NA_real_, displayed_rate = NA_real_,
+                achieved_size = NA_real_))
+  }
+  cut <- score_cc_cutoffs(baseline_trials, test_samples, alpha)
+  c_int <- cut[baseline_successes + 1L]
+  stopifnot(c_int == score_cc_cutoff(baseline_successes, baseline_trials, test_samples, alpha))
+  p_hat <- baseline_successes / baseline_trials
+  list(
+    cutoff_integer = c_int,
+    configuration_error = NA_character_,
+    threshold_real = c_int / test_samples,
+    displayed_rate = round(c_int / test_samples, 6),
+    achieved_size = if (p_hat %in% c(0, 1)) NA_real_ else
+      score_cc_fail_probability(cut, baseline_trials, test_samples, p_hat, p_hat)
+  )
+}
+
+#' @keywords internal
+derivation_case <- function(name, baseline_successes, baseline_trials, test_samples, alpha,
+                            description = NULL) {
+  case <- list(name = name)
+  if (!is.null(description)) case$description <- description
+  c(case, list(
+    inputs = list(baseline_successes = as.integer(baseline_successes),
+                  baseline_trials = as.integer(baseline_trials),
+                  test_samples = as.integer(test_samples), alpha = alpha),
+    expected = score_cc_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
+  ))
+}
+
+#' One regression verdict: derived cutoff, PASS iff K_t >= c.
 #' @keywords internal
 regression_decision_case <- function(name, baseline_successes, baseline_trials,
-                                     test_samples, confidence,
-                                     observed_successes) {
-  block <- ssf_expected_block(baseline_successes, baseline_trials,
-                              test_samples, confidence)
-  c_int <- block$cutoff_integer
+                                     test_samples, alpha, observed_successes,
+                                     description = NULL) {
+  block <- score_cc_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
+  verdict <- if (!is.na(block$configuration_error)) NA_character_ else
+    if (observed_successes >= block$cutoff_integer) "PASS" else "FAIL"
+  case <- list(name = name)
+  if (!is.null(description)) case$description <- description
+  c(case, list(
+    inputs = list(baseline_successes = as.integer(baseline_successes),
+                  baseline_trials = as.integer(baseline_trials),
+                  test_samples = as.integer(test_samples), alpha = alpha,
+                  observed_successes = as.integer(observed_successes)),
+    expected = c(block, list(verdict = verdict))
+  ))
+}
+
+REGRESSION_METHOD <- paste0(
+  "regression/score-cc v1: for k_t = 0..n_t, d = k_t/n_t - K_b/n_b, d_cc = min(0, d + ",
+  "(1/n_b + 1/n_t)/2), p_bar = (K_b + k_t)/(n_b + n_t), v = p_bar (1 - p_bar) (1/n_b + 1/n_t), ",
+  "z = d_cc / sqrt(v) (z = 0 when v = 0); c = the smallest k_t with z >= -qnorm(1 - alpha). ",
+  "Configuration errors, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b; ",
+  "OUTSIDE_CALIBRATION_TOLERANCE when the published calibration-tolerance rule ",
+  "(suite calibration_tolerance_rule) refuses (n_b, n_t, alpha). Informational: ",
+  "threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = ",
+  "sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1})."
+)
+
+#' Generate the regression/score-cc derivation cases
+#'
+#' @return A list suitable for JSON serialisation.
+#' @export
+generate_threshold_derivation_cases <- function() {
+  cases <- list(
+    # The companion's canonical cases (§3.4 rate, larger baselines, equal sizes).
+    derivation_case("ordinary_951_of_1000_test100_a05", 951, 1000, 100, 0.05),
+    derivation_case("ordinary_larger_baseline_1902_of_2000_test100_a05", 1902, 2000, 100, 0.05),
+    derivation_case("boundary_equal_sizes_951_of_1000_test1000_a05", 951, 1000, 1000, 0.05,
+                    "n_t = n_b: the largest test the design rule admits."),
+    derivation_case("large_baseline_small_test_9510_of_10000_test100_a05", 9510, 10000, 100, 0.05),
+    # The perfect-baseline discontinuity is gone: 99/100 -> 94, 100/100 -> 96.
+    derivation_case("near_perfect_99_of_100_test100_a05", 99, 100, 100, 0.05),
+    derivation_case("perfect_100_of_100_test100_a05", 100, 100, 100, 0.05,
+                    "No special case at K_b = n_b; the cutoff is monotone in K_b."),
+    derivation_case("perfect_large_1000_of_1000_test100_a05", 1000, 1000, 100, 0.05),
+    derivation_case("zero_baseline_0_of_100_test50_a05", 0, 100, 50, 0.05,
+                    "c = 0 at K_b = 0: a baseline that succeeded on nothing demands nothing."),
+    derivation_case("small_baseline_27_of_30_test25_a05", 27, 30, 25, 0.05),
+    derivation_case("alpha001_inside_tolerance_951_of_1000_test1000", 951, 1000, 1000, 0.01),
+    # Further sizes and levels.
+    derivation_case("baseline_95_of_100_test50_a05", 95, 100, 50, 0.05),
+    derivation_case("baseline_95_of_100_test50_a01", 95, 100, 50, 0.01),
+    derivation_case("baseline_950_of_1000_test50_a05", 950, 1000, 50, 0.05),
+    derivation_case("baseline_950_of_1000_test200_a05", 950, 1000, 200, 0.05),
+    derivation_case("baseline_950_of_1000_test200_a10", 950, 1000, 200, 0.10),
+    derivation_case("baseline_9_of_10_test10_a05", 9, 10, 10, 0.05),
+    derivation_case("zero_baseline_0_of_1000_test200_a05", 0, 1000, 200, 0.05),
+    derivation_case("zero_baseline_0_of_100_test85_a01", 0, 100, 85, 0.01),
+    # Refusals.
+    derivation_case("refused_test_larger_than_baseline_95_of_100_test200", 95, 100, 200, 0.05,
+                    "n_t > n_b: refused whatever the counts."),
+    derivation_case("refused_test_larger_than_baseline_zero_0_of_10_test50", 0, 10, 50, 0.05,
+                    "n_t > n_b is refused even at a zero baseline."),
+    derivation_case("refused_outside_tolerance_951_of_1000_test25_a01", 951, 1000, 25, 0.01,
+                    "Worst-case size 1.313% at p near 0.977 against a tolerance of 1.2%."),
+    derivation_case("refused_outside_tolerance_9500_of_10000_test100_a001", 9500, 10000, 100, 0.001)
+  )
+
   list(
-    name = name,
-    procedure = "REGRESSION",
-    inputs = list(
-      baseline_successes = baseline_successes,
-      baseline_trials = baseline_trials,
-      test_samples = test_samples,
-      confidence = confidence,
-      observed_successes = observed_successes
+    suite = "threshold_derivation",
+    description = paste(
+      "The decision-rule layer of empirical regression (companion §3.4): from baseline evidence",
+      "(K_b, n_b), a test size n_t and alpha, the integer cutoff c of regression/score-cc, or the",
+      "configuration error that refuses the configuration before any sample runs. The cutoff",
+      "is the binding artefact; configuration_error is binding (null when the configuration is",
+      "valid); threshold_real, displayed_rate and achieved_size are informational report values."
     ),
-    expected = list(
-      threshold_real = block$wilson_lower_real,
-      cutoff_integer = c_int,
-      displayed_rate = round(c_int / test_samples, 6),
-      achieved_size = block$achieved_size,
-      verdict = if (observed_successes >= c_int) "PASS" else "FAIL"
-    )
+    method = REGRESSION_METHOD,
+    tolerance = 1e-10,
+    cases = cases
   )
 }
 
-#' One compliance-procedure scenario: threshold given, Wilson clearance.
-#' @keywords internal
-compliance_decision_case <- function(name, threshold, test_samples,
-                                     confidence, observed_successes) {
-  bound <- wilson_lower(observed_successes, test_samples, confidence)
-  list(
-    name = name,
-    procedure = "COMPLIANCE",
-    inputs = list(
-      threshold = threshold,
-      test_samples = test_samples,
-      confidence = confidence,
-      observed_successes = observed_successes
-    ),
-    expected = list(
-      wilson_lower = bound,
-      verdict = if (bound >= threshold) "PASS" else "FAIL"
-    )
-  )
-}
-
-#' Generate the decision-rule scenario cases
+#' Generate the regression/score-cc verdict cases
 #'
 #' @return A list suitable for JSON serialisation.
 #' @export
 generate_regression_decision_cases <- function() {
-  worked <- ssf_expected_block(951, 1000, 100, 0.95)
-  worked_c <- worked$cutoff_integer
-
-  small <- ssf_expected_block(9, 10, 10, 0.95)
-  small_c <- small$cutoff_integer
-
-  perfect <- ssf_expected_block(50, 50, 50, 0.95)
-  perfect_c <- perfect$cutoff_integer
+  worked_c <- score_cc_cutoff(951, 1000, 100, 0.05)
+  small_c <- score_cc_cutoff(27, 30, 25, 0.05)
+  near_c <- score_cc_cutoff(99, 100, 100, 0.05)
+  perfect_c <- score_cc_cutoff(100, 100, 100, 0.05)
+  equal_c <- score_cc_cutoff(951, 1000, 1000, 0.05)
+  a01_c <- score_cc_cutoff(951, 1000, 1000, 0.01)
 
   cases <- list(
-    # The companion's own worked example (S3.4): p-hat = 0.951,
-    # n_test = 100 -> p* ~= 0.902124, c = 91, achieved size ~= 0.024986.
-    regression_decision_case("worked_example_pass_at_cutoff",
-                             951, 1000, 100, 0.95, worked_c),
-    regression_decision_case("worked_example_fail_below_cutoff",
-                             951, 1000, 100, 0.95, worked_c - 1L),
-    regression_decision_case("worked_example_pass_above_cutoff",
-                             951, 1000, 100, 0.95, 97L),
-    regression_decision_case("worked_example_fail_deep_degradation",
-                             951, 1000, 100, 0.95, 80L),
-
-    # Small-n discretisation: the real-valued bound and the integer
-    # cutoff disagree materially; only K >= c is the decision.
-    regression_decision_case("small_test_pass_at_cutoff",
-                             9, 10, 10, 0.95, small_c),
-    regression_decision_case("small_test_fail_below_cutoff",
-                             9, 10, 10, 0.95, small_c - 1L),
-
-    # Perfect baseline (k = n): the effective-rate guard (S4.3.2)
-    # feeds the derivation; the decision stays K >= c.
-    regression_decision_case("perfect_baseline_pass_at_cutoff",
-                             50, 50, 50, 0.95, perfect_c),
-    regression_decision_case("perfect_baseline_fail_below_cutoff",
-                             50, 50, 50, 0.95, perfect_c - 1L),
-
-    # Zero baseline (k = 0): the §4.3.4 degeneration carried all the way
-    # to a verdict. The cutoff is 0, so K >= 0 holds for every outcome
-    # and the test passes on nothing observed. That reads oddly and is
-    # correct — the baseline supports no lower bound above zero, so it
-    # can demand nothing — but it is exactly the shape a framework is
-    # likely to get wrong, by refusing, by erroring, or by carrying a
-    # floating-point residue into ceiling() and demanding one success.
-    # n_test = 50 is the residue site; the pair pins both the arithmetic
-    # and the verdict it composes into.
-    #
-    # The baseline is sized at the test's own size rather than smaller.
-    # A framework may legitimately hold that a baseline must be at least
-    # as rigorous as the test it grounds — punit returns INCONCLUSIVE
-    # when the test outsizes its baseline — and a case that trips that
-    # rule cannot discriminate the boundary it was written for. The
-    # effective rate is 0 at every baseline size, so nothing about the
-    # expectation depends on this choice.
-    regression_decision_case("zero_baseline_pass_on_nothing_observed",
-                             0, 50, 50, 0.95, 0L),
-    regression_decision_case("zero_baseline_pass_at_test_200",
-                             0, 1000, 200, 0.95, 0L),
-
-    # High confidence variant.
-    regression_decision_case("worked_example_high_confidence_at_95_of_100",
-                             951, 1000, 100, 0.99, 95L),
-
-    # Compliance siblings (threshold GIVEN; verdict via the test
-    # sample's own Wilson lower bound clearing it).
-    compliance_decision_case("compliance_pass_clear_margin",
-                             0.80, 100, 0.95, 95L),
-    compliance_decision_case("compliance_fail_bound_below_threshold",
-                             0.90, 100, 0.95, 92L),
-
-    # The conflation detector: the same observation that PASSES the
-    # regression procedure (K = c = 91 >= c) FAILS under a compliance
-    # reading against the same derived value used as a given threshold
-    # (WilsonLower(91, 100, 0.95) < 0.902124). A framework applying the
-    # compliance rule on the regression path gets this pair inverted.
-    regression_decision_case("conflation_detector_regression_pass",
-                             951, 1000, 100, 0.95, worked_c),
-    compliance_decision_case("conflation_detector_compliance_fail",
-                             round(worked$wilson_lower_real, 6), 100, 0.95,
-                             worked_c)
+    # The §3.4 rate: baseline 951/1000, n_t = 100, c = 91.
+    regression_decision_case("worked_example_pass_at_cutoff", 951, 1000, 100, 0.05, worked_c),
+    regression_decision_case("worked_example_fail_below_cutoff", 951, 1000, 100, 0.05, worked_c - 1L),
+    regression_decision_case("worked_example_pass_above_cutoff", 951, 1000, 100, 0.05, 97L),
+    regression_decision_case("worked_example_fail_deep_degradation", 951, 1000, 100, 0.05, 80L),
+    # Small baseline and test.
+    regression_decision_case("small_test_pass_at_cutoff", 27, 30, 25, 0.05, small_c),
+    regression_decision_case("small_test_fail_below_cutoff", 27, 30, 25, 0.05, small_c - 1L),
+    # Near-perfect and perfect baselines: the cutoff rises with K_b.
+    regression_decision_case("near_perfect_baseline_pass_at_cutoff", 99, 100, 100, 0.05, near_c),
+    regression_decision_case("near_perfect_baseline_fail_below_cutoff", 99, 100, 100, 0.05, near_c - 1L),
+    regression_decision_case("perfect_baseline_pass_at_cutoff", 100, 100, 100, 0.05, perfect_c),
+    regression_decision_case("perfect_baseline_fail_below_cutoff", 100, 100, 100, 0.05, perfect_c - 1L,
+      "95 of 100 FAILs against a perfect baseline and PASSes against 99 of 100."),
+    # Zero baseline: c = 0, so a test that observed nothing PASSes.
+    regression_decision_case("zero_baseline_pass_on_nothing_observed", 0, 100, 50, 0.05, 0L),
+    regression_decision_case("zero_baseline_pass_at_test_200", 0, 1000, 200, 0.05, 0L),
+    # n_t = n_b, the boundary of the design rule.
+    regression_decision_case("boundary_equal_sizes_pass_at_cutoff", 951, 1000, 1000, 0.05, equal_c),
+    regression_decision_case("boundary_equal_sizes_fail_below_cutoff", 951, 1000, 1000, 0.05, equal_c - 1L),
+    # alpha 0.01 inside the calibration tolerance.
+    regression_decision_case("alpha001_pass_at_cutoff", 951, 1000, 1000, 0.01, a01_c),
+    regression_decision_case("alpha001_fail_below_cutoff", 951, 1000, 1000, 0.01, a01_c - 1L),
+    # Refusals: no verdict is produced.
+    regression_decision_case("refused_test_larger_than_baseline", 95, 100, 200, 0.05, 190L),
+    regression_decision_case("refused_outside_calibration_tolerance", 951, 1000, 25, 0.01, 25L),
+    # The conflation detector: this observation PASSes the regression rule;
+    # compliance_decision's conflation_detector_compliance_fail FAILs the
+    # same observation against c / n_t taken as a given requirement.
+    regression_decision_case("conflation_detector_regression_pass", 951, 1000, 100, 0.05, worked_c)
   )
 
   list(
     suite = "regression_decision",
-    description = paste0(
-      "End-to-end scenario cases for the composed decision rules. REGRESSION cases derive the ",
-      "threshold from a baseline per the sample-size-first construction (companion S3.4) and ",
-      "decide PASS iff the raw observed success count K >= cutoff_integer -- the integer cutoff ",
-      "is the binding artefact; threshold_real, displayed_rate, and achieved_size are report ",
-      "obligations. COMPLIANCE cases take the threshold as given and decide via the test ",
-      "sample's own Wilson lower bound clearing it (S3.2/S3.6). The conflation_detector pair ",
-      "shares one observation across both procedures with opposite verdicts, so a framework ",
-      "that applies the compliance rule on the regression path fails the suite even though ",
-      "every component computation is arithmetically conformant. Frameworks MUST evaluate ",
-      "these cases through their production verdict path."
+    description = paste(
+      "End-to-end verdicts of empirical regression under regression/score-cc (companion §3.4):",
+      "the cutoff c derived from (K_b, n_b, n_t, alpha) and PASS iff the observed test count",
+      "K_t >= c. Refused configurations carry their configuration_error and no verdict.",
+      "Binding: cutoff_integer, configuration_error, verdict. Informational: threshold_real,",
+      "displayed_rate, achieved_size. Frameworks MUST evaluate these cases through their",
+      "production verdict path. The conflation_detector case pairs with compliance_decision's",
+      "conflation_detector_compliance_fail: one observation, opposite verdicts under the two rules."
     ),
-    method = paste0(
-      "REGRESSION: p* = sample-size-first Wilson lower bound (with the S4.3.2 perfect-baseline ",
-      "guard, and the S4.3.4 zero-baseline degeneration), c = ceiling(n_test * p*), PASS iff ",
-      "K >= c; achieved size = P_p0(K < c). ",
-      "COMPLIANCE: PASS iff WilsonLower(K, n_test, C) >= given threshold."
-    ),
+    method = paste(REGRESSION_METHOD, "PASS iff K_t >= c."),
     tolerance = 1e-10,
     cases = cases
   )

@@ -5,19 +5,18 @@ test_that("Regression verdict: clear PASS at K well above cutoff", {
     baseline_successes = 951, baseline_trials = 1000
   )
   expect_equal(result$verdict, "PASS")
-  expect_equal(result$feasibility_gate, "ADMIT")
-  expect_true(result$cutoff_integer < 953)
-  expect_equal(result$p_value_method, "exact-binomial-lower-tail")
+  expect_identical(result$cutoff_integer, 933L)
+  expect_true(is.na(result$configuration_error))
 })
 
-test_that("Regression verdict: SC-RU-02 worked example cutoff = 91", {
+test_that("Regression verdict: the §3.4 rate has cutoff 91", {
   result <- regression_verdict(
     n_attempted = 100, n_evaluable = 100, K_c = 91, alpha = 0.05,
     denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 951, baseline_trials = 1000
   )
   expect_equal(result$cutoff_integer, 91L)
-  expect_equal(result$wilson_lower_real, 0.902124, tolerance = 1e-5)
+  expect_equal(result$displayed_rate, 0.91)
   expect_equal(result$verdict, "PASS")  # K_c = 91 = c, PASS
 })
 
@@ -31,23 +30,24 @@ test_that("Regression verdict: K one below cutoff fails", {
   expect_equal(result$verdict, "FAIL")
 })
 
-test_that("Regression INCONCLUSIVE via feasibility gate", {
+test_that("Regression refused outside the calibration tolerance", {
   result <- regression_verdict(
     n_attempted = 5, n_evaluable = 5, K_c = 5, alpha = 0.001,
     denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 999, baseline_trials = 1000
   )
-  expect_equal(result$verdict, "INCONCLUSIVE")
-  expect_equal(result$feasibility_gate, "REFUSE")
+  expect_true(is.na(result$verdict))
+  expect_identical(result$configuration_error, "OUTSIDE_CALIBRATION_TOLERANCE")
 })
 
-test_that("Compliance verdict: clear PASS when Wilson LB well above p_req", {
+test_that("Compliance verdict: clear PASS well above p_req", {
   result <- compliance_verdict(
     n_attempted = 10000, n_evaluable = 10000, K_c = 9990, alpha = 0.05,
     denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL", p_req = 0.99
   )
   expect_equal(result$verdict, "PASS")
-  expect_true(result$wilson_lower_real > 0.99)
+  expect_true(result$clopper_pearson_lower > 0.99)
+  expect_true(result$p_value <= 0.05)
   expect_equal(result$p_value_method, "exact-binomial-upper-tail")
 })
 
@@ -59,9 +59,10 @@ test_that("Compliance FAIL with strands disagreeing (§10.3 example)", {
   expect_equal(result$verdict, "FAIL")
   expect_equal(result$observed_rate_status, "ABOVE_THRESHOLD")
   expect_equal(result$operational_caution_category, "STRANDS_DISAGREE")
-  # p_hat = 0.985 > p_req, but Wilson LB < p_req
+  # p_hat = 0.985 > p_req, but K_c = 788 < k_min = 796
   expect_true(result$p_hat_c > 0.98)
-  expect_true(result$wilson_lower_real < 0.98)
+  expect_identical(result$k_min, 796L)
+  expect_true(result$clopper_pearson_lower < 0.98)
 })
 
 test_that("Compliance INCONCLUSIVE at n_c = 0", {
@@ -80,7 +81,8 @@ test_that("Generator output matches the committed fixture", {
   generated <- generate_criterion_verdict_inferential_cases()
   expect_equal(length(fixture$cases), length(generated$cases))
   for (i in seq_along(fixture$cases)) {
-    expect_equal(fixture$cases[[i]]$expected$verdict,
+    committed <- fixture$cases[[i]]$expected$verdict
+    expect_equal(if (is.null(committed)) NA_character_ else committed,
                  generated$cases[[i]]$expected$verdict,
                  info = generated$cases[[i]]$name)
   }

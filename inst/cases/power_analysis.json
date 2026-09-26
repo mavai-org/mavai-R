@@ -1,85 +1,313 @@
 {
   "suite": "power_analysis",
-  "description": "Sample size calculation via power analysis for one-sided binomial proportion tests",
-  "method": "Standard power formula: n = ((z_alpha * sigma_0 + z_beta * sigma_1) / delta)^2",
-  "tolerance": 1e-10,
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [
+    {
+      "id": "compliance/exact-binomial",
+      "version": 1
+    },
+    {
+      "id": "regression/score-cc",
+      "version": 1
+    }
+  ],
+  "description": "Exact power and sizing against the operative decision rules. compliance_sizing: the smallest n from which exact power at the alternative stays at or above target (compliance/exact-binomial). regression_power: exact power of regression/score-cc at a declared margin. regression_mdd: the minimum detectable degradation at the target power when no margin is declared. Each case names its rule in decisionRule.",
+  "method": "compliance_sizing: power(n) = P_{p1}(K >= k_min(p_req, n, alpha)), 0 where infeasible; p1 = p_req + delta, or (p_req + 1)/2 when p_req + delta >= 1 (alternative_kind MIDWAY); required_samples = 1 + the largest n <= 20000 with power(n) < target (null if that is 20000); first_crossing = the smallest n with power(n) >= target. regression_power: sum_k dbinom(k, n_b, p_b) P_{p_b - delta}(K_t < c(k)), c the regression/score-cc cutoff. regression_mdd: the smallest delta in (0, p_b] with that power >= target (bisection to 1e-12), null when delta = p_b falls short.",
+  "tolerance": 1e-09,
   "cases": [
     {
-      "name": "typical_llm_95pct_5pct_effect_80power",
+      "name": "compliance_p95_delta002_a05",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
-        "baseline_rate": 0.95,
-        "min_detectable_effect": 0.05,
-        "confidence": 0.95,
-        "power": 0.8
-      },
-      "expected": {
-        "required_samples": 150,
-        "achieved_power": 0.801302554374439
-      }
-    },
-    {
-      "name": "high_baseline_99pct_2pct_effect_80power",
-      "inputs": {
-        "baseline_rate": 0.99,
+        "threshold": 0.95,
         "min_detectable_effect": 0.02,
-        "confidence": 0.95,
+        "alpha": 0.05,
         "power": 0.8
       },
       "expected": {
-        "required_samples": 236,
-        "achieved_power": 0.800024834831698
+        "required_samples": 694,
+        "achieved_power": 0.850951162347612,
+        "alternative_rate": 0.97,
+        "alternative_kind": "MARGIN",
+        "first_crossing": 601
       }
     },
     {
-      "name": "fair_coin_50pct_10pct_effect_80power",
+      "name": "compliance_p95_delta001_a05",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
-        "baseline_rate": 0.5,
-        "min_detectable_effect": 0.1,
-        "confidence": 0.95,
+        "threshold": 0.95,
+        "min_detectable_effect": 0.01,
+        "alpha": 0.05,
         "power": 0.8
       },
       "expected": {
-        "required_samples": 153,
-        "achieved_power": 0.801252783463783
+        "required_samples": 2869,
+        "achieved_power": 0.823869562615286,
+        "alternative_rate": 0.96,
+        "alternative_kind": "MARGIN",
+        "first_crossing": 2698
       }
     },
     {
-      "name": "high_power_95pct_5pct_effect_95power",
+      "name": "compliance_p90_delta005_a05",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
-        "baseline_rate": 0.95,
+        "threshold": 0.9,
         "min_detectable_effect": 0.05,
-        "confidence": 0.95,
+        "alpha": 0.05,
+        "power": 0.8
+      },
+      "expected": {
+        "required_samples": 203,
+        "achieved_power": 0.858891357247858,
+        "alternative_rate": 0.95,
+        "alternative_kind": "MARGIN",
+        "first_crossing": 179
+      }
+    },
+    {
+      "name": "compliance_p80_delta010_a01",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "threshold": 0.8,
+        "min_detectable_effect": 0.1,
+        "alpha": 0.01,
+        "power": 0.8
+      },
+      "expected": {
+        "required_samples": 147,
+        "achieved_power": 0.851694079422777,
+        "alternative_rate": 0.9,
+        "alternative_kind": "MARGIN",
+        "first_crossing": 134
+      }
+    },
+    {
+      "name": "compliance_p50_delta010_a10",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "threshold": 0.5,
+        "min_detectable_effect": 0.1,
+        "alpha": 0.1,
+        "power": 0.8
+      },
+      "expected": {
+        "required_samples": 126,
+        "achieved_power": 0.823357013387348,
+        "alternative_rate": 0.6,
+        "alternative_kind": "MARGIN",
+        "first_crossing": 115
+      }
+    },
+    {
+      "name": "compliance_p95_delta005_a05_midway",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "threshold": 0.95,
+        "min_detectable_effect": 0.05,
+        "alpha": 0.05,
+        "power": 0.8
+      },
+      "expected": {
+        "required_samples": 434,
+        "achieved_power": 0.867521077572013,
+        "alternative_rate": 0.975,
+        "alternative_kind": "MIDWAY",
+        "first_crossing": 361
+      }
+    },
+    {
+      "name": "compliance_p99_delta002_a05_midway",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "threshold": 0.99,
+        "min_detectable_effect": 0.02,
+        "alpha": 0.05,
+        "power": 0.8
+      },
+      "expected": {
+        "required_samples": 2185,
+        "achieved_power": 0.859993968146526,
+        "alternative_rate": 0.995,
+        "alternative_kind": "MIDWAY",
+        "first_crossing": 1941
+      }
+    },
+    {
+      "name": "compliance_p95_delta002_a05_power95",
+      "approach": "compliance_sizing",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "threshold": 0.95,
+        "min_detectable_effect": 0.02,
+        "alpha": 0.05,
         "power": 0.95
       },
       "expected": {
-        "required_samples": 291,
-        "achieved_power": 0.950340273106342
+        "required_samples": 1103,
+        "achieved_power": 0.96254251027457,
+        "alternative_rate": 0.97,
+        "alternative_kind": "MARGIN",
+        "first_crossing": 1036
       }
     },
     {
-      "name": "small_effect_95pct_1pct_effect_80power",
+      "name": "regression_nb1000_nt100_p95_delta005_a05",
+      "approach": "regression_power",
+      "decisionRule": "regression/score-cc",
       "inputs": {
+        "baseline_trials": 1000,
+        "test_samples": 100,
+        "alpha": 0.05,
         "baseline_rate": 0.95,
-        "min_detectable_effect": 0.01,
-        "confidence": 0.95,
-        "power": 0.8
+        "min_detectable_effect": 0.05
       },
       "expected": {
-        "required_samples": 3118,
-        "achieved_power": 0.800034230683624
+        "achieved_power": 0.556711832586395
       }
     },
     {
-      "name": "high_confidence_95pct_5pct_effect_99conf",
+      "name": "regression_nb1000_nt1000_p95_delta002_a05",
+      "approach": "regression_power",
+      "decisionRule": "regression/score-cc",
       "inputs": {
+        "baseline_trials": 1000,
+        "test_samples": 1000,
+        "alpha": 0.05,
         "baseline_rate": 0.95,
-        "min_detectable_effect": 0.05,
-        "confidence": 0.99,
+        "min_detectable_effect": 0.02
+      },
+      "expected": {
+        "achieved_power": 0.558768520868637
+      }
+    },
+    {
+      "name": "regression_nb2000_nt1000_p951_delta0026_a05",
+      "approach": "regression_power",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 2000,
+        "test_samples": 1000,
+        "alpha": 0.05,
+        "baseline_rate": 0.951,
+        "min_detectable_effect": 0.026
+      },
+      "expected": {
+        "achieved_power": 0.862683392981756
+      }
+    },
+    {
+      "name": "regression_nb100_nt100_p99_delta005_a01",
+      "approach": "regression_power",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 100,
+        "test_samples": 100,
+        "alpha": 0.01,
+        "baseline_rate": 0.99,
+        "min_detectable_effect": 0.05
+      },
+      "expected": {
+        "achieved_power": 0.124311381864883
+      }
+    },
+    {
+      "name": "regression_nb30_nt25_p90_delta010_a05",
+      "approach": "regression_power",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 30,
+        "test_samples": 25,
+        "alpha": 0.05,
+        "baseline_rate": 0.9,
+        "min_detectable_effect": 0.1
+      },
+      "expected": {
+        "achieved_power": 0.171406352430106
+      }
+    },
+    {
+      "name": "regression_mdd_nb1000_nt100_p95_a05",
+      "approach": "regression_mdd",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 1000,
+        "test_samples": 100,
+        "alpha": 0.05,
+        "baseline_rate": 0.95,
         "power": 0.8
       },
       "expected": {
-        "required_samples": 231,
-        "achieved_power": 0.800402968951298
+        "minimum_detectable_degradation": 0.0734517879467603
+      }
+    },
+    {
+      "name": "regression_mdd_nb1000_nt1000_p95_a05",
+      "approach": "regression_mdd",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 1000,
+        "test_samples": 1000,
+        "alpha": 0.05,
+        "baseline_rate": 0.95,
+        "power": 0.8
+      },
+      "expected": {
+        "minimum_detectable_degradation": 0.0280905788922155
+      }
+    },
+    {
+      "name": "regression_mdd_nb30_nt25_p90_a05",
+      "approach": "regression_mdd",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 30,
+        "test_samples": 25,
+        "alpha": 0.05,
+        "baseline_rate": 0.9,
+        "power": 0.8
+      },
+      "expected": {
+        "minimum_detectable_degradation": 0.310413072014217
+      }
+    },
+    {
+      "name": "regression_mdd_nb100_nt100_p100_a05",
+      "approach": "regression_mdd",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 100,
+        "test_samples": 100,
+        "alpha": 0.05,
+        "baseline_rate": 1,
+        "power": 0.8
+      },
+      "expected": {
+        "minimum_detectable_degradation": 0.0662967041353113
+      }
+    },
+    {
+      "name": "regression_mdd_nb10_nt1_p50_a001_none",
+      "approach": "regression_mdd",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "baseline_trials": 10,
+        "test_samples": 1,
+        "alpha": 0.001,
+        "baseline_rate": 0.5,
+        "power": 0.8
+      },
+      "expected": {
+        "minimum_detectable_degradation": null
       }
     }
   ]

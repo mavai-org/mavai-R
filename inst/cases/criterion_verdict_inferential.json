@@ -1,12 +1,25 @@
 {
   "suite": "criterion_verdict_inferential",
-  "description": "Per-inferential-criterion verdict cases, partitioned by procedure direction (REGRESSION vs COMPLIANCE). REGRESSION tests for degradation from a baseline (H_1: p_c < p*_c) and decides on the SC-RU-02 integer cutoff K_c >= c. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) and decides on the Wilson lower bound exceeding p_req. The effective denominator n_c is derived from the §1.4.5a policy. Each case carries the three-strand verdict and the p-value method/tail metadata.",
-  "method": "REGRESSION: Wilson lower bound centred on baseline rate at test n_c, integer cutoff via ceiling, decision K_c >= c; p-value = P_{p=p*_c}(K <= K_c) lower tail. COMPLIANCE: Wilson lower bound centred on observed p_hat_c at test n_c, decision wlr > p_req; p-value = P_{p=p_req}(K >= K_c) upper tail. Feasibility gate per §8.4.",
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [
+    {
+      "id": "compliance/exact-binomial",
+      "version": 1
+    },
+    {
+      "id": "regression/score-cc",
+      "version": 1
+    }
+  ],
+  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/score-cc and decides K_c >= c; a configuration the design rule or the calibration-tolerance rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The effective denominator n_c is derived from the §1.4.5a policy. Each case carries the three-strand verdict.",
+  "method": "REGRESSION: regression/score-cc cutoff c from (K_b, n_b, n_c, alpha), decision K_c >= c; configuration errors checked on (n_b, n_attempted, alpha). COMPLIANCE: compliance/exact-binomial k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c), INCONCLUSIVE when no count of n_c can pass.",
   "tolerance": 1e-09,
   "cases": [
     {
       "name": "regression_clear_pass_consult_advice_well_formed",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -21,14 +34,10 @@
         "n_c": 1000,
         "r_obs": 1,
         "p_hat_c": 0.953,
-        "wilson_lower_real": 0.938504071903343,
-        "cutoff_integer": 939,
-        "achieved_size": 0.0370976250020686,
-        "feasibility_gate": "ADMIT",
+        "cutoff_integer": 933,
+        "displayed_rate": 0.933,
+        "configuration_error": null,
         "verdict": "PASS",
-        "p_value": 0.97920523100625,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
         "operational_caution_category": "ADEQUATE_POWER"
@@ -38,6 +47,7 @@
     {
       "name": "regression_clear_fail_K_far_below_cutoff",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -52,14 +62,10 @@
         "n_c": 1000,
         "r_obs": 1,
         "p_hat_c": 0.85,
-        "wilson_lower_real": 0.938504071903343,
-        "cutoff_integer": 939,
-        "achieved_size": 0.0370976250020686,
-        "feasibility_gate": "ADMIT",
+        "cutoff_integer": 933,
+        "displayed_rate": 0.933,
+        "configuration_error": null,
         "verdict": "FAIL",
-        "p_value": 1.67713467000422e-23,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "FAIL",
         "observed_rate_status": "BELOW_THRESHOLD",
         "operational_caution_category": "FAIL_CLEAR"
@@ -68,6 +74,7 @@
     {
       "name": "regression_borderline_pass_K_equals_cutoff",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 100,
@@ -82,23 +89,20 @@
         "n_c": 100,
         "r_obs": 1,
         "p_hat_c": 0.91,
-        "wilson_lower_real": 0.902123591001564,
         "cutoff_integer": 91,
-        "achieved_size": 0.0249856283219066,
-        "feasibility_gate": "ADMIT",
+        "displayed_rate": 0.91,
+        "configuration_error": null,
         "verdict": "PASS",
-        "p_value": 0.653651199622346,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "PASS",
-        "observed_rate_status": "ABOVE_THRESHOLD",
-        "operational_caution_category": "ADEQUATE_POWER"
+        "observed_rate_status": "AT_THRESHOLD",
+        "operational_caution_category": "STRANDS_DISAGREE"
       },
-      "description": "SC-RU-02 worked example: cutoff = 91; K = 91 → PASS (boundary)."
+      "description": "The §3.4 rate: cutoff = 91; K = 91 → PASS (boundary)."
     },
     {
       "name": "regression_borderline_fail_K_one_below_cutoff",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 100,
@@ -113,23 +117,20 @@
         "n_c": 100,
         "r_obs": 1,
         "p_hat_c": 0.9,
-        "wilson_lower_real": 0.902123591001564,
         "cutoff_integer": 91,
-        "achieved_size": 0.0249856283219066,
-        "feasibility_gate": "ADMIT",
+        "displayed_rate": 0.91,
+        "configuration_error": null,
         "verdict": "FAIL",
-        "p_value": 0.520429391779031,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "FAIL",
         "observed_rate_status": "BELOW_THRESHOLD",
         "operational_caution_category": "FAIL_CLEAR"
       },
-      "description": "SC-RU-02 worked example: cutoff = 91; K = 90 → FAIL."
+      "description": "The §3.4 rate: cutoff = 91; K = 90 → FAIL."
     },
     {
       "name": "regression_inconclusive_zero_evaluable",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 0,
@@ -144,22 +145,19 @@
         "n_c": 0,
         "r_obs": 0,
         "p_hat_c": null,
-        "wilson_lower_real": null,
         "cutoff_integer": null,
-        "achieved_size": null,
-        "feasibility_gate": "REFUSE",
+        "displayed_rate": null,
+        "configuration_error": null,
         "verdict": "INCONCLUSIVE",
-        "p_value": null,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "INCONCLUSIVE",
         "observed_rate_status": "NOT_APPLICABLE",
         "operational_caution_category": "ZERO_EVALUABLE"
       }
     },
     {
-      "name": "regression_inconclusive_feasibility_refused",
+      "name": "regression_refused_outside_calibration_tolerance",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 5,
@@ -173,23 +171,20 @@
       "expected": {
         "n_c": 5,
         "r_obs": 1,
-        "p_hat_c": 1,
-        "wilson_lower_real": 0.342966793633085,
-        "cutoff_integer": 2,
-        "achieved_size": 4.99600000000002e-12,
-        "feasibility_gate": "REFUSE",
-        "verdict": "INCONCLUSIVE",
-        "p_value": null,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
-        "statistical_verdict": "INCONCLUSIVE",
+        "p_hat_c": null,
+        "cutoff_integer": null,
+        "displayed_rate": null,
+        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
+        "verdict": null,
+        "statistical_verdict": null,
         "observed_rate_status": "NOT_APPLICABLE",
-        "operational_caution_category": "FEASIBILITY_REFUSED"
+        "operational_caution_category": "CONFIGURATION_REFUSED"
       }
     },
     {
       "name": "regression_policy_diff_conditional",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -204,14 +199,10 @@
         "n_c": 950,
         "r_obs": 0.95,
         "p_hat_c": 1,
-        "wilson_lower_real": 0.938144483255898,
-        "cutoff_integer": 892,
-        "achieved_size": 0.0399071145795005,
-        "feasibility_gate": "ADMIT",
+        "cutoff_integer": 886,
+        "displayed_rate": 0.932632,
+        "configuration_error": null,
         "verdict": "PASS",
-        "p_value": 1,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
         "operational_caution_category": "ADEQUATE_POWER"
@@ -221,6 +212,7 @@
     {
       "name": "regression_policy_diff_marginal",
       "procedure": "REGRESSION",
+      "decisionRule": "regression/score-cc",
       "inputs": {
         "procedure": "REGRESSION",
         "n_attempted": 1000,
@@ -235,14 +227,10 @@
         "n_c": 1000,
         "r_obs": 0.95,
         "p_hat_c": 0.95,
-        "wilson_lower_real": 0.938504071903343,
-        "cutoff_integer": 939,
-        "achieved_size": 0.0370976250020686,
-        "feasibility_gate": "ADMIT",
+        "cutoff_integer": 933,
+        "displayed_rate": 0.933,
+        "configuration_error": null,
         "verdict": "PASS",
-        "p_value": 0.946453606862613,
-        "p_value_method": "exact-binomial-lower-tail",
-        "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
         "operational_caution_category": "ADEQUATE_POWER"
@@ -252,6 +240,7 @@
     {
       "name": "compliance_clear_pass",
       "procedure": "COMPLIANCE",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "procedure": "COMPLIANCE",
         "n_attempted": 10000,
@@ -265,10 +254,11 @@
         "n_c": 10000,
         "r_obs": 1,
         "p_hat_c": 0.999,
-        "wilson_lower_real": 0.998327975326935,
+        "k_min": 9917,
+        "clopper_pearson_lower": 0.998304368546355,
         "feasibility_gate": "ADMIT",
         "verdict": "PASS",
-        "p_value": 0,
+        "p_value": 7.56277332915104e-31,
         "p_value_method": "exact-binomial-upper-tail",
         "p_value_tail": "P_{p=p_req}(K >= K_c)",
         "statistical_verdict": "PASS",
@@ -279,6 +269,7 @@
     {
       "name": "compliance_clear_fail",
       "procedure": "COMPLIANCE",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "procedure": "COMPLIANCE",
         "n_attempted": 1000,
@@ -292,7 +283,8 @@
         "n_c": 1000,
         "r_obs": 1,
         "p_hat_c": 0.8,
-        "wilson_lower_real": 0.77839691827793,
+        "k_min": 962,
+        "clopper_pearson_lower": 0.778048566800414,
         "feasibility_gate": "ADMIT",
         "verdict": "FAIL",
         "p_value": 1,
@@ -306,6 +298,7 @@
     {
       "name": "compliance_strands_disagree_consult_advice_layperson",
       "procedure": "COMPLIANCE",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "procedure": "COMPLIANCE",
         "n_attempted": 800,
@@ -319,7 +312,8 @@
         "n_c": 800,
         "r_obs": 1,
         "p_hat_c": 0.985,
-        "wilson_lower_real": 0.964890743013964,
+        "k_min": 796,
+        "clopper_pearson_lower": 0.966533937381507,
         "feasibility_gate": "ADMIT",
         "verdict": "FAIL",
         "p_value": 0.190452456430229,
@@ -329,11 +323,12 @@
         "observed_rate_status": "ABOVE_THRESHOLD",
         "operational_caution_category": "STRANDS_DISAGREE"
       },
-      "description": "§10.3 C_layperson_readable: p_hat = 0.985 > p_req = 0.98, but Wilson LB ≈ 0.967 < 0.98 at α = 0.001 → FAIL with strands disagreeing."
+      "description": "§10.3 C_layperson_readable: p_hat = 0.985 > p_req = 0.98, but K = 788 is below k_min at α = 0.001 → FAIL with strands disagreeing."
     },
     {
       "name": "compliance_inconclusive_zero_evaluable",
       "procedure": "COMPLIANCE",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "procedure": "COMPLIANCE",
         "n_attempted": 0,
@@ -347,7 +342,8 @@
         "n_c": 0,
         "r_obs": 0,
         "p_hat_c": null,
-        "wilson_lower_real": null,
+        "k_min": null,
+        "clopper_pearson_lower": null,
         "feasibility_gate": "REFUSE",
         "verdict": "INCONCLUSIVE",
         "p_value": null,
@@ -361,6 +357,7 @@
     {
       "name": "compliance_inconclusive_feasibility_refused",
       "procedure": "COMPLIANCE",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "procedure": "COMPLIANCE",
         "n_attempted": 5,
@@ -374,7 +371,8 @@
         "n_c": 5,
         "r_obs": 1,
         "p_hat_c": 1,
-        "wilson_lower_real": 0.648883499234899,
+        "k_min": null,
+        "clopper_pearson_lower": 0.549280271653059,
         "feasibility_gate": "REFUSE",
         "verdict": "INCONCLUSIVE",
         "p_value": null,

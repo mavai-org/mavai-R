@@ -1,8 +1,9 @@
-#' Inferential-criterion verdict (companion §1.4.5, §1.4.6, §3.4, SC-RU-02)
+#' Inferential-criterion verdict (companion §1.4.5, §1.4.6, §3.4, §3.6)
 #'
 #' Per-inferential-criterion verdict generation, separated by procedure
-#' direction (REGRESSION vs COMPLIANCE). Each procedure has its own
-#' null/alternative, its own decision rule, and its own p-value tail.
+#' direction (REGRESSION vs COMPLIANCE), each decided by its 1.5.0
+#' decision rule. An informational suite: no framework is obliged to
+#' consume it.
 #'
 #' Shared mechanics:
 #'   - Effective denominator n_c derived from policy (§1.4.5a):
@@ -12,42 +13,34 @@
 #'     trials in either case; unevaluable trials never contribute to
 #'     K_c (the postcondition could not be checked on them).
 #'   - p_hat_c = K_c / n_c (the policy-aware point estimate).
-#'   - Feasibility gate (§8.4): refuses the inferential claim when
-#'     n_c is too small to support the target proportion at confidence
-#'     1 - alpha. Threshold target depends on procedure.
-#'   - Inconclusive outcomes: n_c == 0, or feasibility gate REFUSE.
+#'   - Inconclusive outcomes: n_c == 0; for COMPLIANCE also an n_c too
+#'     small for any count to pass (feasibility gate REFUSE).
 #'
-#' REGRESSION (decision on integer cutoff per SC-RU-02):
-#'   H_0: p_c >= p*_c (no degradation)
-#'   H_1: p_c <  p*_c (degradation)
-#'   p*_c = WilsonLB(p_hat_baseline; n_c, alpha)      [real-valued]
-#'   c    = ceiling(n_c * p*_c)                       [integer cutoff]
-#'   PASS iff K_c >= c
-#'   p_value: lower-tail under H_0 boundary p = p*_c, i.e.
-#'            P_{p*_c}(K <= K_c). Smaller K is more extreme in the
-#'            direction of H_1.
+#' REGRESSION (regression/score-cc):
+#'   H_0: p_c >= p_b (no degradation); H_1: p_c < p_b
+#'   c = the score-cc cutoff from (K_b, n_b, n_c, alpha); PASS iff K_c >= c.
+#'   The configured test (n_attempted trials) is first checked for the
+#'   configuration errors TEST_LARGER_THAN_BASELINE and
+#'   OUTSIDE_CALIBRATION_TOLERANCE; a refused configuration has no verdict.
+#'   The observed-rate strand compares p_hat_c with c / n_c.
 #'
-#' COMPLIANCE (decision on Wilson lower bound clearing requirement):
-#'   H_0: p_c <= p_req
-#'   H_1: p_c >  p_req
-#'   wlr  = WilsonLB(p_hat_c; n_c, alpha)
-#'   PASS iff wlr > p_req
-#'   p_value: upper-tail under H_0 boundary p = p_req, i.e.
-#'            P_{p_req}(K >= K_c). Larger K is more extreme in the
-#'            direction of H_1.
+#' COMPLIANCE (compliance/exact-binomial):
+#'   H_0: p_c <= p_req; H_1: p_c > p_req
+#'   k_min = min{k : P_{p_req}(K >= k) <= alpha} at n_c; PASS iff K_c >= k_min.
+#'   p_value: P_{p_req}(K >= K_c), the exact test's own p-value
+#'   (PASS iff p_value <= alpha). clopper_pearson_lower is the one-sided
+#'   Clopper-Pearson bound reported beside the verdict.
 #'
 #' Three-strand verdict fields:
 #'   - statistical:           PASS, FAIL, or INCONCLUSIVE.
 #'   - observed_rate_status:  ABOVE_THRESHOLD / BELOW_THRESHOLD /
 #'                            AT_THRESHOLD / NOT_APPLICABLE.
-#'                            For REGRESSION the threshold is p*_c; for
+#'                            For REGRESSION the threshold is c / n_c; for
 #'                            COMPLIANCE it is p_req.
 #'   - operational_caution_category: ADEQUATE_POWER /
 #'                            STRANDS_DISAGREE / FEASIBILITY_REFUSED /
-#'                            ZERO_EVALUABLE / FAIL_CLEAR.
-#'                            A coarse classification surface that
-#'                            frameworks can use to render the
-#'                            "operational caution" prose of §10.3.
+#'                            ZERO_EVALUABLE / FAIL_CLEAR /
+#'                            CONFIGURATION_REFUSED.
 
 regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
                                denominator_policy,
@@ -55,74 +48,34 @@ regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   n_c <- if (denominator_policy == "CONDITIONAL_ON_EVALUABLE")
     n_evaluable else n_attempted
   r_obs <- if (n_attempted == 0) 0 else n_evaluable / n_attempted
+  empty <- list(
+    n_c = as.integer(n_c), r_obs = r_obs, p_hat_c = NA_real_,
+    cutoff_integer = NA_integer_, displayed_rate = NA_real_,
+    configuration_error = NA_character_,
+    verdict = "INCONCLUSIVE", statistical_verdict = "INCONCLUSIVE",
+    observed_rate_status = "NOT_APPLICABLE",
+    operational_caution_category = "ZERO_EVALUABLE"
+  )
 
-  if (n_c == 0) {
-    return(list(
-      n_c = as.integer(n_c), r_obs = r_obs,
-      p_hat_c = NA_real_,
-      wilson_lower_real = NA_real_, cutoff_integer = NA_integer_,
-      achieved_size = NA_real_,
-      feasibility_gate = "REFUSE",
-      verdict = "INCONCLUSIVE",
-      p_value = NA_real_,
-      p_value_method = "exact-binomial-lower-tail",
-      p_value_tail = "P_{p=p_star_c}(K <= K_c)",
-      statistical_verdict = "INCONCLUSIVE",
-      observed_rate_status = "NOT_APPLICABLE",
-      operational_caution_category = "ZERO_EVALUABLE"
-    ))
+  if (n_attempted > 0) {
+    err <- regression_configuration_error(baseline_trials, n_attempted, alpha)
+    if (!is.na(err)) {
+      empty$configuration_error <- err
+      empty$verdict <- NA_character_
+      empty$statistical_verdict <- NA_character_
+      empty$operational_caution_category <- "CONFIGURATION_REFUSED"
+      return(empty)
+    }
   }
+  if (n_c == 0) return(empty)
 
-  p_hat_baseline <- baseline_successes / baseline_trials
-  # Perfect-baseline compression (§4.3.2): if baseline is perfect, use
-  # Wilson lower bound of the baseline as the effective rate before
-  # deriving the test threshold.
-  effective_baseline <- if (baseline_successes == baseline_trials) {
-    wilson_lower(baseline_successes, baseline_trials, 1 - alpha)
-  } else {
-    p_hat_baseline
-  }
-
-  wlr <- wilson_lower_from_rate(effective_baseline, n_c, 1 - alpha)
-  cutoff <- as.integer(ceiling(n_c * wlr))
-  achieved <- pbinom(cutoff - 1, size = n_c, prob = effective_baseline)
-  # Feasibility gate (§8.4): the sample must be sufficient to support
-  # an inferential claim against the effective baseline rate at the
-  # stated confidence. A test against a near-perfect baseline at a
-  # tiny n_c is structurally unable to support the claim, regardless
-  # of the (degenerate) Wilson bound that emerges.
-  feas <- check_feasibility(target_proportion = effective_baseline,
-                            sample_size = n_c, confidence = 1 - alpha)
-  feasibility_gate <- if (feas$feasible) "ADMIT" else "REFUSE"
-
-  if (feasibility_gate == "REFUSE") {
-    return(list(
-      n_c = as.integer(n_c), r_obs = r_obs,
-      p_hat_c = K_c / n_c,
-      wilson_lower_real = wlr, cutoff_integer = cutoff,
-      achieved_size = achieved,
-      feasibility_gate = "REFUSE",
-      verdict = "INCONCLUSIVE",
-      p_value = NA_real_,
-      p_value_method = "exact-binomial-lower-tail",
-      p_value_tail = "P_{p=p_star_c}(K <= K_c)",
-      statistical_verdict = "INCONCLUSIVE",
-      observed_rate_status = "NOT_APPLICABLE",
-      operational_caution_category = "FEASIBILITY_REFUSED"
-    ))
-  }
-
-  passed <- K_c >= cutoff
-  verdict <- if (passed) "PASS" else "FAIL"
-
+  cutoff <- score_cc_cutoff(baseline_successes, baseline_trials, n_c, alpha)
+  verdict <- if (K_c >= cutoff) "PASS" else "FAIL"
   p_hat_c <- K_c / n_c
-  # Lower-tail p-value under H_0 boundary p = p*_c
-  p_value <- pbinom(K_c, size = n_c, prob = wlr)
-
-  observed_rate_status <- if (p_hat_c > wlr) "ABOVE_THRESHOLD"
-                          else if (p_hat_c < wlr) "BELOW_THRESHOLD"
+  displayed <- cutoff / n_c
+  observed_rate_status <- if (p_hat_c > displayed) "ABOVE_THRESHOLD"
+                          else if (p_hat_c < displayed) "BELOW_THRESHOLD"
                           else "AT_THRESHOLD"
-
   caution <- if (verdict == "PASS" && observed_rate_status == "ABOVE_THRESHOLD") {
     "ADEQUATE_POWER"
   } else if (verdict == "FAIL" && observed_rate_status == "BELOW_THRESHOLD") {
@@ -134,13 +87,10 @@ regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   list(
     n_c = as.integer(n_c), r_obs = r_obs,
     p_hat_c = p_hat_c,
-    wilson_lower_real = wlr, cutoff_integer = cutoff,
-    achieved_size = achieved,
-    feasibility_gate = feasibility_gate,
+    cutoff_integer = cutoff,
+    displayed_rate = round(displayed, 6),
+    configuration_error = NA_character_,
     verdict = verdict,
-    p_value = p_value,
-    p_value_method = "exact-binomial-lower-tail",
-    p_value_tail = "P_{p=p_star_c}(K <= K_c)",
     statistical_verdict = verdict,
     observed_rate_status = observed_rate_status,
     operational_caution_category = caution
@@ -152,63 +102,40 @@ compliance_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   n_c <- if (denominator_policy == "CONDITIONAL_ON_EVALUABLE")
     n_evaluable else n_attempted
   r_obs <- if (n_attempted == 0) 0 else n_evaluable / n_attempted
+  inconclusive <- function(p_hat_c, cp, caution) list(
+    n_c = as.integer(n_c), r_obs = r_obs,
+    p_hat_c = p_hat_c,
+    k_min = NA_integer_,
+    clopper_pearson_lower = cp,
+    feasibility_gate = "REFUSE",
+    verdict = "INCONCLUSIVE",
+    p_value = NA_real_,
+    p_value_method = "exact-binomial-upper-tail",
+    p_value_tail = "P_{p=p_req}(K >= K_c)",
+    statistical_verdict = "INCONCLUSIVE",
+    observed_rate_status = "NOT_APPLICABLE",
+    operational_caution_category = caution
+  )
 
-  if (n_c == 0) {
-    return(list(
-      n_c = as.integer(n_c), r_obs = r_obs,
-      p_hat_c = NA_real_,
-      wilson_lower_real = NA_real_,
-      feasibility_gate = "REFUSE",
-      verdict = "INCONCLUSIVE",
-      p_value = NA_real_,
-      p_value_method = "exact-binomial-upper-tail",
-      p_value_tail = "P_{p=p_req}(K >= K_c)",
-      statistical_verdict = "INCONCLUSIVE",
-      observed_rate_status = "NOT_APPLICABLE",
-      operational_caution_category = "ZERO_EVALUABLE"
-    ))
-  }
+  if (n_c == 0) return(inconclusive(NA_real_, NA_real_, "ZERO_EVALUABLE"))
 
   p_hat_c <- K_c / n_c
-  wlr <- wilson_lower_from_rate(p_hat_c, n_c, 1 - alpha)
+  cp <- clopper_pearson_lower(K_c, n_c, alpha)
+  k_min <- exact_binomial_k_min(p_req, n_c, alpha)
+  if (is.na(k_min)) return(inconclusive(p_hat_c, cp, "FEASIBILITY_REFUSED"))
 
-  feas <- check_feasibility(target_proportion = p_req,
-                            sample_size = n_c, confidence = 1 - alpha)
-  feasibility_gate <- if (feas$feasible) "ADMIT" else "REFUSE"
-
-  if (feasibility_gate == "REFUSE") {
-    return(list(
-      n_c = as.integer(n_c), r_obs = r_obs,
-      p_hat_c = p_hat_c,
-      wilson_lower_real = wlr,
-      feasibility_gate = "REFUSE",
-      verdict = "INCONCLUSIVE",
-      p_value = NA_real_,
-      p_value_method = "exact-binomial-upper-tail",
-      p_value_tail = "P_{p=p_req}(K >= K_c)",
-      statistical_verdict = "INCONCLUSIVE",
-      observed_rate_status = "NOT_APPLICABLE",
-      operational_caution_category = "FEASIBILITY_REFUSED"
-    ))
-  }
-
-  passed <- wlr > p_req
-  verdict <- if (passed) "PASS" else "FAIL"
-
-  # Upper-tail p-value under H_0 boundary p = p_req
-  p_value <- 1 - pbinom(K_c - 1, size = n_c, prob = p_req)
+  verdict <- if (K_c >= k_min) "PASS" else "FAIL"
+  p_value <- pbinom(K_c - 1, size = n_c, prob = p_req, lower.tail = FALSE)
 
   observed_rate_status <- if (p_hat_c > p_req) "ABOVE_THRESHOLD"
                           else if (p_hat_c < p_req) "BELOW_THRESHOLD"
                           else "AT_THRESHOLD"
 
   # STRANDS_DISAGREE arises classically in COMPLIANCE: observed rate
-  # above the requirement, but Wilson lower bound below it. The §10.3
+  # above the requirement, but compliance not demonstrated. The §10.3
   # layperson-readable case is the canonical example.
   caution <- if (verdict == "PASS" && observed_rate_status == "ABOVE_THRESHOLD") {
     "ADEQUATE_POWER"
-  } else if (verdict == "FAIL" && observed_rate_status == "ABOVE_THRESHOLD") {
-    "STRANDS_DISAGREE"
   } else if (verdict == "FAIL" && observed_rate_status == "BELOW_THRESHOLD") {
     "FAIL_CLEAR"
   } else {
@@ -218,8 +145,9 @@ compliance_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   list(
     n_c = as.integer(n_c), r_obs = r_obs,
     p_hat_c = p_hat_c,
-    wilson_lower_real = wlr,
-    feasibility_gate = feasibility_gate,
+    k_min = k_min,
+    clopper_pearson_lower = cp,
+    feasibility_gate = "ADMIT",
     verdict = verdict,
     p_value = p_value,
     p_value_method = "exact-binomial-upper-tail",
@@ -241,6 +169,7 @@ generate_criterion_verdict_inferential_cases <- function() {
     case <- list(
       name = name,
       procedure = "REGRESSION",
+      decisionRule = "regression/score-cc",
       inputs = list(
         procedure = "REGRESSION",
         n_attempted = as.integer(n_attempted),
@@ -263,6 +192,7 @@ generate_criterion_verdict_inferential_cases <- function() {
     case <- list(
       name = name,
       procedure = "COMPLIANCE",
+      decisionRule = "compliance/exact-binomial",
       inputs = list(
         procedure = "COMPLIANCE",
         n_attempted = as.integer(n_attempted),
@@ -294,19 +224,19 @@ generate_criterion_verdict_inferential_cases <- function() {
              baseline_successes = 951, baseline_trials = 1000),
 
     # REGRESSION — borderline: K right at cutoff boundary.
-    # SC-RU-02 worked example has cutoff = 91 for n=100; K=91 should PASS,
-    # K=90 should FAIL.
+    # The §3.4 rate has cutoff = 91 for n = 100; K = 91 PASSes,
+    # K = 90 FAILs.
     reg_case("regression_borderline_pass_K_equals_cutoff",
              n_attempted = 100, n_evaluable = 100, K_c = 91, alpha = 0.05,
              policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000,
-             description = "SC-RU-02 worked example: cutoff = 91; K = 91 → PASS (boundary)."),
+             description = "The §3.4 rate: cutoff = 91; K = 91 → PASS (boundary)."),
 
     reg_case("regression_borderline_fail_K_one_below_cutoff",
              n_attempted = 100, n_evaluable = 100, K_c = 90, alpha = 0.05,
              policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000,
-             description = "SC-RU-02 worked example: cutoff = 91; K = 90 → FAIL."),
+             description = "The §3.4 rate: cutoff = 91; K = 90 → FAIL."),
 
     # REGRESSION — INCONCLUSIVE via n_c = 0.
     reg_case("regression_inconclusive_zero_evaluable",
@@ -314,19 +244,19 @@ generate_criterion_verdict_inferential_cases <- function() {
              policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000),
 
-    # REGRESSION — INCONCLUSIVE via feasibility gate. Demanding threshold,
-    # tiny n_c.
-    reg_case("regression_inconclusive_feasibility_refused",
+    # REGRESSION — refused configuration: a 5-trial test against a
+    # 1000-trial baseline at alpha 0.001 is outside the calibration
+    # tolerance, so no verdict is produced.
+    reg_case("regression_refused_outside_calibration_tolerance",
              n_attempted = 5, n_evaluable = 5, K_c = 5, alpha = 0.001,
              policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 999, baseline_trials = 1000),
 
     # REGRESSION — policy difference. Same raw counts under two policies.
     # n_attempted=1000, n_evaluable=950, K_c=950. Under CONDITIONAL the
-    # effective n_c=950 and the test compares K_c=950 to cutoff at n=950
-    # against baseline 0.951. Under MARGINAL the effective n_c=1000 and
-    # K_c=950 vs cutoff at n=1000 (lower threshold), but the unevaluable
-    # 50 trials make K_c=950 < cutoff.
+    # effective n_c=950 and the test compares K_c=950 to the cutoff at
+    # n=950 against baseline 951/1000. Under MARGINAL the effective
+    # n_c=1000 and K_c=950 is compared with the cutoff at n=1000.
     reg_case("regression_policy_diff_conditional",
              n_attempted = 1000, n_evaluable = 950, K_c = 950, alpha = 0.05,
              policy = "CONDITIONAL_ON_EVALUABLE",
@@ -345,19 +275,19 @@ generate_criterion_verdict_inferential_cases <- function() {
              alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              p_req = 0.99),
 
-    # COMPLIANCE — clear FAIL: Wilson lower well below requirement.
+    # COMPLIANCE — clear FAIL: observed rate well below requirement.
     com_case("compliance_clear_fail",
              n_attempted = 1000, n_evaluable = 1000, K_c = 800,
              alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              p_req = 0.95),
 
     # COMPLIANCE — the canonical §10.3 layperson-readable disagreement:
-    # p_hat = 0.985, p_req = 0.98, but Wilson LB at α = 0.001 below req.
+    # p_hat = 0.985, p_req = 0.98, but compliance not demonstrated at α = 0.001.
     com_case("compliance_strands_disagree_consult_advice_layperson",
              n_attempted = 800, n_evaluable = 800, K_c = 788,
              alpha = 0.001, policy = "CONDITIONAL_ON_EVALUABLE",
              p_req = 0.98,
-             description = "§10.3 C_layperson_readable: p_hat = 0.985 > p_req = 0.98, but Wilson LB ≈ 0.967 < 0.98 at α = 0.001 → FAIL with strands disagreeing."),
+             description = "§10.3 C_layperson_readable: p_hat = 0.985 > p_req = 0.98, but K = 788 is below k_min at α = 0.001 → FAIL with strands disagreeing."),
 
     # COMPLIANCE — INCONCLUSIVE via n_c = 0.
     com_case("compliance_inconclusive_zero_evaluable",
@@ -365,7 +295,7 @@ generate_criterion_verdict_inferential_cases <- function() {
              alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              p_req = 0.95),
 
-    # COMPLIANCE — INCONCLUSIVE via feasibility gate.
+    # COMPLIANCE — INCONCLUSIVE via feasibility gate: no count of 5 can pass.
     com_case("compliance_inconclusive_feasibility_refused",
              n_attempted = 5, n_evaluable = 5, K_c = 5,
              alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
@@ -375,23 +305,21 @@ generate_criterion_verdict_inferential_cases <- function() {
   list(
     suite = "criterion_verdict_inferential",
     description = paste(
-      "Per-inferential-criterion verdict cases, partitioned by",
-      "procedure direction (REGRESSION vs COMPLIANCE). REGRESSION",
-      "tests for degradation from a baseline (H_1: p_c < p*_c) and",
-      "decides on the SC-RU-02 integer cutoff K_c >= c. COMPLIANCE",
-      "tests whether the rate clears a requirement (H_1: p_c > p_req)",
-      "and decides on the Wilson lower bound exceeding p_req. The",
-      "effective denominator n_c is derived from the §1.4.5a policy.",
-      "Each case carries the three-strand verdict and the p-value",
-      "method/tail metadata."
+      "Per-inferential-criterion verdict cases (informational), partitioned",
+      "by procedure direction. REGRESSION tests for degradation from a",
+      "baseline (H_1: p_c < p_b) under regression/score-cc and decides",
+      "K_c >= c; a configuration the design rule or the calibration-tolerance",
+      "rule refuses has no verdict. COMPLIANCE tests whether the rate clears",
+      "a requirement (H_1: p_c > p_req) under compliance/exact-binomial and",
+      "decides K_c >= k_min. The effective denominator n_c is derived from",
+      "the §1.4.5a policy. Each case carries the three-strand verdict."
     ),
     method = paste(
-      "REGRESSION: Wilson lower bound centred on baseline rate at",
-      "test n_c, integer cutoff via ceiling, decision K_c >= c;",
-      "p-value = P_{p=p*_c}(K <= K_c) lower tail.",
-      "COMPLIANCE: Wilson lower bound centred on observed p_hat_c at",
-      "test n_c, decision wlr > p_req; p-value = P_{p=p_req}(K >= K_c)",
-      "upper tail. Feasibility gate per §8.4."
+      "REGRESSION: regression/score-cc cutoff c from (K_b, n_b, n_c,",
+      "alpha), decision K_c >= c; configuration errors checked on",
+      "(n_b, n_attempted, alpha). COMPLIANCE: compliance/exact-binomial",
+      "k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c),",
+      "INCONCLUSIVE when no count of n_c can pass."
     ),
     tolerance = 1e-9,
     cases = cases

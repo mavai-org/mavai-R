@@ -9,7 +9,7 @@ test_that("Case 1: locked §10.3 example is composite FAIL", {
   expect_equal(e$false_degradation_signal_envelope, 0.05)
 })
 
-test_that("Case 2: passing counterfactual clears Wilson LB > p_req", {
+test_that("Case 2: passing counterfactual reaches k_min", {
   result <- generate_multi_criteria_scenario_cases()
   case <- Filter(function(c) c$name == "consult_advice_passing_counterfactual",
                  result$cases)[[1]]
@@ -18,7 +18,8 @@ test_that("Case 2: passing counterfactual clears Wilson LB > p_req", {
   layperson <- Filter(function(v) v$criterion_id == "c_layperson_readable",
                       e$per_criterion_verdicts)[[1]]
   expect_equal(layperson$verdict, "PASS")
-  expect_true(layperson$wilson_lower_real > 0.98)
+  expect_identical(layperson$k_min, 796L)
+  expect_identical(layperson$decisionRule, "compliance/exact-binomial")
 })
 
 test_that("Case 3: paired pattern with non-1.0 r_obs", {

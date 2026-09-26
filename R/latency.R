@@ -318,10 +318,14 @@ generate_latency_percentile_cases <- function() {
   )
 }
 
-#' Generate latency threshold derivation reference cases
+#' Generate latency threshold reference cases (latency/precedence v1)
 #'
-#' Each case provides the full baseline vector plus (p, confidence). The
-#' expected output is the exact binomial order-statistic upper bound.
+#' Each case provides the full baseline vector plus the test size n_t,
+#' the percentile p and alpha. The expected output is the precedence rank
+#' — the smallest baseline rank k whose exact no-degradation breach
+#' probability for the test's nearest-rank percentile is at most alpha —
+#' and its order statistic, or `saturated: true` (INCONCLUSIVE) when no
+#' rank achieves alpha.
 #'
 #' @return A list suitable for JSON serialisation.
 #' @export
@@ -343,32 +347,62 @@ generate_latency_threshold_cases <- function() {
   set.seed(17)
   heavy_baseline_100 <- sort(round(rlnorm(100, meanlog = log(300), sdlog = 0.8)))
 
+  set.seed(42)
+  baseline_200 <- sort(round(rlnorm(200, meanlog = log(200), sdlog = 0.4)))
+
+  set.seed(19)
+  baseline_1000 <- sort(round(rlnorm(1000, meanlog = log(250), sdlog = 0.35)))
+
+  set.seed(23)
+  baseline_300 <- sort(round(rlnorm(300, meanlog = log(350), sdlog = 0.4)))
+
+  lat_case <- function(name, baseline, test_samples, p, alpha, description = NULL) {
+    case <- list(name = name)
+    if (!is.null(description)) case$description <- description
+    c(case, list(
+      inputs = list(baseline_latencies = baseline, test_samples = as.integer(test_samples),
+                    p = p, alpha = alpha),
+      expected = latency_precedence_threshold(baseline, test_samples, p, alpha)
+    ))
+  }
+
   cases <- list(
-    list(name = "worked_example_p95_935_samples",
-         inputs = list(baseline_latencies = baseline_935, p = 0.95, confidence = 0.95),
-         expected = latency_threshold_derive(baseline_935, 0.95, 0.95)),
-    list(name = "small_baseline_p95_50_samples",
-         inputs = list(baseline_latencies = baseline_50, p = 0.95, confidence = 0.95),
-         expected = latency_threshold_derive(baseline_50, 0.95, 0.95)),
-    list(name = "large_baseline_p95_5000_samples",
-         inputs = list(baseline_latencies = baseline_5000, p = 0.95, confidence = 0.95),
-         expected = latency_threshold_derive(baseline_5000, 0.95, 0.95)),
-    list(name = "high_confidence_p95_500_samples",
-         inputs = list(baseline_latencies = baseline_500, p = 0.95, confidence = 0.99),
-         expected = latency_threshold_derive(baseline_500, 0.95, 0.99)),
-    list(name = "identical_values_p95",
-         inputs = list(baseline_latencies = identical_100, p = 0.95, confidence = 0.95),
-         expected = latency_threshold_derive(identical_100, 0.95, 0.95)),
-    list(name = "heavy_tailed_p99_100_samples",
-         inputs = list(baseline_latencies = heavy_baseline_100, p = 0.99, confidence = 0.95),
-         expected = latency_threshold_derive(heavy_baseline_100, 0.99, 0.95))
+    lat_case("worked_example_p95_935_samples_test192", baseline_935, 192, 0.95, 0.05,
+             "The companion's §12.4.1 configuration."),
+    lat_case("boundary_equal_sizes_p95_935_test935", baseline_935, 935, 0.95, 0.05),
+    lat_case("p90_200_samples_test200", baseline_200, 200, 0.90, 0.05),
+    lat_case("p50_200_samples_test50", baseline_200, 50, 0.50, 0.05),
+    lat_case("large_baseline_small_test_p95_1000_test15", baseline_1000, 15, 0.95, 0.05),
+    lat_case("saturated_p95_100_test15", heavy_baseline_100, 15, 0.95, 0.05,
+             "No rank achieves alpha: INCONCLUSIVE, no threshold."),
+    lat_case("saturated_p99_300_test100", baseline_300, 100, 0.99, 0.05,
+             "No rank achieves alpha: INCONCLUSIVE, no threshold."),
+    lat_case("small_baseline_p95_50_test50", baseline_50, 50, 0.95, 0.05),
+    lat_case("large_baseline_p95_5000_test500", baseline_5000, 500, 0.95, 0.05),
+    lat_case("alpha001_p95_500_test100", baseline_500, 100, 0.95, 0.01),
+    lat_case("identical_values_p95_100_test50", identical_100, 50, 0.95, 0.05,
+             "Heavy ties: the threshold is the common value; ties make the bound conservative, not invalid."),
+    lat_case("heavy_tailed_p99_100_test100", heavy_baseline_100, 100, 0.99, 0.05)
   )
 
   list(
     suite = "latency_threshold",
-    description = "Latency threshold derivation via exact binomial order-statistic upper bound",
-    method = "tau = t_{(k)} where k = qbinom(1 - alpha, n_s, p) + 1, clamped to [ceil(p*n), n]",
-    tolerance = 0,
+    description = paste(
+      "Latency threshold under latency/precedence (companion §12.4): the smallest baseline rank",
+      "whose exact, distribution-free no-degradation breach probability for the test's",
+      "nearest-rank percentile is at most alpha, and the observed baseline latency at that rank.",
+      "When no rank achieves alpha the result is INCONCLUSIVE with saturated = true and no rank or",
+      "threshold. A test percentile equal to the threshold is not a breach. Binding: rank,",
+      "threshold, saturated. Informational: breach_probability, test_rank, n, baseline_percentile."
+    ),
+    method = paste(
+      "latency/precedence v1: r = ceiling(P n_t / 100) in integer arithmetic (P in 50, 90, 95, 99);",
+      "breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1);",
+      "rank = the smallest k in 1..n_b with breach(k) <= alpha; threshold = the rank-th order",
+      "statistic of the baseline latencies; saturated iff no such k (rank and threshold null).",
+      "baseline_percentile is the baseline's own nearest-rank percentile."
+    ),
+    tolerance = 1e-10,
     cases = cases
   )
 }
@@ -399,9 +433,14 @@ bootstrap_upper <- function(baseline, p, confidence, B = 10000L, seed = 1L) {
   unname(quantile(reps, probs = confidence, type = 1))
 }
 
-#' Generate latency-threshold bootstrap-comparison reference cases
+#' Latency-threshold bootstrap comparison (legacy, not published)
 #'
-#' This suite serves two coupled roles:
+#' The comparison behind companion §12.4.4 between the v1.4.1 order-
+#' statistic bound (legacy `latency/order-statistic-bound`) and a
+#' percentile bootstrap. Since methodology 1.5.0 it is no longer published
+#' as a fixture suite — the bound it compares is not the 1.5.0 latency
+#' decision rule — and survives only for scripts/bootstrap_compare.R.
+#' Its former roles:
 #'
 #' (1) **Conformance contract** for the exact binomial order-statistic
 #'     upper bound. Every consuming framework (punit, feotest, ...) must

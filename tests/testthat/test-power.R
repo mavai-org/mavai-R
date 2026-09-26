@@ -1,34 +1,38 @@
-test_that("Smaller effect size requires more samples", {
-  large_effect <- required_sample_size(0.95, 0.10, 0.95, 0.80)
-  small_effect <- required_sample_size(0.95, 0.05, 0.95, 0.80)
+by_name <- function(suite) setNames(suite$cases, vapply(suite$cases, `[[`, character(1), "name"))
 
-  expect_true(small_effect$required_samples > large_effect$required_samples)
+test_that("compliance sizing reproduces the published stays-at figures", {
+  cases <- by_name(generate_power_analysis_cases())
+  expect_identical(cases[["compliance_p95_delta002_a05"]]$expected$required_samples, 694L)
+  expect_identical(cases[["compliance_p95_delta001_a05"]]$expected$required_samples, 2869L)
+  expect_identical(cases[["compliance_p99_delta002_a05_midway"]]$expected$alternative_kind, "MIDWAY")
+  expect_equal(cases[["compliance_p99_delta002_a05_midway"]]$expected$alternative_rate, 0.995)
 })
 
-test_that("Higher power requires more samples", {
-  low_power <- required_sample_size(0.95, 0.05, 0.95, 0.80)
-  high_power <- required_sample_size(0.95, 0.05, 0.95, 0.95)
-
-  expect_true(high_power$required_samples > low_power$required_samples)
+test_that("achieved power at the required size meets the target", {
+  for (case in generate_power_analysis_cases()$cases) {
+    if (case$approach == "compliance_sizing") {
+      expect_gte(case$expected$achieved_power, case$inputs$power)
+      expect_lte(case$expected$first_crossing, case$expected$required_samples)
+    }
+  }
 })
 
-test_that("Higher confidence requires more samples", {
-  low_conf <- required_sample_size(0.95, 0.05, 0.90, 0.80)
-  high_conf <- required_sample_size(0.95, 0.05, 0.99, 0.80)
-
-  expect_true(high_conf$required_samples > low_conf$required_samples)
+test_that("smaller margins and higher targets need more samples", {
+  a <- compliance_exact_sizing(0.95, 0.02, 0.05)$required_samples
+  expect_gt(compliance_exact_sizing(0.95, 0.01, 0.05)$required_samples, a)
+  expect_gt(compliance_exact_sizing(0.95, 0.02, 0.05, power = 0.95)$required_samples, a)
 })
 
-test_that("Achieved power meets or exceeds target", {
-  result <- required_sample_size(0.95, 0.05, 0.95, 0.80)
-
-  expect_true(result$achieved_power >= 0.80)
-})
-
-test_that("Achieved power at computed sample size is close to target", {
-  result <- required_sample_size(0.95, 0.05, 0.95, 0.80)
-
-  # Should be close to 0.80 (within a few percent, due to ceiling)
-  expect_true(result$achieved_power >= 0.80)
-  expect_true(result$achieved_power < 0.90)
+test_that("regression power and the minimum detectable degradation are consistent", {
+  for (case in generate_power_analysis_cases()$cases) {
+    i <- case$inputs
+    if (case$approach == "regression_mdd" && !is.na(case$expected$minimum_detectable_degradation)) {
+      pw <- score_cc_power(i$baseline_trials, i$test_samples, i$alpha, i$baseline_rate,
+                           case$expected$minimum_detectable_degradation)
+      expect_equal(pw, i$power, tolerance = 1e-8, info = case$name)
+    }
+    if (case$approach == "regression_power") {
+      expect_gt(case$expected$achieved_power, i$alpha)
+    }
+  }
 })

@@ -1,225 +1,373 @@
 {
   "suite": "threshold_derivation",
-  "description": "Threshold derivation per the statistical companion: §3.4 for the general case, §4.3.2 for the perfect-baseline two-step, §4.3.4 for the zero-baseline degeneration, §6.3 for threshold-first inversion. The threshold is the one-sided Wilson lower bound at the *test* sample size; smaller test samples lower the threshold (§3.5).",
-  "method": "Wilson lower bound at test sample size (§3.4 / §4.3.2 / §4.3.4); binary search for implied confidence (§6.3)",
-  "tolerance": 1e-06,
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [
+    {
+      "id": "regression/score-cc",
+      "version": 1
+    }
+  ],
+  "description": "The decision-rule layer of empirical regression (companion §3.4): from baseline evidence (K_b, n_b), a test size n_t and alpha, the integer cutoff c of regression/score-cc, or the configuration error that refuses the configuration before any sample runs. The cutoff is the binding artefact; configuration_error is binding (null when the configuration is valid); threshold_real, displayed_rate and achieved_size are informational report values.",
+  "method": "regression/score-cc v1: for k_t = 0..n_t, d = k_t/n_t - K_b/n_b, d_cc = min(0, d + (1/n_b + 1/n_t)/2), p_bar = (K_b + k_t)/(n_b + n_t), v = p_bar (1 - p_bar) (1/n_b + 1/n_t), z = d_cc / sqrt(v) (z = 0 when v = 0); c = the smallest k_t with z >= -qnorm(1 - alpha). Configuration errors, checked first: TEST_LARGER_THAN_BASELINE when n_t > n_b; OUTSIDE_CALIBRATION_TOLERANCE when the published calibration-tolerance rule (suite calibration_tolerance_rule) refuses (n_b, n_t, alpha). Informational: threshold_real = c/n_t; displayed_rate = round(c/n_t, 6); achieved_size = sum_k P_p(K_b = k) P_p(K_t < c(k)) at p = K_b/n_b (null at K_b/n_b in {0, 1}).",
+  "tolerance": 1e-10,
   "cases": [
     {
-      "name": "ssf_95_of_100_test50_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 95,
-        "baseline_trials": 100,
-        "test_samples": 50,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0.872384625855458,
-        "wilson_lower_real": 0.872384625855458,
-        "cutoff_integer": 44,
-        "achieved_size": 0.0117864477972644
-      }
-    },
-    {
-      "name": "ssf_950_of_1000_test100_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 950,
-        "baseline_trials": 1000,
-        "test_samples": 100,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0.900838914720947,
-        "wilson_lower_real": 0.900838914720947,
-        "cutoff_integer": 91,
-        "achieved_size": 0.0281882941634163
-      }
-    },
-    {
-      "name": "ssf_perfect_baseline_test50_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 100,
-        "baseline_trials": 100,
-        "test_samples": 50,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0.905664335522471,
-        "wilson_lower_real": 0.905664335522471,
-        "cutoff_integer": 46,
-        "achieved_size": 0.0100504382370853
-      }
-    },
-    {
-      "name": "ssf_perfect_baseline_n1000_test100_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 1000,
-        "baseline_trials": 1000,
-        "test_samples": 100,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0.968628914619744,
-        "wilson_lower_real": 0.968628914619744,
-        "cutoff_integer": 97,
-        "achieved_size": 0.000169061205239264
-      }
-    },
-    {
-      "name": "ssf_zero_baseline_n10_test50_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 0,
-        "baseline_trials": 10,
-        "test_samples": 50,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0,
-        "wilson_lower_real": 0,
-        "cutoff_integer": 0,
-        "achieved_size": 0
-      }
-    },
-    {
-      "name": "ssf_zero_baseline_n1000_test200_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 0,
-        "baseline_trials": 1000,
-        "test_samples": 200,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0,
-        "wilson_lower_real": 0,
-        "cutoff_integer": 0,
-        "achieved_size": 0
-      }
-    },
-    {
-      "name": "ssf_zero_baseline_n100_test85_99pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 0,
-        "baseline_trials": 100,
-        "test_samples": 85,
-        "confidence": 0.99
-      },
-      "expected": {
-        "threshold": 0,
-        "wilson_lower_real": 0,
-        "cutoff_integer": 0,
-        "achieved_size": 0
-      }
-    },
-    {
-      "name": "ssf_950_of_1000_test50_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 950,
-        "baseline_trials": 1000,
-        "test_samples": 50,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0.872384625855458,
-        "wilson_lower_real": 0.872384625855458,
-        "cutoff_integer": 44,
-        "achieved_size": 0.0117864477972644
-      }
-    },
-    {
-      "name": "ssf_950_of_1000_test200_95pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 950,
-        "baseline_trials": 1000,
-        "test_samples": 200,
-        "confidence": 0.95
-      },
-      "expected": {
-        "threshold": 0.918108167081791,
-        "wilson_lower_real": 0.918108167081791,
-        "cutoff_integer": 184,
-        "achieved_size": 0.023799459747173
-      }
-    },
-    {
-      "name": "ssf_95_of_100_test50_99pct",
-      "approach": "sample_size_first",
-      "inputs": {
-        "baseline_successes": 95,
-        "baseline_trials": 100,
-        "test_samples": 50,
-        "confidence": 0.99
-      },
-      "expected": {
-        "threshold": 0.824989729472328,
-        "wilson_lower_real": 0.824989729472328,
-        "cutoff_integer": 42,
-        "achieved_size": 0.000755984691221479
-      }
-    },
-    {
-      "name": "ssf_sc_ru_02_worked_example",
-      "approach": "sample_size_first",
+      "name": "ordinary_951_of_1000_test100_a05",
       "inputs": {
         "baseline_successes": 951,
         "baseline_trials": 1000,
         "test_samples": 100,
-        "confidence": 0.95
+        "alpha": 0.05
       },
       "expected": {
-        "threshold": 0.902123591001564,
-        "wilson_lower_real": 0.902123591001564,
         "cutoff_integer": 91,
-        "achieved_size": 0.0249856283219066
+        "configuration_error": null,
+        "threshold_real": 0.91,
+        "displayed_rate": 0.91,
+        "achieved_size": 0.0386303312503997
       }
     },
     {
-      "name": "tf_baseline_95pct_test100_threshold_90",
-      "approach": "threshold_first",
+      "name": "ordinary_larger_baseline_1902_of_2000_test100_a05",
       "inputs": {
-        "baseline_successes": 95,
-        "baseline_trials": 100,
+        "baseline_successes": 1902,
+        "baseline_trials": 2000,
         "test_samples": 100,
-        "threshold": 0.9
+        "alpha": 0.05
       },
       "expected": {
-        "implied_confidence": 0.952209647798911,
-        "is_sound": true
+        "cutoff_integer": 91,
+        "configuration_error": null,
+        "threshold_real": 0.91,
+        "displayed_rate": 0.91,
+        "achieved_size": 0.0402294663850958
       }
     },
     {
-      "name": "tf_baseline_95pct_test100_threshold_85",
-      "approach": "threshold_first",
+      "name": "boundary_equal_sizes_951_of_1000_test1000_a05",
+      "description": "n_t = n_b: the largest test the design rule admits.",
       "inputs": {
-        "baseline_successes": 95,
-        "baseline_trials": 100,
-        "test_samples": 100,
-        "threshold": 0.85
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "test_samples": 1000,
+        "alpha": 0.05
       },
       "expected": {
-        "implied_confidence": 0.997449300178152,
-        "is_sound": true
+        "cutoff_integer": 933,
+        "configuration_error": null,
+        "threshold_real": 0.933,
+        "displayed_rate": 0.933,
+        "achieved_size": 0.0403532934176465
       }
     },
     {
-      "name": "tf_baseline_95pct_test100_threshold_94",
-      "approach": "threshold_first",
+      "name": "large_baseline_small_test_9510_of_10000_test100_a05",
+      "inputs": {
+        "baseline_successes": 9510,
+        "baseline_trials": 10000,
+        "test_samples": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 92,
+        "configuration_error": null,
+        "threshold_real": 0.92,
+        "displayed_rate": 0.92,
+        "achieved_size": 0.0413957114014636
+      }
+    },
+    {
+      "name": "near_perfect_99_of_100_test100_a05",
+      "inputs": {
+        "baseline_successes": 99,
+        "baseline_trials": 100,
+        "test_samples": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 94,
+        "configuration_error": null,
+        "threshold_real": 0.94,
+        "displayed_rate": 0.94,
+        "achieved_size": 0.00128278211655939
+      }
+    },
+    {
+      "name": "perfect_100_of_100_test100_a05",
+      "description": "No special case at K_b = n_b; the cutoff is monotone in K_b.",
+      "inputs": {
+        "baseline_successes": 100,
+        "baseline_trials": 100,
+        "test_samples": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 96,
+        "configuration_error": null,
+        "threshold_real": 0.96,
+        "displayed_rate": 0.96,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "perfect_large_1000_of_1000_test100_a05",
+      "inputs": {
+        "baseline_successes": 1000,
+        "baseline_trials": 1000,
+        "test_samples": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 99,
+        "configuration_error": null,
+        "threshold_real": 0.99,
+        "displayed_rate": 0.99,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "zero_baseline_0_of_100_test50_a05",
+      "description": "c = 0 at K_b = 0: a baseline that succeeded on nothing demands nothing.",
+      "inputs": {
+        "baseline_successes": 0,
+        "baseline_trials": 100,
+        "test_samples": 50,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 0,
+        "configuration_error": null,
+        "threshold_real": 0,
+        "displayed_rate": 0,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "small_baseline_27_of_30_test25_a05",
+      "inputs": {
+        "baseline_successes": 27,
+        "baseline_trials": 30,
+        "test_samples": 25,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 18,
+        "configuration_error": null,
+        "threshold_real": 0.72,
+        "displayed_rate": 0.72,
+        "achieved_size": 0.0175146837307742
+      }
+    },
+    {
+      "name": "alpha001_inside_tolerance_951_of_1000_test1000",
+      "inputs": {
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "test_samples": 1000,
+        "alpha": 0.01
+      },
+      "expected": {
+        "cutoff_integer": 925,
+        "configuration_error": null,
+        "threshold_real": 0.925,
+        "displayed_rate": 0.925,
+        "achieved_size": 0.00741688523188998
+      }
+    },
+    {
+      "name": "baseline_95_of_100_test50_a05",
       "inputs": {
         "baseline_successes": 95,
         "baseline_trials": 100,
-        "test_samples": 100,
-        "threshold": 0.94
+        "test_samples": 50,
+        "alpha": 0.05
       },
       "expected": {
-        "implied_confidence": 0.663150192704052,
-        "is_sound": false
+        "cutoff_integer": 43,
+        "configuration_error": null,
+        "threshold_real": 0.86,
+        "displayed_rate": 0.86,
+        "achieved_size": 0.0271190155848159
+      }
+    },
+    {
+      "name": "baseline_95_of_100_test50_a01",
+      "inputs": {
+        "baseline_successes": 95,
+        "baseline_trials": 100,
+        "test_samples": 50,
+        "alpha": 0.01
+      },
+      "expected": {
+        "cutoff_integer": 41,
+        "configuration_error": null,
+        "threshold_real": 0.82,
+        "displayed_rate": 0.82,
+        "achieved_size": 0.00418800157638278
+      }
+    },
+    {
+      "name": "baseline_950_of_1000_test50_a05",
+      "inputs": {
+        "baseline_successes": 950,
+        "baseline_trials": 1000,
+        "test_samples": 50,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 45,
+        "configuration_error": null,
+        "threshold_real": 0.9,
+        "displayed_rate": 0.9,
+        "achieved_size": 0.0365223288282607
+      }
+    },
+    {
+      "name": "baseline_950_of_1000_test200_a05",
+      "inputs": {
+        "baseline_successes": 950,
+        "baseline_trials": 1000,
+        "test_samples": 200,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 184,
+        "configuration_error": null,
+        "threshold_real": 0.92,
+        "displayed_rate": 0.92,
+        "achieved_size": 0.0404621965607436
+      }
+    },
+    {
+      "name": "baseline_950_of_1000_test200_a10",
+      "inputs": {
+        "baseline_successes": 950,
+        "baseline_trials": 1000,
+        "test_samples": 200,
+        "alpha": 0.1
+      },
+      "expected": {
+        "cutoff_integer": 185,
+        "configuration_error": null,
+        "threshold_real": 0.925,
+        "displayed_rate": 0.925,
+        "achieved_size": 0.077574833929
+      }
+    },
+    {
+      "name": "baseline_9_of_10_test10_a05",
+      "inputs": {
+        "baseline_successes": 9,
+        "baseline_trials": 10,
+        "test_samples": 10,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 5,
+        "configuration_error": null,
+        "threshold_real": 0.5,
+        "displayed_rate": 0.5,
+        "achieved_size": 0.00452011138810319
+      }
+    },
+    {
+      "name": "zero_baseline_0_of_1000_test200_a05",
+      "inputs": {
+        "baseline_successes": 0,
+        "baseline_trials": 1000,
+        "test_samples": 200,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 0,
+        "configuration_error": null,
+        "threshold_real": 0,
+        "displayed_rate": 0,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "zero_baseline_0_of_100_test85_a01",
+      "inputs": {
+        "baseline_successes": 0,
+        "baseline_trials": 100,
+        "test_samples": 85,
+        "alpha": 0.01
+      },
+      "expected": {
+        "cutoff_integer": 0,
+        "configuration_error": null,
+        "threshold_real": 0,
+        "displayed_rate": 0,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "refused_test_larger_than_baseline_95_of_100_test200",
+      "description": "n_t > n_b: refused whatever the counts.",
+      "inputs": {
+        "baseline_successes": 95,
+        "baseline_trials": 100,
+        "test_samples": 200,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": null,
+        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "threshold_real": null,
+        "displayed_rate": null,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "refused_test_larger_than_baseline_zero_0_of_10_test50",
+      "description": "n_t > n_b is refused even at a zero baseline.",
+      "inputs": {
+        "baseline_successes": 0,
+        "baseline_trials": 10,
+        "test_samples": 50,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": null,
+        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "threshold_real": null,
+        "displayed_rate": null,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "refused_outside_tolerance_951_of_1000_test25_a01",
+      "description": "Worst-case size 1.313% at p near 0.977 against a tolerance of 1.2%.",
+      "inputs": {
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "test_samples": 25,
+        "alpha": 0.01
+      },
+      "expected": {
+        "cutoff_integer": null,
+        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
+        "threshold_real": null,
+        "displayed_rate": null,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "refused_outside_tolerance_9500_of_10000_test100_a001",
+      "inputs": {
+        "baseline_successes": 9500,
+        "baseline_trials": 10000,
+        "test_samples": 100,
+        "alpha": 0.001
+      },
+      "expected": {
+        "cutoff_integer": null,
+        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
+        "threshold_real": null,
+        "displayed_rate": null,
+        "achieved_size": null
       }
     }
   ]

@@ -1,3 +1,13 @@
+#' Legacy: the v1.4.1 regression construction, `regression/wilson-reference` v1.
+#'
+#' Withdrawn as a decision rule by Statistical Companion 1.5.0, which
+#' replaces it with `regression/score-cc` (R/decision_rules.R). Kept, under
+#' its legacy identifier, only to reproduce methodology-1.4.1 outputs and to
+#' compare the two generations; no 1.5.0 fixture is computed from it. The
+#' 1.4.1 fixtures themselves are the immutable release assets of v0.10.13.
+#' @name legacy_wilson_reference
+NULL
+
 #' Derive threshold using the sample-size-first approach (companion §3.4 / §4.3)
 #'
 #' Given a baseline (successes/trials) and a *test* sample size, derives the
@@ -133,185 +143,5 @@ ssf_expected_block <- function(baseline_successes, baseline_trials,
     wilson_lower_real  = wlr,
     cutoff_integer     = as.integer(c_int),
     achieved_size      = achieved
-  )
-}
-
-#' Generate threshold derivation reference cases
-#'
-#' @return A list suitable for JSON serialisation.
-#' @export
-generate_threshold_derivation_cases <- function() {
-  cases <- list(
-    # Sample-size-first cases — general (k < n)
-    list(
-      name = "ssf_95_of_100_test50_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 95L, baseline_trials = 100L,
-        test_samples = 50L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(95, 100, 50, 0.95)
-    ),
-    list(
-      name = "ssf_950_of_1000_test100_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 950L, baseline_trials = 1000L,
-        test_samples = 100L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(950, 1000, 100, 0.95)
-    ),
-    # Sample-size-first case — perfect-baseline two-step (companion §4.3.2)
-    list(
-      name = "ssf_perfect_baseline_test50_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 100L, baseline_trials = 100L,
-        test_samples = 50L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(100, 100, 50, 0.95)
-    ),
-    list(
-      name = "ssf_perfect_baseline_n1000_test100_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 1000L, baseline_trials = 1000L,
-        test_samples = 100L, confidence = 0.95
-      ),
-      # Companion §4.3.2 worked example: real-valued ≈ 0.9686, cutoff ≈ 97
-      expected = ssf_expected_block(1000, 1000, 100, 0.95)
-    ),
-    # Sample-size-first case — zero baseline (companion §4.3.4)
-    #
-    # The mirror of the perfect-baseline cases above. At k = 0 the
-    # effective baseline rate is exactly 0 at every n, so the derivation
-    # degenerates: threshold 0, cutoff 0, and an achieved size of 0
-    # because a cutoff of 0 excludes no outcome. A baseline that
-    # succeeded on no attempt can demand nothing of its successor, and
-    # these cases publish that rather than leaving each framework to
-    # infer it.
-    #
-    # The two test sizes are chosen, not arbitrary. n_test = 50 and
-    # n_test = 200 are where the one-sided 95% arithmetic failed to
-    # cancel to zero and left a residue near 1e-18 — invisible against
-    # the suite's 1e-6 tolerance on `threshold`, and decisive on
-    # `cutoff_integer`, which ceiling() lifts from 0 to 1. These are the
-    # cases that hold the fix in place.
-    list(
-      name = "ssf_zero_baseline_n10_test50_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 0L, baseline_trials = 10L,
-        test_samples = 50L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(0, 10, 50, 0.95)
-    ),
-    list(
-      name = "ssf_zero_baseline_n1000_test200_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 0L, baseline_trials = 1000L,
-        test_samples = 200L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(0, 1000, 200, 0.95)
-    ),
-    # Same zero baseline at a different confidence: p_0 = 0 does not
-    # move with z any more than it moves with n. n_test = 85 rather than
-    # a round number because the round ones mostly cancel cleanly — 85 is
-    # a residue site at 99%, so this case discriminates as the other two
-    # do instead of merely agreeing with everyone.
-    list(
-      name = "ssf_zero_baseline_n100_test85_99pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 0L, baseline_trials = 100L,
-        test_samples = 85L, confidence = 0.99
-      ),
-      expected = ssf_expected_block(0, 100, 85, 0.99)
-    ),
-    # Sample-size-first sensitivity to test sample size — companion §3.5
-    list(
-      name = "ssf_950_of_1000_test50_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 950L, baseline_trials = 1000L,
-        test_samples = 50L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(950, 1000, 50, 0.95)
-    ),
-    list(
-      name = "ssf_950_of_1000_test200_95pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 950L, baseline_trials = 1000L,
-        test_samples = 200L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(950, 1000, 200, 0.95)
-    ),
-    # Sample-size-first at higher confidence
-    list(
-      name = "ssf_95_of_100_test50_99pct",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 95L, baseline_trials = 100L,
-        test_samples = 50L, confidence = 0.99
-      ),
-      expected = ssf_expected_block(95, 100, 50, 0.99)
-    ),
-    # SC-RU-02 worked example: baseline 0.951, test n = 100, alpha = 0.05
-    # Companion §3.4 reports wilson_lower_real ≈ 0.902124,
-    # cutoff = 91, achieved_size ≈ 0.024986.
-    list(
-      name = "ssf_sc_ru_02_worked_example",
-      approach = "sample_size_first",
-      inputs = list(
-        baseline_successes = 951L, baseline_trials = 1000L,
-        test_samples = 100L, confidence = 0.95
-      ),
-      expected = ssf_expected_block(951, 1000, 100, 0.95)
-    ),
-    # Threshold-first cases (now require test_samples per companion §6.3)
-    list(
-      name = "tf_baseline_95pct_test100_threshold_90",
-      approach = "threshold_first",
-      inputs = list(
-        baseline_successes = 95L, baseline_trials = 100L,
-        test_samples = 100L, threshold = 0.90
-      ),
-      expected = threshold_first_implied_confidence(95, 100, 100, 0.90)
-    ),
-    list(
-      name = "tf_baseline_95pct_test100_threshold_85",
-      approach = "threshold_first",
-      inputs = list(
-        baseline_successes = 95L, baseline_trials = 100L,
-        test_samples = 100L, threshold = 0.85
-      ),
-      expected = threshold_first_implied_confidence(95, 100, 100, 0.85)
-    ),
-    list(
-      name = "tf_baseline_95pct_test100_threshold_94",
-      approach = "threshold_first",
-      inputs = list(
-        baseline_successes = 95L, baseline_trials = 100L,
-        test_samples = 100L, threshold = 0.94
-      ),
-      expected = threshold_first_implied_confidence(95, 100, 100, 0.94)
-    )
-  )
-
-  list(
-    suite = "threshold_derivation",
-    description = paste(
-      "Threshold derivation per the statistical companion: §3.4 for the",
-      "general case, §4.3.2 for the perfect-baseline two-step, §4.3.4 for",
-      "the zero-baseline degeneration, §6.3 for",
-      "threshold-first inversion. The threshold is the one-sided Wilson",
-      "lower bound at the *test* sample size; smaller test samples lower",
-      "the threshold (§3.5)."
-    ),
-    method = "Wilson lower bound at test sample size (§3.4 / §4.3.2 / §4.3.4); binary search for implied confidence (§6.3)",
-    tolerance = 1e-6,
-    cases = cases
   )
 }

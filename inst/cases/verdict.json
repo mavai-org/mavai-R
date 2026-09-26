@@ -1,103 +1,293 @@
 {
   "suite": "verdict",
-  "description": "Verdict evaluation — pass/fail determination with z-test statistics",
-  "method": "One-sided z-test: z = (p_hat - threshold) / SE; SE = sqrt(threshold * (1 - threshold) / n)",
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [
+    {
+      "id": "compliance/exact-binomial",
+      "version": 1
+    },
+    {
+      "id": "regression/score-cc",
+      "version": 1
+    }
+  ],
+  "description": "Verdict evaluation under the two ruled rules: regression/score-cc for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A configuration carrying both bars (approach joint) is refused whole when either part is invalid. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error. Informational: observed_rate.",
+  "method": "regression/score-cc: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision). compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision). Configuration errors are checked first, for every part of the configuration.",
   "tolerance": 1e-10,
   "cases": [
     {
-      "name": "clear_pass_48_of_50_threshold_90",
+      "name": "compliance_fail_48_of_50_threshold_90",
+      "description": "96% observed against a 90% requirement does not demonstrate compliance at n = 50.",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "successes": 48,
         "trials": 50,
         "threshold": 0.9,
-        "confidence": 0.95
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
       },
       "expected": {
-        "passed": true,
-        "observed_rate": 0.96,
-        "test_statistic": 1.41421356237309,
-        "p_value": 0.921350396474857,
-        "false_positive_probability": 0.05
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 0.96
       }
     },
     {
-      "name": "clear_fail_40_of_50_threshold_90",
+      "name": "compliance_pass_49_of_50_threshold_90",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "successes": 49,
+        "trials": 50,
+        "threshold": 0.9,
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
+      },
+      "expected": {
+        "verdict": "PASS",
+        "configuration_error": null,
+        "observed_rate": 0.98
+      }
+    },
+    {
+      "name": "compliance_fail_40_of_50_threshold_90",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "successes": 40,
         "trials": 50,
         "threshold": 0.9,
-        "confidence": 0.95
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
       },
       "expected": {
-        "passed": false,
-        "observed_rate": 0.8,
-        "test_statistic": -2.35702260395516,
-        "p_value": 0.00921106272704952,
-        "false_positive_probability": 0.05
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 0.8
       }
     },
     {
-      "name": "borderline_pass_45_of_50_threshold_90",
+      "name": "compliance_fail_45_of_50_threshold_90",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "successes": 45,
         "trials": 50,
         "threshold": 0.9,
-        "confidence": 0.95
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
       },
       "expected": {
-        "passed": true,
-        "observed_rate": 0.9,
-        "test_statistic": 0,
-        "p_value": 0.5,
-        "false_positive_probability": 0.05
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 0.9
       }
     },
     {
-      "name": "perfect_score_50_of_50_threshold_95",
-      "inputs": {
-        "successes": 50,
-        "trials": 50,
-        "threshold": 0.95,
-        "confidence": 0.95
-      },
-      "expected": {
-        "passed": true,
-        "observed_rate": 1,
-        "test_statistic": 1.62221421130763,
-        "p_value": 0.947621255075135,
-        "false_positive_probability": 0.05
-      }
-    },
-    {
-      "name": "zero_successes_0_of_50_threshold_90",
+      "name": "compliance_fail_0_of_50_threshold_90",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "successes": 0,
         "trials": 50,
         "threshold": 0.9,
-        "confidence": 0.95
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
       },
       "expected": {
-        "passed": false,
-        "observed_rate": 0,
-        "test_statistic": -21.2132034355964,
-        "p_value": 3.60649708622527e-100,
-        "false_positive_probability": 0.05
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 0
       }
     },
     {
-      "name": "large_sample_pass_920_of_1000_threshold_90",
+      "name": "compliance_pass_920_of_1000_threshold_90",
+      "decisionRule": "compliance/exact-binomial",
       "inputs": {
         "successes": 920,
         "trials": 1000,
         "threshold": 0.9,
-        "confidence": 0.95
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
       },
       "expected": {
-        "passed": true,
-        "observed_rate": 0.92,
-        "test_statistic": 2.10818510677892,
-        "p_value": 0.982492509490169,
-        "false_positive_probability": 0.05
+        "verdict": "PASS",
+        "configuration_error": null,
+        "observed_rate": 0.92
+      }
+    },
+    {
+      "name": "compliance_refused_50_of_50_threshold_95",
+      "description": "n = 50 is below the feasibility minimum of 59: refused under VERIFICATION.",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "successes": 50,
+        "trials": 50,
+        "threshold": 0.95,
+        "alpha": 0.05,
+        "intent": "VERIFICATION"
+      },
+      "expected": {
+        "verdict": null,
+        "configuration_error": "COMPLIANCE_INFEASIBLE",
+        "observed_rate": 1
+      }
+    },
+    {
+      "name": "compliance_smoke_50_of_50_threshold_95",
+      "description": "SMOKE runs the undersized design; it cannot PASS.",
+      "decisionRule": "compliance/exact-binomial",
+      "inputs": {
+        "successes": 50,
+        "trials": 50,
+        "threshold": 0.95,
+        "alpha": 0.05,
+        "intent": "SMOKE"
+      },
+      "expected": {
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 1
+      }
+    },
+    {
+      "name": "regression_pass_91_of_100_baseline_951_of_1000",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "successes": 91,
+        "trials": 100,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "alpha": 0.05
+      },
+      "expected": {
+        "verdict": "PASS",
+        "configuration_error": null,
+        "observed_rate": 0.91
+      }
+    },
+    {
+      "name": "regression_fail_90_of_100_baseline_951_of_1000",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "successes": 90,
+        "trials": 100,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "alpha": 0.05
+      },
+      "expected": {
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 0.9
+      }
+    },
+    {
+      "name": "regression_pass_95_of_100_baseline_99_of_100",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "successes": 95,
+        "trials": 100,
+        "baseline_successes": 99,
+        "baseline_trials": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "verdict": "PASS",
+        "configuration_error": null,
+        "observed_rate": 0.95
+      }
+    },
+    {
+      "name": "regression_fail_95_of_100_baseline_100_of_100",
+      "description": "The cutoff is monotone in the baseline count: a perfect baseline demands more than 99 of 100.",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "successes": 95,
+        "trials": 100,
+        "baseline_successes": 100,
+        "baseline_trials": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "verdict": "FAIL",
+        "configuration_error": null,
+        "observed_rate": 0.95
+      }
+    },
+    {
+      "name": "regression_refused_test_larger_than_baseline",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "successes": 190,
+        "trials": 200,
+        "baseline_successes": 95,
+        "baseline_trials": 100,
+        "alpha": 0.05
+      },
+      "expected": {
+        "verdict": null,
+        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "observed_rate": 0.95
+      }
+    },
+    {
+      "name": "regression_refused_outside_calibration_tolerance",
+      "decisionRule": "regression/score-cc",
+      "inputs": {
+        "successes": 25,
+        "trials": 25,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "alpha": 0.01
+      },
+      "expected": {
+        "verdict": null,
+        "configuration_error": "OUTSIDE_CALIBRATION_TOLERANCE",
+        "observed_rate": 1
+      }
+    },
+    {
+      "name": "joint_refused_empirical_part_test_larger_than_baseline",
+      "description": "The normative part is valid; the empirical part is not, so nothing runs.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/score-cc"
+      ],
+      "inputs": {
+        "successes": 190,
+        "trials": 200,
+        "threshold": 0.9,
+        "alpha": 0.05,
+        "intent": "VERIFICATION",
+        "baseline_successes": 95,
+        "baseline_trials": 100
+      },
+      "expected": {
+        "verdict": null,
+        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "observed_rate": 0.95
+      }
+    },
+    {
+      "name": "joint_refused_normative_part_infeasible",
+      "description": "The empirical part is valid; the normative part cannot PASS at n = 100, so nothing runs.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/score-cc"
+      ],
+      "inputs": {
+        "successes": 100,
+        "trials": 100,
+        "threshold": 0.999,
+        "alpha": 0.05,
+        "intent": "VERIFICATION",
+        "baseline_successes": 950,
+        "baseline_trials": 1000
+      },
+      "expected": {
+        "verdict": null,
+        "configuration_error": "COMPLIANCE_INFEASIBLE",
+        "observed_rate": 1
       }
     }
   ]

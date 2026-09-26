@@ -5,6 +5,38 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.11.0] — unreleased
+
+**Breaking: the fixtures implement Statistical Companion 1.5.0.** The three verdict-producing procedures change, so cutoffs, ranks, sample sizes, feasibility and verdicts change against methodology 1.4.1. Every fixture file and the manifest now say which methodology they implement. The 1.4.1 fixtures remain reproducible from the `v0.10.13` release assets, which are not changed.
+
+*New decision rules*, each with a versioned identifier carried by the fixtures that depend on it:
+
+- `regression/score-cc` v1 — empirical regression. The integer cutoff c is the smallest test count whose continuity-corrected pooled two-sample score statistic is at least `-qnorm(1 - alpha)`, weighing baseline and test evidence jointly; z = 0 where the pooled variance vanishes. It replaces the Wilson lower bound of the baseline rate evaluated at the test size, and the perfect-baseline substitution with it: the cutoff is monotone in the baseline count (99/100 gives 94, 100/100 gives 96, where 1.4.1 gave 96 then 94). Calibration is the exact unconditional false-degradation probability with both counts random.
+- `compliance/exact-binomial` v1 — normative compliance. k_min = min{k : P_{p_req}(K >= k) <= alpha}; PASS iff K >= k_min. It replaces the Wilson clearance. Feasibility becomes n >= ceiling(log(alpha) / log(p_req)) (598 for 99.5% at alpha 0.05, 2995 for 99.9%), and sizing becomes the exact smallest n from which power stays at target (694 for p_req 0.95, delta 0.02, alpha 0.05), with the midway alternative (p_req + 1)/2 where p_req + delta >= 1.
+- `latency/precedence` v1 — latency regression. The threshold rank is the smallest baseline rank whose exact, distribution-free no-degradation breach probability for the test's nearest-rank percentile is at most alpha; INCONCLUSIVE with `saturated: true` when none is. It replaces the order-statistic confidence bound on the baseline quantile, whose breach probability for a future test reached 46%. The fixture inputs gain `test_samples`.
+
+The 1.4.1 rules survive in the R package only, as `regression/wilson-reference`, `latency/order-statistic-bound` and `compliance/wilson-clearance`, for reproducing 1.4.1 outputs; no fixture is computed from them.
+
+*New configuration errors*, refused before any sample runs and published as binding `configuration_error` fields: `TEST_LARGER_THAN_BASELINE` (an empirical test with n_t > n_b), `OUTSIDE_CALIBRATION_TOLERANCE` (an empirical configuration whose worst-case size under `regression/score-cc` exceeds 1.2 alpha, determined by the published rule below) and `COMPLIANCE_INFEASIBLE` (a normative design too small to PASS, under VERIFICATION intent; SMOKE runs and reports `pass_possible: false`). A configuration carrying both a normative and an empirical bar is refused whole when either part is invalid.
+
+*The calibration-tolerance rule is published as data*: new suite `calibration_tolerance_rule`. At alpha 0.001 refuse when (n_b >= 16 and n_t/n_b <= 0.177), (n_b >= 41 and <= 0.220), (n_b >= 51 and <= 0.250), (n_b >= 61 and <= 0.258) or (n_b >= 91 and <= 0.350); at alpha 0.01 refuse when n_b >= 21 and n_t/n_b <= 0.080; nothing at 0.05 or 0.10. It is derived from, and verified against, an exact scan of the worst-case size over 1179 values of p for 1922 configurations per alpha; the suite states the derivation.
+
+*Suites*:
+
+- New: `compliance_decision` (the exact-binomial verdict, with the VERIFICATION refusal and the SMOKE "PASS not possible" outcome) and `calibration_tolerance_rule`.
+- Re-based: `threshold_derivation` and `regression_decision` on `regression/score-cc` (the compliance cases of `regression_decision` move to `compliance_decision`; the conflation-detector pair now spans the two suites); `latency_threshold` on `latency/precedence`; `feasibility` on the exact test (inputs take `alpha`; `criterion` is `exact_binomial_pass_possible`); `power_analysis` on exact power and sizing (compliance sizing, regression power at a declared margin, and the minimum detectable degradation at 80% power); `verdict` on the two ruled rules, each case naming its rule — the point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic, p-value and false-positive probability are withdrawn; `criterion_verdict_inferential` and `multi_criteria_scenario_consult_advice` on the new rules (informational; the consult-advice scenario's first case is the one canonical consult-advice example).
+- Inputs of the decision suites take `alpha` instead of `confidence`.
+- Every case whose empirical test was larger than its baseline is replaced by a refusal case, and each decision suite gains the boundary n_t = n_b.
+- Dropped: `latency_threshold_bootstrap` (a comparison of the withdrawn order-statistic bound), `risk_driven_sizing` (sizing built on the withdrawn Wilson floor), the three threshold-first cases of `threshold_derivation` (implied confidence of the Wilson construction), and every case name listed in the 0.10.13 manifest for the re-based suites (they are renamed with their new inputs).
+- Unchanged in content: `wilson_ci`, `wilson_lower` (descriptive primitives, no longer deciding anything), `latency_percentile`, `latency_percentile_minimums`, `criterion_verdict_observational`, `composite_verdict`, `baseline_object`.
+- Family-mandatory roster: `wilson_ci`, `wilson_lower`, `regression_decision`, `compliance_decision`, `latency_threshold`, `feasibility`, `power_analysis`, `verdict`.
+
+*Binding classification*: `achieved_size` (now the unconditional size at the baseline rate), `threshold_real` (now c/n_t) and `displayed_rate` are informational report values; the binding fields are the decision artefacts — cutoff, k_min, rank, saturated, verdict, configuration error. Also informational: `false_compliance`, `clopper_pearson_lower`, the latency `breach_probability`, `test_rank`, `n` and `baseline_percentile`, the verdict suite's `observed_rate`, and sizing's `first_crossing`.
+
+*Schema changes*: fixture schema version 2. `cases.schema.json` requires `methodologyVersion`, `fixtureSchemaVersion` and `decisionRules` (a list of `{id, version}`) on every suite and admits a per-case `decisionRule`; the manifest (`manifestVersion` 2) carries the same versions, the decision-rule registry, the configuration-error codes and each suite's rules. `schema/verdict-1.7.xsd` adds `methodology-version` to the record, `decision-rule`, `decision-rule-version` and `configuration-error` to the verdict (a refused record states the code and no value) and to criterion rows, and the termination reason `CONFIGURATION_REFUSED`; worked examples `verdict-1.7-typical.xml` and `verdict-1.7-refused.xml`. Earlier XSD versions and the baseline interchange's `procedure: REGRESSION | COMPLIANCE` field are unchanged.
+
+*Generation*: `scripts/generate_all.R` is the one generator; the stale exported `generate_all()` is removed. The certification script `scripts/certify.R` derives and verifies the calibration-tolerance rule.
+
 ## [0.10.13] — 2026-08-19
 
 **The zero baseline becomes assertable, and a decision-rule defect it exposed is fixed.** Additive: nine new cases, one new expected field, no existing expected value changed.
