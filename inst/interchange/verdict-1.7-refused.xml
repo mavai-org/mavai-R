@@ -2,18 +2,18 @@
 <!-- Worked example: a verdict-1.7 record for a refused configuration.
 
      The configuration asked for a 200-sample empirical test against a
-     baseline of 100 trials. Under Statistical Companion 1.5.0 an empirical
+     baseline of 100 trials. Under Statistical Companion 2.0.0 an empirical
      test may not be larger than its baseline: the extra test samples buy
      almost no power and signal that a larger baseline is needed. The
      configuration is refused before any sample runs, so the record states
      no verdict value, only the configuration error, and the termination
      reason CONFIGURATION_REFUSED. The refusal is not INCONCLUSIVE, which
      is reserved for outcomes that depend on the data. -->
-<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-26T12:05:00+00:00" generator="worked-example">
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="2.0.0" timestamp="2026-09-26T12:05:00+00:00" generator="worked-example">
   <identity use-case-id="offer-extraction" />
   <execution planned-samples="200" samples-executed="0" successes="0" failures="0" elapsed-ms="3" intent="VERIFICATION" confidence="0.95" />
   <covariates aligned="true" />
   <provenance origin="EMPIRICAL" />
   <termination reason="CONFIGURATION_REFUSED" detail="the test (200 samples) is larger than its baseline (100 trials)" />
-  <verdict configuration-error="TEST_LARGER_THAN_BASELINE" decision-rule="regression/score-cc" decision-rule-version="1" />
+  <verdict configuration-error="TEST_LARGER_THAN_BASELINE" decision-rule="regression/fisher" decision-rule-version="1" />
 </verdict-record>
