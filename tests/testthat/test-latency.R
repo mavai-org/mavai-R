@@ -206,3 +206,30 @@ test_that("the pre-run check warns and plans; saturation is decided on the actua
   # The expectation is not a lower bound: 161 successful latencies saturate.
   expect_true(latency_precedence_exists(554, 161, 0.99, 0.05)$saturated)
 })
+
+test_that("TEST_LARGER_THAN_BASELINE is judged on the sampling for latency, never on latency counts", {
+  cases <- generate_latency_threshold_cases()$cases
+  get <- function(n) Filter(function(c) c$name == n, cases)[[1]]
+  r <- get("refused_planned_test_larger_than_baseline")
+  expect_identical(r$expected$configuration_error, list("TEST_LARGER_THAN_BASELINE"))
+  expect_true(is.na(r$expected$rank))
+  a <- get("latency_counts_not_compared_p50")
+  expect_length(a$expected$configuration_error, 0)
+  expect_gt(a$inputs$test_samples, length(a$inputs$baseline_latencies))
+  for (case in cases) {
+    refused <- length(case$expected$configuration_error) > 0
+    expect_identical(refused, case$inputs$planned_samples > case$inputs$baseline_samples, info = case$name)
+  }
+})
+
+test_that("non-degeneracy warns before the run and decides after it", {
+  pl <- latency_nondegeneracy_planning(0.99, 110, 0.80)
+  expect_identical(pl$expected_test_samples, 88L)
+  expect_true(pl$warning)
+  expect_identical(pl$planned_samples_needed, 125L)
+  expect_false(latency_nondegeneracy_planning(0.99, 125, 0.80)$warning)
+  expect_identical(latency_nondegeneracy_decision(0.99, 99, "VERIFICATION", TRUE)$outcome, "INCONCLUSIVE")
+  expect_identical(latency_nondegeneracy_decision(0.99, 100, "VERIFICATION", TRUE)$outcome, "DECIDED")
+  expect_identical(latency_nondegeneracy_decision(0.99, 40, "SMOKE", TRUE)$outcome, "INDICATIVE")
+  expect_identical(latency_nondegeneracy_decision(0.95, 19, "VERIFICATION", FALSE)$outcome, "INDICATIVE")
+})

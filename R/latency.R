@@ -173,6 +173,46 @@ latency_precedence_planning <- function(baseline_trials, planned_samples, baseli
        minimum_baseline_trials = as.integer(n_b))
 }
 
+#' Pre-run non-degeneracy check for a latency percentile assertion
+#'
+#' Before the run the number of successful latencies is an expectation,
+#' floor(planned_samples * baseline_success_rate), not a lower bound. A
+#' shortfall against the §12.5.2 minimum gives a warning and a planning
+#' figure, the smallest planned sample size whose expected count reaches
+#' the minimum; nothing here is binding.
+#'
+#' @return A list: expected_test_samples, minimum_contributing_samples,
+#'   warning, planned_samples_needed.
+#' @export
+latency_nondegeneracy_planning <- function(p, planned_samples, baseline_success_rate) {
+  m <- latency_min_samples(p)
+  n_exp <- as.integer(floor(planned_samples * baseline_success_rate + 1e-9))
+  need <- as.integer(ceiling(m / baseline_success_rate - 1e-9))
+  while (floor(need * baseline_success_rate + 1e-9) < m) need <- need + 1L
+  list(expected_test_samples = n_exp, minimum_contributing_samples = m,
+       warning = n_exp < m, planned_samples_needed = need)
+}
+
+#' Post-run non-degeneracy decision for a latency percentile assertion
+#'
+#' Made on the actual number of successful latencies. Below the §12.5.2
+#' minimum the percentile is degenerate: an enforced assertion under
+#' VERIFICATION intent cannot be decided and is INCONCLUSIVE; under SMOKE
+#' intent or in advisory mode the percentile is evaluated and marked
+#' INDICATIVE (§12.5.4). At or above the minimum the assertion is DECIDED
+#' by its rule.
+#'
+#' @return A list: degenerate, outcome (DECIDED, INCONCLUSIVE or
+#'   INDICATIVE).
+#' @export
+latency_nondegeneracy_decision <- function(p, test_samples, intent, enforced) {
+  if (!intent %in% c("VERIFICATION", "SMOKE")) stop("intent must be VERIFICATION or SMOKE", call. = FALSE)
+  degenerate <- test_samples < latency_min_samples(p)
+  outcome <- if (!degenerate) "DECIDED" else
+    if (intent == "VERIFICATION" && enforced) "INCONCLUSIVE" else "INDICATIVE"
+  list(degenerate = degenerate, outcome = outcome)
+}
+
 #' Generate latency percentile minimum-sample-size and existence cases
 #'
 #' Two case groups, distinguished by the `approach` field:
@@ -249,6 +289,39 @@ generate_latency_percentile_minimums_cases <- function() {
       expected = e
     ))
   }
+  nd_planning_case <- function(name, p, planned, rate, description = NULL) {
+    case <- list(name = name, approach = "nondegeneracy_planning")
+    if (!is.null(description)) case$description <- description
+    c(case, list(
+      inputs = list(percentile = p, planned_samples = as.integer(planned),
+                    baseline_success_rate = rate),
+      expected = latency_nondegeneracy_planning(p, planned, rate)
+    ))
+  }
+  nd_decision_case <- function(name, p, test_samples, intent, enforced, description = NULL) {
+    case <- list(name = name, approach = "nondegeneracy_decision")
+    if (!is.null(description)) case$description <- description
+    c(case, list(
+      inputs = list(percentile = p, test_samples = as.integer(test_samples),
+                    intent = intent, enforced = enforced),
+      expected = latency_nondegeneracy_decision(p, test_samples, intent, enforced)
+    ))
+  }
+  nondegeneracy_cases <- list(
+    nd_planning_case("p99_planned110_rate080_warning", 0.99, 110, 0.80,
+      "88 successful latencies expected, below the p99 minimum of 100: a warning and the planning figure 125, not a refusal."),
+    nd_planning_case("p99_planned125_rate080_no_warning", 0.99, 125, 0.80),
+    nd_planning_case("p95_planned30_rate090_no_warning", 0.95, 30, 0.90),
+    nd_planning_case("p90_planned12_rate075_warning", 0.90, 12, 0.75),
+    nd_decision_case("p99_actual99_verification_enforced_inconclusive", 0.99, 99, "VERIFICATION", TRUE,
+      "One successful latency short of the p99 minimum after the run: the enforced assertion is INCONCLUSIVE."),
+    nd_decision_case("p99_actual100_verification_enforced_decided", 0.99, 100, "VERIFICATION", TRUE,
+      "The pre-run warning at 110 planned (88 expected) does not bind: a run that returns 100 successful latencies is decided."),
+    nd_decision_case("p99_actual40_smoke_indicative", 0.99, 40, "SMOKE", TRUE),
+    nd_decision_case("p95_actual19_verification_advisory_indicative", 0.95, 19, "VERIFICATION", FALSE),
+    nd_decision_case("p50_actual5_verification_enforced_decided", 0.50, 5, "VERIFICATION", TRUE)
+  )
+
   planning_cases <- list(
     planning_case("p99_400_planned200_rate080_warning", 400, 200, 0.80, 0.99, 0.05,
       "The §12.5.3 example: 160 expected successful latencies, no rank at a baseline of 400; a warning and the planning figure 554, not a verdict."),
@@ -274,7 +347,12 @@ generate_latency_percentile_minimums_cases <- function() {
       "successful count floor(planned_samples * baseline_success_rate), an expectation and not a ",
       "lower bound, giving a warning (no rank at the expected count), the planning rank and the ",
       "smallest baseline at least as large as the expected count that supports a rank; it ",
-      "decides nothing. The withdrawn Wilks minimums are no longer ",
+      "decides nothing. Cases with approach 'nondegeneracy_planning' carry the §12.5.3 pre-run ",
+      "non-degeneracy check: the expected successful count against the emission minimum, giving ",
+      "a warning and the planning figure planned_samples_needed, never a refusal. Cases with ",
+      "approach 'nondegeneracy_decision' carry the binding decision on the actual count after the ",
+      "run: below the minimum an enforced VERIFICATION assertion is INCONCLUSIVE, and a SMOKE or ",
+      "advisory one INDICATIVE; otherwise DECIDED by its rule. The withdrawn Wilks minimums are no longer ",
       "published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly ",
       "(the test percentile is the test maximum); the inclusive rule admits the rank, and double ",
       "precision alone does not: implementations follow the exact-boundary convention (companion ",
@@ -287,10 +365,15 @@ generate_latency_percentile_minimums_cases <- function() {
       "r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1). ",
       "Planning: expected_test_samples = floor(planned_samples * baseline_success_rate); warning = ",
       "no rank at that count; planning_rank = the rank at it (null under a warning); ",
-      "minimum_baseline_trials = the smallest n_b >= expected_test_samples with a rank."
+      "minimum_baseline_trials = the smallest n_b >= expected_test_samples with a rank. ",
+      "Non-degeneracy planning: warning = expected_test_samples < minimum_contributing_samples; ",
+      "planned_samples_needed = the smallest planned size with floor(planned * rate) >= the ",
+      "minimum. Non-degeneracy decision: degenerate = test_samples < the minimum; outcome = ",
+      "DECIDED, else INCONCLUSIVE when intent is VERIFICATION and the assertion enforced, else ",
+      "INDICATIVE."
     ),
     tolerance = 0,
-    cases = c(emission_cases, existence_cases, planning_cases)
+    cases = c(emission_cases, nondegeneracy_cases, existence_cases, planning_cases)
   )
 }
 
@@ -442,13 +525,31 @@ generate_latency_threshold_cases <- function() {
   set.seed(23)
   baseline_300 <- sort(round(rlnorm(300, meanlog = log(350), sdlog = 0.4)))
 
-  lat_case <- function(name, baseline, test_samples, p, alpha, description = NULL) {
+  # baseline_samples (N_b) and planned_samples (N_t) are the two runs'
+  # sampling sizes; the latencies are their successful samples. The design
+  # rule TEST_LARGER_THAN_BASELINE is judged on N_t versus N_b before the
+  # run; the latency counts are never compared with each other.
+  lat_case <- function(name, baseline, test_samples, p, alpha, description = NULL,
+                       baseline_samples = length(baseline), planned_samples = test_samples) {
     case <- list(name = name)
     if (!is.null(description)) case$description <- description
+    err <- test_size_configuration_error(baseline_samples, planned_samples)
+    expected <- if (!is.na(err)) {
+      list(configuration_error = configuration_errors(err), rank = NA_integer_,
+           threshold = NA_real_, saturated = NA, breach_probability = NA_real_,
+           test_rank = NA_integer_, n = as.integer(length(baseline)),
+           baseline_percentile = nearest_rank_percentile(sort(baseline), p))
+    } else {
+      c(list(configuration_error = configuration_errors()),
+        latency_precedence_threshold(baseline, test_samples, p, alpha))
+    }
     c(case, list(
-      inputs = list(baseline_latencies = baseline, test_samples = as.integer(test_samples),
+      inputs = list(baseline_samples = as.integer(baseline_samples),
+                    planned_samples = as.integer(planned_samples),
+                    baseline_latencies = baseline,
+                    test_samples = if (is.na(err)) as.integer(test_samples) else NA_integer_,
                     p = p, alpha = alpha),
-      expected = latency_precedence_threshold(baseline, test_samples, p, alpha)
+      expected = expected
     ))
   }
 
@@ -468,7 +569,14 @@ generate_latency_threshold_cases <- function() {
     lat_case("alpha001_p95_500_test100", baseline_500, 100, 0.95, 0.01),
     lat_case("identical_values_p95_100_test50", identical_100, 50, 0.95, 0.05,
              "Heavy ties: the threshold is the common value; ties make the bound conservative, not invalid."),
-    lat_case("heavy_tailed_p99_100_test100", heavy_baseline_100, 100, 0.99, 0.05)
+    lat_case("heavy_tailed_p99_100_test100", heavy_baseline_100, 100, 0.99, 0.05),
+    # The design rule, judged on the sampling before the run.
+    lat_case("refused_planned_test_larger_than_baseline", baseline_200, NA, 0.95, 0.05,
+             "A test planned at 250 samples against a baseline run of 200: refused before the run with TEST_LARGER_THAN_BASELINE, whatever the latency counts would have been.",
+             baseline_samples = 200, planned_samples = 250),
+    lat_case("latency_counts_not_compared_p50", baseline_200, 300, 0.50, 0.05,
+             "A baseline run of 500 samples returned 200 successful latencies; the test planned 400 samples and returned 300. The sampling sizes decide the design rule (400 <= 500); that the test has more successful latencies than the baseline refuses nothing.",
+             baseline_samples = 500, planned_samples = 400)
   )
 
   list(
@@ -478,15 +586,22 @@ generate_latency_threshold_cases <- function() {
       "whose exact, distribution-free no-degradation breach probability for the test's",
       "nearest-rank percentile is at most alpha, and the observed baseline latency at that rank.",
       "When no rank achieves alpha the result is INCONCLUSIVE with saturated = true and no rank or",
-      "threshold. A test percentile equal to the threshold is not a breach. Binding: rank,",
-      "threshold, saturated. Informational: breach_probability, test_rank, n, baseline_percentile."
+      "threshold. A test percentile equal to the threshold is not a breach. Inputs carry the two",
+      "runs' sampling sizes, baseline_samples (N_b) and planned_samples (N_t), beside the",
+      "successful latencies: a test planned larger than its baseline run is refused before the",
+      "run (configuration_error [TEST_LARGER_THAN_BASELINE], no rank, test_samples null), for",
+      "latency as for pass rate; the latency counts are never compared. Binding:",
+      "configuration_error, rank, threshold, saturated. Informational: breach_probability,",
+      "test_rank, n, baseline_percentile."
     ),
     method = paste(
       "latency/precedence v1: r = ceiling(P n_t / 100) in integer arithmetic (P in 50, 90, 95, 99);",
       "breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1);",
       "rank = the smallest k in 1..n_b with breach(k) <= alpha; threshold = the rank-th order",
       "statistic of the baseline latencies; saturated iff no such k (rank and threshold null).",
-      "baseline_percentile is the baseline's own nearest-rank percentile."
+      "baseline_percentile is the baseline's own nearest-rank percentile.",
+      "configuration_error = [TEST_LARGER_THAN_BASELINE] iff planned_samples > baseline_samples,",
+      "else []."
     ),
     tolerance = 1e-10,
     cases = cases
