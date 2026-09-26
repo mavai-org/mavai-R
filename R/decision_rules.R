@@ -102,7 +102,8 @@ fisher_cutoff <- function(baseline_successes, baseline_trials, test_samples, alp
   }
   k_t <- 0:test_samples
   vapply(baseline_successes, function(k_b) {
-    above <- fisher_pvalue(k_t, k_b, baseline_trials, test_samples) > alpha
+    pv <- fisher_pvalue(k_t, k_b, baseline_trials, test_samples)
+    above <- !at_most_alpha(pv, alpha, function(i) fisher_pvalue_exact(k_t[i], k_b, baseline_trials, test_samples))
     as.integer(which(above)[1] - 1L)
   }, integer(1))
 }
@@ -129,13 +130,16 @@ fisher_cutoffs <- function(n_b, n_t, alpha, k_b = 0:n_b) {
     open <- which(hi - lo > 1L)
     if (length(open) == 0) break
     mid <- (lo[open] + hi[open]) %/% 2L
-    above <- fisher_pvalue(mid, k_b[open], n_b, n_t) > alpha
+    kb_open <- k_b[open]
+    above <- !at_most_alpha(fisher_pvalue(mid, kb_open, n_b, n_t), alpha,
+                            function(i) fisher_pvalue_exact(mid[i], kb_open[i], n_b, n_t))
     hi[open[above]] <- mid[above]
     lo[open[!above]] <- mid[!above]
   }
   low <- hi > 0L
-  if (!all(fisher_pvalue(hi, k_b, n_b, n_t) > alpha) ||
-      any(fisher_pvalue(hi[low] - 1L, k_b[low], n_b, n_t) > alpha)) {
+  above_at <- function(kt, kb) !at_most_alpha(fisher_pvalue(kt, kb, n_b, n_t), alpha,
+                                               function(i) fisher_pvalue_exact(kt[i], kb[i], n_b, n_t))
+  if (!all(above_at(hi, k_b)) || any(above_at(hi[low] - 1L, k_b[low]))) {
     stop("Fisher cutoff boundary check failed", call. = FALSE)
   }
   hi
@@ -274,7 +278,7 @@ exact_binomial_k_min <- function(threshold, n, alpha) {
   check_count(n, "n", 1)
   check_alpha(alpha)
   upper <- pbinom(0:n - 1, n, threshold, lower.tail = FALSE)  # P(K >= k), k = 0..n
-  ok <- which(upper <= alpha)
+  ok <- which(at_most_alpha(upper, alpha, function(i) binomial_upper_exact(i - 1L, n, threshold)))
   if (length(ok) == 0) NA_integer_ else as.integer(ok[1] - 1L)
 }
 
@@ -286,8 +290,10 @@ exact_binomial_k_min <- function(threshold, n, alpha) {
 exact_binomial_k_min_vec <- function(ns, threshold, alpha) {
   k <- qbinom(1 - alpha, ns, threshold) + 1
   repeat {
-    up <- pbinom(k - 1, ns, threshold, lower.tail = FALSE) > alpha  # k too small
-    dn <- k > 0 & pbinom(k - 2, ns, threshold, lower.tail = FALSE) <= alpha  # k - 1 passes
+    up <- !at_most_alpha(pbinom(k - 1, ns, threshold, lower.tail = FALSE), alpha,
+                         function(i) binomial_upper_exact(k[i], ns[i], threshold))  # k too small
+    dn <- k > 0 & at_most_alpha(pbinom(k - 2, ns, threshold, lower.tail = FALSE), alpha,
+                                function(i) binomial_upper_exact(k[i] - 1, ns[i], threshold))  # k - 1 passes
     if (!any(up) && !any(dn)) break
     k[up] <- k[up] + 1
     k[dn] <- k[dn] - 1
@@ -310,8 +316,9 @@ exact_binomial_min_feasible_n <- function(threshold, alpha) {
   if (threshold <= 0 || threshold >= 1) stop("threshold must be in (0, 1)", call. = FALSE)
   n <- as.integer(ceiling(log(alpha) / log(threshold)))
   top <- function(m) pbinom(m - 1, m, threshold, lower.tail = FALSE)  # P(K >= m)
-  while (n > 1L && top(n - 1L) <= alpha) n <- n - 1L
-  while (top(n) > alpha) n <- n + 1L
+  ok <- function(m) at_most_alpha(top(m), alpha, function(i) binomial_upper_exact(m, m, threshold))
+  while (n > 1L && ok(n - 1L)) n <- n - 1L
+  while (!ok(n)) n <- n + 1L
   max(n, 1L)
 }
 
@@ -429,6 +436,13 @@ latency_breach_probability <- function(n_b, k, test_samples, p) {
   }, numeric(1))
 }
 
+#' Does rank k achieve breach(k) <= alpha? (exact-boundary convention)
+#' @keywords internal
+latency_breach_admits <- function(n_b, k, test_samples, p, alpha) {
+  at_most_alpha(latency_breach_probability(n_b, k, test_samples, p), alpha,
+                function(i) breach_exact(n_b, k, test_samples, latency_test_rank(test_samples, p)))
+}
+
 #' Precedence rank of latency/precedence
 #'
 #' The smallest k in 1..n_b with breach(k) <= alpha; NA when none
@@ -438,7 +452,7 @@ latency_precedence_rank <- function(n_b, test_samples, p, alpha) {
   check_count(n_b, "n_b", 1)
   check_alpha(alpha)
   for (k in seq_len(n_b)) {
-    if (latency_breach_probability(n_b, k, test_samples, p) <= alpha) return(as.integer(k))
+    if (latency_breach_admits(n_b, k, test_samples, p, alpha)) return(as.integer(k))
   }
   NA_integer_
 }

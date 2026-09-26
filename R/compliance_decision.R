@@ -79,6 +79,13 @@ generate_compliance_decision_cases <- function() {
     compliance_decision_case("alpha001_p90_n60_fail_below_k_min", 0.90, 60, 0.01, "VERIFICATION",
       exact_binomial_k_min(0.90, 60, 0.01) - 1L),
     compliance_decision_case("alpha0001_p98_n800_fail", 0.98, 800, 0.001, "VERIFICATION", 788L),
+    # Exact boundaries: the upper tail at k_min equals alpha exactly, with
+    # alpha declared as that decimal. The inclusive rule admits k_min;
+    # double precision alone does not (§10.6).
+    compliance_decision_case("exact_boundary_p50_n5", 0.5, 5, 0.03125, "VERIFICATION", 5L,
+      "P(K >= 5) = 1/32 = alpha exactly: the design is feasible and 5 of 5 PASSes."),
+    compliance_decision_case("exact_boundary_p60_n10", 0.6, 10, 0.0463574016, "VERIFICATION", 9L,
+      "P(K >= 9) = 0.0463574016 = alpha exactly: k_min = 9."),
     # The conflation detector: the observation regression_decision's
     # conflation_detector_regression_pass PASSes (K = c = 91 of 100) FAILs
     # when c / n_t = 0.91 is taken as a given requirement.

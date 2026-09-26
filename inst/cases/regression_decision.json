@@ -320,6 +320,43 @@
       }
     },
     {
+      "name": "exact_boundary_fail_at_alpha",
+      "description": "The p-value of the observed count equals alpha exactly; the inclusive rule FAILs it.",
+      "inputs": {
+        "baseline_successes": 12,
+        "baseline_trials": 12,
+        "test_samples": 4,
+        "alpha": 0.05,
+        "observed_successes": 2
+      },
+      "expected": {
+        "cutoff_integer": 3,
+        "configuration_error": null,
+        "threshold_real": 0.75,
+        "displayed_rate": 0.75,
+        "achieved_size": null,
+        "verdict": "FAIL"
+      }
+    },
+    {
+      "name": "exact_boundary_pass_at_cutoff",
+      "inputs": {
+        "baseline_successes": 12,
+        "baseline_trials": 12,
+        "test_samples": 4,
+        "alpha": 0.05,
+        "observed_successes": 3
+      },
+      "expected": {
+        "cutoff_integer": 3,
+        "configuration_error": null,
+        "threshold_real": 0.75,
+        "displayed_rate": 0.75,
+        "achieved_size": null,
+        "verdict": "PASS"
+      }
+    },
+    {
       "name": "small_test_large_baseline_pass_at_cutoff",
       "inputs": {
         "baseline_successes": 951,

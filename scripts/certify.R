@@ -28,7 +28,8 @@
 # Exits non-zero if any rule exceeds its calibration bound (alpha) anywhere
 # it is scanned, or if a cutoff is not monotone in the baseline count.
 # Sizes are compared with alpha allowing a relative 1e-12 for floating-point
-# summation.
+# summation; the decision rules themselves apply the exact-boundary
+# convention of R/exact_boundary.R.
 
 args <- commandArgs(trailingOnly = TRUE)
 opt <- function(name, default) {
@@ -202,9 +203,9 @@ checks <- c(
   regression_size = all(REG$within_alpha), regression_beyond = all(BEY$within_alpha),
   regression_settling = all(SET$within_alpha),
   monotone = all(REG$monotone) && all(BEY$monotone),
-  latency_bound = all(LAT$breach_at_rank <= LAT$alpha, na.rm = TRUE) &&
+  latency_bound = all(within_alpha(LAT$breach_at_rank, LAT$alpha), na.rm = TRUE) &&
     all(LAT$breach_at_rank_minus_1 > LAT$alpha, na.rm = TRUE),
-  compliance_bound = all(CMP$false_compliance <= CMP$alpha))
+  compliance_bound = all(within_alpha(CMP$false_compliance, CMP$alpha)))
 summary_lines <- c(
   "# Calibration certification, Statistical Companion 1.5.0", "",
   sprintf("mavai-R %s; methodology %s; R %s; %s.", read.dcf("DESCRIPTION")[1, "Version"],

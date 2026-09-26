@@ -165,7 +165,7 @@ test_that("the Wilks minimum is the legacy existence condition, not the preceden
 })
 
 test_that("precedence existence is decided by the top rank", {
-  for (cfg in list(c(85, 25, 0.95), c(86, 25, 0.95), c(950, 50, 0.99), c(951, 50, 0.99), c(33, 10, 0.90))) {
+  for (cfg in list(c(85, 25, 0.95), c(86, 25, 0.95), c(949, 50, 0.99), c(33, 10, 0.90))) {
     top <- latency_breach_probability(cfg[1], cfg[1], cfg[2], cfg[3]) <= 0.05
     expect_identical(!latency_precedence_exists(cfg[1], cfg[2], cfg[3], 0.05)$saturated, top)
   }
@@ -185,7 +185,7 @@ test_that("percentile minimums suite publishes the emission minimums and the exi
   expect_true(by_name[["p95_100_test15_saturated"]]$expected$saturated)
   expect_identical(by_name[["p95_1000_test15"]]$expected$rank, 998L)
   expect_identical(by_name[["p95_935_test192"]]$expected$rank, 911L)
-  for (stem in c("p90_%d_test10", "p95_%d_test25", "p99_%d_test50", "p99_%d_test160")) {
+  for (stem in c("p90_%d_test10", "p95_%d_test25", "p99_%d_test50", "p99_%d_test160", "p95_%d_test10", "p99_%d_test25")) {
     sat <- Filter(function(c) grepl(sub("%d", "[0-9]+", stem), c$name) && grepl("saturated", c$name), existence)
     first <- Filter(function(c) grepl(sub("%d", "[0-9]+", stem), c$name) && grepl("first_rank", c$name), existence)
     expect_true(sat[[1]]$expected$saturated)

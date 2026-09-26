@@ -289,6 +289,44 @@
       }
     },
     {
+      "name": "exact_boundary_p50_n5",
+      "description": "P(K >= 5) = 1/32 = alpha exactly: the design is feasible and 5 of 5 PASSes.",
+      "inputs": {
+        "threshold": 0.5,
+        "test_samples": 5,
+        "alpha": 0.03125,
+        "intent": "VERIFICATION",
+        "observed_successes": 5
+      },
+      "expected": {
+        "k_min": 5,
+        "pass_possible": true,
+        "verdict": "PASS",
+        "configuration_error": null,
+        "false_compliance": 0.03125,
+        "clopper_pearson_lower": 0.5
+      }
+    },
+    {
+      "name": "exact_boundary_p60_n10",
+      "description": "P(K >= 9) = 0.0463574016 = alpha exactly: k_min = 9.",
+      "inputs": {
+        "threshold": 0.6,
+        "test_samples": 10,
+        "alpha": 0.0463574016,
+        "intent": "VERIFICATION",
+        "observed_successes": 9
+      },
+      "expected": {
+        "k_min": 9,
+        "pass_possible": true,
+        "verdict": "PASS",
+        "configuration_error": null,
+        "false_compliance": 0.0463574016,
+        "clopper_pearson_lower": 0.6
+      }
+    },
+    {
       "name": "conflation_detector_compliance_fail",
       "inputs": {
         "threshold": 0.91,

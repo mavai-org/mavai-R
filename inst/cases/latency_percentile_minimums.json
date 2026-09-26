@@ -8,7 +8,7 @@
       "version": 1
     }
   ],
-  "description": "Minimum sample sizes and the existence gate for empirical latency percentiles (p50/p90/p95/p99). Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 minimums for emitting a percentile in experiment artefacts (baseline, exploration, optimization) and verdicts: below the minimum the percentile key is omitted entirely and renderers display a placeholder. Cases with approach 'precedence_existence' carry the §12.5.2.1 existence gate of latency/precedence, computed before the run from the baseline size, the test size, the percentile and alpha: saturated (no rank achieves alpha, the result is INCONCLUSIVE) and otherwise the rank. The withdrawn Wilks minimums are no longer published. Conformance is exact equality (tolerance: 0).",
+  "description": "Minimum sample sizes and the existence gate for empirical latency percentiles (p50/p90/p95/p99). Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 minimums for emitting a percentile in experiment artefacts (baseline, exploration, optimization) and verdicts: below the minimum the percentile key is omitted entirely and renderers display a placeholder. Cases with approach 'precedence_existence' carry the §12.5.2.1 existence gate of latency/precedence, computed before the run from the baseline size, the test size, the percentile and alpha: saturated (no rank achieves alpha, the result is INCONCLUSIVE) and otherwise the rank. The withdrawn Wilks minimums are no longer published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly (the test percentile is the test maximum); the inclusive rule admits the rank, and double precision alone does not: implementations follow the exact-boundary convention (companion §10.6). Conformance is exact equality (tolerance: 0).",
   "method": "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for p50/p90/p95/p99); existence per §12.5.2.1: a rank exists iff breach(n_b) <= alpha, with breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1) and r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1).",
   "tolerance": 0,
   "cases": [
@@ -173,11 +173,11 @@
       }
     },
     {
-      "name": "p99_950_test50_saturated",
+      "name": "p99_949_test50_saturated",
       "approach": "precedence_existence",
       "decisionRule": "latency/precedence",
       "inputs": {
-        "baseline_trials": 950,
+        "baseline_trials": 949,
         "test_samples": 50,
         "percentile": 0.99,
         "alpha": 0.05
@@ -188,18 +188,78 @@
       }
     },
     {
-      "name": "p99_951_test50_first_rank",
+      "name": "p99_950_test50_first_rank_exact_boundary",
       "approach": "precedence_existence",
       "decisionRule": "latency/precedence",
       "inputs": {
-        "baseline_trials": 951,
+        "baseline_trials": 950,
         "test_samples": 50,
         "percentile": 0.99,
         "alpha": 0.05
       },
       "expected": {
         "saturated": false,
-        "rank": 951
+        "rank": 950
+      }
+    },
+    {
+      "name": "p95_189_test10_saturated",
+      "approach": "precedence_existence",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 189,
+        "test_samples": 10,
+        "percentile": 0.95,
+        "alpha": 0.05
+      },
+      "expected": {
+        "saturated": true,
+        "rank": null
+      }
+    },
+    {
+      "name": "p95_190_test10_first_rank_exact_boundary",
+      "approach": "precedence_existence",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 190,
+        "test_samples": 10,
+        "percentile": 0.95,
+        "alpha": 0.05
+      },
+      "expected": {
+        "saturated": false,
+        "rank": 190
+      }
+    },
+    {
+      "name": "p99_474_test25_saturated",
+      "approach": "precedence_existence",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 474,
+        "test_samples": 25,
+        "percentile": 0.99,
+        "alpha": 0.05
+      },
+      "expected": {
+        "saturated": true,
+        "rank": null
+      }
+    },
+    {
+      "name": "p99_475_test25_first_rank_exact_boundary",
+      "approach": "precedence_existence",
+      "decisionRule": "latency/precedence",
+      "inputs": {
+        "baseline_trials": 475,
+        "test_samples": 25,
+        "percentile": 0.99,
+        "alpha": 0.05
+      },
+      "expected": {
+        "saturated": false,
+        "rank": 475
       }
     },
     {

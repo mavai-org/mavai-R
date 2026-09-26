@@ -358,6 +358,42 @@
       }
     },
     {
+      "name": "exact_boundary_12_of_12_test4_a05",
+      "approach": "sample_size_first",
+      "description": "P(X <= 2) = 1/20 = alpha exactly: k_t = 2 FAILs, so c = 3.",
+      "inputs": {
+        "baseline_successes": 12,
+        "baseline_trials": 12,
+        "test_samples": 4,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 3,
+        "configuration_error": null,
+        "threshold_real": 0.75,
+        "displayed_rate": 0.75,
+        "achieved_size": null
+      }
+    },
+    {
+      "name": "exact_boundary_19_of_23_test2_a05",
+      "approach": "sample_size_first",
+      "description": "P(X <= 0) = 1/20 = alpha exactly: k_t = 0 FAILs, so c = 1.",
+      "inputs": {
+        "baseline_successes": 19,
+        "baseline_trials": 23,
+        "test_samples": 2,
+        "alpha": 0.05
+      },
+      "expected": {
+        "cutoff_integer": 1,
+        "configuration_error": null,
+        "threshold_real": 0.5,
+        "displayed_rate": 0.5,
+        "achieved_size": 0.0190376278407176
+      }
+    },
+    {
       "name": "small_test_large_baseline_951_of_1000_test25_a01",
       "approach": "sample_size_first",
       "inputs": {

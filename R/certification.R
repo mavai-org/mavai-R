@@ -46,13 +46,13 @@ bbpred_cutoffs <- function(n_b, n_t, alpha, a = 0.5, b = 0.5) {
 #' is found by bisection; equals `latency_precedence_rank()`.
 #' @keywords internal
 latency_precedence_rank_fast <- function(n_b, test_samples, p, alpha) {
-  br <- function(k) latency_breach_probability(n_b, k, test_samples, p)
-  if (br(n_b) > alpha) return(NA_integer_)
-  if (br(1L) <= alpha) return(1L)
-  lo <- 1L; hi <- as.integer(n_b)  # br(lo) > alpha >= br(hi)
+  ok <- function(k) latency_breach_admits(n_b, k, test_samples, p, alpha)
+  if (!ok(n_b)) return(NA_integer_)
+  if (ok(1L)) return(1L)
+  lo <- 1L; hi <- as.integer(n_b)  # not ok(lo), ok(hi)
   while (hi - lo > 1L) {
     mid <- (lo + hi) %/% 2L
-    if (br(mid) <= alpha) hi <- mid else lo <- mid
+    if (ok(mid)) hi <- mid else lo <- mid
   }
   hi
 }

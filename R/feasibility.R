@@ -53,7 +53,9 @@ generate_feasibility_cases <- function() {
     feasibility_case("three_nines_n2994_a05_undersized", 0.999, 2994, 0.05),
     feasibility_case("near_perfect_n100_a05_undersized", 0.9999, 100, 0.05),
     feasibility_case("high_rate_n22_a10", 0.90, 22, 0.10),
-    feasibility_case("high_rate_n66_a001", 0.90, 66, 0.001)
+    feasibility_case("high_rate_n66_a001", 0.90, 66, 0.001),
+    # Exact boundary: 0.5^5 = 1/32 = alpha; feasible at 5 under the inclusive rule.
+    feasibility_case("exact_boundary_p50_n5_a003125", 0.50, 5, 0.03125)
   )
 
   list(

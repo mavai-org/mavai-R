@@ -219,6 +219,19 @@
         "minimum_samples": 66,
         "criterion": "exact_binomial_pass_possible"
       }
+    },
+    {
+      "name": "exact_boundary_p50_n5_a003125",
+      "inputs": {
+        "target_proportion": 0.5,
+        "sample_size": 5,
+        "alpha": 0.03125
+      },
+      "expected": {
+        "feasible": true,
+        "minimum_samples": 5,
+        "criterion": "exact_binomial_pass_possible"
+      }
     }
   ]
 }

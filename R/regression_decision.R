@@ -132,6 +132,14 @@ generate_threshold_derivation_cases <- function() {
                     "n_t > n_b: refused whatever the counts."),
     derivation_case("refused_test_larger_than_baseline_zero_0_of_10_test50", 0, 10, 50, 0.05,
                     "n_t > n_b is refused even at a zero baseline."),
+    # Exact boundaries: the Fisher p-value of a test count equals alpha
+    # exactly (12 of 12 against a test of 4: P(X <= 2) = 1/20). The
+    # inclusive rule FAILs that count; double precision alone puts the
+    # p-value above alpha. See the exact-boundary convention (§10.6).
+    derivation_case("exact_boundary_12_of_12_test4_a05", 12, 12, 4, 0.05,
+                    "P(X <= 2) = 1/20 = alpha exactly: k_t = 2 FAILs, so c = 3."),
+    derivation_case("exact_boundary_19_of_23_test2_a05", 19, 23, 2, 0.05,
+                    "P(X <= 0) = 1/20 = alpha exactly: k_t = 0 FAILs, so c = 1."),
     # Small tests against large baselines at small alpha: no calibration
     # refusal, since the rule never exceeds alpha.
     derivation_case("small_test_large_baseline_951_of_1000_test25_a01", 951, 1000, 25, 0.01),
@@ -204,6 +212,10 @@ generate_regression_decision_cases <- function() {
     regression_decision_case("alpha001_fail_below_cutoff", 951, 1000, 1000, 0.01, a01_c - 1L),
     # Refusals: no verdict is produced.
     regression_decision_case("refused_test_larger_than_baseline", 95, 100, 200, 0.05, 190L),
+    # Exact boundary: 2 of 4 against 12 of 12 has Fisher p-value 1/20 = alpha.
+    regression_decision_case("exact_boundary_fail_at_alpha", 12, 12, 4, 0.05, 2L,
+      "The p-value of the observed count equals alpha exactly; the inclusive rule FAILs it."),
+    regression_decision_case("exact_boundary_pass_at_cutoff", 12, 12, 4, 0.05, 3L),
     # A small test against a large baseline at alpha 0.01: admitted.
     regression_decision_case("small_test_large_baseline_pass_at_cutoff", 951, 1000, 25, 0.01,
                              fisher_cutoff(951, 1000, 25, 0.01)),

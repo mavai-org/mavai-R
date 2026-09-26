@@ -26,7 +26,8 @@ test_that("the verdict flips exactly at k_min", {
 test_that("false compliance never exceeds alpha", {
   for (case in generate_compliance_decision_cases()$cases) {
     fc <- case$expected$false_compliance
-    if (!is.na(fc)) expect_lte(fc, case$inputs$alpha)
+    # At an exact boundary the double may sit a few ulps above alpha (§10.6 convention).
+    if (!is.na(fc)) expect_lte(fc, case$inputs$alpha * (1 + 1e-9))
   }
 })
 
@@ -34,7 +35,7 @@ test_that("Clopper-Pearson coincides with the exact test", {
   for (case in generate_compliance_decision_cases()$cases) {
     e <- case$expected
     if (!is.na(e$verdict) && isTRUE(e$pass_possible)) {
-      expect_identical(e$verdict == "PASS", e$clopper_pearson_lower > case$inputs$threshold,
+      expect_identical(e$verdict == "PASS", e$clopper_pearson_lower >= case$inputs$threshold - 1e-12,
                        info = case$name)
     }
   }

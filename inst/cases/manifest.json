@@ -40,11 +40,11 @@
           "version": 1
         }
       ],
-      "caseCount": 16,
-      "cases": ["headline_995_n477_verification_refused", "headline_995_n477_smoke_pass_not_possible", "p95_n150_pass_at_k_min", "p95_n150_fail_below_k_min", "p95_n150_smoke_pass_at_k_min", "p99_n793_pass_at_k_min", "p99_n793_fail_below_k_min", "p999_n2995_zero_failures_pass", "p999_n2995_one_failure_fail", "p999_n2994_verification_refused", "compliance_pass_clear_margin", "compliance_fail_not_demonstrated", "alpha001_p90_n60_pass_at_k_min", "alpha001_p90_n60_fail_below_k_min", "alpha0001_p98_n800_fail", "conflation_detector_compliance_fail"],
+      "caseCount": 18,
+      "cases": ["headline_995_n477_verification_refused", "headline_995_n477_smoke_pass_not_possible", "p95_n150_pass_at_k_min", "p95_n150_fail_below_k_min", "p95_n150_smoke_pass_at_k_min", "p99_n793_pass_at_k_min", "p99_n793_fail_below_k_min", "p999_n2995_zero_failures_pass", "p999_n2995_one_failure_fail", "p999_n2994_verification_refused", "compliance_pass_clear_margin", "compliance_fail_not_demonstrated", "alpha001_p90_n60_pass_at_k_min", "alpha001_p90_n60_fail_below_k_min", "alpha0001_p98_n800_fail", "exact_boundary_p50_n5", "exact_boundary_p60_n10", "conflation_detector_compliance_fail"],
       "bindingFields": ["configuration_error", "k_min", "pass_possible", "verdict"],
       "informationalFields": ["clopper_pearson_lower", "false_compliance"],
-      "md5": "ba325b81813e6a972b7923544a65f0ce"
+      "md5": "383469dabcef90504143a87d31cfb8ab"
     },
     "composite_verdict": {
       "file": "composite_verdict.json",
@@ -94,11 +94,11 @@
           "version": 1
         }
       ],
-      "caseCount": 16,
-      "cases": ["fair_coin_n5_a05", "fair_coin_n4_a05_undersized", "high_rate_n30_a05", "high_rate_n20_a05_undersized", "very_high_rate_n55_a05_undersized", "very_high_rate_n150_a05", "high_rate_n30_a01_undersized", "high_rate_n60_a01", "two_nines_n793_a05", "headline_995_n477_a05_undersized", "headline_995_n598_a05_at_minimum", "three_nines_n2995_a05_at_minimum", "three_nines_n2994_a05_undersized", "near_perfect_n100_a05_undersized", "high_rate_n22_a10", "high_rate_n66_a001"],
+      "caseCount": 17,
+      "cases": ["fair_coin_n5_a05", "fair_coin_n4_a05_undersized", "high_rate_n30_a05", "high_rate_n20_a05_undersized", "very_high_rate_n55_a05_undersized", "very_high_rate_n150_a05", "high_rate_n30_a01_undersized", "high_rate_n60_a01", "two_nines_n793_a05", "headline_995_n477_a05_undersized", "headline_995_n598_a05_at_minimum", "three_nines_n2995_a05_at_minimum", "three_nines_n2994_a05_undersized", "near_perfect_n100_a05_undersized", "high_rate_n22_a10", "high_rate_n66_a001", "exact_boundary_p50_n5_a003125"],
       "bindingFields": ["criterion", "feasible", "minimum_samples"],
       "informationalFields": {},
-      "md5": "f4235e76428f7bae0b510902f677f772"
+      "md5": "92516604716044935ec39e86755b6ae2"
     },
     "latency_percentile": {
       "file": "latency_percentile.json",
@@ -119,11 +119,11 @@
           "version": 1
         }
       ],
-      "caseCount": 18,
-      "cases": ["emission_minimum_p50", "emission_minimum_p90", "emission_minimum_p95", "emission_minimum_p99", "p95_100_test15_saturated", "p95_1000_test15", "p99_300_test100_saturated", "p95_935_test192", "p90_32_test10_saturated", "p90_33_test10_first_rank", "p95_85_test25_saturated", "p95_86_test25_first_rank", "p99_950_test50_saturated", "p99_951_test50_first_rank", "p99_553_test160_saturated", "p99_554_test160_first_rank", "p50_20_test10", "p95_500_test100_alpha001"],
+      "caseCount": 22,
+      "cases": ["emission_minimum_p50", "emission_minimum_p90", "emission_minimum_p95", "emission_minimum_p99", "p95_100_test15_saturated", "p95_1000_test15", "p99_300_test100_saturated", "p95_935_test192", "p90_32_test10_saturated", "p90_33_test10_first_rank", "p95_85_test25_saturated", "p95_86_test25_first_rank", "p99_949_test50_saturated", "p99_950_test50_first_rank_exact_boundary", "p95_189_test10_saturated", "p95_190_test10_first_rank_exact_boundary", "p99_474_test25_saturated", "p99_475_test25_first_rank_exact_boundary", "p99_553_test160_saturated", "p99_554_test160_first_rank", "p50_20_test10", "p95_500_test100_alpha001"],
       "bindingFields": ["minimum_contributing_samples", "rank", "saturated"],
       "informationalFields": {},
-      "md5": "b4de67fa22937690990afc053e64f1db"
+      "md5": "87744a864e4368b57b0eb856565ea8fe"
     },
     "latency_threshold": {
       "file": "latency_threshold.json",
@@ -187,11 +187,11 @@
           "version": 1
         }
       ],
-      "caseCount": 20,
-      "cases": ["worked_example_pass_at_cutoff", "worked_example_fail_below_cutoff", "worked_example_pass_above_cutoff", "worked_example_fail_deep_degradation", "small_test_pass_at_cutoff", "small_test_fail_below_cutoff", "near_perfect_baseline_pass_at_cutoff", "near_perfect_baseline_fail_below_cutoff", "perfect_baseline_pass_at_cutoff", "perfect_baseline_fail_below_cutoff", "zero_baseline_pass_on_nothing_observed", "zero_baseline_pass_at_test_200", "boundary_equal_sizes_pass_at_cutoff", "boundary_equal_sizes_fail_below_cutoff", "alpha001_pass_at_cutoff", "alpha001_fail_below_cutoff", "refused_test_larger_than_baseline", "small_test_large_baseline_pass_at_cutoff", "small_test_large_baseline_fail_below_cutoff", "conflation_detector_regression_pass"],
+      "caseCount": 22,
+      "cases": ["worked_example_pass_at_cutoff", "worked_example_fail_below_cutoff", "worked_example_pass_above_cutoff", "worked_example_fail_deep_degradation", "small_test_pass_at_cutoff", "small_test_fail_below_cutoff", "near_perfect_baseline_pass_at_cutoff", "near_perfect_baseline_fail_below_cutoff", "perfect_baseline_pass_at_cutoff", "perfect_baseline_fail_below_cutoff", "zero_baseline_pass_on_nothing_observed", "zero_baseline_pass_at_test_200", "boundary_equal_sizes_pass_at_cutoff", "boundary_equal_sizes_fail_below_cutoff", "alpha001_pass_at_cutoff", "alpha001_fail_below_cutoff", "refused_test_larger_than_baseline", "exact_boundary_fail_at_alpha", "exact_boundary_pass_at_cutoff", "small_test_large_baseline_pass_at_cutoff", "small_test_large_baseline_fail_below_cutoff", "conflation_detector_regression_pass"],
       "bindingFields": ["configuration_error", "cutoff_integer", "verdict"],
       "informationalFields": ["achieved_size", "displayed_rate", "threshold_real"],
-      "md5": "5444793b907f052e4b9b72bc16f3ebc4"
+      "md5": "70d465140b1e1d7f94c7c4c5ddb2310e"
     },
     "risk_driven_sizing": {
       "file": "risk_driven_sizing.json",
@@ -217,11 +217,11 @@
           "version": 1
         }
       ],
-      "caseCount": 27,
-      "cases": ["ordinary_951_of_1000_test100_a05", "ordinary_larger_baseline_1902_of_2000_test100_a05", "boundary_equal_sizes_951_of_1000_test1000_a05", "large_baseline_small_test_9510_of_10000_test100_a05", "near_perfect_99_of_100_test100_a05", "perfect_100_of_100_test100_a05", "perfect_large_1000_of_1000_test100_a05", "zero_baseline_0_of_100_test50_a05", "small_baseline_27_of_30_test25_a05", "alpha001_951_of_1000_test1000", "baseline_95_of_100_test50_a05", "baseline_95_of_100_test50_a01", "baseline_950_of_1000_test50_a05", "baseline_950_of_1000_test200_a05", "baseline_950_of_1000_test200_a10", "baseline_9_of_10_test10_a05", "zero_baseline_0_of_1000_test200_a05", "zero_baseline_0_of_100_test85_a01", "refused_test_larger_than_baseline_95_of_100_test200", "refused_test_larger_than_baseline_zero_0_of_10_test50", "small_test_large_baseline_951_of_1000_test25_a01", "small_test_large_baseline_9500_of_10000_test100_a001", "tf_951_of_1000_test100_cutoff91", "tf_951_of_1000_test100_cutoff90", "tf_951_of_1000_test100_cutoff94", "tf_95_of_100_test100_cutoff85", "tf_zero_cutoff"],
+      "caseCount": 29,
+      "cases": ["ordinary_951_of_1000_test100_a05", "ordinary_larger_baseline_1902_of_2000_test100_a05", "boundary_equal_sizes_951_of_1000_test1000_a05", "large_baseline_small_test_9510_of_10000_test100_a05", "near_perfect_99_of_100_test100_a05", "perfect_100_of_100_test100_a05", "perfect_large_1000_of_1000_test100_a05", "zero_baseline_0_of_100_test50_a05", "small_baseline_27_of_30_test25_a05", "alpha001_951_of_1000_test1000", "baseline_95_of_100_test50_a05", "baseline_95_of_100_test50_a01", "baseline_950_of_1000_test50_a05", "baseline_950_of_1000_test200_a05", "baseline_950_of_1000_test200_a10", "baseline_9_of_10_test10_a05", "zero_baseline_0_of_1000_test200_a05", "zero_baseline_0_of_100_test85_a01", "refused_test_larger_than_baseline_95_of_100_test200", "refused_test_larger_than_baseline_zero_0_of_10_test50", "exact_boundary_12_of_12_test4_a05", "exact_boundary_19_of_23_test2_a05", "small_test_large_baseline_951_of_1000_test25_a01", "small_test_large_baseline_9500_of_10000_test100_a001", "tf_951_of_1000_test100_cutoff91", "tf_951_of_1000_test100_cutoff90", "tf_951_of_1000_test100_cutoff94", "tf_95_of_100_test100_cutoff85", "tf_zero_cutoff"],
       "bindingFields": ["configuration_error", "cutoff_integer", "implied_alpha", "is_sound"],
       "informationalFields": ["achieved_size", "displayed_rate", "threshold_real"],
-      "md5": "4354369f5acac55f26b0a4d09cb19b3b"
+      "md5": "b347ef92b67275042e4c4c082073a7df"
     },
     "verdict": {
       "file": "verdict.json",

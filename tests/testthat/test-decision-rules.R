@@ -170,3 +170,31 @@ test_that("the test rank is the nearest rank in integer arithmetic", {
   expect_identical(latency_test_rank(1, 0.5), 1L)
   expect_error(latency_test_rank(10, 0.75), "p50, p90, p95, p99")
 })
+
+test_that("exact boundaries follow the inclusive rule, not double precision", {
+  # Fisher: P(X <= 2) = 1/20 for 12 of 12 against a test of 4.
+  expect_true(fisher_pvalue(2, 12, 12, 4) > 0.05)            # the double is above alpha
+  expect_true(fisher_pvalue_exact(2, 12, 12, 4) == gmp::as.bigq(1, 20))
+  expect_identical(fisher_cutoff(12, 12, 4, 0.05), 3L)
+  expect_identical(fisher_cutoffs(12, 4, 0.05)[13], 3L)
+  # Binomial tail: P(K >= 5) = 1/32 at p 0.5, n 5.
+  expect_true(pbinom(4, 5, 0.5, lower.tail = FALSE) > 0.03125)
+  expect_identical(exact_binomial_k_min(0.5, 5, 0.03125), 5L)
+  expect_identical(exact_binomial_min_feasible_n(0.5, 0.03125), 5L)
+  expect_identical(exact_binomial_k_min_vec(5, 0.5, 0.03125), 5L)
+  # Precedence: breach at the top rank is n_t / (n_b + n_t) when r = n_t.
+  expect_true(latency_breach_probability(190, 190, 10, 0.95) > 0.05)
+  expect_true(breach_exact(190, 190, 10, 10) == gmp::as.bigq(1, 20))
+  expect_identical(latency_precedence_rank(190, 10, 0.95, 0.05), 190L)
+  expect_identical(latency_precedence_rank(189, 10, 0.95, 0.05), NA_integer_)
+  # The exact breach sum agrees with the double one away from the boundary.
+  r <- latency_test_rank(50, 0.9)
+  expect_equal(as.numeric(breach_exact(200, 150, 50, r)), latency_breach_probability(200, 150, 50, 0.9),
+               tolerance = 1e-12)
+})
+
+test_that("declared decimals are exact rationals", {
+  expect_true(exact_decimal(0.995) == gmp::as.bigq(199, 200))
+  expect_true(exact_decimal(0.05) == gmp::as.bigq(1, 20))
+  expect_true(exact_decimal(0.0463574016) == gmp::as.bigq(463574016, 10^10))
+})

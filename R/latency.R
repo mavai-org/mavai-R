@@ -196,8 +196,12 @@ generate_latency_percentile_minimums_cases <- function() {
     existence_case("p90_33_test10_first_rank", 33, 10, 0.90, 0.05),
     existence_case("p95_85_test25_saturated", 85, 25, 0.95, 0.05),
     existence_case("p95_86_test25_first_rank", 86, 25, 0.95, 0.05),
-    existence_case("p99_950_test50_saturated", 950, 50, 0.99, 0.05),
-    existence_case("p99_951_test50_first_rank", 951, 50, 0.99, 0.05),
+    existence_case("p99_949_test50_saturated", 949, 50, 0.99, 0.05),
+    existence_case("p99_950_test50_first_rank_exact_boundary", 950, 50, 0.99, 0.05),
+    existence_case("p95_189_test10_saturated", 189, 10, 0.95, 0.05),
+    existence_case("p95_190_test10_first_rank_exact_boundary", 190, 10, 0.95, 0.05),
+    existence_case("p99_474_test25_saturated", 474, 25, 0.99, 0.05),
+    existence_case("p99_475_test25_first_rank_exact_boundary", 475, 25, 0.99, 0.05),
     existence_case("p99_553_test160_saturated", 553, 160, 0.99, 0.05),
     existence_case("p99_554_test160_first_rank", 554, 160, 0.99, 0.05),
     existence_case("p50_20_test10", 20, 10, 0.50, 0.05),
@@ -215,7 +219,10 @@ generate_latency_percentile_minimums_cases <- function() {
       "§12.5.2.1 existence gate of latency/precedence, computed before the run from the baseline ",
       "size, the test size, the percentile and alpha: saturated (no rank achieves alpha, the ",
       "result is INCONCLUSIVE) and otherwise the rank. The withdrawn Wilks minimums are no longer ",
-      "published. Conformance is exact equality (tolerance: 0)."
+      "published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly ",
+      "(the test percentile is the test maximum); the inclusive rule admits the rank, and double ",
+      "precision alone does not: implementations follow the exact-boundary convention (companion ",
+      "§10.6). Conformance is exact equality (tolerance: 0)."
     ),
     method = paste0(
       "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for ",
