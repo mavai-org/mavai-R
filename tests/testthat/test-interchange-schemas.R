@@ -400,3 +400,32 @@ test_that("the verdict-1.6 XSD requires an input's index and excerpt", {
     xml2::read_xml(paste(mutated, collapse = "\n")), xsd
   )))
 })
+
+test_that("the verdict-1.7 XSD requires the methodology version", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
+  mutated <- sub(' methodology-version="1.5.0"', "", body, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})
+
+test_that("the verdict-1.7 XSD refuses an unknown decision rule or configuration error", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  typical <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
+  mutated <- gsub('decision-rule="regression/score-cc"', 'decision-rule="regression/wilson-reference"', typical, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+  refused <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-refused.xml"))
+  mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE"', 'configuration-error="TOO_SMALL"', refused, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})
+
+test_that("a 1.6-shaped record is not a 1.7 record, and 1.6 still validates its own", {
+  skip_if_not_installed("xml2")
+  xsd17 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.6-typical.xml"))
+  restamped <- sub('version="1.6"', 'version="1.7"', body, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(restamped, collapse = "\n")), xsd17)))
+  xsd16 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.6.xsd"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(body, collapse = "\n")), xsd16)))
+})
