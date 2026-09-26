@@ -35,6 +35,8 @@ The 1.4.1 rules survive in the R package only, as `regression/wilson-reference`,
 
 *Generation and certification*: `scripts/generate_all.R` is the one generator (the stale exported `generate_all()` is removed); a new workflow regenerates the fixtures, fails on any difference from the committed files, runs the testthat suite and validates the schemas. `scripts/certify.R` produces the calibration and power surfaces of the three rules over the operating envelope and beyond the certified baseline range — regression size (at or below alpha everywhere scanned) and power, with the beta-binomial predictive rule's power beside it as a disclosure of the Fisher rule's conservatism, latency breach, compliance false compliance and exact sizing — and the release workflow attaches them as a separate `certification-vX.Y.Z.zip`, never inside the cases bundle.
 
+*Statistical Companion*: `docs/STATISTICAL-COMPANION.md` is rewritten for methodology 1.5.0. `scripts/companion_numbers.R` computes every worked number the companion quotes from the package's own functions and fails if the text disagrees; the conformance workflow and the test suite run it.
+
 ## [0.10.13] — 2026-08-19
 
 **The zero baseline becomes assertable, and a decision-rule defect it exposed is fixed.** Additive: nine new cases, one new expected field, no existing expected value changed.
