@@ -155,21 +155,23 @@ test_that("latency_min_samples returns correct minimums", {
   expect_equal(latency_min_samples(0.99), 100L)
 })
 
-test_that("latency_bound_existence_min_samples matches companion 12.5.2.1", {
-  # At alpha = 0.05 (companion's published table).
-  expect_equal(latency_bound_existence_min_samples(0.50, 0.95), 5L)
-  expect_equal(latency_bound_existence_min_samples(0.90, 0.95), 29L)
+test_that("the Wilks minimum is the legacy existence condition, not the precedence one", {
   expect_equal(latency_bound_existence_min_samples(0.95, 0.95), 59L)
-  expect_equal(latency_bound_existence_min_samples(0.99, 0.95), 299L)
-  # Existence condition: p^n <= alpha holds at the minimum, fails below it.
-  for (p in c(0.50, 0.90, 0.95, 0.99)) {
-    n_min <- latency_bound_existence_min_samples(p, 0.95)
-    expect_lte(p^n_min, 0.05)
-    expect_gt(p^(n_min - 1L), 0.05)
+  # Not sufficient: 100 latencies meet the p95 Wilks minimum, yet no rank exists for a test of 15.
+  expect_true(latency_precedence_exists(100, 15, 0.95, 0.05)$saturated)
+  # Not necessary: 200 latencies fall short of the p99 Wilks minimum (299), yet a rank exists for a test of 10.
+  expect_lt(200L, latency_bound_existence_min_samples(0.99, 0.95))
+  expect_false(latency_precedence_exists(200, 10, 0.99, 0.05)$saturated)
+})
+
+test_that("precedence existence is decided by the top rank", {
+  for (cfg in list(c(85, 25, 0.95), c(86, 25, 0.95), c(950, 50, 0.99), c(951, 50, 0.99), c(33, 10, 0.90))) {
+    top <- latency_breach_probability(cfg[1], cfg[1], cfg[2], cfg[3]) <= 0.05
+    expect_identical(!latency_precedence_exists(cfg[1], cfg[2], cfg[3], 0.05)$saturated, top)
   }
 })
 
-test_that("percentile minimums suite publishes both gates exactly", {
+test_that("percentile minimums suite publishes the emission minimums and the existence gate", {
   suite <- generate_latency_percentile_minimums_cases()
   expect_equal(suite$suite, "latency_percentile_minimums")
   expect_equal(suite$tolerance, 0)
@@ -178,11 +180,18 @@ test_that("percentile minimums suite publishes both gates exactly", {
     vapply(emission, function(c) c$expected$minimum_contributing_samples, integer(1)),
     c(5L, 10L, 20L, 100L)
   )
-  existence <- Filter(function(c) c$approach == "bound_existence", suite$cases)
-  expect_length(existence, 8L)  # four levels at two confidence levels
-  c95 <- Filter(function(c) c$inputs$confidence == 0.95, existence)
-  expect_equal(
-    vapply(c95, function(c) c$expected$minimum_baseline_samples, integer(1)),
-    c(5L, 29L, 59L, 299L)
-  )
+  existence <- Filter(function(c) c$approach == "precedence_existence", suite$cases)
+  by_name <- setNames(existence, vapply(existence, `[[`, character(1), "name"))
+  expect_true(by_name[["p95_100_test15_saturated"]]$expected$saturated)
+  expect_identical(by_name[["p95_1000_test15"]]$expected$rank, 998L)
+  expect_identical(by_name[["p95_935_test192"]]$expected$rank, 911L)
+  for (stem in c("p90_%d_test10", "p95_%d_test25", "p99_%d_test50", "p99_%d_test160")) {
+    sat <- Filter(function(c) grepl(sub("%d", "[0-9]+", stem), c$name) && grepl("saturated", c$name), existence)
+    first <- Filter(function(c) grepl(sub("%d", "[0-9]+", stem), c$name) && grepl("first_rank", c$name), existence)
+    expect_true(sat[[1]]$expected$saturated)
+    expect_false(first[[1]]$expected$saturated)
+    expect_identical(first[[1]]$inputs$baseline_trials, sat[[1]]$inputs$baseline_trials + 1L)
+  }
+  expect_false(any(vapply(existence, function(c) c$inputs$test_samples > c$inputs$baseline_trials, logical(1))))
 })
+

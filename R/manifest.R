@@ -73,6 +73,7 @@ SUITE_DECISION_RULES <- list(
   compliance_decision = "compliance/exact-binomial",
   feasibility = "compliance/exact-binomial",
   latency_threshold = "latency/precedence",
+  latency_percentile_minimums = "latency/precedence",
   power_analysis = c("compliance/exact-binomial", "regression/fisher"),
   verdict = c("compliance/exact-binomial", "regression/fisher"),
   criterion_verdict_inferential = c("compliance/exact-binomial", "regression/fisher"),

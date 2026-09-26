@@ -117,13 +117,13 @@ latency_min_samples <- function(p) {
 }
 
 #' Minimum sample size for a non-saturated distribution-free upper bound
+#' (legacy)
 #'
-#' Returns the minimum number of successful samples for which the exact
-#' binomial order-statistic construction admits a non-saturated one-sided
-#' upper confidence bound on the p-quantile: n_s >= ceiling(log(alpha) /
-#' log(p)) (Wilks tolerance-interval logic; Statistical Companion
-#' §12.5.2.1). This is the judgement-time existence gate, distinct from
-#' the emission-time non-degeneracy gate in latency_min_samples().
+#' The Wilks minimum n_s >= ceiling(log(alpha) / log(p)): the existence
+#' condition of the withdrawn order-statistic confidence bound (legacy
+#' `latency/order-statistic-bound`). It is neither necessary nor sufficient
+#' for the latency/precedence rank, whose existence is decided by
+#' `latency_precedence_exists()`; kept only for reproducing 1.4.1 outputs.
 #'
 #' @param p Numeric. Percentile level (e.g. 0.95).
 #' @param confidence Numeric. One-sided confidence level (e.g. 0.95).
@@ -134,28 +134,33 @@ latency_bound_existence_min_samples <- function(p, confidence) {
   as.integer(ceiling(log(alpha) / log(p)))
 }
 
-#' Generate latency percentile minimum-sample-size reference cases
+#' Existence of a latency/precedence threshold, before the run
 #'
-#' Publishes the family standard for how many contributing (passing)
-#' samples an empirical latency percentile requires. Two case groups,
-#' distinguished by the `approach` field:
+#' A rank exists iff the top rank achieves it, breach(n_b) <= alpha,
+#' because breach(k) decreases in k. The inputs are all known before the
+#' test runs, so this is the pre-run existence gate.
+#'
+#' @return A list: saturated (TRUE when no rank achieves alpha) and rank
+#'   (the precedence rank, or NA when saturated).
+#' @export
+latency_precedence_exists <- function(baseline_trials, test_samples, p, alpha) {
+  k <- latency_precedence_rank(baseline_trials, test_samples, p, alpha)
+  list(saturated = is.na(k), rank = k)
+}
+
+#' Generate latency percentile minimum-sample-size and existence cases
+#'
+#' Two case groups, distinguished by the `approach` field:
 #'
 #' (1) **emission_non_degeneracy** — the companion §12.5.2 minimums
 #'     governing whether a percentile may be emitted in experiment
 #'     artefacts and verdicts at all (below the minimum the key is
 #'     omitted, renderers show a dash). One case per supported level.
 #'
-#' (2) **bound_existence** — the companion §12.5.2.1 minimums for the
-#'     binomial order-statistic construction to admit a non-saturated
-#'     one-sided upper confidence bound at the given confidence
-#'     (n_s >= ceiling(log(alpha) / log(p))). These are judgement-time
-#'     minimums consumed by latency-criterion evaluation, NOT emission
-#'     rules.
-#'
-#' The values are deliberately trivial to compute; the suite exists so
-#' that every framework's gating table is conformance-locked to one
-#' published standard instead of each implementation carrying its own
-#' constants.
+#' (2) **precedence_existence** — the companion §12.5.2.1 existence gate:
+#'     whether a latency/precedence rank exists for a baseline of n_b
+#'     latencies, a test of n_t, a percentile and alpha, and the rank.
+#'     Computed before the run; saturated means INCONCLUSIVE.
 #'
 #' @return A list suitable for JSON serialisation.
 #' @export
@@ -171,37 +176,52 @@ generate_latency_percentile_minimums_cases <- function() {
     )
   })
 
-  existence_cases <- unlist(lapply(c(0.95, 0.99), function(confidence) {
-    lapply(levels, function(p) {
-      list(
-        name = sprintf("bound_existence_minimum_p%g_c%g", p * 100, confidence * 100),
-        approach = "bound_existence",
-        inputs = list(percentile = p, confidence = confidence),
-        expected = list(
-          minimum_baseline_samples = latency_bound_existence_min_samples(p, confidence)
-        )
-      )
-    })
-  }), recursive = FALSE)
+  existence_case <- function(name, n_b, n_t, p, alpha) {
+    e <- latency_precedence_exists(n_b, n_t, p, alpha)
+    list(
+      name = name,
+      approach = "precedence_existence",
+      decisionRule = "latency/precedence",
+      inputs = list(baseline_trials = as.integer(n_b), test_samples = as.integer(n_t),
+                    percentile = p, alpha = alpha),
+      expected = list(saturated = e$saturated, rank = e$rank)
+    )
+  }
+  existence_cases <- list(
+    existence_case("p95_100_test15_saturated", 100, 15, 0.95, 0.05),
+    existence_case("p95_1000_test15", 1000, 15, 0.95, 0.05),
+    existence_case("p99_300_test100_saturated", 300, 100, 0.99, 0.05),
+    existence_case("p95_935_test192", 935, 192, 0.95, 0.05),
+    existence_case("p90_32_test10_saturated", 32, 10, 0.90, 0.05),
+    existence_case("p90_33_test10_first_rank", 33, 10, 0.90, 0.05),
+    existence_case("p95_85_test25_saturated", 85, 25, 0.95, 0.05),
+    existence_case("p95_86_test25_first_rank", 86, 25, 0.95, 0.05),
+    existence_case("p99_950_test50_saturated", 950, 50, 0.99, 0.05),
+    existence_case("p99_951_test50_first_rank", 951, 50, 0.99, 0.05),
+    existence_case("p99_553_test160_saturated", 553, 160, 0.99, 0.05),
+    existence_case("p99_554_test160_first_rank", 554, 160, 0.99, 0.05),
+    existence_case("p50_20_test10", 20, 10, 0.50, 0.05),
+    existence_case("p95_500_test100_alpha001", 500, 100, 0.95, 0.01)
+  )
 
   list(
     suite = "latency_percentile_minimums",
     description = paste0(
-      "Minimum sample sizes for empirical latency percentiles (p50/p90/p95/p99) — the single ",
-      "published standard every mavai framework's gating table must equal exactly. ",
+      "Minimum sample sizes and the existence gate for empirical latency percentiles (p50/p90/p95/p99). ",
       "Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 ",
       "minimums for emitting a percentile in experiment artefacts (baseline, exploration, ",
       "optimization) and verdicts: below the minimum the percentile key is omitted entirely ",
-      "and renderers display a placeholder. Cases with approach 'bound_existence' carry the ",
-      "§12.5.2.1 minimums for the exact binomial order-statistic construction to admit a ",
-      "non-saturated one-sided upper confidence bound on the p-quantile at the stated ",
-      "confidence — judgement-time minimums for latency-criterion evaluation, not emission ",
-      "rules. All values are integers; conformance is exact equality (tolerance: 0)."
+      "and renderers display a placeholder. Cases with approach 'precedence_existence' carry the ",
+      "§12.5.2.1 existence gate of latency/precedence, computed before the run from the baseline ",
+      "size, the test size, the percentile and alpha: saturated (no rank achieves alpha, the ",
+      "result is INCONCLUSIVE) and otherwise the rank. The withdrawn Wilks minimums are no longer ",
+      "published. Conformance is exact equality (tolerance: 0)."
     ),
     method = paste0(
       "Emission minimums per companion §12.5.2 (non-degeneracy: 5/10/20/100 for ",
-      "p50/p90/p95/p99); bound-existence minimums per §12.5.2.1, ",
-      "n_s >= ceiling(log(alpha) / log(p)) (Wilks)."
+      "p50/p90/p95/p99); existence per §12.5.2.1: a rank exists iff breach(n_b) <= alpha, with ",
+      "breach(k) = sum_{j=0}^{r-1} C(n_t, j) B(k + j, n_b - k + 1 + n_t - j) / B(k, n_b - k + 1) and ",
+      "r = ceiling(P n_t / 100); rank = the smallest k with breach(k) <= alpha (latency/precedence v1)."
     ),
     tolerance = 0,
     cases = c(emission_cases, existence_cases)

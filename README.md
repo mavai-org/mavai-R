@@ -69,7 +69,7 @@ the `v0.10.13` release assets.
 |---|---|---|
 | Latency percentile | `inst/cases/latency_percentile.json` | Nearest-rank empirical percentiles and summary statistics |
 | Latency threshold | `inst/cases/latency_threshold.json` | The precedence rank and threshold, or saturation |
-| Latency percentile minimums | `inst/cases/latency_percentile_minimums.json` | Emission and bound-existence minimums |
+| Latency percentile minimums | `inst/cases/latency_percentile_minimums.json` | Emission minimums and the precedence existence gate |
 
 The multi-criteria suites (`criterion_verdict_*`, `composite_verdict`,
 `baseline_object`, `multi_criteria_scenario_consult_advice`) are
