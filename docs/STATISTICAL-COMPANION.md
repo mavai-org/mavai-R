@@ -1541,7 +1541,7 @@ Without `minDetectableEffect`, no framework can compute a finite sample size and
 
 **Where no margin is declared, the report still states what the design can detect.** A regression report carries the power against the declared margin where there is one; where none is declared, it carries the **minimum detectable degradation** at 80% power under the operative rule — the smallest $\delta$ at which the §5.3 power reaches 0.80. For a baseline of 1000 trials at 0.95 and a test of 100 at $\alpha = 0.05$ it is 0.0756: the design detects a drop to about 0.874 with 80% power, and nothing smaller reliably. No configuration is added; the adequacy statement is always present, so a weak baseline cannot silently produce a meaningless design.
 
-A tolerated drop from a measured baseline is a minimum detectable effect expressed against the cutoff the test will apply; §5.4.1 prices that form of the question.
+A drop that a test against a measured baseline must be able to detect is stated as the design alternative rate $p_{\mathrm{design}}$ - the rate at which the test must reach its target power, not a drop the test tolerates, since the test flags any degradation from the baseline; §5.4.1 prices that form of the question.
 
 ### 5.7 Test Intent: VERIFICATION vs SMOKE
 
