@@ -28,7 +28,7 @@ independently. No need to trust a Java or Rust implementation.
 ## What's covered
 
 The reference data implements the decision rules of Statistical Companion
-1.5.0 over two quality dimensions of the mavai methodology: **pass-rate
+2.0.0 over two quality dimensions of the mavai methodology: **pass-rate
 analysis** (binomial) and **latency analysis** (non-parametric, empirical
 percentile based). For the full statistical treatment, see the
 [Statistical Companion](docs/STATISTICAL-COMPANION.md). For the contract
@@ -41,13 +41,12 @@ it implements (`methodologyVersion`):
 
 | Rule | Decides | Binding artefact |
 |---|---|---|
-| `regression/score-cc` v1 | Empirical regression against a baseline (continuity-corrected pooled score test) | integer cutoff c; PASS iff K_t >= c |
+| `regression/fisher` v1 | Empirical regression against a baseline (one-sided Fisher exact test) | integer cutoff c; PASS iff K_t >= c |
 | `compliance/exact-binomial` v1 | Normative compliance with a given requirement (exact one-sided binomial test) | k_min; PASS iff K >= k_min |
 | `latency/precedence` v1 | Latency regression (precedence rank of the baseline latencies) | rank, or `saturated` (INCONCLUSIVE) |
 
 Configurations refused before any sample runs carry a `configuration_error`:
-`TEST_LARGER_THAN_BASELINE`, `OUTSIDE_CALIBRATION_TOLERANCE`,
-`COMPLIANCE_INFEASIBLE`. The methodology-1.4.1 fixtures remain available as
+`TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`. The methodology-1.4.1 fixtures remain available as
 the `v0.10.13` release assets.
 
 ### Pass-rate conformance
@@ -56,12 +55,12 @@ the `v0.10.13` release assets.
 |---|---|---|
 | Wilson CI | `inst/cases/wilson_ci.json` | Two-sided Wilson score intervals (descriptive) |
 | Wilson lower | `inst/cases/wilson_lower.json` | One-sided Wilson score lower bound (descriptive) |
-| Threshold derivation | `inst/cases/threshold_derivation.json` | The regression cutoff c, or the configuration error |
+| Threshold derivation | `inst/cases/threshold_derivation.json` | The regression cutoff c or the configuration error, and the implied alpha of a declared cutoff |
 | Regression decision | `inst/cases/regression_decision.json` | Regression verdicts through the production path |
-| Calibration tolerance rule | `inst/cases/calibration_tolerance_rule.json` | The published rule for `OUTSIDE_CALIBRATION_TOLERANCE` |
 | Compliance decision | `inst/cases/compliance_decision.json` | Compliance verdicts, VERIFICATION refusals and SMOKE outcomes |
 | Feasibility | `inst/cases/feasibility.json` | Whether a normative test of this size can PASS at all |
 | Power analysis | `inst/cases/power_analysis.json` | Exact compliance sizing, regression power and minimum detectable degradation |
+| Risk-driven sizing | `inst/cases/risk_driven_sizing.json` | Exact sizing of the regression rule against a declared tolerance, with refusals |
 | Verdict | `inst/cases/verdict.json` | Verdicts under both ruled rules, including joint configurations |
 
 ### Latency conformance
@@ -114,7 +113,7 @@ Each suite file contains:
 ```json
 {
   "suite": "wilson_ci",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "2.0.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
   "description": "Wilson score confidence intervals (two-sided)",
