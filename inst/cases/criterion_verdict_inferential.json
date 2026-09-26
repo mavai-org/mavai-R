@@ -12,7 +12,7 @@
       "version": 1
     }
   ],
-  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/fisher and decides K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The effective denominator n_c is derived from the §1.4.5a policy. Each case carries the three-strand verdict.",
+  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/fisher and decides K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The effective denominator n_c is derived from the §1.4.5a policy. Each single-bar case carries the three-strand verdict. Cases with approach joint are criteria carrying both bars: each bar decides with its own rule and alpha and is reported in bars; the criterion's verdict is their structural composite (PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise), and failing_bars names the bars that failed. configuration_error is the list of every applicable code (empty when valid).",
   "method": "REGRESSION: regression/fisher cutoff c from (K_b, n_b, n_c, alpha), decision K_c >= c; TEST_LARGER_THAN_BASELINE checked on (n_b, n_attempted). COMPLIANCE: compliance/exact-binomial k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c), INCONCLUSIVE when no count of n_c can pass.",
   "tolerance": 1e-09,
   "cases": [
@@ -36,7 +36,7 @@
         "p_hat_c": 0.953,
         "cutoff_integer": 933,
         "displayed_rate": 0.933,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "PASS",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
@@ -64,7 +64,7 @@
         "p_hat_c": 0.85,
         "cutoff_integer": 933,
         "displayed_rate": 0.933,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "FAIL",
         "statistical_verdict": "FAIL",
         "observed_rate_status": "BELOW_THRESHOLD",
@@ -91,7 +91,7 @@
         "p_hat_c": 0.91,
         "cutoff_integer": 91,
         "displayed_rate": 0.91,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "PASS",
         "statistical_verdict": "PASS",
         "observed_rate_status": "AT_THRESHOLD",
@@ -119,7 +119,7 @@
         "p_hat_c": 0.9,
         "cutoff_integer": 91,
         "displayed_rate": 0.91,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "FAIL",
         "statistical_verdict": "FAIL",
         "observed_rate_status": "BELOW_THRESHOLD",
@@ -147,7 +147,7 @@
         "p_hat_c": null,
         "cutoff_integer": null,
         "displayed_rate": null,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "INCONCLUSIVE",
         "statistical_verdict": "INCONCLUSIVE",
         "observed_rate_status": "NOT_APPLICABLE",
@@ -174,7 +174,7 @@
         "p_hat_c": 1,
         "cutoff_integer": 4,
         "displayed_rate": 0.8,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "PASS",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
@@ -201,7 +201,7 @@
         "p_hat_c": 1,
         "cutoff_integer": 886,
         "displayed_rate": 0.932632,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "PASS",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
@@ -229,7 +229,7 @@
         "p_hat_c": 0.95,
         "cutoff_integer": 933,
         "displayed_rate": 0.933,
-        "configuration_error": null,
+        "configuration_error": [],
         "verdict": "PASS",
         "statistical_verdict": "PASS",
         "observed_rate_status": "ABOVE_THRESHOLD",
@@ -382,6 +382,245 @@
         "observed_rate_status": "NOT_APPLICABLE",
         "operational_caution_category": "FEASIBILITY_REFUSED"
       }
+    },
+    {
+      "name": "joint_pass_both_bars",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "n_attempted": 1000,
+        "n_evaluable": 1000,
+        "K_c": 945,
+        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+        "p_req": 0.9,
+        "compliance_alpha": 0.01,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "configuration_error": [],
+        "verdict": "PASS",
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "PASS",
+            "k_min": 922
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "PASS",
+            "cutoff_integer": 933
+          }
+        ],
+        "failing_bars": []
+      },
+      "description": "0.90 demonstrated at alpha 0.01 and no degradation at alpha 0.05: PASS."
+    },
+    {
+      "name": "joint_fail_empirical_bar",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "n_attempted": 1000,
+        "n_evaluable": 1000,
+        "K_c": 925,
+        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+        "p_req": 0.9,
+        "compliance_alpha": 0.01,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "configuration_error": [],
+        "verdict": "FAIL",
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "PASS",
+            "k_min": 922
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "FAIL",
+            "cutoff_integer": 933
+          }
+        ],
+        "failing_bars": [
+          "empirical"
+        ]
+      },
+      "description": "The requirement is demonstrated, the service has degraded from the baseline: FAIL, naming the empirical bar."
+    },
+    {
+      "name": "joint_fail_normative_bar",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "n_attempted": 1000,
+        "n_evaluable": 1000,
+        "K_c": 945,
+        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+        "p_req": 0.95,
+        "compliance_alpha": 0.01,
+        "baseline_successes": 930,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "configuration_error": [],
+        "verdict": "FAIL",
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "FAIL",
+            "k_min": 966
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "PASS",
+            "cutoff_integer": 910
+          }
+        ],
+        "failing_bars": [
+          "normative"
+        ]
+      },
+      "description": "No degradation, but 0.95 is not demonstrated: FAIL, naming the normative bar."
+    },
+    {
+      "name": "joint_inconclusive_normative_bar",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "n_attempted": 100,
+        "n_evaluable": 20,
+        "K_c": 20,
+        "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+        "p_req": 0.95,
+        "compliance_alpha": 0.05,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "configuration_error": [],
+        "verdict": "INCONCLUSIVE",
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.05,
+            "verdict": "INCONCLUSIVE",
+            "k_min": null
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "PASS",
+            "cutoff_integer": 17
+          }
+        ],
+        "failing_bars": []
+      },
+      "description": "Only 20 trials are evaluable: no count of 20 can demonstrate 0.95 (normative bar INCONCLUSIVE), and 20 of 20 shows no degradation (empirical bar PASS). INCONCLUSIVE."
+    },
+    {
+      "name": "joint_fail_dominates_inconclusive",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "n_attempted": 100,
+        "n_evaluable": 20,
+        "K_c": 15,
+        "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+        "p_req": 0.95,
+        "compliance_alpha": 0.05,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "configuration_error": [],
+        "verdict": "FAIL",
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.05,
+            "verdict": "INCONCLUSIVE",
+            "k_min": null
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "FAIL",
+            "cutoff_integer": 17
+          }
+        ],
+        "failing_bars": [
+          "empirical"
+        ]
+      },
+      "description": "Normative bar INCONCLUSIVE, empirical bar FAIL: FAIL, naming the empirical bar."
+    },
+    {
+      "name": "joint_refused_test_larger_than_baseline",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "n_attempted": 200,
+        "n_evaluable": 200,
+        "K_c": 190,
+        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+        "p_req": 0.9,
+        "compliance_alpha": 0.01,
+        "baseline_successes": 95,
+        "baseline_trials": 100,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE"
+        ],
+        "verdict": null,
+        "bars": [],
+        "failing_bars": []
+      },
+      "description": "The empirical part is refused (200 > 100), so the whole criterion is."
     }
   ]
 }

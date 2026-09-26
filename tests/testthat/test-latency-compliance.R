@@ -38,5 +38,5 @@ test_that("the exact boundary is admitted", {
 test_that("a VERIFICATION plan below the feasibility minimum is refused", {
   cases <- generate_latency_compliance_decision_cases()$cases
   refused <- Filter(function(c) c$name == "p95_plan_58_verification_refused", cases)[[1]]
-  expect_equal(refused$expected$configuration_error, "COMPLIANCE_INFEASIBLE")
+  expect_equal(refused$expected$configuration_error, list("COMPLIANCE_INFEASIBLE"))
 })

@@ -23,7 +23,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0339673926250216
@@ -40,7 +40,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.032910216682927
@@ -58,7 +58,7 @@
       },
       "expected": {
         "cutoff_integer": 933,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.933,
         "displayed_rate": 0.933,
         "size_at_assumed_common_rate": 0.0403533182561198
@@ -75,7 +75,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0325386957467103
@@ -92,7 +92,7 @@
       },
       "expected": {
         "cutoff_integer": 94,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.94,
         "displayed_rate": 0.94,
         "size_at_assumed_common_rate": 0.00128278211655939
@@ -110,7 +110,7 @@
       },
       "expected": {
         "cutoff_integer": 96,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.96,
         "displayed_rate": 0.96,
         "size_at_assumed_common_rate": null
@@ -127,7 +127,7 @@
       },
       "expected": {
         "cutoff_integer": 99,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.99,
         "displayed_rate": 0.99,
         "size_at_assumed_common_rate": null
@@ -145,7 +145,7 @@
       },
       "expected": {
         "cutoff_integer": 0,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0,
         "displayed_rate": 0,
         "size_at_assumed_common_rate": null
@@ -162,7 +162,7 @@
       },
       "expected": {
         "cutoff_integer": 18,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.72,
         "displayed_rate": 0.72,
         "size_at_assumed_common_rate": 0.0175146837307742
@@ -179,7 +179,7 @@
       },
       "expected": {
         "cutoff_integer": 925,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
         "size_at_assumed_common_rate": 0.0074842242031557
@@ -196,7 +196,7 @@
       },
       "expected": {
         "cutoff_integer": 43,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.86,
         "displayed_rate": 0.86,
         "size_at_assumed_common_rate": 0.0271145043470716
@@ -213,7 +213,7 @@
       },
       "expected": {
         "cutoff_integer": 41,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.82,
         "displayed_rate": 0.82,
         "size_at_assumed_common_rate": 0.00336361675798863
@@ -230,7 +230,7 @@
       },
       "expected": {
         "cutoff_integer": 45,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.9,
         "displayed_rate": 0.9,
         "size_at_assumed_common_rate": 0.0299689584879597
@@ -247,7 +247,7 @@
       },
       "expected": {
         "cutoff_integer": 184,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.92,
         "displayed_rate": 0.92,
         "size_at_assumed_common_rate": 0.0353227375058836
@@ -264,7 +264,7 @@
       },
       "expected": {
         "cutoff_integer": 185,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
         "size_at_assumed_common_rate": 0.077495050628482
@@ -281,7 +281,7 @@
       },
       "expected": {
         "cutoff_integer": 5,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.5,
         "displayed_rate": 0.5,
         "size_at_assumed_common_rate": 0.00452011138810319
@@ -298,7 +298,7 @@
       },
       "expected": {
         "cutoff_integer": 0,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0,
         "displayed_rate": 0,
         "size_at_assumed_common_rate": null
@@ -315,7 +315,7 @@
       },
       "expected": {
         "cutoff_integer": 0,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0,
         "displayed_rate": 0,
         "size_at_assumed_common_rate": null
@@ -333,7 +333,9 @@
       },
       "expected": {
         "cutoff_integer": null,
-        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE"
+        ],
         "threshold_real": null,
         "displayed_rate": null,
         "size_at_assumed_common_rate": null
@@ -351,7 +353,9 @@
       },
       "expected": {
         "cutoff_integer": null,
-        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE"
+        ],
         "threshold_real": null,
         "displayed_rate": null,
         "size_at_assumed_common_rate": null
@@ -369,7 +373,7 @@
       },
       "expected": {
         "cutoff_integer": 3,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.75,
         "displayed_rate": 0.75,
         "size_at_assumed_common_rate": null
@@ -387,7 +391,7 @@
       },
       "expected": {
         "cutoff_integer": 1,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.5,
         "displayed_rate": 0.5,
         "size_at_assumed_common_rate": 0.0190376278407176
@@ -404,7 +408,7 @@
       },
       "expected": {
         "cutoff_integer": 21,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.84,
         "displayed_rate": 0.84,
         "size_at_assumed_common_rate": 0.00480241920852723
@@ -421,7 +425,7 @@
       },
       "expected": {
         "cutoff_integer": 87,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.87,
         "displayed_rate": 0.87,
         "size_at_assumed_common_rate": 0.000568164806283709

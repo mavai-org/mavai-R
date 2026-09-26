@@ -91,7 +91,7 @@
             "p_hat_c": 0.953,
             "cutoff_integer": 933,
             "displayed_rate": 0.933,
-            "configuration_error": null,
+            "configuration_error": [],
             "verdict": "PASS",
             "statistical_verdict": "PASS",
             "observed_rate_status": "ABOVE_THRESHOLD",

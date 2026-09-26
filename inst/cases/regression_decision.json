@@ -23,7 +23,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0339673926250216,
@@ -41,7 +41,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0339673926250216,
@@ -59,7 +59,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0339673926250216,
@@ -77,7 +77,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0339673926250216,
@@ -95,7 +95,7 @@
       },
       "expected": {
         "cutoff_integer": 18,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.72,
         "displayed_rate": 0.72,
         "size_at_assumed_common_rate": 0.0175146837307742,
@@ -113,7 +113,7 @@
       },
       "expected": {
         "cutoff_integer": 18,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.72,
         "displayed_rate": 0.72,
         "size_at_assumed_common_rate": 0.0175146837307742,
@@ -131,7 +131,7 @@
       },
       "expected": {
         "cutoff_integer": 94,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.94,
         "displayed_rate": 0.94,
         "size_at_assumed_common_rate": 0.00128278211655939,
@@ -149,7 +149,7 @@
       },
       "expected": {
         "cutoff_integer": 94,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.94,
         "displayed_rate": 0.94,
         "size_at_assumed_common_rate": 0.00128278211655939,
@@ -167,7 +167,7 @@
       },
       "expected": {
         "cutoff_integer": 96,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.96,
         "displayed_rate": 0.96,
         "size_at_assumed_common_rate": null,
@@ -186,7 +186,7 @@
       },
       "expected": {
         "cutoff_integer": 96,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.96,
         "displayed_rate": 0.96,
         "size_at_assumed_common_rate": null,
@@ -204,7 +204,7 @@
       },
       "expected": {
         "cutoff_integer": 0,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0,
         "displayed_rate": 0,
         "size_at_assumed_common_rate": null,
@@ -222,7 +222,7 @@
       },
       "expected": {
         "cutoff_integer": 0,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0,
         "displayed_rate": 0,
         "size_at_assumed_common_rate": null,
@@ -240,7 +240,7 @@
       },
       "expected": {
         "cutoff_integer": 933,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.933,
         "displayed_rate": 0.933,
         "size_at_assumed_common_rate": 0.0403533182561198,
@@ -258,7 +258,7 @@
       },
       "expected": {
         "cutoff_integer": 933,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.933,
         "displayed_rate": 0.933,
         "size_at_assumed_common_rate": 0.0403533182561198,
@@ -276,7 +276,7 @@
       },
       "expected": {
         "cutoff_integer": 925,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
         "size_at_assumed_common_rate": 0.0074842242031557,
@@ -294,7 +294,7 @@
       },
       "expected": {
         "cutoff_integer": 925,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.925,
         "displayed_rate": 0.925,
         "size_at_assumed_common_rate": 0.0074842242031557,
@@ -312,7 +312,9 @@
       },
       "expected": {
         "cutoff_integer": null,
-        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE"
+        ],
         "threshold_real": null,
         "displayed_rate": null,
         "size_at_assumed_common_rate": null,
@@ -331,7 +333,7 @@
       },
       "expected": {
         "cutoff_integer": 3,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.75,
         "displayed_rate": 0.75,
         "size_at_assumed_common_rate": null,
@@ -349,7 +351,7 @@
       },
       "expected": {
         "cutoff_integer": 3,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.75,
         "displayed_rate": 0.75,
         "size_at_assumed_common_rate": null,
@@ -367,7 +369,7 @@
       },
       "expected": {
         "cutoff_integer": 21,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.84,
         "displayed_rate": 0.84,
         "size_at_assumed_common_rate": 0.00480241920852723,
@@ -385,7 +387,7 @@
       },
       "expected": {
         "cutoff_integer": 21,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.84,
         "displayed_rate": 0.84,
         "size_at_assumed_common_rate": 0.00480241920852723,
@@ -403,7 +405,7 @@
       },
       "expected": {
         "cutoff_integer": 91,
-        "configuration_error": null,
+        "configuration_error": [],
         "threshold_real": 0.91,
         "displayed_rate": 0.91,
         "size_at_assumed_common_rate": 0.0339673926250216,

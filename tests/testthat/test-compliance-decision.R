@@ -3,12 +3,12 @@ by_name <- function(suite) setNames(suite$cases, vapply(suite$cases, `[[`, chara
 test_that("VERIFICATION refuses an infeasible design and SMOKE says PASS is not possible", {
   cases <- by_name(generate_compliance_decision_cases())
   v <- cases[["headline_995_n477_verification_refused"]]$expected
-  expect_identical(v$configuration_error, "COMPLIANCE_INFEASIBLE")
+  expect_identical(v$configuration_error, list("COMPLIANCE_INFEASIBLE"))
   expect_true(is.na(v$verdict) && is.na(v$k_min))
   s <- cases[["headline_995_n477_smoke_pass_not_possible"]]$expected
   expect_false(s$pass_possible)
   expect_identical(s$verdict, "FAIL")
-  expect_true(is.na(s$configuration_error))
+  expect_length(s$configuration_error, 0)
 })
 
 test_that("the verdict flips exactly at k_min", {

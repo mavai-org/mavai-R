@@ -26,7 +26,9 @@
         "k_min": null,
         "pass_possible": null,
         "verdict": null,
-        "configuration_error": "COMPLIANCE_INFEASIBLE",
+        "configuration_error": [
+          "COMPLIANCE_INFEASIBLE"
+        ],
         "false_compliance": null,
         "clopper_pearson_lower": null
       }
@@ -45,7 +47,7 @@
         "k_min": null,
         "pass_possible": false,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0,
         "clopper_pearson_lower": 0.993739319086423
       }
@@ -63,7 +65,7 @@
         "k_min": 148,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0181540550219443,
         "clopper_pearson_lower": 0.958625030106423
       }
@@ -81,7 +83,7 @@
         "k_min": 148,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0181540550219443,
         "clopper_pearson_lower": 0.949122932021476
       }
@@ -100,7 +102,7 @@
         "k_min": 148,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0181540550219443,
         "clopper_pearson_lower": 0.958625030106423
       }
@@ -118,7 +120,7 @@
         "k_min": 790,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0436918455235539,
         "clopper_pearson_lower": 0.990251646536255
       }
@@ -136,7 +138,7 @@
         "k_min": 790,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0436918455235539,
         "clopper_pearson_lower": 0.988494568131714
       }
@@ -155,7 +157,7 @@
         "k_min": 2995,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0499617033973562,
         "clopper_pearson_lower": 0.999000255579099
       }
@@ -173,7 +175,7 @@
         "k_min": 2995,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0499617033973562,
         "clopper_pearson_lower": 0.998417061587935
       }
@@ -192,7 +194,9 @@
         "k_min": null,
         "pass_possible": null,
         "verdict": null,
-        "configuration_error": "COMPLIANCE_INFEASIBLE",
+        "configuration_error": [
+          "COMPLIANCE_INFEASIBLE"
+        ],
         "false_compliance": null,
         "clopper_pearson_lower": null
       }
@@ -210,7 +214,7 @@
         "k_min": 87,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.046912237160786,
         "clopper_pearson_lower": 0.897746622356726
       }
@@ -229,7 +233,7 @@
         "k_min": 96,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0237110826634767,
         "clopper_pearson_lower": 0.860282880786954
       }
@@ -247,7 +251,7 @@
         "k_min": 60,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.00179701029991443,
         "clopper_pearson_lower": 0.926118728128793
       }
@@ -265,7 +269,7 @@
         "k_min": 60,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.00179701029991443,
         "clopper_pearson_lower": 0.894418404595422
       }
@@ -283,7 +287,7 @@
         "k_min": 796,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.000364706287636343,
         "clopper_pearson_lower": 0.966533937381507
       }
@@ -302,7 +306,7 @@
         "k_min": 5,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.03125,
         "clopper_pearson_lower": 0.5
       }
@@ -321,7 +325,7 @@
         "k_min": 9,
         "pass_possible": true,
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0463574016,
         "clopper_pearson_lower": 0.6
       }
@@ -339,7 +343,7 @@
         "k_min": 96,
         "pass_possible": true,
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "false_compliance": 0.0473866792465057,
         "clopper_pearson_lower": 0.848204571386406
       }

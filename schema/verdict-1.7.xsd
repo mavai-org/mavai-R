@@ -68,14 +68,18 @@
          normative threshold), latency/precedence (a baseline-derived
          latency threshold) or latency/compliance-exact-binomial (an
          explicit latency requirement). Stated whenever a
-         rule decided. A configuration carrying both a normative and an
-         empirical bar states its per-criterion rules on the criterion
-         rows, which gain the same two attributes.
+         rule decided. A criterion carrying both a normative and an
+         empirical bar states its two verdicts on its criterion row as two
+         <bar> children, each with its own rule and alpha; the row's
+         @verdict combines them by the structural composite rule (PASS if
+         both pass, FAIL if either fails, INCONCLUSIVE otherwise), and a
+         FAIL is read from the bars that failed.
 
          @configuration-error on <verdict> — a configuration refused before
-         any sample ran: TEST_LARGER_THAN_BASELINE or
-         COMPLIANCE_INFEASIBLE. A refused
-         record states the code and no @value (there is no verdict; the
+         any sample ran: every applicable code, as a space-separated list in
+         the fixed order TEST_LARGER_THAN_BASELINE, COMPLIANCE_INFEASIBLE
+         (the list's order is an emitter obligation). A refused
+         record states the codes and no @value (there is no verdict; the
          refusal is not INCONCLUSIVE, which is a data-dependent outcome such
          as latency saturation); every other record states @value and no
          code. XSD 1.0 cannot express the exclusivity, so it is an emitter
@@ -576,7 +580,7 @@
     <xs:attribute name="reason" type="xs:string"       use="optional"/>
     <xs:attribute name="decision-rule"         type="tns:DecisionRuleEnum"       use="optional"/>
     <xs:attribute name="decision-rule-version" type="xs:positiveInteger"         use="optional"/>
-    <xs:attribute name="configuration-error"   type="tns:ConfigurationErrorEnum" use="optional"/>
+    <xs:attribute name="configuration-error"   type="tns:ConfigurationErrorListType" use="optional"/>
   </xs:complexType>
 
   <!-- 1.7: the methodology version, major.minor.patch. -->
@@ -601,6 +605,16 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="TEST_LARGER_THAN_BASELINE"/>
       <xs:enumeration value="COMPLIANCE_INFEASIBLE"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- 1.7: every applicable code, at least one, in the fixed order above. -->
+  <xs:simpleType name="ConfigurationErrorListType">
+    <xs:restriction>
+      <xs:simpleType>
+        <xs:list itemType="tns:ConfigurationErrorEnum"/>
+      </xs:simpleType>
+      <xs:minLength value="1"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -640,6 +654,11 @@
   </xs:complexType>
 
   <xs:complexType name="CriterionRowType">
+    <!-- 1.7: a criterion carrying both a normative and an empirical bar
+         states each bar's verdict separately. -->
+    <xs:sequence>
+      <xs:element name="bar" type="tns:BarType" minOccurs="0" maxOccurs="2"/>
+    </xs:sequence>
     <xs:attribute name="id"            type="xs:string"       use="required"/>
     <xs:attribute name="verdict"       type="tns:VerdictEnum" use="required"/>
     <xs:attribute name="pass"          type="xs:int"          use="required"/>
@@ -655,6 +674,26 @@
     <xs:attribute name="decision-rule"         type="tns:DecisionRuleEnum" use="optional"/>
     <xs:attribute name="decision-rule-version" type="xs:positiveInteger"   use="optional"/>
   </xs:complexType>
+
+  <!-- 1.7: one bar of a criterion that carries both. The normative bar
+       asks whether the requirement is met, the empirical bar whether the
+       service has degraded from its baseline; they answer different
+       questions, and each decides with its own rule and alpha. -->
+  <xs:complexType name="BarType">
+    <xs:attribute name="kind"                  type="tns:BarKindEnum"      use="required"/>
+    <xs:attribute name="verdict"               type="tns:VerdictEnum"      use="required"/>
+    <xs:attribute name="decision-rule"         type="tns:DecisionRuleEnum" use="required"/>
+    <xs:attribute name="decision-rule-version" type="xs:positiveInteger"   use="required"/>
+    <xs:attribute name="alpha"                 type="xs:double"            use="required"/>
+    <xs:attribute name="threshold"             type="xs:double"            use="optional"/>
+  </xs:complexType>
+
+  <xs:simpleType name="BarKindEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="normative"/>
+      <xs:enumeration value="empirical"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="CompositeType">
     <xs:attribute name="value" type="tns:VerdictEnum" use="required"/>

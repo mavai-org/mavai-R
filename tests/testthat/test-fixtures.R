@@ -32,7 +32,7 @@ test_that("no empirical case has a test larger than its baseline unless it is re
       i <- case$inputs
       nt <- if (!is.null(i$test_samples)) i$test_samples else if (!is.null(i$trials)) i$trials else i$n_attempted
       if (!is.null(i$baseline_trials) && nt > i$baseline_trials) {
-        expect_identical(case$expected$configuration_error, "TEST_LARGER_THAN_BASELINE", info = case$name)
+        expect_identical(case$expected$configuration_error[[1]], "TEST_LARGER_THAN_BASELINE", info = case$name)
       }
     }
   }

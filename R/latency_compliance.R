@@ -37,13 +37,13 @@ latency_compliance_case <- function(name, percentile, threshold_ms, alpha, inten
   err <- compliance_configuration_error(percentile, planned_samples, alpha, intent)
   expected <- if (!is.na(err)) {
     list(test_samples = NA_integer_, within_threshold = NA_integer_, y_min = NA_integer_,
-         pass_possible = NA, verdict = NA_character_, configuration_error = err,
+         pass_possible = NA, verdict = NA_character_, configuration_error = configuration_errors(err),
          false_compliance = NA_real_, clopper_pearson_lower = NA_real_,
          observed_percentile_ms = NA_real_, advisory_percentile_pass = NA)
   } else {
     v <- latency_compliance_verdict(latencies, threshold_ms, percentile, alpha)
     c(v[c("test_samples", "within_threshold", "y_min", "pass_possible", "verdict")],
-      list(configuration_error = NA_character_),
+      list(configuration_error = configuration_errors()),
       v[c("false_compliance", "clopper_pearson_lower", "observed_percentile_ms",
           "advisory_percentile_pass")])
   }

@@ -7,7 +7,7 @@ test_that("the §3.4 rate is reproduced exactly under regression/fisher", {
   expect_equal(worked$expected$displayed_rate, 0.91)
   expect_lte(worked$expected$size_at_assumed_common_rate, 0.05)
   expect_identical(worked$expected$verdict, "PASS")
-  expect_true(is.na(worked$expected$configuration_error))
+  expect_length(worked$expected$configuration_error, 0)
 })
 
 test_that("the regression verdict flips exactly at the cutoff", {
@@ -26,10 +26,10 @@ test_that("the regression verdict flips exactly at the cutoff", {
 test_that("refused configurations carry a code and no verdict", {
   cases <- by_name(generate_regression_decision_cases())
   r1 <- cases[["refused_test_larger_than_baseline"]]$expected
-  expect_identical(r1$configuration_error, "TEST_LARGER_THAN_BASELINE")
+  expect_identical(r1$configuration_error, list("TEST_LARGER_THAN_BASELINE"))
   expect_true(is.na(r1$verdict) && is.na(r1$cutoff_integer))
   r2 <- cases[["small_test_large_baseline_pass_at_cutoff"]]$expected
-  expect_true(is.na(r2$configuration_error))
+  expect_length(r2$configuration_error, 0)
   expect_identical(r2$verdict, "PASS")
 })
 
@@ -38,7 +38,7 @@ test_that("no published case has a test larger than its baseline without refusin
     for (case in suite$cases) {
       i <- case$inputs
       if (i$test_samples > i$baseline_trials) {
-        expect_identical(case$expected$configuration_error, "TEST_LARGER_THAN_BASELINE", info = case$name)
+        expect_identical(case$expected$configuration_error, list("TEST_LARGER_THAN_BASELINE"), info = case$name)
       }
     }
   }
@@ -57,7 +57,7 @@ test_that("the derivation suite carries every canonical cutoff", {
   expect_identical(cases[["ordinary_951_of_1000_test100_a05"]]$expected$cutoff_integer, 91L)
   expect_identical(cases[["ordinary_larger_baseline_1902_of_2000_test100_a05"]]$expected$cutoff_integer, 91L)
   expect_identical(cases[["refused_test_larger_than_baseline_95_of_100_test200"]]$expected$configuration_error,
-                   "TEST_LARGER_THAN_BASELINE")
+                   list("TEST_LARGER_THAN_BASELINE"))
   tf <- cases[["tf_951_of_1000_test100_cutoff91"]]$expected
   expect_lte(tf$implied_alpha, 0.05)
   expect_true(tf$is_sound)

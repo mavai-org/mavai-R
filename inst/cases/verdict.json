@@ -12,8 +12,8 @@
       "version": 1
     }
   ],
-  "description": "Verdict evaluation under the two ruled rules: regression/fisher for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A configuration carrying both bars (approach joint) is refused whole when either part is invalid. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error. Informational: observed_rate.",
-  "method": "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision). compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision). Configuration errors are checked first, for every part of the configuration.",
+  "description": "Verdict evaluation under the two ruled rules: regression/fisher for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A configuration carrying both bars (approach joint) is refused whole when any part is invalid, reporting every applicable code. When it is valid, each bar decides with its own rule and alpha (compliance_alpha, regression_alpha) and is reported in bars; the verdict is their structural composite (PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise) and failing_bars names the bars that failed. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error, bars, failing_bars. Informational: observed_rate.",
+  "method": "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision). compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision). Configuration errors are checked first, for every part of the configuration; configuration_error is the list of every applicable code in the fixed order TEST_LARGER_THAN_BASELINE, COMPLIANCE_INFEASIBLE (empty when valid).",
   "tolerance": 1e-10,
   "cases": [
     {
@@ -29,7 +29,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.96
       }
     },
@@ -45,7 +45,7 @@
       },
       "expected": {
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.98
       }
     },
@@ -61,7 +61,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.8
       }
     },
@@ -77,7 +77,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.9
       }
     },
@@ -93,7 +93,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0
       }
     },
@@ -109,7 +109,7 @@
       },
       "expected": {
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.92
       }
     },
@@ -126,7 +126,9 @@
       },
       "expected": {
         "verdict": null,
-        "configuration_error": "COMPLIANCE_INFEASIBLE",
+        "configuration_error": [
+          "COMPLIANCE_INFEASIBLE"
+        ],
         "observed_rate": 1
       }
     },
@@ -143,7 +145,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 1
       }
     },
@@ -159,7 +161,7 @@
       },
       "expected": {
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.91
       }
     },
@@ -175,7 +177,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.9
       }
     },
@@ -191,7 +193,7 @@
       },
       "expected": {
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.95
       }
     },
@@ -208,7 +210,7 @@
       },
       "expected": {
         "verdict": "FAIL",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 0.95
       }
     },
@@ -224,7 +226,9 @@
       },
       "expected": {
         "verdict": null,
-        "configuration_error": "TEST_LARGER_THAN_BASELINE",
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE"
+        ],
         "observed_rate": 0.95
       }
     },
@@ -241,7 +245,7 @@
       },
       "expected": {
         "verdict": "PASS",
-        "configuration_error": null,
+        "configuration_error": [],
         "observed_rate": 1
       }
     },
@@ -257,15 +261,20 @@
         "successes": 190,
         "trials": 200,
         "threshold": 0.9,
-        "alpha": 0.05,
         "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
         "baseline_successes": 95,
-        "baseline_trials": 100
+        "baseline_trials": 100,
+        "regression_alpha": 0.05
       },
       "expected": {
         "verdict": null,
-        "configuration_error": "TEST_LARGER_THAN_BASELINE",
-        "observed_rate": 0.95
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE"
+        ],
+        "observed_rate": 0.95,
+        "bars": [],
+        "failing_bars": []
       }
     },
     {
@@ -280,15 +289,212 @@
         "successes": 100,
         "trials": 100,
         "threshold": 0.999,
-        "alpha": 0.05,
         "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
         "baseline_successes": 950,
-        "baseline_trials": 1000
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
       },
       "expected": {
         "verdict": null,
-        "configuration_error": "COMPLIANCE_INFEASIBLE",
-        "observed_rate": 1
+        "configuration_error": [
+          "COMPLIANCE_INFEASIBLE"
+        ],
+        "observed_rate": 1,
+        "bars": [],
+        "failing_bars": []
+      }
+    },
+    {
+      "name": "joint_refused_both_parts",
+      "description": "Both parts are invalid: both codes are reported, TEST_LARGER_THAN_BASELINE first.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "successes": 200,
+        "trials": 200,
+        "threshold": 0.999,
+        "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
+        "baseline_successes": 95,
+        "baseline_trials": 100,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "verdict": null,
+        "configuration_error": [
+          "TEST_LARGER_THAN_BASELINE",
+          "COMPLIANCE_INFEASIBLE"
+        ],
+        "observed_rate": 1,
+        "bars": [],
+        "failing_bars": []
+      }
+    },
+    {
+      "name": "joint_pass_both_bars",
+      "description": "Normative bar: 945 of 1000 demonstrates 0.90 at alpha 0.01. Empirical bar: 945 meets the cutoff of 933. PASS.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "successes": 945,
+        "trials": 1000,
+        "threshold": 0.9,
+        "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "verdict": "PASS",
+        "configuration_error": [],
+        "observed_rate": 0.945,
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "PASS"
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "PASS"
+          }
+        ],
+        "failing_bars": []
+      }
+    },
+    {
+      "name": "joint_fail_empirical_bar",
+      "description": "The requirement of 0.90 is demonstrated, but 925 falls below the cutoff of 933 derived from the baseline: FAIL, naming the empirical bar.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "successes": 925,
+        "trials": 1000,
+        "threshold": 0.9,
+        "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "verdict": "FAIL",
+        "configuration_error": [],
+        "observed_rate": 0.925,
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "PASS"
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "FAIL"
+          }
+        ],
+        "failing_bars": [
+          "empirical"
+        ]
+      }
+    },
+    {
+      "name": "joint_fail_normative_bar",
+      "description": "No degradation from the baseline 930 of 1000, but 945 does not demonstrate 0.95: FAIL, naming the normative bar.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "successes": 945,
+        "trials": 1000,
+        "threshold": 0.95,
+        "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
+        "baseline_successes": 930,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "verdict": "FAIL",
+        "configuration_error": [],
+        "observed_rate": 0.945,
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "FAIL"
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "PASS"
+          }
+        ],
+        "failing_bars": [
+          "normative"
+        ]
+      }
+    },
+    {
+      "name": "joint_fail_both_bars",
+      "description": "Both bars fail; both are named.",
+      "approach": "joint",
+      "decisionRule": [
+        "compliance/exact-binomial",
+        "regression/fisher"
+      ],
+      "inputs": {
+        "successes": 900,
+        "trials": 1000,
+        "threshold": 0.95,
+        "intent": "VERIFICATION",
+        "compliance_alpha": 0.01,
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "regression_alpha": 0.05
+      },
+      "expected": {
+        "verdict": "FAIL",
+        "configuration_error": [],
+        "observed_rate": 0.9,
+        "bars": [
+          {
+            "bar": "normative",
+            "decisionRule": "compliance/exact-binomial",
+            "alpha": 0.01,
+            "verdict": "FAIL"
+          },
+          {
+            "bar": "empirical",
+            "decisionRule": "regression/fisher",
+            "alpha": 0.05,
+            "verdict": "FAIL"
+          }
+        ],
+        "failing_bars": [
+          "normative",
+          "empirical"
+        ]
       }
     }
   ]

@@ -39,10 +39,26 @@ DECISION_RULES <- list(
   "latency/compliance-exact-binomial" = list(id = "latency/compliance-exact-binomial", version = 1L)
 )
 
+# The configuration errors, in the fixed order in which a refused
+# configuration reports them: every applicable code, as a list.
 CONFIGURATION_ERRORS <- c(
   "TEST_LARGER_THAN_BASELINE",
   "COMPLIANCE_INFEASIBLE"
 )
+
+#' Every applicable configuration-error code, in the fixed order
+#'
+#' @param ... Codes or NA (a part of the configuration that is valid).
+#' @return A list of codes in the order of `CONFIGURATION_ERRORS`; empty
+#'   when the configuration is valid.
+#' @export
+configuration_errors <- function(...) {
+  codes <- unlist(list(...))
+  codes <- codes[!is.na(codes)]
+  unknown <- setdiff(codes, CONFIGURATION_ERRORS)
+  if (length(unknown)) stop("unknown configuration error: ", paste(unknown, collapse = ", "), call. = FALSE)
+  as.list(CONFIGURATION_ERRORS[CONFIGURATION_ERRORS %in% codes])
+}
 
 # The alpha values at which the certification scans run.
 CERTIFIED_ALPHAS <- c(0.001, 0.01, 0.05, 0.10)
@@ -260,9 +276,27 @@ fisher_implied_alpha <- function(baseline_successes, baseline_trials, test_sampl
 #' @return A configuration-error code or NA_character_.
 #' @export
 regression_configuration_error <- function(baseline_trials, test_samples) {
-  check_count(baseline_trials, "baseline_trials", 1)
-  check_count(test_samples, "test_samples", 1)
-  if (test_samples > baseline_trials) return("TEST_LARGER_THAN_BASELINE")
+  test_size_configuration_error(baseline_trials, test_samples)
+}
+
+#' The design rule TEST_LARGER_THAN_BASELINE, judged on the sampling
+#'
+#' One run has one sampling. A test whose planned sample size N_t exceeds
+#' the sample size N_b of the baseline it consumes is refused before the
+#' run, for every criterion it carries, pass-rate and latency alike. The
+#' latency success counts are not compared: they cannot exceed N_t, and
+#' they are not known before the run. A design policy (the baseline is at
+#' least as large as any test that consumes it), not a statistical
+#' necessity.
+#'
+#' @param baseline_samples N_b, the baseline run's sample size.
+#' @param planned_samples N_t, the test's planned sample size.
+#' @return "TEST_LARGER_THAN_BASELINE" or NA.
+#' @export
+test_size_configuration_error <- function(baseline_samples, planned_samples) {
+  check_count(baseline_samples, "baseline_samples", 1)
+  check_count(planned_samples, "planned_samples", 1)
+  if (planned_samples > baseline_samples) return("TEST_LARGER_THAN_BASELINE")
   NA_character_
 }
 

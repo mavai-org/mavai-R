@@ -6,7 +6,7 @@ test_that("Regression verdict: clear PASS at K well above cutoff", {
   )
   expect_equal(result$verdict, "PASS")
   expect_identical(result$cutoff_integer, 933L)
-  expect_true(is.na(result$configuration_error))
+  expect_length(result$configuration_error, 0)
 })
 
 test_that("Regression verdict: the §3.4 rate has cutoff 91", {
@@ -37,7 +37,7 @@ test_that("Regression: a tiny test against a near-perfect baseline is admitted",
     baseline_successes = 999, baseline_trials = 1000
   )
   expect_identical(result$verdict, "PASS")
-  expect_true(is.na(result$configuration_error))
+  expect_length(result$configuration_error, 0)
 })
 
 test_that("Compliance verdict: clear PASS well above p_req", {
@@ -86,4 +86,18 @@ test_that("Generator output matches the committed fixture", {
                  generated$cases[[i]]$expected$verdict,
                  info = generated$cases[[i]]$name)
   }
+})
+
+test_that("a criterion with both bars combines them by the structural composite rule", {
+  cases <- generate_criterion_verdict_inferential_cases()$cases
+  get <- function(n) Filter(function(c) c$name == n, cases)[[1]]$expected
+  expect_identical(get("joint_pass_both_bars")$verdict, "PASS")
+  expect_identical(get("joint_fail_empirical_bar")$failing_bars, list("empirical"))
+  expect_identical(get("joint_fail_normative_bar")$failing_bars, list("normative"))
+  inc <- get("joint_inconclusive_normative_bar")
+  expect_identical(inc$verdict, "INCONCLUSIVE")
+  expect_identical(vapply(inc$bars, `[[`, character(1), "verdict"), c("INCONCLUSIVE", "PASS"))
+  expect_identical(get("joint_fail_dominates_inconclusive")$verdict, "FAIL")
+  expect_identical(get("joint_refused_test_larger_than_baseline")$configuration_error,
+                   list("TEST_LARGER_THAN_BASELINE"))
 })

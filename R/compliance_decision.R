@@ -23,7 +23,7 @@ compliance_decision_case <- function(name, threshold, test_samples, alpha, inten
   err <- compliance_configuration_error(threshold, test_samples, alpha, intent)
   expected <- if (!is.na(err)) {
     list(k_min = NA_integer_, pass_possible = NA, verdict = NA_character_,
-         configuration_error = err, false_compliance = NA_real_,
+         configuration_error = configuration_errors(err), false_compliance = NA_real_,
          clopper_pearson_lower = NA_real_)
   } else {
     k <- exact_binomial_k_min(threshold, test_samples, alpha)
@@ -32,7 +32,7 @@ compliance_decision_case <- function(name, threshold, test_samples, alpha, inten
       k_min = k,
       pass_possible = possible,
       verdict = if (possible && observed_successes >= k) "PASS" else "FAIL",
-      configuration_error = NA_character_,
+      configuration_error = configuration_errors(),
       false_compliance = if (possible) pbinom(k - 1, test_samples, threshold, lower.tail = FALSE) else 0,
       clopper_pearson_lower = clopper_pearson_lower(observed_successes, test_samples, alpha)
     )

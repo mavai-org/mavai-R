@@ -24,7 +24,7 @@
 fisher_expected_block <- function(baseline_successes, baseline_trials, test_samples, alpha) {
   err <- regression_configuration_error(baseline_trials, test_samples)
   if (!is.na(err)) {
-    return(list(cutoff_integer = NA_integer_, configuration_error = err,
+    return(list(cutoff_integer = NA_integer_, configuration_error = configuration_errors(err),
                 threshold_real = NA_real_, displayed_rate = NA_real_,
                 size_at_assumed_common_rate = NA_real_))
   }
@@ -34,7 +34,7 @@ fisher_expected_block <- function(baseline_successes, baseline_trials, test_samp
   p_hat <- baseline_successes / baseline_trials
   list(
     cutoff_integer = c_int,
-    configuration_error = NA_character_,
+    configuration_error = configuration_errors(),
     threshold_real = c_int / test_samples,
     displayed_rate = round(c_int / test_samples, 6),
     size_at_assumed_common_rate = if (p_hat %in% c(0, 1)) NA_real_ else
@@ -61,7 +61,7 @@ regression_decision_case <- function(name, baseline_successes, baseline_trials,
                                      test_samples, alpha, observed_successes,
                                      description = NULL) {
   block <- fisher_expected_block(baseline_successes, baseline_trials, test_samples, alpha)
-  verdict <- if (!is.na(block$configuration_error)) NA_character_ else
+  verdict <- if (length(block$configuration_error)) NA_character_ else
     if (observed_successes >= block$cutoff_integer) "PASS" else "FAIL"
   case <- list(name = name)
   if (!is.null(description)) case$description <- description

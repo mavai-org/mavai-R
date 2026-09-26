@@ -416,7 +416,20 @@ test_that("the verdict-1.7 XSD refuses an unknown decision rule or configuration
   mutated <- gsub('decision-rule="regression/fisher"', 'decision-rule="regression/score-cc"', typical, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
   refused <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-refused.xml"))
-  mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE"', 'configuration-error="TOO_SMALL"', refused, fixed = TRUE)
+  mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE COMPLIANCE_INFEASIBLE"',
+                 'configuration-error="TEST_LARGER_THAN_BASELINE TOO_SMALL"', refused, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+  mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE COMPLIANCE_INFEASIBLE"',
+                 'configuration-error=""', refused, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})
+
+test_that("the verdict-1.7 XSD carries a criterion's two bars", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  joint <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-joint.xml"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(joint, collapse = "\n")), xsd)))
+  mutated <- sub('kind="normative"', 'kind="advisory"', joint, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 
