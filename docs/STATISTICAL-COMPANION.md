@@ -1610,7 +1610,7 @@ This refusal is **distinct from a SUT failure** — it indicates a configuration
 | `COMPLIANCE_INFEASIBLE` | A normative design with $n < N_{\min}$ | VERIFICATION; SMOKE runs and reports that PASS is not possible (§5.7.3) |
 | `TEST_LARGER_THAN_BASELINE` | An empirical (regression) test with $n_t > n_b$ (§3.4) | Refused regardless of intent |
 
-When a configuration carries both a normative and an empirical bar and either part is invalid, the whole configuration is refused; a run never proceeds half-valid. The existing zero-baseline treatment (§4.3.4) and the latency existence gate (§12.5.2.1) are not configuration errors: the latency gate yields INCONCLUSIVE, because it depends on the data's rank resolution rather than on the configuration alone.
+When a configuration carries both a normative and an empirical bar and either part is invalid, the whole configuration is refused; a run never proceeds half-valid. The existing zero-baseline treatment (§4.3.4) and the latency existence gate (§12.5.2.1) are not configuration errors: the latency gate, a rank search run before any sample executes, yields INCONCLUSIVE with `saturated: true`.
 
 ##### Conformance Verification
 
@@ -2781,7 +2781,7 @@ It follows from the Beta distribution of the order statistic's coverage, $F(t_{(
 
 **The rank.** $\text{breach}(k)$ decreases as $k$ grows. The operative rank is the smallest $k \le n_b$ with $\text{breach}(k) \le \alpha$, and the threshold is $\tau = t_{(k)}$, an observed latency in integer milliseconds. The test PASSes iff its nearest-rank percentile is at most $\tau$; a test percentile equal to the threshold is not a breach.
 
-**Existence.** If no $k \le n_b$ achieves $\text{breach}(k) \le \alpha$, the baseline cannot support a calibrated threshold for a test of this size at this percentile. The result is INCONCLUSIVE, reported with `saturated: true` and no threshold; no rank is clamped to $n_b$ to manufacture one.
+**Existence.** If no $k \le n_b$ achieves $\text{breach}(k) \le \alpha$, the baseline cannot support a calibrated threshold for a test of this size at this percentile. The result is INCONCLUSIVE, reported with `saturated: true` and no threshold; no rank is clamped to $n_b$ to manufacture one. Because the search needs only $n_b$, $n_t$, the percentile and $\alpha$, it is run before the test as the existence gate (§12.5.2.1, §12.5.3), with the test's expected number of successful samples, and again on the actual count after the run.
 
 **Properties**:
 
@@ -2838,52 +2838,49 @@ The methodology enforces minimum sample counts for each percentile level based o
 | p95        | 0.95 | 20            | $\lceil 0.95 \cdot 20 \rceil = 19$: 19th order statistic of 20; one value above                            |
 | p99        | 0.99 | 100           | $\lceil 0.99 \cdot 100 \rceil = 99$: 99th order statistic of 100; one value above. Below 100, p99 = max    |
 
-These thresholds ensure that the percentile estimate is not degenerate (i.e., not simply the minimum or maximum of the sample). They are a **non-degeneracy gate** only — they do not by themselves guarantee that a finite-sample distribution-free upper confidence bound on the true quantile exists at the configured confidence. That second condition is given by the confidence-bound existence gate below (§12.5.2.1).
+These thresholds ensure that the percentile estimate is not degenerate (i.e., not simply the minimum or maximum of the sample). They are a **non-degeneracy gate** only — they do not by themselves guarantee that a calibrated threshold exists for the test that will run. That second condition is given by the existence gate below (§12.5.2.1).
 
 #### 12.5.2.1 Confidence-Bound Existence Gate
 
-A non-degenerate empirical percentile is necessary but **not sufficient** for the precedence rank of §12.4.2 to exist. The operative existence condition is the one §12.4.2 states: some rank $k \le n_b$ must achieve $\text{breach}(k) \le \alpha$ for the test size that will run. When none does, the result is INCONCLUSIVE with `saturated: true`. It depends on the baseline size, the percentile, $\alpha$ and the test size together: at p95 and $\alpha = 0.05$, a baseline of 100 latencies cannot support a threshold for a test of 15, and a baseline of 1000 can (rank 998).
+A non-degenerate empirical percentile is necessary but **not sufficient** for the precedence rank of §12.4.2 to exist. The existence condition is the one §12.4.2 states: some rank $k \le n_b$ must achieve $\text{breach}(k) \le \alpha$ for the test that will run. Because $\text{breach}(k)$ decreases in $k$, a rank exists exactly when the top rank does, $\text{breach}(n_b) \le \alpha$. The condition depends on the baseline size, the test size, the percentile and $\alpha$ together, and all four are known before the run, so the rank search is itself the pre-run gate (§12.5.3). At p95 and $\alpha = 0.05$, a baseline of 100 latencies cannot support a threshold for a test of 15, and a baseline of 1000 can (rank 998).
 
-The table below is the existence condition of the withdrawn confidence bound of §12.4.3, the Wilks (1941) minimum for a distribution-free upper bound on a quantile to exist within the sample, $p^{n_s} \le \alpha$, that is
+The Wilks (1941) table of minimum sample sizes that stood here, $n_s \ge \lceil \log\alpha / \log p \rceil$, is withdrawn: it was the existence condition of the withdrawn confidence bound of §12.4.3, and it is neither necessary nor sufficient for the precedence rank.
 
-$$n_s \ge \left\lceil \frac{\log(\alpha)}{\log(p)} \right\rceil.$$
+For planning, the smallest baseline, no smaller than the test, from which a rank exists at $\alpha = 0.05$ is:
 
-At $\alpha = 0.05$:
+| Percentile | $n_t = 10$ | $n_t = 25$ | $n_t = 50$ | $n_t = 100$ | $n_t = 200$ |
+|---|---|---|---|---|---|
+| p90 | 33 | 42 | 50 | 100 | 200 |
+| p95 | 191 | 86 | 84 | 100 | 200 |
+| p99 | 191 | 476 | 951 | 346 | 342 |
 
-| Percentile | $p$ | Wilks minimum $n_s$ at 95% |
-|---|---|---:|
-| p50 | 0.50 | 5 |
-| p90 | 0.90 | 29 |
-| p95 | 0.95 | 59 |
-| p99 | 0.99 | 299 |
-| p99.9 | 0.999 | 2995 |
-
-It is retained as the pre-run screen of §12.5.3. It is not the existence condition of the precedence rank: whether a precedence threshold exists depends on the test size as well, and the rank search of §12.4.2 decides it.
+The requirement is not monotone in the test size, because the test's nearest rank $r$ moves in integer steps: a p99 test of 50 has $r = 50$, its own maximum, so the baseline must make even the test's largest value unlikely to exceed the threshold. At p50 a baseline of 5 suffices for every test size in the table.
 
 The two latency gates therefore play different roles:
 
 | Gate | Question answered | Outcome |
 |---|---|---|
 | Non-degeneracy (§12.5.2) | Is the empirical percentile distinct from the sample maximum / minimum? | Configuration error in VERIFICATION |
-| Existence (§12.4.2) | Does some baseline rank achieve a no-degradation breach probability of at most $\alpha$ for this test size? | INCONCLUSIVE with `saturated: true` |
+| Existence (§12.4.2) | Does some baseline rank achieve a no-degradation breach probability of at most $\alpha$ for this test size? | INCONCLUSIVE with `saturated: true`, reported before the run |
 
-A percentile estimate can be non-degenerate yet still unable to support a calibrated threshold. For each asserted percentile, the framework first checks the non-degeneracy requirement and then searches for the precedence rank.
+A percentile estimate can be non-degenerate yet still unable to support a calibrated threshold. For each asserted percentile, the framework checks the non-degeneracy requirement and runs the precedence rank search before any sample executes.
 
 **Scope note on p99.9 and beyond**: The supported percentile levels are $\{0.50, 0.90, 0.95, 0.99\}$. Extreme-tail percentiles such as p99.9 are out of scope for the current methodology: a non-degenerate p99.9 estimate requires $n_s \geq 1{,}000$ successful samples, and a statistically useful threshold at 95% requires considerably more. Services with genuine p99.9 SLAs generally warrant dedicated tail-focused instrumentation (production telemetry, HdrHistogram-style log-linear bucketing, or extreme-value modelling) rather than per-test-run estimation.
 
 #### 12.5.3 The Feasibility Gate
 
-For **VERIFICATION** intent with latency enforcement enabled, the framework checks *before any samples execute* whether the expected number of successful samples meets the **stricter** of two minimums — non-degeneracy (§12.5.2) and the Wilks minimum of §12.5.2.1. The check is a pre-run screen; whether a calibrated threshold exists for the test that will run is decided by the precedence rank search (§12.4.2), which returns INCONCLUSIVE when none does:
+For **VERIFICATION** intent with latency enforcement enabled, the framework checks *before any samples execute*, for each asserted percentile $p_j$:
 
-$$n_{s,\min}^{\mathrm{VERIFICATION}}(p_j,\, \alpha) \;=\; \max\!\left(\, n_{s,\min}^{\mathrm{non\text{-}degen}}(p_j),\; \left\lceil \frac{\log\alpha}{\log p_j} \right\rceil \,\right).$$
+1. **Non-degeneracy** (§12.5.2): the expected number of successful test samples meets the minimum of §12.5.2; otherwise the framework raises a configuration error — the same mechanism used for the pass-rate feasibility gate (Section 5.7.1).
+2. **Existence** (§12.5.2.1): the precedence rank search of §12.4.2, run on the baseline's $n_b$ latencies and the test's expected successful-sample count, finds a rank; otherwise the result is INCONCLUSIVE with `saturated: true`, reported before the run.
 
 The expected successful-sample count is
 
-$$n_{s,\text{expected}} = n_{\text{planned}} \times \hat{p}_{\text{baseline}}.$$
+$$n_{t,\text{expected}} = \lfloor n_{\text{planned}} \times \hat{p}_{\text{baseline}} \rfloor.$$
 
-If $n_{s,\text{expected}} < n_{s,\min}^{\mathrm{VERIFICATION}}(p_j,\, \alpha)$ for any asserted percentile $p_j$, the framework raises a configuration error — the same mechanism used for the pass-rate feasibility gate (Section 5.7.1).
+After the run, the threshold is derived from the test's actual number of successful samples (§12.4.2).
 
-**Example**: A test with $n_{\text{planned}} = 200$ and baseline $\hat{p} = 0.80$ yields $n_{s,\text{expected}} = 160$. A p99 assertion at $\alpha = 0.05$ requires $n_{s,\min}^{\mathrm{VERIFICATION}} = \max(100,\, 299) = 299$. The test is infeasible (160 < 299) and fails immediately with a diagnostic message.
+**Example**: A test with $n_{\text{planned}} = 200$ and baseline $\hat{p} = 0.80$ expects $n_{t,\text{expected}} = 160$ successful samples. A p99 assertion at $\alpha = 0.05$ has $r = 159$; against a baseline of 400 latencies no rank achieves $\alpha$, and the assertion is reported INCONCLUSIVE with `saturated: true` before the test runs. A baseline of at least 554 latencies supports a threshold (rank 554 at exactly 554).
 
 #### 12.5.4 Indicative Results
 
@@ -2916,7 +2913,7 @@ The table below summarises how the two quality dimensions parallel each other in
 | **Estimand**             | Success probability $p$      | Percentile quantiles $Q(p_j)$            |
 | **Decision rule** | Fisher cutoff (regression); exact binomial $k_{\min}$ (compliance) | Precedence rank (§12.4.2) |
 | **Baseline storage**     | $(\hat{p}, k, n)$            | $(t_{(1)}, \ldots, t_{(n_s)}, n_s)$      |
-| **Feasibility gate** | $N_{\min} = \lceil \log\alpha / \log p_{\mathrm{req}} \rceil$ (compliance) | $n_{s,\min}$ from percentile reliability |
+| **Feasibility gate** | $N_{\min} = \lceil \log\alpha / \log p_{\mathrm{req}} \rceil$ (compliance) | Non-degeneracy minimum and the precedence rank search (§12.5.3) |
 | **Indicative marking**   | Undersized sample note       | Undersized sample note                   |
 | **Enforcement**          | Always enforced              | Advisory by default; opt-in enforcement  |
 

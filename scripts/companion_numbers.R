@@ -181,9 +181,27 @@ chk("12.4.5", "legacy rank and breach", sprintf("used rank %d here, whose no-deg
                                                pct2(latency_breach_probability(935, legacy_order_statistic_rank(935, 0.95, 0.05)$rank, 192, 0.95))))
 chk("12.5.2.1", "1000/15 rank", sprintf("and a baseline of 1000 can (rank %d)", latency_precedence_rank(1000, 15, 0.95, 0.05)))
 stopifnot(is.na(latency_precedence_rank(100, 15, 0.95, 0.05)))
-for (pp in c(0.50, 0.90, 0.95, 0.99, 0.999)) {
-  chk("12.5.2.1", sprintf("Wilks %g", pp), sprintf("| %s | %d |", format(pp, nsmall = 2), exact_binomial_min_feasible_n(pp, 0.05)))
+min_baseline <- function(nt, pp, a = 0.05) {  # smallest n_b >= n_t from which a rank exists
+  nb <- nt
+  while (latency_precedence_exists(nb, nt, pp, a)$saturated) nb <- nb + 1L
+  stopifnot(!latency_precedence_exists(nb + 1L, nt, pp, a)$saturated)
+  as.integer(nb)
 }
+for (pp in c(0.90, 0.95, 0.99)) {
+  mins <- vapply(c(10L, 25L, 50L, 100L, 200L), min_baseline, integer(1), pp = pp)
+  chk("12.5.2.1", sprintf("existence table p%g", 100 * pp),
+      sprintf("| p%g | %s |", 100 * pp, paste(mins, collapse = " | ")))
+}
+chk("12.5.2.1", "p99 test of 50", sprintf("a p99 test of 50 has $r = %d$", latency_test_rank(50, 0.99)))
+stopifnot(all(vapply(c(10L, 25L, 50L, 100L, 200L), function(nt)
+  latency_precedence_exists(5, nt, 0.50, 0.05)$saturated == FALSE && latency_precedence_exists(4, nt, 0.50, 0.05)$saturated, logical(1))))
+chk("12.5.2.1", "p50 minimum", "At p50 a baseline of 5 suffices for every test size in the table")
+nte <- floor(200 * 0.80)
+chk("12.5.3", "expected successes", sprintf("expects $n_{t,\\text{expected}} = %d$", nte))
+chk("12.5.3", "test rank", sprintf("has $r = %d$", latency_test_rank(nte, 0.99)))
+stopifnot(latency_precedence_exists(400, nte, 0.99, 0.05)$saturated)
+chk("12.5.3", "gate threshold", sprintf("A baseline of at least %d latencies supports a threshold (rank %d at exactly %d)",
+    min_baseline(nte, 0.99), latency_precedence_rank(min_baseline(nte, 0.99), nte, 0.99, 0.05), min_baseline(nte, 0.99)))
 
 # --- Worked numbers in the descriptive and planning sections ----------------------
 se <- sqrt(0.951 * 0.049 / 1000)
