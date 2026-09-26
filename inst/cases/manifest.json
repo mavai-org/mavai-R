@@ -29,11 +29,11 @@
       "file": "baseline_object.json",
       "tolerance": 0,
       "decisionRules": [],
-      "caseCount": 6,
-      "cases": ["consult_advice_eu_weekday", "guardrail_sentinel_observational_only", "consult_advice_us_weekend_divergent", "perfect_baseline_moderate_n", "consult_advice_cross_policy_counterexample", "paired_evaluability_content_pattern"],
+      "caseCount": 8,
+      "cases": ["consult_advice_eu_weekday", "consult_advice_readability_eu_weekday", "consult_advice_self_harm_probe_eu_weekday", "guardrail_sentinel_observational_only", "consult_advice_us_weekend_divergent", "perfect_baseline_moderate_n", "consult_advice_cross_policy_counterexample", "paired_evaluability_content_pattern"],
       "bindingFields": [],
       "informationalFields": {},
-      "md5": "5a934739fb9749f2c708aced04e08849"
+      "md5": "5002487d267a58e3a434711b31e875ec"
     },
     "compliance_decision": {
       "file": "compliance_decision.json",
@@ -172,11 +172,11 @@
           "version": 1
         }
       ],
-      "caseCount": 4,
-      "cases": ["consult_advice_locked_section_10_3", "consult_advice_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch"],
+      "caseCount": 6,
+      "cases": ["consult_advice_well_formed", "consult_advice_readability", "consult_advice_self_harm_probe", "consult_advice_readability_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch"],
       "bindingFields": ["composite_verdict", "conformance_status", "false_compliance_envelope", "false_degradation_signal_envelope", "per_criterion_verdicts", "structural_error", "triggering_criteria"],
       "informationalFields": {},
-      "md5": "bc0d5a27b5809ecdc5eb4b2519f5c4a3"
+      "md5": "16c10b866f5d31968abf115c49d50a9f"
     },
     "power_analysis": {
       "file": "power_analysis.json",

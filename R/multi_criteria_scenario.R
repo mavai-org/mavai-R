@@ -1,28 +1,30 @@
 #' Multi-criteria end-to-end scenario fixture (companion §10.3, §10.6)
 #'
-#' The fixture-form counterpart of the locked §10.3 worked example.
+#' The fixture-form counterpart of the §10.3 worked example.
 #' Each case ties together a baseline, a test run, and an expected
 #' output that names per-criterion derived thresholds, per-criterion
 #' verdicts (with the three-strand block for inferential criteria),
 #' the composite verdict, both procedure-direction envelopes, and the
 #' §10.6 `conformance_status` metadata block.
 #'
-#' Four cases:
-#'   1. consult_advice_locked_section_10_3 — the §10.3 contract.
-#'      Composite FAIL triggered by C_layperson_readable.
-#'   2. consult_advice_passing_counterfactual — the same contract,
-#'      same baseline, but a higher observed K on C_layperson_readable
-#'      that clears the SLO at α = 0.001. Composite PASS.
-#'   3. paired_evaluability_content_non_unit_r_obs — a separate
+#' Six cases:
+#'   1-3. consult_advice_well_formed, consult_advice_readability,
+#'      consult_advice_self_harm_probe — the §10.3 example: three tests,
+#'      each bound to its own contract and running over one sampling
+#'      (V_prod, V_complexity, V_probe). One run, one sampling: differing
+#'      input populations are separate tests.
+#'   4. consult_advice_readability_passing_counterfactual — test 2 with a
+#'      higher observed K that clears the SLO at alpha = 0.001.
+#'   5. paired_evaluability_content_non_unit_r_obs — a separate
 #'      contract exercising the structural-composition pattern: a
 #'      MARGINAL availability criterion paired with a CONDITIONAL
-#'      content criterion via availability_criterion_ref. Non-1.0
-#'      r_obs on the content criterion exercises the difference
-#'      between n_attempted and n_evaluable.
-#'   4. cross_policy_structural_mismatch — the test run's
-#'      denominator_policy differs from the baseline's for at least
-#'      one criterion. Expected verdict: STRUCTURAL_ERROR; no
-#'      numerical comparison performed.
+#'      content criterion via availability_criterion_ref, both over one
+#'      sampling. Non-1.0 r_obs on the content criterion exercises the
+#'      difference between n_attempted and n_evaluable.
+#'   6. cross_policy_structural_mismatch — the test run's
+#'      denominator_policy differs from the baseline's.
+#'      Expected verdict: STRUCTURAL_ERROR; no numerical comparison
+#'      performed.
 #'
 #' Numerics: verified by R recomputation against the locked companion.
 
@@ -182,107 +184,126 @@ expected_structural_error <- function(reason, conflicting_criteria) {
 #' @export
 generate_multi_criteria_scenario_cases <- function() {
 
-  # --- Shared consult-advice baseline (mirrors baseline_object.json
-  #     case 1; duplicated inline so the scenario fixture is
-  #     self-contained for downstream consumers).
-  consult_advice_baseline <- list(
-    factor_record = list(
-      service       = "consult-advice-service@3.1",
-      model         = "claude-sonnet-4-5-20250929",
-      temperature   = 0.0,
-      system_prompt = "consult-advice-prompt@5"
-    ),
-    covariate_profile = list(
-      day_of_week   = "WEEKDAY",
-      time_of_day   = "08:00-12:00",
-      region        = "EU",
-      serving_stack = "standard"
-    ),
-    expiration_window    = "2026-08-13",
-    structural_reference = "consult-advice@5",
-    criteria = list(
-      inf_crit("c_well_formed",
-               procedure = "REGRESSION",
-               policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-               n_attempted = 1000, n_evaluable = 1000, K_c = 951),
-      obs_crit("c_no_self_harm",
-               policy = "CONDITIONAL_ON_EVALUABLE",
-               n_attempted = 200, n_evaluable = 200, K_c = 200),
-      inf_crit("c_layperson_readable",
-               procedure = "COMPLIANCE",
-               policy = "CONDITIONAL_ON_EVALUABLE",
-               n_attempted = 800, n_evaluable = 800, K_c = 788)
+  # --- The consult-advice example: three tests, one sampling each.
+  #     Each input population is its own contract and test (the
+  #     baselines mirror baseline_object.json, duplicated inline so the
+  #     scenario fixture is self-contained for downstream consumers).
+  factor_record <- list(
+    service       = "consult-advice-service@3.1",
+    model         = "claude-sonnet-4-5-20250929",
+    temperature   = 0.0,
+    system_prompt = "consult-advice-prompt@5"
+  )
+  covariate_profile <- list(
+    day_of_week   = "WEEKDAY",
+    time_of_day   = "08:00-12:00",
+    region        = "EU",
+    serving_stack = "standard"
+  )
+  one_sampling_baseline <- function(structural_reference, criteria) {
+    list(
+      factor_record        = factor_record,
+      covariate_profile    = covariate_profile,
+      expiration_window    = "2026-08-13",
+      structural_reference = structural_reference,
+      criteria             = criteria
     )
-  )
-
-  # --- Case 1: locked §10.3 contract, composite FAIL.
-  case_1_test_run <- list(
-    covariate_profile = consult_advice_baseline$covariate_profile,
-    criteria_observations = list(
-      inf_test_obs("c_well_formed",
-                   procedure = "REGRESSION",
-                   policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-                   alpha = 0.05,
-                   n_attempted = 1000, n_evaluable = 1000, K_c = 953,
-                   baseline_successes = 951, baseline_trials = 1000),
-      obs_test_obs("c_no_self_harm",
-                   policy = "CONDITIONAL_ON_EVALUABLE",
-                   n_attempted = 200, n_evaluable = 200, K_c = 200),
-      inf_test_obs("c_layperson_readable",
-                   procedure = "COMPLIANCE",
-                   policy = "CONDITIONAL_ON_EVALUABLE",
-                   alpha = 0.001,
-                   n_attempted = 800, n_evaluable = 800, K_c = 788,
-                   p_req = 0.98)
+  }
+  scenario_case <- function(name, description, baseline, observations) {
+    test_run <- list(covariate_profile = baseline$covariate_profile,
+                     criteria_observations = observations)
+    list(
+      name = name,
+      description = description,
+      inputs = list(baseline = baseline, test_run = test_run),
+      expected = expected_scenario(lapply(observations, per_criterion_verdict_block))
     )
-  )
-  case_1_per_crit <- lapply(case_1_test_run$criteria_observations,
-                            per_criterion_verdict_block)
+  }
 
-  case_1 <- list(
-    name = "consult_advice_locked_section_10_3",
-    description = paste(
-      "The locked §10.3 worked example. Three criteria: C_well_formed",
-      "(REGRESSION, EMPIRICAL origin) passes; C_no_self_harm",
-      "(observational) passes; C_layperson_readable (COMPLIANCE, SLO",
-      "origin) fails with the three-strand verdict's statistical and",
-      "observed-rate strands disagreeing. Composite FAIL."
-    ),
-    inputs = list(
-      baseline = consult_advice_baseline,
-      test_run = case_1_test_run
-    ),
-    expected = expected_scenario(case_1_per_crit)
-  )
+  # Test 1 of 3: consult-advice@5 over V_prod v5 (1000 samples).
+  well_formed_baseline <- one_sampling_baseline("consult-advice@5", list(
+    inf_crit("c_well_formed",
+             procedure = "REGRESSION",
+             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             n_attempted = 1000, n_evaluable = 1000, K_c = 951)
+  ))
+  well_formed_obs <- inf_test_obs("c_well_formed",
+                                  procedure = "REGRESSION",
+                                  policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+                                  alpha = 0.05,
+                                  n_attempted = 1000, n_evaluable = 1000, K_c = 953,
+                                  baseline_successes = 951, baseline_trials = 1000)
 
-  # --- Case 2: passing counterfactual.
-  # Bump K_c on layperson-readable enough to demonstrate compliance at
-  # α = 0.001: the exact test's k_min at n = 800, p_req = 0.98 is 796,
-  # so K = 798 (p_hat = 0.9975) PASSes.
-  case_2_test_run <- case_1_test_run
-  case_2_test_run$criteria_observations[[3]]$K_c <- 798L
-  case_2_per_crit <- lapply(case_2_test_run$criteria_observations,
-                            per_criterion_verdict_block)
+  # Test 2 of 3: consult-advice-readability@1 over V_complexity v2 (800).
+  readability_baseline <- one_sampling_baseline("consult-advice-readability@1", list(
+    inf_crit("c_layperson_readable",
+             procedure = "COMPLIANCE",
+             policy = "CONDITIONAL_ON_EVALUABLE",
+             n_attempted = 800, n_evaluable = 800, K_c = 788)
+  ))
+  readability_obs <- inf_test_obs("c_layperson_readable",
+                                  procedure = "COMPLIANCE",
+                                  policy = "CONDITIONAL_ON_EVALUABLE",
+                                  alpha = 0.001,
+                                  n_attempted = 800, n_evaluable = 800, K_c = 788,
+                                  p_req = 0.98)
 
-  case_2 <- list(
-    name = "consult_advice_passing_counterfactual",
-    description = paste(
-      "Same contract and baseline as case 1, with K_c on",
-      "C_layperson_readable increased to 798, at or above k_min = 796, so",
-      "compliance with the SLO requirement of 0.98 is demonstrated at",
-      "α = 0.001. Composite PASS."
+  # Test 3 of 3: consult-advice-self-harm-probe@1 over V_probe v3 (200).
+  probe_baseline <- one_sampling_baseline("consult-advice-self-harm-probe@1", list(
+    obs_crit("c_no_self_harm",
+             policy = "CONDITIONAL_ON_EVALUABLE",
+             n_attempted = 200, n_evaluable = 200, K_c = 200)
+  ))
+  probe_obs <- obs_test_obs("c_no_self_harm",
+                            policy = "CONDITIONAL_ON_EVALUABLE",
+                            n_attempted = 200, n_evaluable = 200, K_c = 200)
+
+  case_1 <- scenario_case("consult_advice_well_formed",
+    paste(
+      "Test 1 of the consult-advice example (§1.4.8, §10.3): contract",
+      "consult-advice@5 over the production sampling V_prod v5. One criterion,",
+      "C_well_formed (REGRESSION, EMPIRICAL origin): 953 of 1000 against the",
+      "baseline 951 of 1000 at alpha 0.05; the Fisher cutoff is 933. PASS."
     ),
-    inputs = list(
-      baseline = consult_advice_baseline,
-      test_run = case_2_test_run
+    well_formed_baseline, list(well_formed_obs))
+
+  case_2 <- scenario_case("consult_advice_readability",
+    paste(
+      "Test 2 of the consult-advice example: contract",
+      "consult-advice-readability@1 over V_complexity v2, inputs chosen to",
+      "elicit clinical terminology, so a separate test with its own sampling.",
+      "C_layperson_readable (COMPLIANCE, SLO origin): 788 of 800 against the",
+      "0.98 requirement at alpha 0.001; k_min is 796. FAIL, with the",
+      "three-strand verdict's statistical and observed-rate strands disagreeing."
     ),
-    expected = expected_scenario(case_2_per_crit)
-  )
+    readability_baseline, list(readability_obs))
+
+  case_3_probe <- scenario_case("consult_advice_self_harm_probe",
+    paste(
+      "Test 3 of the consult-advice example: contract",
+      "consult-advice-self-harm-probe@1 over the adversarial sampling V_probe v3,",
+      "a separate test with its own sampling. C_no_self_harm (observational):",
+      "no failure in 200 probe trials. PASS. The evidence is about the service",
+      "(generator and guardrail together) under adversarial input."
+    ),
+    probe_baseline, list(probe_obs))
+
+  # Passing counterfactual of test 2: at alpha 0.001 the exact test's
+  # k_min at n = 800, p_req = 0.98 is 796, so K = 798 PASSes.
+  readability_pass_obs <- readability_obs
+  readability_pass_obs$K_c <- 798L
+  case_2_pass <- scenario_case("consult_advice_readability_passing_counterfactual",
+    paste(
+      "Test 2 with K_c on C_layperson_readable increased to 798, at or above",
+      "k_min = 796, so compliance with the SLO requirement of 0.98 is",
+      "demonstrated at alpha 0.001. PASS."
+    ),
+    readability_baseline, list(readability_pass_obs))
 
   # --- Case 3: paired-criterion structural-composition pattern.
   paired_baseline <- list(
-    factor_record = consult_advice_baseline$factor_record,
-    covariate_profile = consult_advice_baseline$covariate_profile,
+    factor_record = factor_record,
+    covariate_profile = covariate_profile,
     expiration_window    = "2026-08-13",
     structural_reference = "consult-advice-paired@1",
     criteria = list(
@@ -338,18 +359,17 @@ generate_multi_criteria_scenario_cases <- function() {
     expected = expected_scenario(case_3_per_crit)
   )
 
-  # --- Case 4: cross-policy structural mismatch.
-  # The test run flips one criterion's denominator policy relative to
+  # --- Cross-policy structural mismatch.
+  # The test run flips the criterion's denominator policy relative to
   # the baseline. Methodology: structural error, no numerical
   # comparison performed.
-  case_4_test_run <- case_1_test_run
-  case_4_test_run$criteria_observations[[3]]$denominator_policy <-
-    "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
+  cross_obs <- readability_obs
+  cross_obs$denominator_policy <- "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
 
   case_4 <- list(
     name = "cross_policy_structural_mismatch",
     description = paste(
-      "Same contract and baseline as case 1, but the test run's",
+      "Test 2's contract and baseline, but the test run's",
       "denominator_policy for C_layperson_readable is",
       "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL while the baseline's is",
       "CONDITIONAL_ON_EVALUABLE. The two estimate different",
@@ -358,8 +378,9 @@ generate_multi_criteria_scenario_cases <- function() {
       "computed."
     ),
     inputs = list(
-      baseline = consult_advice_baseline,
-      test_run = case_4_test_run
+      baseline = readability_baseline,
+      test_run = list(covariate_profile = readability_baseline$covariate_profile,
+                      criteria_observations = list(cross_obs))
     ),
     expected = expected_structural_error(
       reason = paste(
@@ -371,7 +392,7 @@ generate_multi_criteria_scenario_cases <- function() {
     )
   )
 
-  cases <- list(case_1, case_2, case_3, case_4)
+  cases <- list(case_1, case_2, case_3_probe, case_2_pass, case_3, case_4)
 
   list(
     suite = "multi_criteria_scenario_consult_advice",
@@ -381,14 +402,19 @@ generate_multi_criteria_scenario_cases <- function() {
       "ties together a baseline, a test run, and the expected scenario",
       "output (per-criterion verdicts, composite verdict, both",
       "procedure-direction envelopes, conformance-status metadata).",
-      "Case 1 is the one canonical consult-advice example: the run 953 of",
-      "1000 against the baseline 951 of 1000 (C_well_formed) and 788 of 800",
-      "against the 0.98 requirement at alpha 0.001 (C_layperson_readable);",
-      "composite FAIL. Every consult-advice number in the companion is",
-      "generated from it. Case 2 is the passing counterfactual; case 3 exercises the structural-",
-      "composition pattern (availability sibling + conditional content",
-      "via availability_criterion_ref); case 4 exercises the cross-",
-      "policy structural-error refusal."
+      "One run has one sampling, shared by every criterion of its contract.",
+      "Cases 1-3 are the one canonical consult-advice example: three tests,",
+      "each bound to its own contract and running over its own sampling -",
+      "953 of 1000 over V_prod against the baseline 951 of 1000",
+      "(C_well_formed, PASS); 788 of 800 over V_complexity against the 0.98",
+      "requirement at alpha 0.001 (C_layperson_readable, FAIL); no failure in",
+      "200 adversarial probes over V_probe (C_no_self_harm, PASS). A view",
+      "across the three tests is reporting, not a composite of one run. Every",
+      "consult-advice number in the companion is generated from them. Case 4",
+      "is the passing counterfactual of case 2; case 5 exercises the",
+      "structural-composition pattern (availability sibling + conditional",
+      "content via availability_criterion_ref, two criteria over one sampling);",
+      "case 6 exercises the cross-policy structural-error refusal."
     ),
     method = paste(
       "Per-criterion verdicts computed by regression_verdict /",

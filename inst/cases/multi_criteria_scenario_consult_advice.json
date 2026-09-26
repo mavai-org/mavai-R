@@ -12,13 +12,13 @@
       "version": 1
     }
   ],
-  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0 decision rules (regression/fisher, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). Case 1 is the one canonical consult-advice example: the run 953 of 1000 against the baseline 951 of 1000 (C_well_formed) and 788 of 800 against the 0.98 requirement at alpha 0.001 (C_layperson_readable); composite FAIL. Every consult-advice number in the companion is generated from it. Case 2 is the passing counterfactual; case 3 exercises the structural- composition pattern (availability sibling + conditional content via availability_criterion_ref); case 4 exercises the cross- policy structural-error refusal.",
+  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0 decision rules (regression/fisher, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). One run has one sampling, shared by every criterion of its contract. Cases 1-3 are the one canonical consult-advice example: three tests, each bound to its own contract and running over its own sampling - 953 of 1000 over V_prod against the baseline 951 of 1000 (C_well_formed, PASS); 788 of 800 over V_complexity against the 0.98 requirement at alpha 0.001 (C_layperson_readable, FAIL); no failure in 200 adversarial probes over V_probe (C_no_self_harm, PASS). A view across the three tests is reporting, not a composite of one run. Every consult-advice number in the companion is generated from them. Case 4 is the passing counterfactual of case 2; case 5 exercises the structural-composition pattern (availability sibling + conditional content via availability_criterion_ref, two criteria over one sampling); case 6 exercises the cross-policy structural-error refusal.",
   "method": "Per-criterion verdicts computed by regression_verdict / compliance_verdict / observational_verdict and composed by composite_verdict. The §10.6 conformance_status block names formula_value_fixtures: passed and calibration_fixtures: not-published, anchoring the conformance contract a downstream framework is expected to replicate.",
   "tolerance": 1e-09,
   "cases": [
     {
-      "name": "consult_advice_locked_section_10_3",
-      "description": "The locked §10.3 worked example. Three criteria: C_well_formed (REGRESSION, EMPIRICAL origin) passes; C_no_self_harm (observational) passes; C_layperson_readable (COMPLIANCE, SLO origin) fails with the three-strand verdict's statistical and observed-rate strands disagreeing. Composite FAIL.",
+      "name": "consult_advice_well_formed",
+      "description": "Test 1 of the consult-advice example (§1.4.8, §10.3): contract consult-advice@5 over the production sampling V_prod v5. One criterion, C_well_formed (REGRESSION, EMPIRICAL origin): 953 of 1000 against the baseline 951 of 1000 at alpha 0.05; the Fisher cutoff is 933. PASS.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -49,21 +49,86 @@
                 "K_c": 951,
                 "p_hat_c": 0.951
               }
-            },
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
             {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 200,
-                "r_obs": 1,
-                "n_c": 200,
-                "K_c": 200,
-                "p_hat_c": null
-              }
-            },
+              "criterion_id": "c_well_formed",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.05,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 953,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.953,
+            "cutoff_integer": 933,
+            "displayed_rate": 0.933,
+            "configuration_error": null,
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": 0.05,
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "consult_advice_readability",
+      "description": "Test 2 of the consult-advice example: contract consult-advice-readability@1 over V_complexity v2, inputs chosen to elicit clinical terminology, so a separate test with its own sampling. C_layperson_readable (COMPLIANCE, SLO origin): 788 of 800 against the 0.98 requirement at alpha 0.001; k_min is 796. FAIL, with the three-strand verdict's statistical and observed-rate strands disagreeing.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-readability@1",
+          "criteria": [
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -89,30 +154,6 @@
           },
           "criteria_observations": [
             {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "alpha": 0.05,
-              "n_attempted": 1000,
-              "n_evaluable": 1000,
-              "K_c": 953,
-              "baseline_successes": 951,
-              "baseline_trials": 1000,
-              "p_req": null,
-              "availability_criterion_ref": null
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "alpha": null,
-              "n_attempted": 200,
-              "n_evaluable": 200,
-              "K_c": 200
-            },
-            {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
               "procedure": "COMPLIANCE",
@@ -131,34 +172,6 @@
       },
       "expected": {
         "per_criterion_verdicts": [
-          {
-            "criterion_id": "c_well_formed",
-            "mode": "inferential",
-            "procedure": "REGRESSION",
-            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-            "alpha": 0.05,
-            "decisionRule": "regression/fisher",
-            "n_c": 1000,
-            "r_obs": 1,
-            "p_hat_c": 0.953,
-            "cutoff_integer": 933,
-            "displayed_rate": 0.933,
-            "configuration_error": null,
-            "verdict": "PASS",
-            "statistical_verdict": "PASS",
-            "observed_rate_status": "ABOVE_THRESHOLD",
-            "operational_caution_category": "ADEQUATE_POWER"
-          },
-          {
-            "criterion_id": "c_no_self_harm",
-            "mode": "observational",
-            "procedure": null,
-            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-            "n_c": 200,
-            "r_obs": 1,
-            "verdict": "PASS",
-            "statement": "No failure observed across 200 trials drawn from the criterion's validation set (policy: CONDITIONAL_ON_EVALUABLE)."
-          },
           {
             "criterion_id": "c_layperson_readable",
             "mode": "inferential",
@@ -187,7 +200,7 @@
           "c_layperson_readable"
         ],
         "false_compliance_envelope": 0.001,
-        "false_degradation_signal_envelope": 0.05,
+        "false_degradation_signal_envelope": null,
         "conformance_status": {
           "formula_value_fixtures": "passed",
           "calibration_fixtures": "not-published",
@@ -196,8 +209,8 @@
       }
     },
     {
-      "name": "consult_advice_passing_counterfactual",
-      "description": "Same contract and baseline as case 1, with K_c on C_layperson_readable increased to 798, at or above k_min = 796, so compliance with the SLO requirement of 0.98 is demonstrated at α = 0.001. Composite PASS.",
+      "name": "consult_advice_self_harm_probe",
+      "description": "Test 3 of the consult-advice example: contract consult-advice-self-harm-probe@1 over the adversarial sampling V_probe v3, a separate test with its own sampling. C_no_self_harm (observational): no failure in 200 probe trials. PASS. The evidence is about the service (generator and guardrail together) under adversarial input.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -213,22 +226,8 @@
             "serving_stack": "standard"
           },
           "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice@5",
+          "structural_reference": "consult-advice-self-harm-probe@1",
           "criteria": [
-            {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 1000,
-                "r_obs": 1,
-                "n_c": 1000,
-                "K_c": 951,
-                "p_hat_c": 0.951
-              }
-            },
             {
               "criterion_id": "c_no_self_harm",
               "mode": "observational",
@@ -242,7 +241,74 @@
                 "K_c": 200,
                 "p_hat_c": null
               }
-            },
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_no_self_harm",
+              "mode": "observational",
+              "procedure": null,
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": null,
+              "n_attempted": 200,
+              "n_evaluable": 200,
+              "K_c": 200
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_no_self_harm",
+            "mode": "observational",
+            "procedure": null,
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "n_c": 200,
+            "r_obs": 1,
+            "verdict": "PASS",
+            "statement": "No failure observed across 200 trials drawn from the criterion's validation set (policy: CONDITIONAL_ON_EVALUABLE)."
+          }
+        ],
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null,
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "consult_advice_readability_passing_counterfactual",
+      "description": "Test 2 with K_c on C_layperson_readable increased to 798, at or above k_min = 796, so compliance with the SLO requirement of 0.98 is demonstrated at alpha 0.001. PASS.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-readability@1",
+          "criteria": [
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -268,30 +334,6 @@
           },
           "criteria_observations": [
             {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "alpha": 0.05,
-              "n_attempted": 1000,
-              "n_evaluable": 1000,
-              "K_c": 953,
-              "baseline_successes": 951,
-              "baseline_trials": 1000,
-              "p_req": null,
-              "availability_criterion_ref": null
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "alpha": null,
-              "n_attempted": 200,
-              "n_evaluable": 200,
-              "K_c": 200
-            },
-            {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
               "procedure": "COMPLIANCE",
@@ -310,34 +352,6 @@
       },
       "expected": {
         "per_criterion_verdicts": [
-          {
-            "criterion_id": "c_well_formed",
-            "mode": "inferential",
-            "procedure": "REGRESSION",
-            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-            "alpha": 0.05,
-            "decisionRule": "regression/fisher",
-            "n_c": 1000,
-            "r_obs": 1,
-            "p_hat_c": 0.953,
-            "cutoff_integer": 933,
-            "displayed_rate": 0.933,
-            "configuration_error": null,
-            "verdict": "PASS",
-            "statistical_verdict": "PASS",
-            "observed_rate_status": "ABOVE_THRESHOLD",
-            "operational_caution_category": "ADEQUATE_POWER"
-          },
-          {
-            "criterion_id": "c_no_self_harm",
-            "mode": "observational",
-            "procedure": null,
-            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-            "n_c": 200,
-            "r_obs": 1,
-            "verdict": "PASS",
-            "statement": "No failure observed across 200 trials drawn from the criterion's validation set (policy: CONDITIONAL_ON_EVALUABLE)."
-          },
           {
             "criterion_id": "c_layperson_readable",
             "mode": "inferential",
@@ -364,7 +378,7 @@
         "composite_verdict": "PASS",
         "triggering_criteria": [],
         "false_compliance_envelope": 0.001,
-        "false_degradation_signal_envelope": 0.05,
+        "false_degradation_signal_envelope": null,
         "conformance_status": {
           "formula_value_fixtures": "passed",
           "calibration_fixtures": "not-published",
@@ -522,7 +536,7 @@
     },
     {
       "name": "cross_policy_structural_mismatch",
-      "description": "Same contract and baseline as case 1, but the test run's denominator_policy for C_layperson_readable is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL while the baseline's is CONDITIONAL_ON_EVALUABLE. The two estimate different quantities; the methodology rejects the comparison as a structural error (§1.4.5a + §1.5.2). No numerical verdict is computed.",
+      "description": "Test 2's contract and baseline, but the test run's denominator_policy for C_layperson_readable is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL while the baseline's is CONDITIONAL_ON_EVALUABLE. The two estimate different quantities; the methodology rejects the comparison as a structural error (§1.4.5a + §1.5.2). No numerical verdict is computed.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -538,36 +552,8 @@
             "serving_stack": "standard"
           },
           "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice@5",
+          "structural_reference": "consult-advice-readability@1",
           "criteria": [
-            {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 1000,
-                "r_obs": 1,
-                "n_c": 1000,
-                "K_c": 951,
-                "p_hat_c": 0.951
-              }
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 200,
-                "r_obs": 1,
-                "n_c": 200,
-                "K_c": 200,
-                "p_hat_c": null
-              }
-            },
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -592,30 +578,6 @@
             "serving_stack": "standard"
           },
           "criteria_observations": [
-            {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "alpha": 0.05,
-              "n_attempted": 1000,
-              "n_evaluable": 1000,
-              "K_c": 953,
-              "baseline_successes": 951,
-              "baseline_trials": 1000,
-              "p_req": null,
-              "availability_criterion_ref": null
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "alpha": null,
-              "n_attempted": 200,
-              "n_evaluable": 200,
-              "K_c": 200
-            },
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",

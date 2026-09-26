@@ -9,7 +9,7 @@
   "cases": [
     {
       "name": "consult_advice_eu_weekday",
-      "description": "The consult-advice contract baseline at the EU / weekday / morning index. Three criteria mix REGRESSION + observational + COMPLIANCE; mixed denominator policies; r_obs = 1.0 throughout.",
+      "description": "The consult-advice@5 baseline at the EU / weekday / morning index, measured over the production sampling V_prod v5 (1000 samples). One sampling, shared by every criterion of the contract; here one REGRESSION criterion.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -40,21 +40,32 @@
                 "K_c": 951,
                 "p_hat_c": 0.951
               }
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 200,
-                "r_obs": 1,
-                "n_c": 200,
-                "K_c": 200,
-                "p_hat_c": null
-              }
-            },
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "consult_advice_readability_eu_weekday",
+      "description": "The consult-advice-readability@1 baseline at the same index, measured over V_complexity v2 (800 samples), inputs chosen to elicit clinical terminology. A different input population is a separate contract with its own sampling and baseline. The criterion's requirement is normative (SLO); the baseline observation is diagnostic context.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-readability@1",
+          "criteria": [
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -67,6 +78,45 @@
                 "n_c": 800,
                 "K_c": 788,
                 "p_hat_c": 0.985
+              }
+            }
+          ]
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "consult_advice_self_harm_probe_eu_weekday",
+      "description": "The consult-advice-self-harm-probe@1 baseline at the same index, measured over the adversarial sampling V_probe v3 (200 samples). One observational criterion.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-self-harm-probe@1",
+          "criteria": [
+            {
+              "criterion_id": "c_no_self_harm",
+              "mode": "observational",
+              "procedure": null,
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 200,
+                "n_evaluable": 200,
+                "r_obs": 1,
+                "n_c": 200,
+                "K_c": 200,
+                "p_hat_c": null
               }
             }
           ]
@@ -146,34 +196,6 @@
                 "K_c": 940,
                 "p_hat_c": 0.94
               }
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 199,
-                "r_obs": 0.995,
-                "n_c": 199,
-                "K_c": 199,
-                "p_hat_c": null
-              }
-            },
-            {
-              "criterion_id": "c_layperson_readable",
-              "mode": "inferential",
-              "procedure": "COMPLIANCE",
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 800,
-                "n_evaluable": 795,
-                "r_obs": 0.99375,
-                "n_c": 795,
-                "K_c": 780,
-                "p_hat_c": 0.981132075471698
-              }
             }
           ]
         }
@@ -182,7 +204,7 @@
     },
     {
       "name": "perfect_baseline_moderate_n",
-      "description": "A baseline at p_hat_c = 1 over a moderate n_c. Anchors the §4 perfect-baseline two-step under the per-criterion shape: a downstream threshold derivation must compress the observed 1.0 to a Wilson lower bound on the baseline itself before using it as the effective baseline rate.",
+      "description": "A baseline at p_hat_c = 1 over a moderate n_c (§4). Under regression/fisher the perfect count enters the Fisher test as observed, with no substitution: the cutoff is monotone in the baseline count, and a perfect baseline demands at least as much of the test as any lesser one.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -221,7 +243,7 @@
     },
     {
       "name": "consult_advice_cross_policy_counterexample",
-      "description": "The same consult-advice contract at the same index as #1, except the C_layperson_readable criterion's denominator policy is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error check that cross-policy comparison between this baseline and the #1 baseline is rejected — the two baselines look identical in every other respect but estimate different quantities under the C_layperson_readable criterion.",
+      "description": "The consult-advice-readability contract at the same index as #2, except the C_layperson_readable criterion's denominator policy is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error check that cross-policy comparison between this baseline and the #2 baseline is rejected — the two baselines look identical in every other respect but estimate different quantities under the C_layperson_readable criterion.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -237,36 +259,8 @@
             "serving_stack": "standard"
           },
           "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice@5",
+          "structural_reference": "consult-advice-readability@1",
           "criteria": [
-            {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 1000,
-                "r_obs": 1,
-                "n_c": 1000,
-                "K_c": 951,
-                "p_hat_c": 0.951
-              }
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 200,
-                "r_obs": 1,
-                "n_c": 200,
-                "K_c": 200,
-                "p_hat_c": null
-              }
-            },
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
