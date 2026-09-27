@@ -5,14 +5,17 @@
 # significant digit of some probabilities). This check requires everything a
 # consumer binds on to match exactly - structure, names, strings, logicals,
 # integers (cutoffs, ranks, counts, verdicts, error codes) - and every
-# non-integer number to agree to a relative 1e-12, far below any tolerance a
-# fixture declares. The manifest's md5 fields follow the file bytes and are
-# not compared; the published fixtures are always the committed files.
+# non-integer number to agree to a relative 1e-12, or to an absolute 1e-15
+# near zero (a bound that is mathematically 0 can come out as 3e-18 on one
+# platform) - both far below any tolerance a fixture declares. The
+# manifest's md5 fields follow the file bytes and are not compared; the
+# published fixtures are always the committed files.
 #
 # Usage (after scripts/generate_all.R has rewritten inst/cases):
 #   Rscript scripts/compare_fixtures.R
 
 rel_tol <- 1e-12
+abs_tol <- 1e-15
 
 committed <- function(path) {
   txt <- system2("git", c("show", paste0("HEAD:", path)), stdout = TRUE)
@@ -22,7 +25,7 @@ committed <- function(path) {
 same_number <- function(a, b) {
   if (a == b) return(TRUE)
   if (a == round(a) && b == round(b) && abs(a) < 2^53 && abs(b) < 2^53) return(FALSE)
-  abs(a - b) <= rel_tol * max(abs(a), abs(b))
+  abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 }
 
 compare <- function(a, b, where, skip) {
@@ -66,4 +69,4 @@ if (length(problems)) {
   cat(sprintf("\n%d difference(s) beyond platform rounding.\n", length(problems)))
   quit(status = 1)
 }
-cat(sprintf("%d fixture files match the committed ones (floats to a relative %g).\n", length(files), rel_tol))
+cat(sprintf("%d fixture files match the committed ones (floats to a relative %g, absolute %g).\n", length(files), rel_tol, abs_tol))
