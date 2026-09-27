@@ -1,5 +1,20 @@
 #' Risk-driven sizing under regression/fisher (companion §5.4.1).
 #'
+#' Two sizing operations, named apart:
+#'
+#'   - design sizing, before the baseline exists: the baseline and the test
+#'     are planned together, the baseline at a planned size n_b and an
+#'     assumed rate p0, and the design power averages over the baseline
+#'     count yet to be drawn (approaches power_at, required_n,
+#'     detectable_rate below);
+#'   - resolved sizing, against an existing baseline: its observed count K_b
+#'     fixes the cutoff c(K_b; n_b, n_t, alpha) for every candidate n_t, and
+#'     the resolved power is P_{p_design}(K_t < c(K_b; n_b, n_t, alpha))
+#'     (approaches resolved_power_at, resolved_required_n). Once a baseline
+#'     exists, BASELINE_TOO_SMALL is judged by this power.
+#'
+#' Design sizing:
+#'
 #' A regression test's cutoff moves with its own size, so sizing is done
 #' against the operative rule itself: the exact power of regression/fisher
 #' at a declared design alternative rate p_design (the true rate at which
@@ -92,6 +107,35 @@ sizing_refusal <- function(baseline_rate, design_alternative_rate = NULL, baseli
   NA_character_
 }
 
+#' Resolved power of regression/fisher against an observed baseline
+#'
+#' @param test_samples n_t.
+#' @param baseline_successes K_b, observed.
+#' @param baseline_trials n_b.
+#' @param design_alternative_rate p_design.
+#' @param alpha One-sided level.
+#' @export
+risk_sizing_resolved_power <- function(test_samples, baseline_successes, baseline_trials,
+                                       design_alternative_rate, alpha) {
+  c_int <- fisher_cutoff(baseline_successes, baseline_trials, test_samples, alpha)
+  pbinom(c_int - 1, test_samples, design_alternative_rate)
+}
+
+#' Smallest n_t <= n_b from which resolved power stays at target (§5.4.1)
+#'
+#' NA when resolved power at n_b itself is short (BASELINE_TOO_SMALL).
+#' @export
+risk_sizing_resolved_required_n <- function(baseline_successes, baseline_trials,
+                                            design_alternative_rate, alpha, target_power) {
+  pw <- vapply(seq_len(baseline_trials), function(n)
+    risk_sizing_resolved_power(n, baseline_successes, baseline_trials,
+                               design_alternative_rate, alpha), numeric(1))
+  below <- which(pw < target_power)
+  if (length(below) == 0) return(1L)
+  if (max(below) == baseline_trials) return(NA_integer_)
+  as.integer(max(below) + 1L)
+}
+
 #' @keywords internal
 refused <- function(category, fields) {
   e <- list(sizing_gate = "REFUSE", refusal_category = category)
@@ -145,6 +189,47 @@ detectable_rate_case <- function(name, baseline_rate, baseline_trials, alpha, ta
   list(name = name, approach = "detectable_rate", inputs = inputs, expected = expected)
 }
 
+#' @keywords internal
+resolved_required_n_case <- function(name, baseline_successes, baseline_trials,
+                                     design_alternative_rate, alpha, target_power,
+                                     description = NULL) {
+  inputs <- list(baseline_successes = as.integer(baseline_successes),
+                 baseline_trials = as.integer(baseline_trials),
+                 design_alternative_rate = design_alternative_rate, alpha = alpha,
+                 target_power = target_power)
+  cat <- sizing_refusal(baseline_successes / baseline_trials, design_alternative_rate, baseline_trials)
+  expected <- if (!is.na(cat)) refused(cat, c("required_n", "resolved_power", "first_crossing")) else {
+    pw <- vapply(seq_len(baseline_trials), function(n)
+      risk_sizing_resolved_power(n, baseline_successes, baseline_trials,
+                                 design_alternative_rate, alpha), numeric(1))
+    n <- risk_sizing_resolved_required_n(baseline_successes, baseline_trials,
+                                         design_alternative_rate, alpha, target_power)
+    if (is.na(n)) refused("BASELINE_TOO_SMALL", c("required_n", "resolved_power", "first_crossing")) else
+      list(sizing_gate = "ADMIT", required_n = n, resolved_power = pw[n],
+           first_crossing = as.integer(which(pw >= target_power)[1]))
+  }
+  case <- list(name = name, approach = "resolved_required_n")
+  if (!is.null(description)) case$description <- description
+  c(case, list(inputs = inputs, expected = expected))
+}
+
+#' @keywords internal
+resolved_power_at_case <- function(name, baseline_successes, baseline_trials,
+                                   design_alternative_rate, alpha, test_samples) {
+  inputs <- list(baseline_successes = as.integer(baseline_successes),
+                 baseline_trials = as.integer(baseline_trials),
+                 design_alternative_rate = design_alternative_rate, alpha = alpha,
+                 test_samples = as.integer(test_samples))
+  cat <- sizing_refusal(baseline_successes / baseline_trials, design_alternative_rate,
+                        baseline_trials, test_samples)
+  expected <- if (!is.na(cat)) refused(cat, c("cutoff_integer", "resolved_power")) else
+    list(sizing_gate = "ADMIT",
+         cutoff_integer = fisher_cutoff(baseline_successes, baseline_trials, test_samples, alpha),
+         resolved_power = risk_sizing_resolved_power(test_samples, baseline_successes,
+                                                     baseline_trials, design_alternative_rate, alpha))
+  list(name = name, approach = "resolved_power_at", inputs = inputs, expected = expected)
+}
+
 #' Generate risk-driven sizing reference cases (companion §5.4.1)
 #'
 #' @return A list suitable for JSON serialisation.
@@ -169,13 +254,32 @@ generate_risk_driven_sizing_cases <- function() {
     power_at_case("zero_baseline_power_at_refused", 0, 1000, 0.90, 0.05, 100),
     detectable_rate_case("zero_baseline_detectable_rate_refused", 0, 1000, 0.05, 0.80, 100),
     required_n_case("design_alternative_at_baseline_refused", 0.90, 1000, 0.90, 0.05, 0.80),
-    power_at_case("test_larger_than_baseline_refused", 0.90, 100, 0.80, 0.05, 200)
+    power_at_case("test_larger_than_baseline_refused", 0.90, 100, 0.80, 0.05, 200),
+    # Resolved sizing against an existing baseline: the observed count fixes
+    # the cutoff, and resolved power decides. The companion's §10.3
+    # configuration: design power never reaches 0.80 at n_t <= 1000 (0.753 at
+    # 1000), resolved power reaches and holds it from 966.
+    resolved_required_n_case("resolved_section_10_3_951_of_1000_at_0925", 951, 1000, 0.925, 0.05, 0.80,
+      "Admissible under resolved sizing (stays at 0.80 from 966, first reaching it at 868), where design sizing for the same planned baseline refuses."),
+    required_n_case("design_section_10_3_planned_1000_at_0951_vs_0925", 0.951, 1000, 0.925, 0.05, 0.80),
+    resolved_required_n_case("resolved_walkthrough_1920_of_2000_at_093", 1920, 2000, 0.93, 0.05, 0.80),
+    resolved_required_n_case("resolved_baseline_too_small_288_of_300_at_093", 288, 300, 0.93, 0.05, 0.80),
+    resolved_required_n_case("resolved_alternative_at_baseline_refused", 900, 1000, 0.90, 0.05, 0.80),
+    resolved_required_n_case("resolved_zero_baseline_refused", 0, 1000, 0.90, 0.05, 0.80),
+    resolved_power_at_case("resolved_power_at_1000_section_10_3", 951, 1000, 0.925, 0.05, 1000),
+    resolved_power_at_case("resolved_power_at_463_walkthrough", 1920, 2000, 0.93, 0.05, 463),
+    resolved_power_at_case("resolved_test_larger_than_baseline_refused", 95, 100, 0.85, 0.05, 200)
   )
 
   list(
     suite = "risk_driven_sizing",
     description = paste(
-      "Risk-driven sizing (companion §5.4.1) against the operative regression rule,",
+      "Risk-driven sizing (companion §5.4.1) against the operative regression rule, in two",
+      "operations. Design sizing, before the baseline exists (approaches power_at, required_n,",
+      "detectable_rate), plans baseline and test together and uses the design power. Resolved",
+      "sizing, against an existing baseline (approaches resolved_power_at, resolved_required_n),",
+      "uses the resolved power at the observed baseline count, whose cutoff is fixed; once a",
+      "baseline exists BASELINE_TOO_SMALL is judged by it. Design sizing:",
       "regression/fisher: the exact power of the rule at a declared design alternative rate",
       "p_design - the true rate at which the test must reach its target power; the test still",
       "flags any degradation from the baseline - with the baseline's n_b trials at rate p0.",
@@ -192,7 +296,10 @@ generate_risk_driven_sizing_cases <- function() {
       "regression/fisher cutoff at (k, n_b, n_t, alpha), over the baseline counts from",
       "qbinom(1e-17, n_b, p0) to qbinom(1 - 1e-17, n_b, p0); required_n = 1 + the largest",
       "n_t <= n_b with Power < target (refused when that is n_b); detectable_rate by bisection",
-      "on p_design over (0, p0) to 1e-10."
+      "on p_design over (0, p0) to 1e-10. Resolved: resolved_power(n_t) = pbinom(c(K_b; n_b, n_t,",
+      "alpha) - 1, n_t, p_design); resolved_required_n = 1 + the largest n_t <= n_b with resolved",
+      "power < target (refused BASELINE_TOO_SMALL when that is n_b); first_crossing = the smallest",
+      "n_t with resolved power >= target; refusals as for design with p0 = K_b / n_b."
     ),
     tolerance = 1e-6,
     cases = cases

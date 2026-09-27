@@ -44,3 +44,18 @@ test_that("inadmissible designs are published as refusals", {
   expect_identical(r$refusal_category, "BASELINE_TOO_SMALL")
   expect_true(is.na(r$required_n))
 })
+
+test_that("resolved sizing against an observed baseline differs from design sizing", {
+  cases <- setNames(generate_risk_driven_sizing_cases()$cases,
+                    vapply(generate_risk_driven_sizing_cases()$cases, `[[`, character(1), "name"))
+  r <- cases[["resolved_section_10_3_951_of_1000_at_0925"]]$expected
+  expect_identical(r$sizing_gate, "ADMIT")
+  expect_identical(r$required_n, 966L)
+  expect_identical(r$first_crossing, 868L)
+  expect_gte(r$resolved_power, 0.80)
+  expect_lt(risk_sizing_resolved_power(965, 951, 1000, 0.925, 0.05), 0.80)
+  d <- cases[["design_section_10_3_planned_1000_at_0951_vs_0925"]]$expected
+  expect_identical(d$refusal_category, "BASELINE_TOO_SMALL")
+  expect_equal(cases[["resolved_power_at_1000_section_10_3"]]$expected$resolved_power,
+               pbinom(932, 1000, 0.925), tolerance = 1e-14)
+})

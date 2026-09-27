@@ -221,11 +221,11 @@
           "version": 1
         }
       ],
-      "caseCount": 16,
-      "cases": ["companion_worked_example", "companion_scenario_walkthrough", "higher_power_costs_samples", "smaller_alpha_costs_samples", "large_design_drop_is_cheap", "baseline_too_small_for_design", "walkthrough_candidate_50", "walkthrough_candidate_150", "worked_example_at_891", "inversion_at_100", "inversion_at_400", "zero_baseline_required_n_refused", "zero_baseline_power_at_refused", "zero_baseline_detectable_rate_refused", "design_alternative_at_baseline_refused", "test_larger_than_baseline_refused"],
-      "bindingFields": ["achieved_power", "detectable_rate", "power", "refusal_category", "required_n", "sizing_gate"],
+      "caseCount": 25,
+      "cases": ["companion_worked_example", "companion_scenario_walkthrough", "higher_power_costs_samples", "smaller_alpha_costs_samples", "large_design_drop_is_cheap", "baseline_too_small_for_design", "walkthrough_candidate_50", "walkthrough_candidate_150", "worked_example_at_891", "inversion_at_100", "inversion_at_400", "zero_baseline_required_n_refused", "zero_baseline_power_at_refused", "zero_baseline_detectable_rate_refused", "design_alternative_at_baseline_refused", "test_larger_than_baseline_refused", "resolved_section_10_3_951_of_1000_at_0925", "design_section_10_3_planned_1000_at_0951_vs_0925", "resolved_walkthrough_1920_of_2000_at_093", "resolved_baseline_too_small_288_of_300_at_093", "resolved_alternative_at_baseline_refused", "resolved_zero_baseline_refused", "resolved_power_at_1000_section_10_3", "resolved_power_at_463_walkthrough", "resolved_test_larger_than_baseline_refused"],
+      "bindingFields": ["achieved_power", "cutoff_integer", "detectable_rate", "first_crossing", "power", "refusal_category", "required_n", "resolved_power", "sizing_gate"],
       "informationalFields": {},
-      "md5": "e630457a31811bb710060b8ed93b2742"
+      "md5": "8e0a001611ec51dd963630d7452197d5"
     },
     "threshold_derivation": {
       "file": "threshold_derivation.json",

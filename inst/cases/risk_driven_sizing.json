@@ -8,8 +8,8 @@
       "version": 1
     }
   ],
-  "description": "Risk-driven sizing (companion §5.4.1) against the operative regression rule, regression/fisher: the exact power of the rule at a declared design alternative rate p_design - the true rate at which the test must reach its target power; the test still flags any degradation from the baseline - with the baseline's n_b trials at rate p0. POWER_AT gives the power at a candidate n_t; REQUIRED_N the smallest n_t <= n_b from which power stays at or above the target up to n_b; DETECTABLE_RATE the largest p_design detectable at the target with n_t samples. Designs outside the domain are published as refusals: sizing_gate REFUSE, every numeric expectation null, refusal_category ZERO_BASELINE, ALTERNATIVE_NOT_BELOW_BASELINE, TEST_LARGER_THAN_BASELINE or BASELINE_TOO_SMALL (the target is not reached and held within n_t <= n_b).",
-  "method": "Power(n_t) = sum_k dbinom(k, n_b, p0) pbinom(c(k) - 1, n_t, p_design), c the regression/fisher cutoff at (k, n_b, n_t, alpha), over the baseline counts from qbinom(1e-17, n_b, p0) to qbinom(1 - 1e-17, n_b, p0); required_n = 1 + the largest n_t <= n_b with Power < target (refused when that is n_b); detectable_rate by bisection on p_design over (0, p0) to 1e-10.",
+  "description": "Risk-driven sizing (companion §5.4.1) against the operative regression rule, in two operations. Design sizing, before the baseline exists (approaches power_at, required_n, detectable_rate), plans baseline and test together and uses the design power. Resolved sizing, against an existing baseline (approaches resolved_power_at, resolved_required_n), uses the resolved power at the observed baseline count, whose cutoff is fixed; once a baseline exists BASELINE_TOO_SMALL is judged by it. Design sizing: regression/fisher: the exact power of the rule at a declared design alternative rate p_design - the true rate at which the test must reach its target power; the test still flags any degradation from the baseline - with the baseline's n_b trials at rate p0. POWER_AT gives the power at a candidate n_t; REQUIRED_N the smallest n_t <= n_b from which power stays at or above the target up to n_b; DETECTABLE_RATE the largest p_design detectable at the target with n_t samples. Designs outside the domain are published as refusals: sizing_gate REFUSE, every numeric expectation null, refusal_category ZERO_BASELINE, ALTERNATIVE_NOT_BELOW_BASELINE, TEST_LARGER_THAN_BASELINE or BASELINE_TOO_SMALL (the target is not reached and held within n_t <= n_b).",
+  "method": "Power(n_t) = sum_k dbinom(k, n_b, p0) pbinom(c(k) - 1, n_t, p_design), c the regression/fisher cutoff at (k, n_b, n_t, alpha), over the baseline counts from qbinom(1e-17, n_b, p0) to qbinom(1 - 1e-17, n_b, p0); required_n = 1 + the largest n_t <= n_b with Power < target (refused when that is n_b); detectable_rate by bisection on p_design over (0, p0) to 1e-10. Resolved: resolved_power(n_t) = pbinom(c(K_b; n_b, n_t, alpha) - 1, n_t, p_design); resolved_required_n = 1 + the largest n_t <= n_b with resolved power < target (refused BASELINE_TOO_SMALL when that is n_b); first_crossing = the smallest n_t with resolved power >= target; refusals as for design with p0 = K_b / n_b.",
   "tolerance": 1e-06,
   "cases": [
     {
@@ -264,6 +264,161 @@
         "sizing_gate": "REFUSE",
         "refusal_category": "TEST_LARGER_THAN_BASELINE",
         "power": null
+      }
+    },
+    {
+      "name": "resolved_section_10_3_951_of_1000_at_0925",
+      "approach": "resolved_required_n",
+      "description": "Admissible under resolved sizing (stays at 0.80 from 966, first reaching it at 868), where design sizing for the same planned baseline refuses.",
+      "inputs": {
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "design_alternative_rate": 0.925,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 966,
+        "resolved_power": 0.800750874586063,
+        "first_crossing": 868
+      }
+    },
+    {
+      "name": "design_section_10_3_planned_1000_at_0951_vs_0925",
+      "approach": "required_n",
+      "inputs": {
+        "baseline_rate": 0.951,
+        "baseline_trials": 1000,
+        "design_alternative_rate": 0.925,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "BASELINE_TOO_SMALL",
+        "required_n": null,
+        "achieved_power": null
+      }
+    },
+    {
+      "name": "resolved_walkthrough_1920_of_2000_at_093",
+      "approach": "resolved_required_n",
+      "inputs": {
+        "baseline_successes": 1920,
+        "baseline_trials": 2000,
+        "design_alternative_rate": 0.93,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "required_n": 460,
+        "resolved_power": 0.803001007250628,
+        "first_crossing": 413
+      }
+    },
+    {
+      "name": "resolved_baseline_too_small_288_of_300_at_093",
+      "approach": "resolved_required_n",
+      "inputs": {
+        "baseline_successes": 288,
+        "baseline_trials": 300,
+        "design_alternative_rate": 0.93,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "BASELINE_TOO_SMALL",
+        "required_n": null,
+        "resolved_power": null,
+        "first_crossing": null
+      }
+    },
+    {
+      "name": "resolved_alternative_at_baseline_refused",
+      "approach": "resolved_required_n",
+      "inputs": {
+        "baseline_successes": 900,
+        "baseline_trials": 1000,
+        "design_alternative_rate": 0.9,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "ALTERNATIVE_NOT_BELOW_BASELINE",
+        "required_n": null,
+        "resolved_power": null,
+        "first_crossing": null
+      }
+    },
+    {
+      "name": "resolved_zero_baseline_refused",
+      "approach": "resolved_required_n",
+      "inputs": {
+        "baseline_successes": 0,
+        "baseline_trials": 1000,
+        "design_alternative_rate": 0.9,
+        "alpha": 0.05,
+        "target_power": 0.8
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "ZERO_BASELINE",
+        "required_n": null,
+        "resolved_power": null,
+        "first_crossing": null
+      }
+    },
+    {
+      "name": "resolved_power_at_1000_section_10_3",
+      "approach": "resolved_power_at",
+      "inputs": {
+        "baseline_successes": 951,
+        "baseline_trials": 1000,
+        "design_alternative_rate": 0.925,
+        "alpha": 0.05,
+        "test_samples": 1000
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "cutoff_integer": 933,
+        "resolved_power": 0.815266681807277
+      }
+    },
+    {
+      "name": "resolved_power_at_463_walkthrough",
+      "approach": "resolved_power_at",
+      "inputs": {
+        "baseline_successes": 1920,
+        "baseline_trials": 2000,
+        "design_alternative_rate": 0.93,
+        "alpha": 0.05,
+        "test_samples": 463
+      },
+      "expected": {
+        "sizing_gate": "ADMIT",
+        "cutoff_integer": 436,
+        "resolved_power": 0.813168627296219
+      }
+    },
+    {
+      "name": "resolved_test_larger_than_baseline_refused",
+      "approach": "resolved_power_at",
+      "inputs": {
+        "baseline_successes": 95,
+        "baseline_trials": 100,
+        "design_alternative_rate": 0.85,
+        "alpha": 0.05,
+        "test_samples": 200
+      },
+      "expected": {
+        "sizing_gate": "REFUSE",
+        "refusal_category": "TEST_LARGER_THAN_BASELINE",
+        "cutoff_integer": null,
+        "resolved_power": null
       }
     }
   ]
