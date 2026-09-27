@@ -29,6 +29,13 @@
      observed p99 is compared with the threshold, the breach is a warning,
      and it does not enter the verdict.
 
+     The record's verdict is the overall test verdict: the functional
+     composite (PASS) and the latency dimension's verdict (PASS, from the
+     one strict evaluation) composed by the structural rule. Two rules
+     decided - regression/fisher on the criterion and
+     latency/compliance-exact-binomial on the p90 evaluation - so each is
+     stated where it decided and <verdict> states none.
+
      A configuration refused before any sample ran is shown in
      verdict-1.7-refused.xml. -->
 <verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-26T12:00:00+00:00" generator="worked-example">
@@ -48,7 +55,7 @@
       <check name="states the premium amount" count="7" kind="evaluated" />
     </failure-distribution>
   </functional>
-  <latency successful-samples="93" strict-violations="0" advisory-violations="1">
+  <latency successful-samples="93" strict-violations="0" advisory-violations="1" verdict="PASS">
     <observed>
       <percentile label="p90" value-ms="640" />
       <percentile label="p99" value-ms="1400" />
@@ -62,5 +69,5 @@
     <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" />
     <composite value="PASS" />
   </per-criterion>
-  <verdict value="PASS" decision-rule="regression/fisher" decision-rule-version="1" />
+  <verdict value="PASS" />
 </verdict-record>

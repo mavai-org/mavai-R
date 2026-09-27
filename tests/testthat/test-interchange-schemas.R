@@ -442,3 +442,17 @@ test_that("a 1.6-shaped record is not a 1.7 record, and 1.6 still validates its 
   xsd16 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.6.xsd"))
   expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(body, collapse = "\n")), xsd16)))
 })
+
+test_that("verdict-1.7 carries the latency dimension's verdict beside the functional composite", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  lf <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-latency-fail.xml"))
+  doc <- xml2::read_xml(paste(lf, collapse = "\n"))
+  expect_true(isTRUE(xml2::xml_validate(doc, xsd)))
+  ns <- xml2::xml_ns(doc)
+  expect_identical(xml2::xml_attr(xml2::xml_find_first(doc, "//d1:latency", ns), "verdict"), "FAIL")
+  expect_identical(xml2::xml_attr(xml2::xml_find_first(doc, "//d1:composite", ns), "value"), "PASS")
+  expect_identical(xml2::xml_attr(xml2::xml_find_first(doc, "/d1:verdict-record/d1:verdict", ns), "value"), "FAIL")
+  mutated <- sub('verdict="FAIL">', 'verdict="MAYBE">', lf, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})

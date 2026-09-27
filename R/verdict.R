@@ -169,6 +169,58 @@ generate_verdict_cases <- function() {
       "Both criteria fail; both are named.")
   )
 
+  # The overall test verdict: the functional dimension (V_rate) and the
+  # enforced latency constraints (V_latency) composed by the structural rule.
+  # The latencies are those of the samples that passed every functional
+  # criterion, so their number equals the functional successes.
+  lat <- latency_compliance_sample
+  set.seed(29)
+  baseline_100 <- sort(round(rlnorm(100, meanlog = log(400), sdlog = 0.3)))
+  test_case <- function(name, description, functional, constraints) {
+    fv <- if (is.null(functional)) NULL else {
+      do.call(evaluate_verdict, functional[setdiff(names(functional), "criterion_id")])
+    }
+    crit <- if (is.null(fv)) list() else list(list(criterion_id = functional$criterion_id, verdict = fv$verdict))
+    kv <- lapply(constraints, latency_constraint_verdict)
+    tv <- test_verdict(crit, kv)
+    frule <- if (is.null(functional)) NULL else if (!is.null(functional$baseline_trials)) R else C
+    krules <- unlist(lapply(kv, function(k) k$decisionRule))
+    rules <- unique(c(frule, krules[!is.na(krules)]))
+    inputs <- list(functional = functional, latency_constraints = constraints)
+    if (is.null(functional)) inputs$functional <- NULL
+    list(name = name, approach = "test_verdict", description = description,
+         decisionRule = as.list(rules),
+         inputs = inputs,
+         expected = c(list(criteria = crit, latency_constraints = kv), tv))
+  }
+  fpass <- c(list(criterion_id = "c_extraction"), reg(91, 100, 951, 1000))
+  explicit <- function(id, n, within, tau = 500, p = 0.95, mode = "enforced", alpha = 0.05) {
+    list(constraint_id = id, source = "explicit", mode = mode, percentile = p, alpha = alpha,
+         threshold_ms = tau, latencies = lat(n, within, tau))
+  }
+  test_cases <- list(
+    test_case("test_functional_pass_latency_fail",
+      "Functional PASS (91 of 100 meets the cutoff of 91); the enforced p95 <= 500 ms requirement FAILs (85 of 91 latencies within, y_min 91). V_test FAIL, triggered by the latency constraint.",
+      fpass, list(explicit("p95_le_500ms", 91, 85))),
+    test_case("test_functional_pass_latency_inconclusive",
+      "Functional PASS; the enforced baseline-derived p99 constraint is saturated (a test of 91 latencies against a baseline of 100: no rank achieves alpha), so V_latency is INCONCLUSIVE and so is V_test.",
+      fpass, list(list(constraint_id = "p99_vs_baseline", source = "baseline-derived", mode = "enforced",
+                       percentile = 0.99, alpha = 0.05, baseline_latencies = baseline_100,
+                       latencies = sort(round(baseline_100[1:91] * 0.97))))),
+    test_case("test_functional_fail_latency_pass",
+      "Functional FAIL (90 of 100 below the cutoff of 91); the enforced p95 <= 500 ms requirement passes (90 of 90 within). V_test FAIL, triggered by the criterion.",
+      c(list(criterion_id = "c_extraction"), reg(90, 100, 951, 1000)), list(explicit("p95_le_500ms", 90, 90))),
+    test_case("test_latency_only",
+      "No functional criteria: V_test = V_latency. The enforced p95 <= 500 ms requirement over 100 latencies, 99 within: PASS.",
+      NULL, list(explicit("p95_le_500ms", 100, 99))),
+    test_case("test_advisory_breach_does_not_change_verdict",
+      "Functional PASS and the enforced p95 <= 500 ms requirement PASS (91 of 91 within); an advisory p99 <= 450 ms comparison is breached (ADVISORY_WARN) and does not participate. V_test PASS.",
+      fpass, list(explicit("p95_le_500ms", 91, 91),
+                  list(constraint_id = "p99_le_450ms_advisory", source = "explicit", mode = "advisory",
+                       percentile = 0.99, alpha = 0.05, threshold_ms = 450, latencies = lat(91, 91, 500))))
+  )
+  cases <- c(cases, test_cases)
+
   list(
     suite = "verdict",
     description = paste(
@@ -184,7 +236,15 @@ generate_verdict_cases <- function() {
       "invalid, reporting every applicable code. The v1.4.1 point-estimate rule (PASS iff",
       "p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict,",
       "configuration_error, criteria, triggering_criteria. Informational: observed_rate,",
-      "false_compliance_envelope, false_degradation_signal_envelope."
+      "false_compliance_envelope, false_degradation_signal_envelope. Cases with approach",
+      "test_verdict give the overall test verdict: the functional dimension's verdict",
+      "(rate_verdict, the structural composite of the criteria), the latency dimension's",
+      "(latency_verdict, the same composite over the enforced latency constraints; advisory",
+      "constraints never participate) and test_verdict, their composite (PASS if both pass, FAIL",
+      "if either fails, INCONCLUSIVE otherwise; a dimension that is absent is left out), with",
+      "triggering naming the criteria and enforced constraints that decided it. Latencies are",
+      "those of the samples that passed every functional criterion. Binding: rate_verdict,",
+      "latency_verdict, test_verdict, triggering, each constraint's verdict."
     ),
     method = paste(
       "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision).",

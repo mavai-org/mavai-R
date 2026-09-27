@@ -80,9 +80,11 @@ SUITE_DECISION_RULES <- list(
   latency_percentile_minimums = "latency/precedence",
   latency_compliance_decision = "latency/compliance-exact-binomial",
   power_analysis = c("compliance/exact-binomial", "regression/fisher"),
-  verdict = c("compliance/exact-binomial", "regression/fisher"),
+  verdict = c("compliance/exact-binomial", "regression/fisher", "latency/precedence",
+              "latency/compliance-exact-binomial"),
   criterion_verdict_inferential = c("compliance/exact-binomial", "regression/fisher"),
-  multi_criteria_scenario_consult_advice = c("compliance/exact-binomial", "regression/fisher")
+  multi_criteria_scenario_consult_advice = c("compliance/exact-binomial", "regression/fisher",
+                                             "latency/compliance-exact-binomial")
 )
 
 #' The decisionRules entry of a suite: a list of {id, version}.

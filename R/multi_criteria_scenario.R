@@ -133,7 +133,7 @@ per_criterion_verdict_block <- function(test_obs) {
 #' Expected scenario output (composite + envelopes + per-criterion
 #' verdicts + §10.6 conformance status).
 #' @keywords internal
-expected_scenario <- function(per_criterion_verdicts) {
+expected_scenario <- function(per_criterion_verdicts, latency_constraints = list()) {
   # Compose criteria entries for composite_verdict()
   for_composite <- lapply(per_criterion_verdicts, function(v) {
     list(
@@ -145,6 +145,9 @@ expected_scenario <- function(per_criterion_verdicts) {
     )
   })
   cv <- composite_verdict(for_composite)
+  kv <- lapply(latency_constraints, latency_constraint_verdict)
+  tv <- test_verdict(lapply(per_criterion_verdicts, function(v)
+    list(criterion_id = v$criterion_id, verdict = v$verdict)), kv)
 
   list(
     per_criterion_verdicts = per_criterion_verdicts,
@@ -152,6 +155,10 @@ expected_scenario <- function(per_criterion_verdicts) {
     triggering_criteria = cv$triggering_criteria,
     false_compliance_envelope = cv$false_compliance_envelope,
     false_degradation_signal_envelope = cv$false_degradation_signal_envelope,
+    latency_constraints = kv,
+    latency_verdict = tv$latency_verdict,
+    test_verdict = tv$test_verdict,
+    test_triggering = tv$triggering,
     conformance_status = list(
       formula_value_fixtures = "passed",
       calibration_fixtures = "not-published",
@@ -209,14 +216,17 @@ generate_multi_criteria_scenario_cases <- function() {
       criteria             = criteria
     )
   }
-  scenario_case <- function(name, description, baseline, observations) {
+  scenario_case <- function(name, description, baseline, observations,
+                            latency_constraints = list()) {
     test_run <- list(covariate_profile = baseline$covariate_profile,
                      criteria_observations = observations)
+    if (length(latency_constraints)) test_run$latency_constraints <- latency_constraints
     list(
       name = name,
       description = description,
       inputs = list(baseline = baseline, test_run = test_run),
-      expected = expected_scenario(lapply(observations, per_criterion_verdict_block))
+      expected = expected_scenario(lapply(observations, per_criterion_verdict_block),
+                                   latency_constraints)
     )
   }
 
@@ -371,7 +381,8 @@ generate_multi_criteria_scenario_cases <- function() {
              n_attempted = 1000, n_evaluable = 1000, K_c = 951)
   ))
   dual_case <- function(name, description, n_attempted, n_evaluable, K_c, policy, p_req,
-                        baseline_successes, compliance_alpha = 0.01, regression_alpha = 0.05) {
+                        baseline_successes, compliance_alpha = 0.01, regression_alpha = 0.05,
+                        latency_constraints = list()) {
     b <- dual_baseline
     for (i in 1:2) {
       b$criteria[[i]]$denominator_policy <- policy
@@ -385,7 +396,7 @@ generate_multi_criteria_scenario_cases <- function() {
                    alpha = regression_alpha, n_attempted = n_attempted,
                    n_evaluable = n_evaluable, K_c = K_c,
                    baseline_successes = baseline_successes, baseline_trials = 1000)
-    ))
+    ), latency_constraints)
   }
   M <- "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
   dual_cases <- list(
@@ -401,6 +412,20 @@ generate_multi_criteria_scenario_cases <- function() {
     dual_case("two_criteria_inconclusive",
       "Only 20 of 100 trials are evaluable under the conditional policy: no count of 20 can demonstrate 0.95 (compliance INCONCLUSIVE), and 20 of 20 shows no degradation (regression PASS). INCONCLUSIVE.",
       100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05),
+    # The overall test verdict with an enforced latency constraint: the 20
+    # samples that passed both criteria are the latency population.
+    dual_case("two_criteria_inconclusive_latency_pass",
+      "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an enforced explicit p50 <= 300 ms requirement over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
+      100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05,
+      latency_constraints = list(list(constraint_id = "p50_le_300ms", source = "explicit",
+        mode = "enforced", percentile = 0.50, alpha = 0.05, threshold_ms = 300,
+        latencies = latency_compliance_sample(20, 18, 300)))),
+    dual_case("two_criteria_inconclusive_latency_fail",
+      "The same with 12 of 20 latencies within 300 ms: V_latency FAIL, and FAIL dominates, so V_test FAIL, triggered by the latency constraint.",
+      100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05,
+      latency_constraints = list(list(constraint_id = "p50_le_300ms", source = "explicit",
+        mode = "enforced", percentile = 0.50, alpha = 0.05, threshold_ms = 300,
+        latencies = latency_compliance_sample(20, 12, 300)))),
     dual_case("two_criteria_fail_dominates_inconclusive",
       "As before with 15 of 20: compliance INCONCLUSIVE, regression FAIL. FAIL, triggered by the regression criterion.",
       100, 20, 15, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05)
@@ -466,7 +491,11 @@ generate_multi_criteria_scenario_cases <- function() {
       "on the same postconditions: two criteria over one sampling and the same",
       "observations, a compliance criterion and a regression criterion, each with",
       "one rule, one alpha and one verdict, composed by the ordinary structural",
-      "composite, one case for each outcome."
+      "composite, one case for each outcome; two of them carry an enforced latency",
+      "constraint. Every case states the overall test verdict: latency_verdict (the",
+      "structural composite of the enforced latency constraints, null without any) and",
+      "test_verdict (the composite of the functional composite and latency_verdict), with",
+      "test_triggering naming the criteria and constraints that decided it."
     ),
     method = paste(
       "Per-criterion verdicts computed by regression_verdict /",

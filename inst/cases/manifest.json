@@ -170,13 +170,17 @@
         {
           "id": "regression/fisher",
           "version": 1
+        },
+        {
+          "id": "latency/compliance-exact-binomial",
+          "version": 1
         }
       ],
-      "caseCount": 11,
-      "cases": ["consult_advice_well_formed", "consult_advice_readability", "consult_advice_self_harm_probe", "consult_advice_readability_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch", "two_criteria_pass", "two_criteria_fail_regression", "two_criteria_fail_compliance", "two_criteria_inconclusive", "two_criteria_fail_dominates_inconclusive"],
-      "bindingFields": ["composite_verdict", "conformance_status", "false_compliance_envelope", "false_degradation_signal_envelope", "per_criterion_verdicts", "structural_error", "triggering_criteria"],
+      "caseCount": 13,
+      "cases": ["consult_advice_well_formed", "consult_advice_readability", "consult_advice_self_harm_probe", "consult_advice_readability_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch", "two_criteria_pass", "two_criteria_fail_regression", "two_criteria_fail_compliance", "two_criteria_inconclusive", "two_criteria_inconclusive_latency_pass", "two_criteria_inconclusive_latency_fail", "two_criteria_fail_dominates_inconclusive"],
+      "bindingFields": ["composite_verdict", "conformance_status", "false_compliance_envelope", "false_degradation_signal_envelope", "latency_constraints", "latency_verdict", "per_criterion_verdicts", "structural_error", "test_triggering", "test_verdict", "triggering_criteria"],
       "informationalFields": {},
-      "md5": "6724ae3ce868b57a46b5284db4f51d84"
+      "md5": "9f76cb2ba420acc862d0becb5b967f83"
     },
     "power_analysis": {
       "file": "power_analysis.json",
@@ -253,13 +257,21 @@
         {
           "id": "regression/fisher",
           "version": 1
+        },
+        {
+          "id": "latency/precedence",
+          "version": 1
+        },
+        {
+          "id": "latency/compliance-exact-binomial",
+          "version": 1
         }
       ],
-      "caseCount": 21,
-      "cases": ["compliance_fail_48_of_50_threshold_90", "compliance_pass_49_of_50_threshold_90", "compliance_fail_40_of_50_threshold_90", "compliance_fail_45_of_50_threshold_90", "compliance_fail_0_of_50_threshold_90", "compliance_pass_920_of_1000_threshold_90", "compliance_refused_50_of_50_threshold_95", "compliance_smoke_50_of_50_threshold_95", "regression_pass_91_of_100_baseline_951_of_1000", "regression_fail_90_of_100_baseline_951_of_1000", "regression_pass_95_of_100_baseline_99_of_100", "regression_fail_95_of_100_baseline_100_of_100", "regression_refused_test_larger_than_baseline", "regression_pass_25_of_25_baseline_951_of_1000_alpha001", "two_criteria_refused_regression_part_test_larger_than_baseline", "two_criteria_refused_compliance_part_infeasible", "two_criteria_refused_both_parts", "two_criteria_pass", "two_criteria_fail_regression", "two_criteria_fail_compliance", "two_criteria_fail_both"],
-      "bindingFields": ["configuration_error", "criteria", "false_compliance_envelope", "false_degradation_signal_envelope", "triggering_criteria", "verdict"],
+      "caseCount": 26,
+      "cases": ["compliance_fail_48_of_50_threshold_90", "compliance_pass_49_of_50_threshold_90", "compliance_fail_40_of_50_threshold_90", "compliance_fail_45_of_50_threshold_90", "compliance_fail_0_of_50_threshold_90", "compliance_pass_920_of_1000_threshold_90", "compliance_refused_50_of_50_threshold_95", "compliance_smoke_50_of_50_threshold_95", "regression_pass_91_of_100_baseline_951_of_1000", "regression_fail_90_of_100_baseline_951_of_1000", "regression_pass_95_of_100_baseline_99_of_100", "regression_fail_95_of_100_baseline_100_of_100", "regression_refused_test_larger_than_baseline", "regression_pass_25_of_25_baseline_951_of_1000_alpha001", "two_criteria_refused_regression_part_test_larger_than_baseline", "two_criteria_refused_compliance_part_infeasible", "two_criteria_refused_both_parts", "two_criteria_pass", "two_criteria_fail_regression", "two_criteria_fail_compliance", "two_criteria_fail_both", "test_functional_pass_latency_fail", "test_functional_pass_latency_inconclusive", "test_functional_fail_latency_pass", "test_latency_only", "test_advisory_breach_does_not_change_verdict"],
+      "bindingFields": ["configuration_error", "criteria", "false_compliance_envelope", "false_degradation_signal_envelope", "latency_constraints", "latency_verdict", "rate_verdict", "test_verdict", "triggering", "triggering_criteria", "verdict"],
       "informationalFields": "observed_rate",
-      "md5": "ac7fe17bd1b077dfd0f0edad32f52b6a"
+      "md5": "41e1845a56c710e34d5211c817ba85a9"
     },
     "wilson_ci": {
       "file": "wilson_ci.json",

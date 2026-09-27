@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a verdict-1.7 record in which the functional dimension
+     passes and the latency dimension fails.
+
+     The empirical regression criterion passes: 93 of 100 samples succeeded
+     against a baseline of 951 in 1000, and the Fisher cutoff is 91. The
+     test also enforces an explicit requirement, p90 <= 600 ms, decided by
+     latency/compliance-exact-binomial over the 93 latencies of the samples
+     that passed every functional criterion: 80 of them are at or below
+     600 ms, and demonstrating the requirement at alpha 0.05 needs at least
+     89. The strict evaluation fails, so the latency dimension's verdict is
+     FAIL.
+
+     The record's verdict is the overall test verdict, the structural
+     composite of the two dimensions: the functional composite is PASS and
+     the latency verdict is FAIL, so the test FAILs, triggered by the p90
+     latency constraint. Two rules decided, each stated where it decided;
+     <verdict> states none. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-27T12:00:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="100" samples-executed="100" successes="93" failures="7" elapsed-ms="151300" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="1000" baseline-rate="0.951" derived-threshold="0.91" />
+  <termination reason="COMPLETED" />
+  <functional successes="93" failures="7" pass-rate="0.93" />
+  <latency successful-samples="93" strict-violations="1" advisory-violations="0" verdict="FAIL">
+    <observed>
+      <percentile label="p90" value-ms="640" />
+    </observed>
+    <evaluations>
+      <evaluation percentile="p90" observed-ms="640" threshold-ms="600" provenance="explicit" mode="strict" status="STRICT_FAIL" decision-rule="latency/compliance-exact-binomial" decision-rule-version="1" within-threshold="80" required-within="89" />
+    </evaluations>
+  </latency>
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" />
+    <composite value="PASS" />
+  </per-criterion>
+  <verdict value="FAIL" />
+</verdict-record>

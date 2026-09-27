@@ -11,7 +11,8 @@ test_that("the point-estimate rule is withdrawn: 48 of 50 does not demonstrate 9
 test_that("every verdict case names its rule and each rule is exercised", {
   suite <- generate_verdict_cases()
   rules <- unlist(lapply(suite$cases, `[[`, "decisionRule"))
-  expect_setequal(unique(rules), c("regression/fisher", "compliance/exact-binomial"))
+  expect_setequal(unique(rules), c("regression/fisher", "compliance/exact-binomial",
+                                   "latency/precedence", "latency/compliance-exact-binomial"))
 })
 
 test_that("the verdict suite agrees with the decision suites", {

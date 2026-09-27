@@ -67,12 +67,24 @@
          baseline-derived threshold), compliance/exact-binomial (a given,
          normative threshold), latency/precedence (a baseline-derived
          latency threshold) or latency/compliance-exact-binomial (an
-         explicit latency requirement). Stated whenever a
-         rule decided. A service judged against both a requirement and its
+         explicit latency requirement). Stated when one rule decided the
+         whole test; when several did (functional criteria of different
+         directions, or enforced latency constraints beside functional
+         criteria), each is stated where it decided — on the criterion rows
+         and the latency evaluations — and <verdict> states none. A service
+         judged against both a requirement and its
          baseline carries two criteria over the same postconditions, a
          compliance criterion and a regression criterion, each on its own
          criterion row with its own rule and verdict; the record's verdict
          is their structural composite, and <verdict> then states no rule.
+
+         @value on <verdict> — the overall test verdict V_test: the
+         structural composite of the functional dimension (the criteria's
+         composite, <per-criterion>/<composite>) and the latency dimension
+         (<latency>/@verdict, the composite of the strict evaluations) —
+         PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise; a
+         dimension the test does not carry is left out. Advisory latency
+         evaluations never enter it.
 
          @configuration-error on <verdict> — a configuration refused before
          any sample ran: every applicable code, as a space-separated list in
@@ -293,6 +305,13 @@
     <xs:attribute name="successful-samples"  type="xs:int" use="required"/>
     <xs:attribute name="strict-violations"   type="xs:int" use="required"/>
     <xs:attribute name="advisory-violations" type="xs:int" use="required"/>
+    <!-- 1.7: the latency dimension's verdict V_latency, the structural
+         composite of the strict (enforced) evaluations: PASS if every one
+         passes, FAIL if any is STRICT_FAIL, INCONCLUSIVE otherwise (an
+         evaluation with status INFEASIBLE is inconclusive). Absent when the
+         test enforces no latency constraint; advisory evaluations never
+         enter it. -->
+    <xs:attribute name="verdict"             type="tns:VerdictEnum" use="optional"/>
   </xs:complexType>
 
   <xs:complexType name="ObservedPercentilesType">
