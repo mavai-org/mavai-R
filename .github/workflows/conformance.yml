@@ -2,8 +2,10 @@ name: Conformance fixtures
 
 # The committed fixtures in inst/cases/ are the public API of this
 # repository. This job regenerates them from the generators and fails on
-# any difference, so a fixture can only change together with the code
-# that produces it; then it runs the testthat suite and validates the
+# any difference beyond platform rounding (scripts/compare_fixtures.R:
+# everything a consumer binds on exactly, other numbers to a relative
+# 1e-12), so a fixture can only change together with the code that
+# produces it; then it runs the testthat suite and validates the
 # interchange and format schemas.
 
 on:
@@ -31,11 +33,10 @@ jobs:
       - name: Regenerate fixtures
         run: Rscript scripts/generate_all.R
 
-      - name: Fail on any difference from the committed fixtures
+      - name: Fail on any difference from the committed fixtures beyond platform rounding
         run: |
-          git status --porcelain inst/cases
-          git diff --exit-code --stat inst/cases
-          test -z "$(git status --porcelain inst/cases)"
+          git diff --stat inst/cases
+          Rscript scripts/compare_fixtures.R
 
       - name: Run the testthat suite
         run: Rscript -e 'testthat::test_local(reporter = "summary", stop_on_failure = TRUE)'
