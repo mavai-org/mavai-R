@@ -48,9 +48,10 @@ it implements (`methodologyVersion`):
 
 Configurations refused before any sample runs carry `configuration_error`, the
 list of every applicable code in the fixed order `TEST_LARGER_THAN_BASELINE`,
-`COMPLIANCE_INFEASIBLE` (empty when the configuration is valid). A criterion
-carrying both a normative and an empirical bar reports each bar's verdict and
-their structural composite. The methodology-1.4.1 fixtures remain available as
+`COMPLIANCE_INFEASIBLE` (empty when the configuration is valid). A service
+judged against both a requirement and its baseline carries two criteria over
+the same postconditions, one compliance and one regression, composed like any
+others. The methodology-1.4.1 fixtures remain available as
 the `v0.10.13` release assets.
 
 ### Pass-rate conformance

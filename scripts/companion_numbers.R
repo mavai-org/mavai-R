@@ -66,8 +66,21 @@ chk("10.3", "resolved cutoff", sprintf("cutoff, c = %d)", c_wf))
 chk("10.3", "powers in the reading", sprintf("the design power, %.3f, averages over a baseline yet to be drawn, and the resolved-test power, %.3f,", dp, rp))
 chk("10.3", "resolved cutoff in the reading", sprintf("fixed at %d.", c_wf))
 mdd <- fisher_minimum_detectable_degradation(1000, 1000, 0.05, 0.951)
-chk("10.3", "MDD", sprintf("at a drop of %.4f", mdd))
-chk("10.3", "MDD rate", sprintf("(to ≈ %.3f)", 0.951 - mdd))
+chk("10.3", "MDD, design inversion", sprintf("inverting the design power    %.4f (to ≈ %.3f)", mdd, 0.951 - mdd))
+p_res <- uniroot(function(p) pbinom(c_wf - 1, 1000, p) - 0.80, c(0.85, 0.951), tol = 1e-12)$root
+chk("10.3", "MDD, resolved inversion", sprintf("inverting the resolved power  %.4f (to ≈ %.3f)", 0.951 - p_res, p_res))
+
+# --- §8.5 fixed-baseline monitoring ----------------------------------------------
+c_pb <- fisher_cutoff(100, 100, 100, 0.05)
+chk("8.5", "cutoff after a perfect baseline", sprintf("after a perfect baseline of 100 of 100 (cutoff %d for a test of 100", c_pb))
+chk("8.5", "conditional false alarm", sprintf("a service still at 0.95 fails %.1f%% of the time", 100 * pbinom(c_pb - 1, 100, 0.95)))
+chk("8.5", "probability of that baseline", sprintf("such a baseline had probability %.4f", 0.95^100))
+chk("8.5", "unconditional size", sprintf("the unconditional size is %.2f%%",
+    100 * regression_fail_probability(fisher_cutoffs(100, 100, 0.05), 100, 100, 0.95, 0.95)))
+
+# --- §12.5.2 explicit requirement below the p50 minimum ---------------------------
+stopifnot(exact_binomial_k_min(0.50, 4, 0.10) == 4L, latency_min_samples(0.50) == 5L)
+chk("12.5.2", "p50 at alpha 0.10 with four latencies", sprintf("($P(Y \\ge 4) = %.4f$)", 0.5^4))
 chk("10.3", "layperson SE", sprintf("√(0.985 × 0.015 / 800) ≈ %.5f", sqrt(0.985 * 0.015 / 800)))
 chk("10.3", "layperson feasibility", sprintf("PASS possible from n = %d", exact_binomial_min_feasible_n(0.98, 0.001)))
 chk("10.3", "layperson k_min", sprintf("k_min = %d", k_lr))
@@ -262,7 +275,7 @@ for (m in c(5, 10, 20)) {
   chk("7.3", sprintf("family of %d", m), sprintf("| %.1f%% | %.1f%% | %s | %.1f%% |", 100 * (1 - 0.95^m), 100 * (1 - 0.99^m),
       if (m * 0.05 >= 1) "100% (capped)" else sprintf("%.1f%%", 100 * m * 0.05), 100 * m * 0.01))
 }
-chk("8.5", "horizon of 50", sprintf("the independence approximation gives $\\approx %d\\%%$", round(100 * (1 - 0.95^50))))
+chk("8.5", "horizon of 50", sprintf("the independence benchmark gives $\\approx %d\\%%$", round(100 * (1 - 0.95^50))))
 for (pp in c(0.50, 0.90, 0.95, 0.99)) chk("12.2.2", sprintf("rank p%g of 200", 100 * pp), sprintf("| %d |", ceiling(pp * 200)))
 legacy_uncond <- function(nb, nt, p) {
   lc <- legacy_wilson_reference_cutoff(0:nb, nb, nt, 0.05); regression_fail_probability(lc, nb, nt, p, p)
