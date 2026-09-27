@@ -2,8 +2,9 @@
 #'
 #' Generated from the suites at generation time, never hand-maintained.
 #' The manifest is the denominator that makes a framework's conformance
-#' standing countable: per suite it carries the case names, the expected
-#' fields classified binding vs informational, and a content hash of the
+#' standing countable: per suite it carries the case names, the decision
+#' rules the suite's expectations depend on, the expected fields
+#' classified binding vs informational, and a content hash of the
 #' fixture file (so a consumer can assert its vendored snapshot matches
 #' the manifest it claims coverage against). A family-mandatory tier
 #' names the suites every mavai implementation must support; per-repo
@@ -15,48 +16,101 @@
 #' mismatch, and report its standing (covered / in-manifest counts and
 #' the named not-yet-addressed suites).
 
-# Suites every mavai implementation must support: the methodological
-# spine. Roster confirmed by the owner at the 2026-07-10 design session
-# (seed examples named: the Wilson lower bound and the binomial
-# order-statistic construction).
+MANIFEST_VERSION <- 2L
+
+# Suites every mavai implementation must support under methodology 1.5.0.
 FAMILY_MANDATORY_SUITES <- c(
   "wilson_ci",
   "wilson_lower",
-  "threshold_derivation",
-  "verdict",
-  "latency_percentile",
+  "regression_decision",
+  "compliance_decision",
   "latency_threshold",
-  "regression_decision"
+  "feasibility",
+  "power_analysis",
+  "verdict"
 )
 
-# Why the roster is not extended for the effective-baseline step
-# (DIR-R-SIZING-boundary-cases, 2026-08). Published in the manifest
-# because a tier decision that lives only in a directive is a decision
-# consumers cannot see.
+# Why the roster is what it is. Published in the manifest because a tier
+# decision that lives only in a design document is a decision consumers
+# cannot see.
 TIER_RATIONALE <- paste0(
-  "The effective-baseline substitution of companion S4.3.2 and its zero-baseline mirror ",
-  "S4.3.4 are obligations of the existing mandatory tier; the roster is unchanged. ",
-  "threshold_derivation carries the perfect baseline at two baseline sizes and the zero ",
-  "baseline at three test sizes, and regression_decision carries both boundaries composed ",
-  "into a verdict. Each of those cases binds: an implementation using the raw point ",
-  "estimate at k = n differs from the published threshold by 5e-3 to 8e-2, far above the ",
-  "1e-6 tolerance, and one carrying a cancellation residue at k = 0 returns cutoff_integer ",
-  "1 where the fixtures say 0. Promoting baseline_object or criterion_verdict_inferential ",
-  "was therefore not needed to make the substitution binding. ",
-  "One obligation is deliberately NOT in the mandatory tier: the sizing refusal at an ",
-  "empty domain (S5.4.1), published in risk_driven_sizing, which is optional. A framework ",
-  "that implements no risk-driven sizing has nothing to refuse; one that does must consume ",
-  "the suite to be conformant with the feature it claims. Whether risk_driven_sizing should ",
-  "join the roster is a question about the roster, not about this boundary, and is left to ",
-  "the owner."
+  "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. ",
+  "The roster is the methodological spine of the three rules: the Wilson interval and lower ",
+  "bound (kept as descriptive primitives; no rule decides with them), the empirical-regression ",
+  "verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), ",
+  "the latency threshold (latency/precedence), the feasibility gate and exact sizing of the ",
+  "compliance rule, the exact power of the regression rule, and the verdict suite encoding ",
+  "both ruled rules. Every mandatory decision suite carries its refusal cases, so both ",
+  "configuration errors are binding through them. threshold_derivation (the regression cutoff ",
+  "without a verdict, and the threshold-first inversion), risk_driven_sizing (exact sizing of ",
+  "the regression rule against a declared tolerance, with its refusals), latency_percentile ",
+  "(the nearest-rank primitive), latency_percentile_minimums and latency_compliance_decision ",
+  "(explicit latency requirements enforced under latency/compliance-exact-binomial) remain ",
+  "published and optional: ",
+  "a framework that implements the feature must consume the suite. ",
+  "criterion_verdict_inferential, criterion_verdict_observational, composite_verdict, ",
+  "baseline_object and multi_criteria_scenario_consult_advice are informational. Withdrawn with ",
+  "the 1.4.1 rules: latency_threshold_bootstrap (a comparison of the withdrawn order-statistic ",
+  "bound); the 1.4.1 fixtures remain reproducible from the v0.10.13 release assets."
 )
 
-# Expected fields documented as informational (not conformance targets).
-# Everything not listed here is binding. Authored here, beside the
-# generators, so classification travels with the release.
+# Expected fields documented as informational (report obligations, not
+# conformance targets). Everything not listed here is binding. Authored
+# here, beside the generators, so classification travels with the release.
 INFORMATIONAL_FIELDS <- list(
-  latency_threshold_bootstrap = c("bootstrap_upper", "point_estimate", "diff")
+  threshold_derivation = c("threshold_real", "displayed_rate", "size_at_assumed_common_rate"),
+  regression_decision = c("threshold_real", "displayed_rate", "size_at_assumed_common_rate"),
+  compliance_decision = c("false_compliance", "clopper_pearson_lower"),
+  latency_threshold = c("breach_probability", "test_rank", "n", "baseline_percentile"),
+  latency_compliance_decision = c("false_compliance", "clopper_pearson_lower",
+                                  "observed_percentile_ms", "advisory_percentile_pass"),
+  verdict = c("observed_rate"),
+  power_analysis = c("first_crossing")
 )
+
+# The decision rules each suite's expectations depend on (none for the
+# descriptive and structural suites).
+SUITE_DECISION_RULES <- list(
+  threshold_derivation = "regression/fisher",
+  regression_decision = "regression/fisher",
+  risk_driven_sizing = "regression/fisher",
+  compliance_decision = "compliance/exact-binomial",
+  feasibility = "compliance/exact-binomial",
+  latency_threshold = "latency/precedence",
+  latency_percentile_minimums = "latency/precedence",
+  latency_compliance_decision = "latency/compliance-exact-binomial",
+  power_analysis = c("compliance/exact-binomial", "regression/fisher"),
+  verdict = c("compliance/exact-binomial", "regression/fisher", "latency/precedence",
+              "latency/compliance-exact-binomial"),
+  criterion_verdict_inferential = c("compliance/exact-binomial", "regression/fisher"),
+  multi_criteria_scenario_consult_advice = c("compliance/exact-binomial", "regression/fisher",
+                                             "latency/compliance-exact-binomial")
+)
+
+#' The decisionRules entry of a suite: a list of {id, version}.
+#' @keywords internal
+suite_decision_rules <- function(name) {
+  ids <- SUITE_DECISION_RULES[[name]]
+  if (is.null(ids)) return(list())
+  lapply(ids, function(id) DECISION_RULES[[id]])
+}
+
+#' Stamp a generated suite with the methodology and fixture-schema
+#' versions and its decision rules, in a fixed key order.
+#'
+#' @param name Suite name.
+#' @param suite Generator output.
+#' @return The suite with methodologyVersion, fixtureSchemaVersion and
+#'   decisionRules inserted after `suite`.
+#' @export
+finalise_suite <- function(name, suite) {
+  stopifnot(identical(suite$suite, name))
+  c(list(suite = suite$suite,
+         methodologyVersion = METHODOLOGY_VERSION,
+         fixtureSchemaVersion = FIXTURE_SCHEMA_VERSION,
+         decisionRules = suite_decision_rules(name)),
+    suite[setdiff(names(suite), "suite")])
+}
 
 #' Collect one suite's expected-field inventory across its cases.
 #' @keywords internal
@@ -86,6 +140,7 @@ generate_manifest <- function(suites, fixture_version, case_dir = NULL) {
     entry <- list(
       file = paste0(name, ".json"),
       tolerance = suite$tolerance,
+      decisionRules = suite_decision_rules(name),
       caseCount = length(suite$cases),
       cases = vapply(suite$cases, function(case) case$name, character(1)),
       bindingFields = setdiff(fields, informational),
@@ -105,8 +160,12 @@ generate_manifest <- function(suites, fixture_version, case_dir = NULL) {
          paste(missing, collapse = ", "))
   }
   list(
-    manifestVersion = 1L,
+    manifestVersion = MANIFEST_VERSION,
     fixtureVersion = fixture_version,
+    methodologyVersion = METHODOLOGY_VERSION,
+    fixtureSchemaVersion = FIXTURE_SCHEMA_VERSION,
+    decisionRules = unname(DECISION_RULES),
+    configurationErrors = CONFIGURATION_ERRORS,
     familyMandatory = FAMILY_MANDATORY_SUITES,
     familyMandatoryRationale = TIER_RATIONALE,
     suites = suite_entries

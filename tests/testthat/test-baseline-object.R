@@ -1,22 +1,28 @@
-test_that("Generator emits the expected six baseline cases", {
+test_that("Generator emits the expected eight baseline cases", {
   result <- generate_baseline_object_cases()
   expect_equal(result$suite, "baseline_object")
-  expect_equal(length(result$cases), 6)
+  expect_equal(length(result$cases), 8)
   names <- vapply(result$cases, function(c) c$name, character(1))
   expect_true("consult_advice_eu_weekday" %in% names)
+  expect_true("consult_advice_readability_eu_weekday" %in% names)
+  expect_true("consult_advice_self_harm_probe_eu_weekday" %in% names)
   expect_true("paired_evaluability_content_pattern" %in% names)
   expect_true("consult_advice_cross_policy_counterexample" %in% names)
 })
 
-test_that("Consult-advice baseline carries the three §10.3 criteria", {
+test_that("Every baseline is one sampling: all its criteria share one n", {
   result <- generate_baseline_object_cases()
-  case <- Filter(function(c) c$name == "consult_advice_eu_weekday",
-                 result$cases)[[1]]
-  criteria <- case$inputs$baseline$criteria
-  expect_equal(length(criteria), 3)
-  ids <- vapply(criteria, function(c) c$criterion_id, character(1))
-  expect_setequal(ids, c("c_well_formed", "c_no_self_harm",
-                         "c_layperson_readable"))
+  for (case in result$cases) {
+    n <- vapply(case$inputs$baseline$criteria,
+                function(c) c$observation$n_attempted, integer(1))
+    expect_length(unique(n), 1)
+  }
+  get <- function(n) Filter(function(c) c$name == n, result$cases)[[1]]
+  ids <- function(case) vapply(case$inputs$baseline$criteria,
+                               function(c) c$criterion_id, character(1))
+  expect_identical(ids(get("consult_advice_eu_weekday")), "c_well_formed")
+  expect_identical(ids(get("consult_advice_readability_eu_weekday")), "c_layperson_readable")
+  expect_identical(ids(get("consult_advice_self_harm_probe_eu_weekday")), "c_no_self_harm")
 })
 
 test_that("Paired baseline declares availability_criterion_ref", {

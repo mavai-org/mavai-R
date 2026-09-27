@@ -1,5 +1,8 @@
 {
   "suite": "composite_verdict",
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [],
   "description": "Composite-verdict aggregation per companion §1.4.6 (composite rule) and SC-RU-05 (envelopes split by procedure direction). The composite rule is: PASS if every per-criterion verdict is PASS; FAIL if any is FAIL; INCONCLUSIVE otherwise. The two envelopes are sums of alpha_c over their own family of inferential criteria: the false-compliance envelope over COMPLIANCE criteria, the false-degradation-signal envelope over REGRESSION criteria. Observational criteria carry no alpha and contribute to neither.",
   "method": "Three-way aggregation (PASS/FAIL/INCONCLUSIVE) plus per-family alpha summation. An envelope is omitted (encoded as null) when no inferential criterion of that procedure direction is present.",
   "tolerance": 1e-12,

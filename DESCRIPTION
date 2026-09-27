@@ -1,14 +1,18 @@
 Package: mavair
 Title: Reference Statistical Computations for the mavai Project Family
-Version: 0.10.13
+Version: 0.11.0
 Authors@R: person("mavai-org", email = "info@mavai.org", role = c("aut", "cre"))
 Description: Generates language-agnostic reference datasets for statistical
     computations used in probabilistic testing frameworks. Provides canonical
     expected outputs — computed in R using established statistical packages — so
     that implementations in Java (punit), Rust (feotest), Python (baseltest),
-    and future languages can verify conformance. Covers Wilson score confidence
-    intervals, threshold derivation, power analysis, feasibility checking, and
-    verdict evaluation. Designed to grow into design of experiments (DoE)
+    and future languages can verify conformance. Covers the Statistical
+    Companion 1.5.0 decision rules (the one-sided Fisher exact test for
+    empirical regression, the exact binomial test for normative
+    compliance, the precedence rank for latency), their configuration errors,
+    exact power and sizing, Wilson score intervals as descriptive primitives,
+    and verdict evaluation, with calibration certification over the operating
+    envelope. Designed to grow into design of experiments (DoE)
     reference data as the mavai family expands.
 License: Apache-2.0
 URL: https://github.com/mavai-org/mavai-R
@@ -17,12 +21,14 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
-    jsonlite
+    jsonlite,
+    gmp
 Suggests:
     testthat (>= 3.0.0),
     binom,
     pwr,
     jsonvalidate,
     yaml,
-    xml2
+    xml2,
+    withr
 Config/testthat/edition: 3

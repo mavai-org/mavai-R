@@ -27,30 +27,62 @@ independently. No need to trust a Java or Rust implementation.
 
 ## What's covered
 
-The reference data spans two quality dimensions of the mavai methodology:
-**pass-rate analysis** (binomial, Wilson score based) and **latency analysis**
-(non-parametric, empirical percentile based). For the full statistical
-treatment, see the [Statistical Companion](docs/STATISTICAL-COMPANION.md). For
-the contract model that these computations serve, see
+The reference data implements the decision rules of Statistical Companion
+1.5.0 over two quality dimensions of the mavai methodology: **pass-rate
+analysis** (binomial) and **latency analysis** (non-parametric, empirical
+percentile based). For the full statistical treatment, see the
+[Statistical Companion](docs/STATISTICAL-COMPANION.md). For the contract
+model that these computations serve, see
 [Distributional Contracts](docs/DISTRIBUTIONAL-CONTRACTS.md).
+
+Four versioned decision rules decide every verdict, and each fixture file
+names the rules it depends on (`decisionRules`) and the methodology version
+it implements (`methodologyVersion`):
+
+| Rule | Decides | Binding artefact |
+|---|---|---|
+| `regression/fisher` v1 | Empirical regression against a baseline (one-sided Fisher exact test) | integer cutoff c; PASS iff K_t >= c |
+| `compliance/exact-binomial` v1 | Normative compliance with a given requirement (exact one-sided binomial test) | k_min; PASS iff K >= k_min |
+| `latency/precedence` v1 | Latency regression (precedence rank of the baseline latencies) | rank, or `saturated` (INCONCLUSIVE) |
+| `latency/compliance-exact-binomial` v1 | An explicit latency requirement (exact one-sided binomial test on the count of successful latencies within the threshold) | y_min; PASS iff Y >= y_min, or INCONCLUSIVE when too few latencies arrived |
+
+Configurations refused before any sample runs carry `configuration_error`, the
+list of every applicable code in the fixed order `TEST_LARGER_THAN_BASELINE`,
+`COMPLIANCE_INFEASIBLE` (empty when the configuration is valid). A service
+judged against both a requirement and its baseline carries two criteria over
+the same postconditions, one compliance and one regression, composed like any
+others. The methodology-1.4.1 fixtures remain available as
+the `v0.10.13` release assets.
 
 ### Pass-rate conformance
 
 | Suite | File | Covers |
 |---|---|---|
-| Wilson CI | `inst/cases/wilson_ci.json` | Two-sided Wilson score confidence intervals |
-| Wilson lower | `inst/cases/wilson_lower.json` | One-sided Wilson score lower bound |
-| Threshold derivation | `inst/cases/threshold_derivation.json` | Sample-size-first and threshold-first approaches |
-| Power analysis | `inst/cases/power_analysis.json` | Sample size calculation via power analysis |
-| Feasibility | `inst/cases/feasibility.json` | Verification feasibility checking |
-| Verdict | `inst/cases/verdict.json` | Pass/fail verdict evaluation with z-test |
+| Wilson CI | `inst/cases/wilson_ci.json` | Two-sided Wilson score intervals (descriptive) |
+| Wilson lower | `inst/cases/wilson_lower.json` | One-sided Wilson score lower bound (descriptive) |
+| Threshold derivation | `inst/cases/threshold_derivation.json` | The regression cutoff c or the configuration error, and the implied alpha of a declared cutoff |
+| Regression decision | `inst/cases/regression_decision.json` | Regression verdicts through the production path |
+| Compliance decision | `inst/cases/compliance_decision.json` | Compliance verdicts, VERIFICATION refusals and SMOKE outcomes |
+| Feasibility | `inst/cases/feasibility.json` | Whether a normative test of this size can PASS at all |
+| Power analysis | `inst/cases/power_analysis.json` | Exact compliance sizing (margin, midway or declared alternative), regression design power and resolved-test power, and minimum detectable degradation |
+| Risk-driven sizing | `inst/cases/risk_driven_sizing.json` | Exact sizing of the regression rule at a declared design alternative rate, with refusals |
+| Verdict | `inst/cases/verdict.json` | Verdicts under both ruled rules, including joint configurations |
 
 ### Latency conformance
 
 | Suite | File | Covers |
 |---|---|---|
 | Latency percentile | `inst/cases/latency_percentile.json` | Nearest-rank empirical percentiles and summary statistics |
-| Latency threshold | `inst/cases/latency_threshold.json` | Upper confidence bound threshold derivation from baselines |
+| Latency threshold | `inst/cases/latency_threshold.json` | The precedence rank and threshold, or saturation |
+| Latency percentile minimums | `inst/cases/latency_percentile_minimums.json` | Emission minimums, precedence existence on the actual count, and the pre-run planning check |
+| Latency compliance decision | `inst/cases/latency_compliance_decision.json` | Explicit latency requirements: verdicts, refusals and INCONCLUSIVE outcomes, with the advisory percentile comparison |
+
+The multi-criteria suites (`criterion_verdict_*`, `composite_verdict`,
+`baseline_object`, `multi_criteria_scenario_consult_advice`) are
+informational. `inst/cases/manifest.json` lists every suite, its binding and
+informational fields and the family-mandatory roster. The calibration
+certification surfaces behind the rules are produced by `scripts/certify.R`
+and published as a separate release asset.
 
 ### Design of experiments (planned)
 
@@ -87,6 +119,9 @@ Each suite file contains:
 ```json
 {
   "suite": "wilson_ci",
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [],
   "description": "Wilson score confidence intervals (two-sided)",
   "method": "qnorm-based Wilson score interval",
   "tolerance": 1e-10,

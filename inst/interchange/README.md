@@ -30,7 +30,20 @@ a vendored snapshot of the published file, synced per release. From 1.3 the
 record carries a first-class `<postcondition-standings>` element (descriptive
 per-check tallies with the partial-credit facts stated verbatim); the
 `verdict-1.3-typical.xml` example here is validated against the XSD by the
-same build step that validates the YAML examples.
+same build step that validates the YAML examples. From 1.7
+(Statistical Companion 1.5.0) the record states the methodology version
+whose decision rules produced it, the verdict names the versioned rule that
+decided (`regression/fisher`, `compliance/exact-binomial`,
+`latency/precedence`, `latency/compliance-exact-binomial`), a configuration
+refused before any sample ran carries every applicable configuration-error
+code, as an ordered list, in place of a verdict value, and a service judged
+against both a requirement and its baseline carries two criteria over the
+same postcondition, each with its own rule and verdict
+and the record's verdict is the overall test verdict, composing the
+functional criteria with the enforced latency constraints
+(`verdict-1.7-typical.xml`, `verdict-1.7-refused.xml`,
+`verdict-1.7-two-criteria.xml`, `verdict-1.7-latency-fail.xml`). Earlier XSD versions
+are unchanged.
 
 **This repository is the publication channel for these artefacts, not their
 authority.** The formats are specified canonically in the mavai family's

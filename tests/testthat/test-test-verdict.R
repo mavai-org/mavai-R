@@ -1,0 +1,32 @@
+test_that("V_latency and V_test follow the structural composite rule", {
+  pass <- list(constraint_id = "a", participates = TRUE, verdict = "PASS")
+  fail <- list(constraint_id = "b", participates = TRUE, verdict = "FAIL")
+  inc <- list(constraint_id = "c", participates = TRUE, verdict = "INCONCLUSIVE")
+  adv <- list(constraint_id = "d", participates = FALSE, verdict = "ADVISORY_WARN")
+  crit <- function(v) list(list(criterion_id = "c1", verdict = v))
+  expect_identical(test_verdict(crit("PASS"), list(fail))$test_verdict, "FAIL")
+  expect_identical(test_verdict(crit("PASS"), list(inc))$test_verdict, "INCONCLUSIVE")
+  expect_identical(test_verdict(crit("INCONCLUSIVE"), list(pass))$test_verdict, "INCONCLUSIVE")
+  expect_identical(test_verdict(crit("INCONCLUSIVE"), list(fail))$test_verdict, "FAIL")
+  expect_identical(test_verdict(crit("PASS"), list(pass, adv))$test_verdict, "PASS")
+  expect_true(is.na(test_verdict(crit("PASS"), list(adv))$latency_verdict))
+  lo <- test_verdict(list(), list(pass))
+  expect_true(is.na(lo$rate_verdict))
+  expect_identical(lo$test_verdict, "PASS")
+  expect_identical(test_verdict(crit("FAIL"), list())$test_verdict, "FAIL")
+  expect_error(test_verdict(list(), list(adv)))
+  t <- test_verdict(crit("PASS"), list(fail))$triggering
+  expect_identical(t, list(list(kind = "latency", id = "b")))
+})
+
+test_that("the verdict suite carries the mixed test-verdict cases", {
+  cases <- Filter(function(c) identical(c$approach, "test_verdict"), generate_verdict_cases()$cases)
+  get <- function(n) Filter(function(c) c$name == n, cases)[[1]]$expected
+  expect_identical(get("test_functional_pass_latency_fail")$test_verdict, "FAIL")
+  expect_identical(get("test_functional_pass_latency_inconclusive")$test_verdict, "INCONCLUSIVE")
+  expect_identical(get("test_functional_fail_latency_pass")$test_verdict, "FAIL")
+  expect_identical(get("test_latency_only")$test_verdict, "PASS")
+  a <- get("test_advisory_breach_does_not_change_verdict")
+  expect_identical(a$test_verdict, "PASS")
+  expect_identical(a$latency_constraints[[2]]$verdict, "ADVISORY_WARN")
+})

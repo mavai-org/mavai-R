@@ -1,100 +1,61 @@
-test_that("power is increasing in n within the domain", {
-  powers <- vapply(c(50, 150, 405, 1000), function(n) {
-    power_self_consistent(n, 0.96, 0.93, 0.95)
-  }, numeric(1))
-  expect_true(all(diff(powers) > 0))
+by_name <- function(suite) setNames(suite$cases, vapply(suite$cases, `[[`, character(1), "name"))
+suite <- generate_risk_driven_sizing_cases()
+cases <- by_name(suite)
+
+test_that("required n is where power stays at target up to n_b", {
+  e <- cases[["companion_scenario_walkthrough"]]
+  n <- e$expected$required_n
+  i <- e$inputs
+  expect_gte(e$expected$achieved_power, i$target_power)
+  expect_lt(risk_sizing_power(n - 1L, i$baseline_rate, i$baseline_trials,
+                              i$design_alternative_rate, i$alpha), i$target_power)
+  for (m in c(n + 1L, n + 50L, i$baseline_trials)) {
+    expect_gte(risk_sizing_power(m, i$baseline_rate, i$baseline_trials,
+                                 i$design_alternative_rate, i$alpha), i$target_power)
+  }
 })
 
-test_that("required n is minimal: the target holds at n and fails at n - 1", {
-  n <- required_n_self_consistent(0.87, 0.84, 0.95, 0.80)
-  expect_gte(power_self_consistent(n, 0.87, 0.84, 0.95), 0.80)
-  expect_lt(power_self_consistent(n - 1, 0.87, 0.84, 0.95), 0.80)
+test_that("the windowed power equals the full exact sum", {
+  full <- fisher_power(2000, 150, 0.05, 0.96, 0.03)
+  expect_equal(risk_sizing_power(150, 0.96, 2000, 0.93, 0.05), full, tolerance = 1e-14)
 })
 
-test_that("the companion's computed examples are pinned", {
-  expect_identical(required_n_self_consistent(0.87, 0.84, 0.95, 0.80), 891L)
-  expect_identical(required_n_self_consistent(0.96, 0.93, 0.95, 0.80), 405L)
-  expect_equal(wilson_lower_from_rate(0.87, 891, 0.95), 0.8503, tolerance = 1e-4)
-})
-
-test_that("the closed-form seed underpowers the worked example", {
-  expect_lt(power_self_consistent(826, 0.87, 0.84, 0.95), 0.80)
+test_that("higher power and smaller alpha cost samples", {
+  base <- cases[["companion_scenario_walkthrough"]]$expected$required_n
+  expect_gt(cases[["higher_power_costs_samples"]]$expected$required_n, base)
+  expect_gt(cases[["smaller_alpha_costs_samples"]]$expected$required_n, base)
 })
 
 test_that("the inversion round-trips: power at the detectable rate meets the target", {
-  detectable <- detectable_rate_self_consistent(100, 0.87, 0.95, 0.80)
-  expect_gte(power_self_consistent(100, 0.87, detectable, 0.95), 0.80)
-  # And a nudge above the detectable rate falls below the target.
-  expect_lt(power_self_consistent(100, 0.87, detectable + 1e-6, 0.95), 0.80)
+  e <- cases[["inversion_at_400"]]
+  i <- e$inputs
+  expect_gte(risk_sizing_power(400, i$baseline_rate, i$baseline_trials, e$expected$detectable_rate,
+                               i$alpha), i$target_power)
+  expect_lt(risk_sizing_power(400, i$baseline_rate, i$baseline_trials,
+                              e$expected$detectable_rate + 1e-6, i$alpha), i$target_power)
 })
 
-test_that("inverting at the required n recovers the declared tolerance", {
-  expect_equal(detectable_rate_self_consistent(891, 0.87, 0.95, 0.80), 0.84,
-               tolerance = 1e-3)
-  expect_equal(detectable_rate_self_consistent(405, 0.96, 0.95, 0.80), 0.93,
-               tolerance = 1e-3)
+test_that("inadmissible designs are published as refusals", {
+  expect_identical(cases[["zero_baseline_required_n_refused"]]$expected$refusal_category, "ZERO_BASELINE")
+  expect_identical(cases[["design_alternative_at_baseline_refused"]]$expected$refusal_category, "ALTERNATIVE_NOT_BELOW_BASELINE")
+  expect_identical(cases[["test_larger_than_baseline_refused"]]$expected$refusal_category, "TEST_LARGER_THAN_BASELINE")
+  r <- cases[["baseline_too_small_for_design"]]$expected
+  expect_identical(r$sizing_gate, "REFUSE")
+  expect_identical(r$refusal_category, "BASELINE_TOO_SMALL")
+  expect_true(is.na(r$required_n))
 })
 
-test_that("the over-reach regime is refused, not computed", {
-  expect_error(
-    power_self_consistent(100, 0.90, 0.90, 0.95),
-    "p_min < p0"
-  )
-  expect_error(
-    required_n_self_consistent(0.90, 0.95, 0.95, 0.80),
-    "p_min < p0"
-  )
-})
-
-test_that("the generated suite is well formed", {
-  suite <- generate_risk_driven_sizing_cases()
-  expect_identical(suite$suite, "risk_driven_sizing")
-  expect_identical(suite$tolerance, 1e-6)
-  names_ <- vapply(suite$cases, function(c) c$name, character(1))
-  expect_identical(anyDuplicated(names_), 0L)
-  approaches <- vapply(suite$cases, function(c) c$approach, character(1))
-  expect_setequal(unique(approaches), c("required_n", "power_at", "detectable_rate"))
-  for (case in suite$cases) {
-    expect_true(length(case$expected) >= 1, info = case$name)
-    expect_true(all(!vapply(case$expected, is.null, logical(1))), info = case$name)
-  }
-})
-
-test_that("inadmissible sizing designs are published as refusals, not omitted", {
-  # The suite used to express the §5.4.1 domain restriction by declining
-  # to emit cases outside it, which left "correctly refuses" a convention
-  # rather than an assertable outcome. Both routes out of the domain are
-  # now published, and they are distinguishable by cause.
-  suite <- generate_risk_driven_sizing_cases()
-  by_name <- setNames(suite$cases, vapply(suite$cases, `[[`, "", "name"))
-
-  refused <- Filter(function(c) c$expected$sizing_gate == "REFUSE", suite$cases)
-  expect_length(refused, 4)
-
-  for (case in refused) {
-    # Every numeric expectation is absent, because none exists.
-    numerics <- setdiff(names(case$expected), c("sizing_gate", "refusal_category"))
-    expect_gt(length(numerics), 0)
-    for (f in numerics) expect_true(is.na(case$expected[[f]]))
-  }
-
-  # A zero baseline reaches the refusal through an effective rate of
-  # exactly 0 (§4.3.4); all three approaches refuse, since the emptiness
-  # is in the domain rather than in any one inversion.
-  zero <- Filter(function(c) c$expected$refusal_category == "ZERO_BASELINE", refused)
-  expect_setequal(vapply(zero, `[[`, "", "approach"),
-                  c("required_n", "power_at", "detectable_rate"))
-  for (case in zero) expect_identical(case$inputs$baseline_rate, 0)
-
-  # The other route out is a tolerance that is not below the baseline —
-  # same gate, different cause. A framework collapsing the two into one
-  # message loses the distinction the operator acts on.
-  expect_identical(
-    by_name[["tolerance_at_baseline_refused"]]$expected$refusal_category,
-    "EMPTY_TOLERANCE_INTERVAL")
-
-  # Admissible cases carry the gate too, so its absence is never how a
-  # consumer infers admissibility.
-  admitted <- Filter(function(c) c$expected$sizing_gate == "ADMIT", suite$cases)
-  expect_length(admitted, length(suite$cases) - 4)
+test_that("resolved sizing against an observed baseline differs from design sizing", {
+  cases <- setNames(generate_risk_driven_sizing_cases()$cases,
+                    vapply(generate_risk_driven_sizing_cases()$cases, `[[`, character(1), "name"))
+  r <- cases[["resolved_section_10_3_951_of_1000_at_0925"]]$expected
+  expect_identical(r$sizing_gate, "ADMIT")
+  expect_identical(r$required_n, 966L)
+  expect_identical(r$first_crossing, 868L)
+  expect_gte(r$resolved_power, 0.80)
+  expect_lt(risk_sizing_resolved_power(965, 951, 1000, 0.925, 0.05), 0.80)
+  d <- cases[["design_section_10_3_planned_1000_at_0951_vs_0925"]]$expected
+  expect_identical(d$refusal_category, "BASELINE_TOO_SMALL")
+  expect_equal(cases[["resolved_power_at_1000_section_10_3"]]$expected$resolved_power,
+               pbinom(932, 1000, 0.925), tolerance = 1e-14)
 })

@@ -1,60 +1,74 @@
-#' Compute required sample size for a one-sided binomial proportion test
+#' Exact power and sizing under the 1.5.0 decision rules.
 #'
-#' Uses the standard power formula for one-sided tests:
-#'   n = ((z_alpha * sigma_0 + z_beta * sigma_1) / delta)^2
+#' Three approaches, each an exact finite computation against the
+#' operative decision rule (no normal approximation):
 #'
-#' @param baseline_rate Numeric. Null hypothesis proportion (p0).
-#' @param min_detectable_effect Numeric. Minimum degradation to detect (delta).
-#' @param confidence Numeric. Confidence level (1 - alpha).
-#' @param power Numeric. Statistical power (1 - beta).
-#' @return A list with required_samples and achieved_power.
-#' @export
-required_sample_size <- function(baseline_rate, min_detectable_effect,
-                                  confidence, power) {
-  alpha <- 1 - confidence
-  z_alpha <- qnorm(1 - alpha)
-  z_beta <- qnorm(power)
+#'   - `compliance_sizing` (compliance/exact-binomial): the smallest n from
+#'     which P(PASS | alternative) stays at or above the target power —
+#'     not the first crossing, since power is a sawtooth in n — searched
+#'     to n = 20000 with the feasibility gate inside the search. The
+#'     alternative is p_req + delta, or the midway rate (p_req + 1)/2
+#'     where p_req + delta >= 1.
+#'   - `regression_power` (regression/fisher): the exact design power at a
+#'     declared margin, with the baseline and the test both yet to be
+#'     drawn: sum_k P_{p_b}(K_b = k) P_{p_b - delta}(K_t < c(k)).
+#'   - `regression_resolved_power` (regression/fisher): once a baseline has
+#'     been observed its cutoff c(K_b) is fixed, and the power of that
+#'     resolved test at a design alternative rate p_design is
+#'     P_{p_design}(K_t < c(K_b)). It answers a different question from the
+#'     design power and is reported beside it, named apart.
+#'   - `regression_mdd` (regression/fisher): where no margin is declared,
+#'     the minimum detectable degradation at the target power (default
+#'     0.80), null when no degradation reaches it.
 
-  p0 <- baseline_rate
-  p1 <- baseline_rate - min_detectable_effect
-  delta <- min_detectable_effect
-
-  sigma_0 <- sqrt(p0 * (1 - p0))
-  sigma_1 <- sqrt(p1 * (1 - p1))
-
-  n <- ((z_alpha * sigma_0 + z_beta * sigma_1) / delta)^2
-  n_ceil <- ceiling(n)
-
-  # Compute achieved power at the ceiling sample size
-  achieved <- achieved_power(n_ceil, baseline_rate, min_detectable_effect,
-                              confidence)
-
+#' @keywords internal
+compliance_sizing_case <- function(name, threshold, delta, alpha, power = 0.80,
+                                   alternative_rate = NULL) {
+  s <- compliance_exact_sizing(threshold, delta, alpha, power, alternative_rate = alternative_rate)
+  inputs <- list(threshold = threshold, min_detectable_effect = delta, alpha = alpha,
+                 power = power)
+  if (!is.null(alternative_rate)) inputs$alternative_rate <- alternative_rate
   list(
-    required_samples = as.integer(n_ceil),
-    achieved_power = achieved
+    name = name, approach = "compliance_sizing", decisionRule = "compliance/exact-binomial",
+    inputs = inputs,
+    expected = list(required_samples = s$required_samples, achieved_power = s$achieved_power,
+                    alternative_rate = s$alternative_rate, alternative_kind = s$alternative_kind,
+                    first_crossing = s$first_crossing)
   )
 }
 
-#' Compute achieved power for a given sample size
-#'
-#' @param n Integer. Sample size.
-#' @param baseline_rate Numeric. Null hypothesis proportion.
-#' @param min_detectable_effect Numeric. Effect size.
-#' @param confidence Numeric. Confidence level.
-#' @return Numeric. Achieved power.
-achieved_power <- function(n, baseline_rate, min_detectable_effect, confidence) {
-  alpha <- 1 - confidence
-  z_alpha <- qnorm(1 - alpha)
+#' @keywords internal
+regression_power_case <- function(name, n_b, n_t, alpha, baseline_rate, delta) {
+  list(
+    name = name, approach = "regression_power", decisionRule = "regression/fisher",
+    inputs = list(baseline_trials = as.integer(n_b), test_samples = as.integer(n_t),
+                  alpha = alpha, baseline_rate = baseline_rate, min_detectable_effect = delta),
+    expected = list(design_power = fisher_power(n_b, n_t, alpha, baseline_rate, delta))
+  )
+}
 
-  p0 <- baseline_rate
-  p1 <- baseline_rate - min_detectable_effect
+#' @keywords internal
+regression_resolved_power_case <- function(name, k_b, n_b, n_t, alpha, design_alternative_rate) {
+  c_int <- fisher_cutoff(k_b, n_b, n_t, alpha)
+  list(
+    name = name, approach = "regression_resolved_power", decisionRule = "regression/fisher",
+    inputs = list(baseline_successes = as.integer(k_b), baseline_trials = as.integer(n_b),
+                  test_samples = as.integer(n_t), alpha = alpha,
+                  design_alternative_rate = design_alternative_rate),
+    expected = list(cutoff_integer = c_int,
+                    resolved_test_power = pbinom(c_int - 1, n_t, design_alternative_rate))
+  )
+}
 
-  sigma_0 <- sqrt(p0 * (1 - p0))
-  sigma_1 <- sqrt(p1 * (1 - p1))
-
-  # Power = P(Z > z_alpha * sigma_0/sigma_1 - delta*sqrt(n)/sigma_1)
-  z_beta <- (z_alpha * sigma_0 - min_detectable_effect * sqrt(n)) / sigma_1
-  pnorm(-z_beta)  # = 1 - pnorm(z_beta)
+#' @keywords internal
+regression_mdd_case <- function(name, n_b, n_t, alpha, baseline_rate, power = 0.80) {
+  list(
+    name = name, approach = "regression_mdd", decisionRule = "regression/fisher",
+    inputs = list(baseline_trials = as.integer(n_b), test_samples = as.integer(n_t),
+                  alpha = alpha, baseline_rate = baseline_rate, power = power),
+    expected = list(minimum_detectable_degradation =
+                      fisher_minimum_detectable_degradation(n_b, n_t, alpha, baseline_rate, power))
+  )
 }
 
 #' Generate power analysis reference cases
@@ -63,61 +77,61 @@ achieved_power <- function(n, baseline_rate, min_detectable_effect, confidence) 
 #' @export
 generate_power_analysis_cases <- function() {
   cases <- list(
-    list(
-      name = "typical_llm_95pct_5pct_effect_80power",
-      inputs = list(
-        baseline_rate = 0.95, min_detectable_effect = 0.05,
-        confidence = 0.95, power = 0.80
-      ),
-      expected = required_sample_size(0.95, 0.05, 0.95, 0.80)
-    ),
-    list(
-      name = "high_baseline_99pct_2pct_effect_80power",
-      inputs = list(
-        baseline_rate = 0.99, min_detectable_effect = 0.02,
-        confidence = 0.95, power = 0.80
-      ),
-      expected = required_sample_size(0.99, 0.02, 0.95, 0.80)
-    ),
-    list(
-      name = "fair_coin_50pct_10pct_effect_80power",
-      inputs = list(
-        baseline_rate = 0.50, min_detectable_effect = 0.10,
-        confidence = 0.95, power = 0.80
-      ),
-      expected = required_sample_size(0.50, 0.10, 0.95, 0.80)
-    ),
-    list(
-      name = "high_power_95pct_5pct_effect_95power",
-      inputs = list(
-        baseline_rate = 0.95, min_detectable_effect = 0.05,
-        confidence = 0.95, power = 0.95
-      ),
-      expected = required_sample_size(0.95, 0.05, 0.95, 0.95)
-    ),
-    list(
-      name = "small_effect_95pct_1pct_effect_80power",
-      inputs = list(
-        baseline_rate = 0.95, min_detectable_effect = 0.01,
-        confidence = 0.95, power = 0.80
-      ),
-      expected = required_sample_size(0.95, 0.01, 0.95, 0.80)
-    ),
-    list(
-      name = "high_confidence_95pct_5pct_effect_99conf",
-      inputs = list(
-        baseline_rate = 0.95, min_detectable_effect = 0.05,
-        confidence = 0.99, power = 0.80
-      ),
-      expected = required_sample_size(0.95, 0.05, 0.99, 0.80)
-    )
+    compliance_sizing_case("compliance_p95_delta002_a05", 0.95, 0.02, 0.05),
+    compliance_sizing_case("compliance_p95_delta001_a05", 0.95, 0.01, 0.05),
+    compliance_sizing_case("compliance_p90_delta005_a05", 0.90, 0.05, 0.05),
+    compliance_sizing_case("compliance_p80_delta010_a01", 0.80, 0.10, 0.01),
+    compliance_sizing_case("compliance_p50_delta010_a10", 0.50, 0.10, 0.10),
+    compliance_sizing_case("compliance_p95_delta005_a05_midway", 0.95, 0.05, 0.05),
+    compliance_sizing_case("compliance_p99_delta002_a05_midway", 0.99, 0.02, 0.05),
+    compliance_sizing_case("compliance_p95_delta002_a05_power95", 0.95, 0.02, 0.05, power = 0.95),
+    compliance_sizing_case("compliance_p95_declared_alternative_098_a05", 0.95, 0.02, 0.05,
+                           alternative_rate = 0.98),
+    compliance_sizing_case("compliance_p98_declared_alternative_0985_a0001", 0.98, 0.005, 0.001,
+                           alternative_rate = 0.985),
+    regression_power_case("regression_nb1000_nt100_p95_delta005_a05", 1000, 100, 0.05, 0.95, 0.05),
+    regression_power_case("regression_nb1000_nt1000_p95_delta002_a05", 1000, 1000, 0.05, 0.95, 0.02),
+    regression_power_case("regression_nb2000_nt1000_p951_delta0026_a05", 2000, 1000, 0.05, 0.951, 0.026),
+    regression_power_case("regression_nb100_nt100_p99_delta005_a01", 100, 100, 0.01, 0.99, 0.05),
+    regression_power_case("regression_nb30_nt25_p90_delta010_a05", 30, 25, 0.05, 0.90, 0.10),
+    regression_resolved_power_case("resolved_kb951_nb1000_nt1000_at0925_a05", 951, 1000, 1000, 0.05, 0.925),
+    regression_resolved_power_case("resolved_kb951_nb1000_nt100_at090_a05", 951, 1000, 100, 0.05, 0.90),
+    regression_resolved_power_case("resolved_kb100_nb100_nt100_at090_a05", 100, 100, 100, 0.05, 0.90),
+    regression_resolved_power_case("resolved_kb1920_nb2000_nt463_at093_a05", 1920, 2000, 463, 0.05, 0.93),
+    regression_mdd_case("regression_mdd_nb1000_nt100_p95_a05", 1000, 100, 0.05, 0.95),
+    regression_mdd_case("regression_mdd_nb1000_nt1000_p95_a05", 1000, 1000, 0.05, 0.95),
+    regression_mdd_case("regression_mdd_nb30_nt25_p90_a05", 30, 25, 0.05, 0.90),
+    regression_mdd_case("regression_mdd_nb100_nt100_p100_a05", 100, 100, 0.05, 1.00),
+    regression_mdd_case("regression_mdd_nb10_nt1_p50_a001_none", 10, 1, 0.001, 0.50)
   )
 
   list(
     suite = "power_analysis",
-    description = "Sample size calculation via power analysis for one-sided binomial proportion tests",
-    method = "Standard power formula: n = ((z_alpha * sigma_0 + z_beta * sigma_1) / delta)^2",
-    tolerance = 1e-10,
+    description = paste(
+      "Exact power and sizing against the operative decision rules. compliance_sizing: the",
+      "smallest n from which exact power at the alternative stays at or above target",
+      "(compliance/exact-binomial), at the declared alternative rate where one is declared",
+      "(alternative_kind DECLARED), else at p_req + delta (MARGIN) or the midway rate (MIDWAY).",
+      "regression_power: the design power of regression/fisher at a declared margin, baseline and",
+      "test both yet to be drawn. regression_resolved_power: the power of the test resolved",
+      "against an observed baseline, whose cutoff is fixed, at a design alternative rate; it is",
+      "reported beside the design power and named apart. regression_mdd: the minimum",
+      "detectable degradation at the target design power when no margin is declared. Each case",
+      "names its rule in decisionRule."
+    ),
+    method = paste(
+      "compliance_sizing: power(n) = P_{p1}(K >= k_min(p_req, n, alpha)), 0 where infeasible;",
+      "p1 = the declared alternative_rate (DECLARED), else p_req + delta (MARGIN), or",
+      "(p_req + 1)/2 when p_req + delta >= 1 (MIDWAY);",
+      "required_samples = 1 + the largest n <= 20000 with power(n) < target (null if that is",
+      "20000); first_crossing = the smallest n with power(n) >= target.",
+      "regression_power: design_power = sum_k dbinom(k, n_b, p_b) P_{p_b - delta}(K_t < c(k)),",
+      "c the regression/fisher cutoff. regression_resolved_power: resolved_test_power =",
+      "pbinom(c(K_b) - 1, n_t, design_alternative_rate), c(K_b) the cutoff at the observed",
+      "baseline count. regression_mdd: the smallest delta in (0, p_b] with that power",
+      ">= target (bisection to 1e-12), null when delta = p_b falls short."
+    ),
+    tolerance = 1e-9,
     cases = cases
   )
 }

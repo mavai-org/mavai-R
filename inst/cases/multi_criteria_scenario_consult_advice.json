@@ -1,12 +1,28 @@
 {
   "suite": "multi_criteria_scenario_consult_advice",
-  "description": "End-to-end scenarios per companion §10.3 and §10.6. Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). Case 1 mirrors the locked §10.3 example (composite FAIL); case 2 is the passing counterfactual; case 3 exercises the structural- composition pattern (availability sibling + conditional content via availability_criterion_ref); case 4 exercises the cross- policy structural-error refusal.",
+  "methodologyVersion": "1.5.0",
+  "fixtureSchemaVersion": 2,
+  "decisionRules": [
+    {
+      "id": "compliance/exact-binomial",
+      "version": 1
+    },
+    {
+      "id": "regression/fisher",
+      "version": 1
+    },
+    {
+      "id": "latency/compliance-exact-binomial",
+      "version": 1
+    }
+  ],
+  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0 decision rules (regression/fisher, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). One run has one sampling, shared by every criterion of its contract. Cases 1-3 are the one canonical consult-advice example: three tests, each bound to its own contract and running over its own sampling - 953 of 1000 over V_prod against the baseline 951 of 1000 (C_well_formed, PASS); 788 of 800 over V_complexity against the 0.98 requirement at alpha 0.001 (C_layperson_readable, FAIL); no failure in 200 adversarial probes over V_probe (C_no_self_harm, PASS). A view across the three tests is reporting, not a composite of one run. Every consult-advice number in the companion is generated from them. Case 4 is the passing counterfactual of case 2; case 5 exercises the structural-composition pattern (availability sibling + conditional content via availability_criterion_ref, two criteria over one sampling); case 6 exercises the cross-policy structural-error refusal. Cases 7-11 (two_criteria_*) judge one service against a requirement and its baseline on the same postconditions: two criteria over one sampling and the same observations, a compliance criterion and a regression criterion, each with one rule, one alpha and one verdict, composed by the ordinary structural composite, one case for each outcome; two of them carry an enforced latency constraint. Every case states the overall test verdict: latency_verdict (the structural composite of the enforced latency constraints, null without any) and test_verdict (the composite of the functional composite and latency_verdict), with test_triggering naming the criteria and constraints that decided it.",
   "method": "Per-criterion verdicts computed by regression_verdict / compliance_verdict / observational_verdict and composed by composite_verdict. The §10.6 conformance_status block names formula_value_fixtures: passed and calibration_fixtures: not-published, anchoring the conformance contract a downstream framework is expected to replicate.",
   "tolerance": 1e-09,
   "cases": [
     {
-      "name": "consult_advice_locked_section_10_3",
-      "description": "The locked §10.3 worked example. Three criteria: C_well_formed (REGRESSION, EMPIRICAL origin) passes; C_no_self_harm (observational) passes; C_layperson_readable (COMPLIANCE, SLO origin) fails with the three-strand verdict's statistical and observed-rate strands disagreeing. Composite FAIL.",
+      "name": "consult_advice_well_formed",
+      "description": "Test 1 of the consult-advice example (§1.4.8, §10.3): contract consult-advice@5 over the production sampling V_prod v5. One criterion, C_well_formed (REGRESSION, EMPIRICAL origin): 953 of 1000 against the baseline 951 of 1000 at alpha 0.05; the Fisher cutoff is 933. PASS.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -37,34 +53,6 @@
                 "K_c": 951,
                 "p_hat_c": 0.951
               }
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 200,
-                "r_obs": 1,
-                "n_c": 200,
-                "K_c": 200,
-                "p_hat_c": null
-              }
-            },
-            {
-              "criterion_id": "c_layperson_readable",
-              "mode": "inferential",
-              "procedure": "COMPLIANCE",
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 800,
-                "n_evaluable": 800,
-                "r_obs": 1,
-                "n_c": 800,
-                "K_c": 788,
-                "p_hat_c": 0.985
-              }
             }
           ]
         },
@@ -89,17 +77,90 @@
               "baseline_trials": 1000,
               "p_req": null,
               "availability_criterion_ref": null
-            },
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.953,
+            "cutoff_integer": 933,
+            "displayed_rate": 0.933,
+            "configuration_error": [],
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "PASS",
+        "test_triggering": [],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "consult_advice_readability",
+      "description": "Test 2 of the consult-advice example: contract consult-advice-readability@1 over V_complexity v2, inputs chosen to elicit clinical terminology, so a separate test with its own sampling. C_layperson_readable (COMPLIANCE, SLO origin): 788 of 800 against the 0.98 requirement at alpha 0.001; k_min is 796. FAIL, with the three-strand verdict's statistical and observed-rate strands disagreeing.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-readability@1",
+          "criteria": [
             {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
+              "criterion_id": "c_layperson_readable",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
               "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "alpha": null,
-              "n_attempted": 200,
-              "n_evaluable": 200,
-              "K_c": 200
-            },
+              "observation": {
+                "n_attempted": 800,
+                "n_evaluable": 800,
+                "r_obs": 1,
+                "n_c": 800,
+                "K_c": 788,
+                "p_hat_c": 0.985
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -120,47 +181,18 @@
       "expected": {
         "per_criterion_verdicts": [
           {
-            "criterion_id": "c_well_formed",
-            "mode": "inferential",
-            "procedure": "REGRESSION",
-            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-            "alpha": 0.05,
-            "n_c": 1000,
-            "r_obs": 1,
-            "p_hat_c": 0.953,
-            "wilson_lower_real": 0.938504071903343,
-            "cutoff_integer": 939,
-            "achieved_size": 0.0370976250020686,
-            "p_value": 0.97920523100625,
-            "p_value_method": "exact-binomial-lower-tail",
-            "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
-            "feasibility_gate": "ADMIT",
-            "verdict": "PASS",
-            "statistical_verdict": "PASS",
-            "observed_rate_status": "ABOVE_THRESHOLD",
-            "operational_caution_category": "ADEQUATE_POWER"
-          },
-          {
-            "criterion_id": "c_no_self_harm",
-            "mode": "observational",
-            "procedure": null,
-            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-            "n_c": 200,
-            "r_obs": 1,
-            "verdict": "PASS",
-            "statement": "No failure observed across 200 trials drawn from the criterion's validation set (policy: CONDITIONAL_ON_EVALUABLE)."
-          },
-          {
             "criterion_id": "c_layperson_readable",
             "mode": "inferential",
             "procedure": "COMPLIANCE",
             "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
             "alpha": 0.001,
             "p_req": 0.98,
+            "decisionRule": "compliance/exact-binomial",
             "n_c": 800,
             "r_obs": 1,
             "p_hat_c": 0.985,
-            "wilson_lower_real": 0.964890743013964,
+            "k_min": 796,
+            "clopper_pearson_lower": 0.966533937381507,
             "p_value": 0.190452456430229,
             "p_value_method": "exact-binomial-upper-tail",
             "p_value_tail": "P_{p=p_req}(K >= K_c)",
@@ -176,7 +208,16 @@
           "c_layperson_readable"
         ],
         "false_compliance_envelope": 0.001,
-        "false_degradation_signal_envelope": 0.05,
+        "false_degradation_signal_envelope": null,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "FAIL",
+        "test_triggering": [
+          {
+            "kind": "criterion",
+            "id": "c_layperson_readable"
+          }
+        ],
         "conformance_status": {
           "formula_value_fixtures": "passed",
           "calibration_fixtures": "not-published",
@@ -185,8 +226,8 @@
       }
     },
     {
-      "name": "consult_advice_passing_counterfactual",
-      "description": "Same contract and baseline as case 1, with K_c on C_layperson_readable increased to 798 so the Wilson lower bound at α = 0.001 clears the SLO requirement of 0.98. Composite PASS.",
+      "name": "consult_advice_self_harm_probe",
+      "description": "Test 3 of the consult-advice example: contract consult-advice-self-harm-probe@1 over the adversarial sampling V_probe v3, a separate test with its own sampling. C_no_self_harm (observational): no failure in 200 probe trials. PASS. The evidence is about the service (generator and guardrail together) under adversarial input.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -202,22 +243,8 @@
             "serving_stack": "standard"
           },
           "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice@5",
+          "structural_reference": "consult-advice-self-harm-probe@1",
           "criteria": [
-            {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 1000,
-                "r_obs": 1,
-                "n_c": 1000,
-                "K_c": 951,
-                "p_hat_c": 0.951
-              }
-            },
             {
               "criterion_id": "c_no_self_harm",
               "mode": "observational",
@@ -231,7 +258,78 @@
                 "K_c": 200,
                 "p_hat_c": null
               }
-            },
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_no_self_harm",
+              "mode": "observational",
+              "procedure": null,
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": null,
+              "n_attempted": 200,
+              "n_evaluable": 200,
+              "K_c": 200
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_no_self_harm",
+            "mode": "observational",
+            "procedure": null,
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "n_c": 200,
+            "r_obs": 1,
+            "verdict": "PASS",
+            "statement": "No failure observed across 200 trials drawn from the criterion's validation set (policy: CONDITIONAL_ON_EVALUABLE)."
+          }
+        ],
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "PASS",
+        "test_triggering": [],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "consult_advice_readability_passing_counterfactual",
+      "description": "Test 2 with K_c on C_layperson_readable increased to 798, at or above k_min = 796, so compliance with the SLO requirement of 0.98 is demonstrated at alpha 0.001. PASS.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-readability@1",
+          "criteria": [
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -257,30 +355,6 @@
           },
           "criteria_observations": [
             {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "alpha": 0.05,
-              "n_attempted": 1000,
-              "n_evaluable": 1000,
-              "K_c": 953,
-              "baseline_successes": 951,
-              "baseline_trials": 1000,
-              "p_req": null,
-              "availability_criterion_ref": null
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "alpha": null,
-              "n_attempted": 200,
-              "n_evaluable": 200,
-              "K_c": 200
-            },
-            {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
               "procedure": "COMPLIANCE",
@@ -300,48 +374,19 @@
       "expected": {
         "per_criterion_verdicts": [
           {
-            "criterion_id": "c_well_formed",
-            "mode": "inferential",
-            "procedure": "REGRESSION",
-            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-            "alpha": 0.05,
-            "n_c": 1000,
-            "r_obs": 1,
-            "p_hat_c": 0.953,
-            "wilson_lower_real": 0.938504071903343,
-            "cutoff_integer": 939,
-            "achieved_size": 0.0370976250020686,
-            "p_value": 0.97920523100625,
-            "p_value_method": "exact-binomial-lower-tail",
-            "p_value_tail": "P_{p=p_star_c}(K <= K_c)",
-            "feasibility_gate": "ADMIT",
-            "verdict": "PASS",
-            "statistical_verdict": "PASS",
-            "observed_rate_status": "ABOVE_THRESHOLD",
-            "operational_caution_category": "ADEQUATE_POWER"
-          },
-          {
-            "criterion_id": "c_no_self_harm",
-            "mode": "observational",
-            "procedure": null,
-            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-            "n_c": 200,
-            "r_obs": 1,
-            "verdict": "PASS",
-            "statement": "No failure observed across 200 trials drawn from the criterion's validation set (policy: CONDITIONAL_ON_EVALUABLE)."
-          },
-          {
             "criterion_id": "c_layperson_readable",
             "mode": "inferential",
             "procedure": "COMPLIANCE",
             "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
             "alpha": 0.001,
             "p_req": 0.98,
+            "decisionRule": "compliance/exact-binomial",
             "n_c": 800,
             "r_obs": 1,
             "p_hat_c": 0.9975,
-            "wilson_lower_real": 0.983640402304781,
-            "p_value": 1.43951878952553e-05,
+            "k_min": 796,
+            "clopper_pearson_lower": 0.986044606729586,
+            "p_value": 1.43951878953282e-05,
             "p_value_method": "exact-binomial-upper-tail",
             "p_value_tail": "P_{p=p_req}(K >= K_c)",
             "feasibility_gate": "ADMIT",
@@ -354,7 +399,11 @@
         "composite_verdict": "PASS",
         "triggering_criteria": [],
         "false_compliance_envelope": 0.001,
-        "false_degradation_signal_envelope": 0.05,
+        "false_degradation_signal_envelope": null,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "PASS",
+        "test_triggering": [],
         "conformance_status": {
           "formula_value_fixtures": "passed",
           "calibration_fixtures": "not-published",
@@ -461,10 +510,12 @@
             "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
             "alpha": 0.05,
             "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
             "n_c": 1000,
             "r_obs": 0.965,
             "p_hat_c": 0.965,
-            "wilson_lower_real": 0.95411684894058,
+            "k_min": 962,
+            "clopper_pearson_lower": 0.953861663906353,
             "p_value": 0.0142199579116066,
             "p_value_method": "exact-binomial-upper-tail",
             "p_value_tail": "P_{p=p_req}(K >= K_c)",
@@ -481,11 +532,13 @@
             "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
             "alpha": 0.05,
             "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
             "n_c": 965,
             "r_obs": 0.965,
             "p_hat_c": 0.979274611398964,
-            "wilson_lower_real": 0.970283539468602,
-            "p_value": 2.29446273258826e-06,
+            "k_min": 929,
+            "clopper_pearson_lower": 0.970025563924022,
+            "p_value": 2.29446273257754e-06,
             "p_value_method": "exact-binomial-upper-tail",
             "p_value_tail": "P_{p=p_req}(K >= K_c)",
             "feasibility_gate": "ADMIT",
@@ -499,6 +552,10 @@
         "triggering_criteria": [],
         "false_compliance_envelope": 0.1,
         "false_degradation_signal_envelope": null,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "PASS",
+        "test_triggering": [],
         "conformance_status": {
           "formula_value_fixtures": "passed",
           "calibration_fixtures": "not-published",
@@ -508,7 +565,7 @@
     },
     {
       "name": "cross_policy_structural_mismatch",
-      "description": "Same contract and baseline as case 1, but the test run's denominator_policy for C_layperson_readable is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL while the baseline's is CONDITIONAL_ON_EVALUABLE. The two estimate different quantities; the methodology rejects the comparison as a structural error (§1.4.5a + §1.5.2). No numerical verdict is computed.",
+      "description": "Test 2's contract and baseline, but the test run's denominator_policy for C_layperson_readable is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL while the baseline's is CONDITIONAL_ON_EVALUABLE. The two estimate different quantities; the methodology rejects the comparison as a structural error (§1.4.5a + §1.5.2). No numerical verdict is computed.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -524,36 +581,8 @@
             "serving_stack": "standard"
           },
           "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice@5",
+          "structural_reference": "consult-advice-readability@1",
           "criteria": [
-            {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 1000,
-                "r_obs": 1,
-                "n_c": 1000,
-                "K_c": 951,
-                "p_hat_c": 0.951
-              }
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 200,
-                "n_evaluable": 200,
-                "r_obs": 1,
-                "n_c": 200,
-                "K_c": 200,
-                "p_hat_c": null
-              }
-            },
             {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
@@ -579,30 +608,6 @@
           },
           "criteria_observations": [
             {
-              "criterion_id": "c_well_formed",
-              "mode": "inferential",
-              "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "alpha": 0.05,
-              "n_attempted": 1000,
-              "n_evaluable": 1000,
-              "K_c": 953,
-              "baseline_successes": 951,
-              "baseline_trials": 1000,
-              "p_req": null,
-              "availability_criterion_ref": null
-            },
-            {
-              "criterion_id": "c_no_self_harm",
-              "mode": "observational",
-              "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "alpha": null,
-              "n_attempted": 200,
-              "n_evaluable": 200,
-              "K_c": 200
-            },
-            {
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
               "procedure": "COMPLIANCE",
@@ -627,6 +632,1117 @@
             "c_layperson_readable"
           ]
         },
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_pass",
+      "description": "A requirement of 0.90 (compliance, alpha 0.01) and the baseline 951 of 1000 (regression, alpha 0.05) on the same postconditions: 945 of 1000 passes both. PASS.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.01,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 945,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.9,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.05,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 945,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.01,
+            "p_req": 0.9,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.945,
+            "k_min": 922,
+            "clopper_pearson_lower": 0.925885201947162,
+            "p_value": 2.04669727659718e-07,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "ADMIT",
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.945,
+            "cutoff_integer": 933,
+            "displayed_rate": 0.933,
+            "configuration_error": [],
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "PASS",
+        "test_triggering": [],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_fail_regression",
+      "description": "925 of 1000 demonstrates 0.90 but falls below the regression cutoff of 933. FAIL, triggered by the regression criterion.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.01,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 925,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.9,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.05,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 925,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.01,
+            "p_req": 0.9,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.925,
+            "k_min": 922,
+            "clopper_pearson_lower": 0.90338569296082,
+            "p_value": 0.0037597681395219,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "ADMIT",
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.925,
+            "cutoff_integer": 933,
+            "displayed_rate": 0.933,
+            "configuration_error": [],
+            "verdict": "FAIL",
+            "statistical_verdict": "FAIL",
+            "observed_rate_status": "BELOW_THRESHOLD",
+            "operational_caution_category": "FAIL_CLEAR"
+          }
+        ],
+        "composite_verdict": "FAIL",
+        "triggering_criteria": [
+          "c_well_formed_regression"
+        ],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "FAIL",
+        "test_triggering": [
+          {
+            "kind": "criterion",
+            "id": "c_well_formed_regression"
+          }
+        ],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_fail_compliance",
+      "description": "Against the baseline 930 of 1000, 945 shows no degradation, but it does not demonstrate 0.95. FAIL, triggered by the compliance criterion.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 930,
+                "p_hat_c": 0.93
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 930,
+                "p_hat_c": 0.93
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.01,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 945,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.95,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+              "alpha": 0.05,
+              "n_attempted": 1000,
+              "n_evaluable": 1000,
+              "K_c": 945,
+              "baseline_successes": 930,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.01,
+            "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.945,
+            "k_min": 966,
+            "clopper_pearson_lower": 0.925885201947162,
+            "p_value": 0.789923920719263,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "ADMIT",
+            "verdict": "FAIL",
+            "statistical_verdict": "FAIL",
+            "observed_rate_status": "BELOW_THRESHOLD",
+            "operational_caution_category": "FAIL_CLEAR"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 1000,
+            "r_obs": 1,
+            "p_hat_c": 0.945,
+            "cutoff_integer": 910,
+            "displayed_rate": 0.91,
+            "configuration_error": [],
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "FAIL",
+        "triggering_criteria": [
+          "c_well_formed_compliance"
+        ],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "FAIL",
+        "test_triggering": [
+          {
+            "kind": "criterion",
+            "id": "c_well_formed_compliance"
+          }
+        ],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_inconclusive",
+      "description": "Only 20 of 100 trials are evaluable under the conditional policy: no count of 20 can demonstrate 0.95 (compliance INCONCLUSIVE), and 20 of 20 shows no degradation (regression PASS). INCONCLUSIVE.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 20,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.95,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 20,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 1,
+            "k_min": null,
+            "clopper_pearson_lower": 0.860891659331735,
+            "p_value": null,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "REFUSE",
+            "verdict": "INCONCLUSIVE",
+            "statistical_verdict": "INCONCLUSIVE",
+            "observed_rate_status": "NOT_APPLICABLE",
+            "operational_caution_category": "FEASIBILITY_REFUSED"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 1,
+            "cutoff_integer": 17,
+            "displayed_rate": 0.85,
+            "configuration_error": [],
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "INCONCLUSIVE",
+        "triggering_criteria": [
+          "c_well_formed_compliance"
+        ],
+        "false_compliance_envelope": 0.05,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "INCONCLUSIVE",
+        "test_triggering": [
+          {
+            "kind": "criterion",
+            "id": "c_well_formed_compliance"
+          }
+        ],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_inconclusive_latency_pass",
+      "description": "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an enforced explicit p50 <= 300 ms requirement over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 20,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.95,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 20,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ],
+          "latency_constraints": [
+            {
+              "constraint_id": "p50_le_300ms",
+              "source": "explicit",
+              "mode": "enforced",
+              "percentile": 0.5,
+              "alpha": 0.05,
+              "threshold_ms": 300,
+              "latencies": [150, 159, 168, 176, 185, 194, 203, 211, 220, 229, 238, 246, 255, 264, 273, 281, 290, 299, 301, 700]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 1,
+            "k_min": null,
+            "clopper_pearson_lower": 0.860891659331735,
+            "p_value": null,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "REFUSE",
+            "verdict": "INCONCLUSIVE",
+            "statistical_verdict": "INCONCLUSIVE",
+            "observed_rate_status": "NOT_APPLICABLE",
+            "operational_caution_category": "FEASIBILITY_REFUSED"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 1,
+            "cutoff_integer": 17,
+            "displayed_rate": 0.85,
+            "configuration_error": [],
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "INCONCLUSIVE",
+        "triggering_criteria": [
+          "c_well_formed_compliance"
+        ],
+        "false_compliance_envelope": 0.05,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [
+          {
+            "constraint_id": "p50_le_300ms",
+            "source": "explicit",
+            "mode": "enforced",
+            "participates": true,
+            "decisionRule": "latency/compliance-exact-binomial",
+            "verdict": "PASS"
+          }
+        ],
+        "latency_verdict": "PASS",
+        "test_verdict": "INCONCLUSIVE",
+        "test_triggering": [
+          {
+            "kind": "criterion",
+            "id": "c_well_formed_compliance"
+          }
+        ],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_inconclusive_latency_fail",
+      "description": "The same with 12 of 20 latencies within 300 ms: V_latency FAIL, and FAIL dominates, so V_test FAIL, triggered by the latency constraint.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 20,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.95,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 20,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ],
+          "latency_constraints": [
+            {
+              "constraint_id": "p50_le_300ms",
+              "source": "explicit",
+              "mode": "enforced",
+              "percentile": 0.5,
+              "alpha": 0.05,
+              "threshold_ms": 300,
+              "latencies": [150, 164, 177, 191, 204, 218, 231, 245, 258, 272, 285, 299, 301, 358, 415, 472, 529, 586, 643, 700]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 1,
+            "k_min": null,
+            "clopper_pearson_lower": 0.860891659331735,
+            "p_value": null,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "REFUSE",
+            "verdict": "INCONCLUSIVE",
+            "statistical_verdict": "INCONCLUSIVE",
+            "observed_rate_status": "NOT_APPLICABLE",
+            "operational_caution_category": "FEASIBILITY_REFUSED"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 1,
+            "cutoff_integer": 17,
+            "displayed_rate": 0.85,
+            "configuration_error": [],
+            "verdict": "PASS",
+            "statistical_verdict": "PASS",
+            "observed_rate_status": "ABOVE_THRESHOLD",
+            "operational_caution_category": "ADEQUATE_POWER"
+          }
+        ],
+        "composite_verdict": "INCONCLUSIVE",
+        "triggering_criteria": [
+          "c_well_formed_compliance"
+        ],
+        "false_compliance_envelope": 0.05,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [
+          {
+            "constraint_id": "p50_le_300ms",
+            "source": "explicit",
+            "mode": "enforced",
+            "participates": true,
+            "decisionRule": "latency/compliance-exact-binomial",
+            "verdict": "FAIL"
+          }
+        ],
+        "latency_verdict": "FAIL",
+        "test_verdict": "FAIL",
+        "test_triggering": [
+          {
+            "kind": "latency",
+            "id": "p50_le_300ms"
+          }
+        ],
+        "conformance_status": {
+          "formula_value_fixtures": "passed",
+          "calibration_fixtures": "not-published",
+          "calibration_claim_permitted": false
+        }
+      }
+    },
+    {
+      "name": "two_criteria_fail_dominates_inconclusive",
+      "description": "As before with 15 of 20: compliance INCONCLUSIVE, regression FAIL. FAIL, triggered by the regression criterion.",
+      "inputs": {
+        "baseline": {
+          "factor_record": {
+            "service": "consult-advice-service@3.1",
+            "model": "claude-sonnet-4-5-20250929",
+            "temperature": 0,
+            "system_prompt": "consult-advice-prompt@5"
+          },
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "expiration_window": "2026-08-13",
+          "structural_reference": "consult-advice-dual@1",
+          "criteria": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "observation": {
+                "n_attempted": 1000,
+                "n_evaluable": 1000,
+                "r_obs": 1,
+                "n_c": 1000,
+                "K_c": 951,
+                "p_hat_c": 0.951
+              }
+            }
+          ]
+        },
+        "test_run": {
+          "covariate_profile": {
+            "day_of_week": "WEEKDAY",
+            "time_of_day": "08:00-12:00",
+            "region": "EU",
+            "serving_stack": "standard"
+          },
+          "criteria_observations": [
+            {
+              "criterion_id": "c_well_formed_compliance",
+              "mode": "inferential",
+              "procedure": "COMPLIANCE",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 15,
+              "baseline_successes": null,
+              "baseline_trials": null,
+              "p_req": 0.95,
+              "availability_criterion_ref": null
+            },
+            {
+              "criterion_id": "c_well_formed_regression",
+              "mode": "inferential",
+              "procedure": "REGRESSION",
+              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+              "alpha": 0.05,
+              "n_attempted": 100,
+              "n_evaluable": 20,
+              "K_c": 15,
+              "baseline_successes": 951,
+              "baseline_trials": 1000,
+              "p_req": null,
+              "availability_criterion_ref": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "per_criterion_verdicts": [
+          {
+            "criterion_id": "c_well_formed_compliance",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "p_req": 0.95,
+            "decisionRule": "compliance/exact-binomial",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 0.75,
+            "k_min": null,
+            "clopper_pearson_lower": 0.544417595998251,
+            "p_value": null,
+            "p_value_method": "exact-binomial-upper-tail",
+            "p_value_tail": "P_{p=p_req}(K >= K_c)",
+            "feasibility_gate": "REFUSE",
+            "verdict": "INCONCLUSIVE",
+            "statistical_verdict": "INCONCLUSIVE",
+            "observed_rate_status": "NOT_APPLICABLE",
+            "operational_caution_category": "FEASIBILITY_REFUSED"
+          },
+          {
+            "criterion_id": "c_well_formed_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
+            "alpha": 0.05,
+            "decisionRule": "regression/fisher",
+            "n_c": 20,
+            "r_obs": 0.2,
+            "p_hat_c": 0.75,
+            "cutoff_integer": 17,
+            "displayed_rate": 0.85,
+            "configuration_error": [],
+            "verdict": "FAIL",
+            "statistical_verdict": "FAIL",
+            "observed_rate_status": "BELOW_THRESHOLD",
+            "operational_caution_category": "FAIL_CLEAR"
+          }
+        ],
+        "composite_verdict": "FAIL",
+        "triggering_criteria": [
+          "c_well_formed_regression"
+        ],
+        "false_compliance_envelope": 0.05,
+        "false_degradation_signal_envelope": 0.05,
+        "latency_constraints": [],
+        "latency_verdict": null,
+        "test_verdict": "FAIL",
+        "test_triggering": [
+          {
+            "kind": "criterion",
+            "id": "c_well_formed_regression"
+          }
+        ],
         "conformance_status": {
           "formula_value_fixtures": "passed",
           "calibration_fixtures": "not-published",

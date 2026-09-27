@@ -1,24 +1,37 @@
-test_that("Case 1: locked §10.3 example is composite FAIL", {
+test_that("The consult-advice example is three tests, one sampling each", {
   result <- generate_multi_criteria_scenario_cases()
-  case <- Filter(function(c) c$name == "consult_advice_locked_section_10_3",
-                 result$cases)[[1]]
-  e <- case$expected
-  expect_equal(e$composite_verdict, "FAIL")
-  expect_equal(e$triggering_criteria, list("c_layperson_readable"))
-  expect_equal(e$false_compliance_envelope, 0.001)
-  expect_equal(e$false_degradation_signal_envelope, 0.05)
+  get <- function(n) Filter(function(c) c$name == n, result$cases)[[1]]
+  wf <- get("consult_advice_well_formed")
+  rd <- get("consult_advice_readability")
+  pr <- get("consult_advice_self_harm_probe")
+  expect_equal(wf$expected$composite_verdict, "PASS")
+  expect_equal(rd$expected$composite_verdict, "FAIL")
+  expect_equal(pr$expected$composite_verdict, "PASS")
+  expect_equal(rd$expected$false_compliance_envelope, 0.001)
+  expect_equal(wf$expected$false_degradation_signal_envelope, 0.05)
+  expect_identical(wf$expected$per_criterion_verdicts[[1]]$cutoff_integer, 933L)
+  # Every case: one sampling, shared by all its criteria.
+  for (case in result$cases) {
+    ns <- vapply(case$inputs$test_run$criteria_observations,
+                 function(o) o$n_attempted, integer(1))
+    expect_length(unique(ns), 1)
+    nb <- vapply(case$inputs$baseline$criteria,
+                 function(c) c$observation$n_attempted, integer(1))
+    expect_length(unique(nb), 1)
+  }
 })
 
-test_that("Case 2: passing counterfactual clears Wilson LB > p_req", {
+test_that("The readability counterfactual reaches k_min", {
   result <- generate_multi_criteria_scenario_cases()
-  case <- Filter(function(c) c$name == "consult_advice_passing_counterfactual",
+  case <- Filter(function(c) c$name == "consult_advice_readability_passing_counterfactual",
                  result$cases)[[1]]
   e <- case$expected
   expect_equal(e$composite_verdict, "PASS")
   layperson <- Filter(function(v) v$criterion_id == "c_layperson_readable",
                       e$per_criterion_verdicts)[[1]]
   expect_equal(layperson$verdict, "PASS")
-  expect_true(layperson$wilson_lower_real > 0.98)
+  expect_identical(layperson$k_min, 796L)
+  expect_identical(layperson$decisionRule, "compliance/exact-binomial")
 })
 
 test_that("Case 3: paired pattern with non-1.0 r_obs", {
@@ -61,4 +74,14 @@ test_that("Generator output matches committed fixture", {
                  generated$cases[[i]]$expected$composite_verdict,
                  info = generated$cases[[i]]$name)
   }
+})
+
+test_that("a requirement and a baseline are two criteria composed as usual", {
+  result <- generate_multi_criteria_scenario_cases()
+  get <- function(n) Filter(function(c) c$name == n, result$cases)[[1]]$expected
+  expect_identical(get("two_criteria_pass")$composite_verdict, "PASS")
+  expect_identical(get("two_criteria_fail_regression")$triggering_criteria, list("c_well_formed_regression"))
+  expect_identical(get("two_criteria_fail_compliance")$triggering_criteria, list("c_well_formed_compliance"))
+  expect_identical(get("two_criteria_inconclusive")$composite_verdict, "INCONCLUSIVE")
+  expect_identical(get("two_criteria_fail_dominates_inconclusive")$composite_verdict, "FAIL")
 })

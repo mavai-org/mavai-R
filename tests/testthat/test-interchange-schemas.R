@@ -400,3 +400,59 @@ test_that("the verdict-1.6 XSD requires an input's index and excerpt", {
     xml2::read_xml(paste(mutated, collapse = "\n")), xsd
   )))
 })
+
+test_that("the verdict-1.7 XSD requires the methodology version", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
+  mutated <- sub(' methodology-version="1.5.0"', "", body, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})
+
+test_that("the verdict-1.7 XSD refuses an unknown decision rule or configuration error", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  typical <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
+  mutated <- gsub('decision-rule="regression/fisher"', 'decision-rule="regression/score-cc"', typical, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+  refused <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-refused.xml"))
+  mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE COMPLIANCE_INFEASIBLE"',
+                 'configuration-error="TEST_LARGER_THAN_BASELINE TOO_SMALL"', refused, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+  mutated <- sub('configuration-error="TEST_LARGER_THAN_BASELINE COMPLIANCE_INFEASIBLE"',
+                 'configuration-error=""', refused, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})
+
+test_that("the verdict-1.7 XSD has no bar element: two criteria carry the two questions", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  two <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-two-criteria.xml"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(two, collapse = "\n")), xsd)))
+  mutated <- sub('decision-rule-version="1" />', 'decision-rule-version="1"><bar kind="normative" /></criterion>', two, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})
+
+test_that("a 1.6-shaped record is not a 1.7 record, and 1.6 still validates its own", {
+  skip_if_not_installed("xml2")
+  xsd17 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.6-typical.xml"))
+  restamped <- sub('version="1.6"', 'version="1.7"', body, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(restamped, collapse = "\n")), xsd17)))
+  xsd16 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.6.xsd"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(body, collapse = "\n")), xsd16)))
+})
+
+test_that("verdict-1.7 carries the latency dimension's verdict beside the functional composite", {
+  skip_if_not_installed("xml2")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  lf <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-latency-fail.xml"))
+  doc <- xml2::read_xml(paste(lf, collapse = "\n"))
+  expect_true(isTRUE(xml2::xml_validate(doc, xsd)))
+  ns <- xml2::xml_ns(doc)
+  expect_identical(xml2::xml_attr(xml2::xml_find_first(doc, "//d1:latency", ns), "verdict"), "FAIL")
+  expect_identical(xml2::xml_attr(xml2::xml_find_first(doc, "//d1:composite", ns), "value"), "PASS")
+  expect_identical(xml2::xml_attr(xml2::xml_find_first(doc, "/d1:verdict-record/d1:verdict", ns), "value"), "FAIL")
+  mutated <- sub('verdict="FAIL">', 'verdict="MAYBE">', lf, fixed = TRUE)
+  expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+})

@@ -1,13 +1,15 @@
 #!/usr/bin/env Rscript
 #
-# Regenerate all conformance reference data.
+# Regenerate all conformance reference data. This script is the one
+# generator of the committed fixtures.
 #
 # Usage:
 #   Rscript scripts/generate_all.R
 #
 # This writes JSON files to inst/cases/. These files are committed to the
 # repository so that consumers (punit, feotest, baseltest, ...) can read
-# them without needing R installed.
+# them without needing R installed. CI regenerates them and fails on any
+# difference from the committed files.
 
 # Source all R files (works without installing the package)
 r_files <- list.files("R", pattern = "\\.R$", full.names = TRUE)
@@ -20,16 +22,17 @@ suites <- list(
   wilson_ci = generate_wilson_ci_cases(),
   wilson_lower = generate_wilson_lower_cases(),
   threshold_derivation = generate_threshold_derivation_cases(),
-  power_analysis = generate_power_analysis_cases(),
+  regression_decision = generate_regression_decision_cases(),
+  compliance_decision = generate_compliance_decision_cases(),
   feasibility = generate_feasibility_cases(),
+  power_analysis = generate_power_analysis_cases(),
+  risk_driven_sizing = generate_risk_driven_sizing_cases(),
   verdict = generate_verdict_cases(),
   latency_percentile = generate_latency_percentile_cases(),
   latency_threshold = generate_latency_threshold_cases(),
-  latency_threshold_bootstrap = generate_latency_threshold_bootstrap_cases(),
   latency_percentile_minimums = generate_latency_percentile_minimums_cases(),
-  regression_decision = generate_regression_decision_cases(),
-  risk_driven_sizing = generate_risk_driven_sizing_cases(),
-  # Multi-criteria model fixtures (per DIR-MULTI-CRITERIA-FIXTURES-javai-R):
+  latency_compliance_decision = generate_latency_compliance_decision_cases(),
+  # Multi-criteria model fixtures (informational):
   criterion_verdict_observational =
     generate_criterion_verdict_observational_cases(),
   criterion_verdict_inferential =
@@ -39,6 +42,16 @@ suites <- list(
   multi_criteria_scenario_consult_advice =
     generate_multi_criteria_scenario_cases()
 )
+suites <- Map(finalise_suite, names(suites), suites)
+
+# Suites no longer published: remove stale files so the directory is
+# exactly the generated set.
+stale <- setdiff(list.files(output_dir, pattern = "\\.json$"),
+                 c(paste0(names(suites), ".json"), "manifest.json"))
+for (f in stale) {
+  file.remove(file.path(output_dir, f))
+  message("Removed: ", file.path(output_dir, f))
+}
 
 for (name in names(suites)) {
   path <- file.path(output_dir, paste0(name, ".json"))

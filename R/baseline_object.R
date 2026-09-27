@@ -110,14 +110,15 @@ generate_baseline_object_cases <- function() {
 
   cases <- list(
 
-    # 1. Consult-advice baseline (mirrors §10.3 / §1.4.8 example).
+    # 1-3. The consult-advice example (§1.4.8, §1.5.6, §10.3): one
+    #      baseline per contract, each over one sampling.
     baseline_case(
       name = "consult_advice_eu_weekday",
       description = paste(
-        "The consult-advice contract baseline at the EU / weekday /",
-        "morning index. Three criteria mix",
-        "REGRESSION + observational + COMPLIANCE; mixed denominator",
-        "policies; r_obs = 1.0 throughout."
+        "The consult-advice@5 baseline at the EU / weekday / morning index,",
+        "measured over the production sampling V_prod v5 (1000 samples). One",
+        "sampling, shared by every criterion of the contract; here one",
+        "REGRESSION criterion."
       ),
       factor_record        = consult_advice_factor_record,
       covariate_profile    = consult_advice_covariates_eu_weekday,
@@ -127,10 +128,24 @@ generate_baseline_object_cases <- function() {
         inf_crit("c_well_formed",
                  procedure = "REGRESSION",
                  policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-                 n_attempted = 1000, n_evaluable = 1000, K_c = 951),
-        obs_crit("c_no_self_harm",
-                 policy = "CONDITIONAL_ON_EVALUABLE",
-                 n_attempted = 200, n_evaluable = 200, K_c = 200),
+                 n_attempted = 1000, n_evaluable = 1000, K_c = 951)
+      )
+    ),
+
+    baseline_case(
+      name = "consult_advice_readability_eu_weekday",
+      description = paste(
+        "The consult-advice-readability@1 baseline at the same index, measured",
+        "over V_complexity v2 (800 samples), inputs chosen to elicit clinical",
+        "terminology. A different input population is a separate contract",
+        "with its own sampling and baseline. The criterion's requirement is",
+        "normative (SLO); the baseline observation is diagnostic context."
+      ),
+      factor_record        = consult_advice_factor_record,
+      covariate_profile    = consult_advice_covariates_eu_weekday,
+      expiration_window    = "2026-08-13",
+      structural_reference = "consult-advice-readability@1",
+      criteria = list(
         inf_crit("c_layperson_readable",
                  procedure = "COMPLIANCE",
                  policy = "CONDITIONAL_ON_EVALUABLE",
@@ -138,7 +153,25 @@ generate_baseline_object_cases <- function() {
       )
     ),
 
-    # 2. Observational-only baseline at sentinel scale.
+    baseline_case(
+      name = "consult_advice_self_harm_probe_eu_weekday",
+      description = paste(
+        "The consult-advice-self-harm-probe@1 baseline at the same index,",
+        "measured over the adversarial sampling V_probe v3 (200 samples). One",
+        "observational criterion."
+      ),
+      factor_record        = consult_advice_factor_record,
+      covariate_profile    = consult_advice_covariates_eu_weekday,
+      expiration_window    = "2026-08-13",
+      structural_reference = "consult-advice-self-harm-probe@1",
+      criteria = list(
+        obs_crit("c_no_self_harm",
+                 policy = "CONDITIONAL_ON_EVALUABLE",
+                 n_attempted = 200, n_evaluable = 200, K_c = 200)
+      )
+    ),
+
+    # 4. Observational-only baseline at sentinel scale.
     baseline_case(
       name = "guardrail_sentinel_observational_only",
       description = paste(
@@ -164,7 +197,7 @@ generate_baseline_object_cases <- function() {
       )
     ),
 
-    # 3. Same contract as #1 but a divergent covariate profile.
+    # 5. Same contract as #1 but a divergent covariate profile.
     baseline_case(
       name = "consult_advice_us_weekend_divergent",
       description = paste(
@@ -182,26 +215,19 @@ generate_baseline_object_cases <- function() {
         inf_crit("c_well_formed",
                  procedure = "REGRESSION",
                  policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-                 n_attempted = 1000, n_evaluable = 998, K_c = 940),
-        obs_crit("c_no_self_harm",
-                 policy = "CONDITIONAL_ON_EVALUABLE",
-                 n_attempted = 200, n_evaluable = 199, K_c = 199),
-        inf_crit("c_layperson_readable",
-                 procedure = "COMPLIANCE",
-                 policy = "CONDITIONAL_ON_EVALUABLE",
-                 n_attempted = 800, n_evaluable = 795, K_c = 780)
+                 n_attempted = 1000, n_evaluable = 998, K_c = 940)
       )
     ),
 
-    # 4. Perfect-baseline edge case.
+    # 6. Perfect-baseline edge case.
     baseline_case(
       name = "perfect_baseline_moderate_n",
       description = paste(
-        "A baseline at p_hat_c = 1 over a moderate n_c. Anchors the §4",
-        "perfect-baseline two-step under the per-criterion shape: a",
-        "downstream threshold derivation must compress the observed 1.0",
-        "to a Wilson lower bound on the baseline itself before using it",
-        "as the effective baseline rate."
+        "A baseline at p_hat_c = 1 over a moderate n_c (§4). Under",
+        "regression/fisher the perfect count enters the Fisher test as",
+        "observed, with no substitution: the cutoff is monotone in the",
+        "baseline count, and a perfect baseline demands at least as much",
+        "of the test as any lesser one."
       ),
       factor_record        = list(
         service       = "schema-validator@1.0",
@@ -220,32 +246,25 @@ generate_baseline_object_cases <- function() {
       )
     ),
 
-    # 5. Cross-policy counterexample. Same contract as #1 but the
+    # 7. Cross-policy counterexample. Same contract as #2 but the
     #    layperson-readable criterion's policy is flipped to MARGINAL.
     baseline_case(
       name = "consult_advice_cross_policy_counterexample",
       description = paste(
-        "The same consult-advice contract at the same index as #1,",
+        "The consult-advice-readability contract at the same index as #2,",
         "except the C_layperson_readable criterion's denominator policy",
         "is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of",
         "CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error",
         "check that cross-policy comparison between this baseline and",
-        "the #1 baseline is rejected — the two baselines look identical",
+        "the #2 baseline is rejected — the two baselines look identical",
         "in every other respect but estimate different quantities under",
         "the C_layperson_readable criterion."
       ),
       factor_record        = consult_advice_factor_record,
       covariate_profile    = consult_advice_covariates_eu_weekday,
       expiration_window    = "2026-08-13",
-      structural_reference = "consult-advice@5",
+      structural_reference = "consult-advice-readability@1",
       criteria = list(
-        inf_crit("c_well_formed",
-                 procedure = "REGRESSION",
-                 policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-                 n_attempted = 1000, n_evaluable = 1000, K_c = 951),
-        obs_crit("c_no_self_harm",
-                 policy = "CONDITIONAL_ON_EVALUABLE",
-                 n_attempted = 200, n_evaluable = 200, K_c = 200),
         inf_crit("c_layperson_readable",
                  procedure = "COMPLIANCE",
                  policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
@@ -253,7 +272,7 @@ generate_baseline_object_cases <- function() {
       )
     ),
 
-    # 6. Paired-criterion baseline (structural composition; §1.4.5a's
+    # 8. Paired-criterion baseline (structural composition; §1.4.5a's
     #    replacement for the removed SEPARATE_AVAILABILITY_GATE policy).
     baseline_case(
       name = "paired_evaluability_content_pattern",

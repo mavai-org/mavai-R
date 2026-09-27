@@ -1,3 +1,6 @@
+# The legacy regression/wilson-reference construction of methodology 1.4.1,
+# kept in R/threshold.R for reproducing 1.4.1 outputs.
+
 test_that("Sample-size-first threshold is below baseline rate", {
   threshold <- threshold_sample_size_first(95, 100, 50, 0.95)
   baseline_rate <- 95 / 100

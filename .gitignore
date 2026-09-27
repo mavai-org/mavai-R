@@ -17,3 +17,6 @@ _site/
 
 # Agent-local guidance — not tracked in this public repo.
 CLAUDE.md
+
+# Certification surfaces written by scripts/certify.R (a release asset, not committed)
+/certification/
