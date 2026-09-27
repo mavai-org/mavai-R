@@ -70,6 +70,19 @@ chk("10.3", "MDD, design inversion", sprintf("inverting the design power    %.4f
 p_res <- uniroot(function(p) pbinom(c_wf - 1, 1000, p) - 0.80, c(0.85, 0.951), tol = 1e-12)$root
 chk("10.3", "MDD, resolved inversion", sprintf("inverting the resolved power  %.4f (to ≈ %.3f)", 0.951 - p_res, p_res))
 
+# --- §5.4.1 and §10.3 design versus resolved sizing -------------------------------
+rs <- risk_sizing_resolved_required_n(951, 1000, 0.925, 0.05, 0.80)
+rs_first <- which(vapply(1:1000, function(n) risk_sizing_resolved_power(n, 951, 1000, 0.925, 0.05), numeric(1)) >= 0.80)[1]
+stopifnot(is.na(risk_sizing_required_n(0.951, 1000, 0.925, 0.05, 0.80)))
+chk("5.4.1", "design power at 1000", sprintf("the design power is only %.3f even at $n_t = 1000$", fisher_power(1000, 1000, 0.05, 0.951, 0.951 - 0.925)))
+chk("5.4.1", "resolved sizing, §10.3", sprintf("admits the test from $n_t = %d$, where the resolved power reaches and holds 0.80 (first reaching it at %d)", rs, rs_first))
+chk("10.3", "resolved sizing in the report", sprintf("at 0.925 holds from n_t = %d (§5.4.1)", rs))
+chk("10.3", "resolved sizing in the reading", sprintf("and %d would be enough", rs))
+rw <- risk_sizing_resolved_required_n(1920, 2000, 0.93, 0.05, 0.80)
+rw_first <- which(vapply(1:2000, function(n) risk_sizing_resolved_power(n, 1920, 2000, 0.93, 0.05), numeric(1)) >= 0.80)[1]
+chk("5.4.1", "resolved walk-through", sprintf("resolved sizing against it gives %d (its resolved power first reaches 0.80 at %d), and a test of 463 has resolved power %.3f",
+    rw, rw_first, risk_sizing_resolved_power(463, 1920, 2000, 0.93, 0.05)))
+
 # --- §8.5 fixed-baseline monitoring ----------------------------------------------
 c_pb <- fisher_cutoff(100, 100, 100, 0.05)
 chk("8.5", "cutoff after a perfect baseline", sprintf("after a perfect baseline of 100 of 100 (cutoff %d for a test of 100", c_pb))
@@ -238,7 +251,7 @@ chk("12.5.3", "expectation is not a lower bound", sprintf("against a baseline of
 
 nd <- latency_nondegeneracy_planning(0.99, 110, 0.80)
 stopifnot(nd$warning, !latency_nondegeneracy_planning(0.99, nd$planned_samples_needed, 0.80)$warning)
-chk("12.5.3", "non-degeneracy expected count", sprintf("$n_{\\text{planned}} = 110$ and baseline $\\hat{p} = 0.80$ expects %d successful samples, below the p99 minimum of %d",
+chk("12.5.3", "non-degeneracy expected count", sprintf("$n_{\\text{planned}} = 110$ and a baseline response rate $\\hat{r} = 0.80$ expects %d successful samples, below the p99 minimum of %d",
     nd$expected_test_samples, nd$minimum_contributing_samples))
 chk("12.5.3", "non-degeneracy planning figure", sprintf("%d planned samples give an expected %d", nd$planned_samples_needed,
     latency_nondegeneracy_planning(0.99, nd$planned_samples_needed, 0.80)$expected_test_samples))
