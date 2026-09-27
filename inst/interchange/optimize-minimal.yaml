@@ -1,6 +1,8 @@
 # Worked example: the minimal valid optimize artefact — a single iteration
-# with no passing samples (so no latency block) and a failure distribution
-# (required because failures > 0). The convergence block still names the
+# with no passing samples and a failure distribution (required because
+# failures > 0). Both samples produced a response that the criterion then
+# judged, so the latency block is present: two durations, below every
+# percentile floor, so no stated percentile. The convergence block still names the
 # best iteration: with one iteration, it is the best there is.
 schemaVersion: "mavai-optimize-1"
 serviceContractId: "echo-service"
@@ -29,6 +31,11 @@ iterations:
           failureDistribution:
             - condition: "echoes-input"
               count: 2
+    latency:
+      basis: "responded-samples"
+      contributingSamples: 2
+      totalSamples: 2
+      sortedPassingLatenciesMs: [140, 210]
 convergence:
   totalIterations: 1
   bestIteration: 0

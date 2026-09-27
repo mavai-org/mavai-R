@@ -547,6 +547,9 @@ latency_precedence_threshold <- function(baseline_latencies, test_samples, p, al
 #' y_min = min{y : P_p(Y >= y) <= alpha} over the n_s successful
 #' latencies, and PASS iff Y >= y_min.
 #'
+#' A successful latency is that of a sample whose invocation produced a
+#' response, whatever the criteria then said (companion §12.2.1).
+#'
 #' The number of successful latencies is known only after the run. When
 #' no count can pass at the realised n_s (n_s below the feasibility
 #' minimum ceiling(log(alpha) / log(p))) the verdict is INCONCLUSIVE: too

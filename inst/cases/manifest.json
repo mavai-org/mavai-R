@@ -117,7 +117,7 @@
       "cases": ["p95_n100_pass_at_y_min", "p95_n100_fail_below_y_min", "p95_n100_advisory_pass_not_demonstrated", "p95_n100_advisory_fail", "tie_at_threshold_counts_within", "p95_plan_58_verification_refused", "p95_plan_58_smoke_inconclusive", "p95_plan_60_realised_58_inconclusive", "p95_n59_zero_exceedances_pass", "p99_n500_pass_at_y_min", "p99_n500_fail_below_y_min", "p90_n200_alpha001_pass_at_y_min", "p90_n200_alpha001_fail_below_y_min", "p50_n40_pass_at_y_min", "explicit_p50_n4_alpha010_pass", "exact_boundary_p50_n5"],
       "bindingFields": ["configuration_error", "pass_possible", "test_samples", "verdict", "within_threshold", "y_min"],
       "informationalFields": ["advisory_percentile_pass", "clopper_pearson_lower", "false_compliance", "observed_percentile_ms"],
-      "md5": "078c62f43f4a16907833b15a5b45defa"
+      "md5": "847f28ced6ba1f24a771730d7fd90f40"
     },
     "latency_percentile": {
       "file": "latency_percentile.json",
@@ -142,7 +142,7 @@
       "cases": ["emission_minimum_p50", "emission_minimum_p90", "emission_minimum_p95", "emission_minimum_p99", "p99_planned110_rate080_warning", "p99_planned125_rate080_no_warning", "p95_planned30_rate090_no_warning", "p90_planned12_rate075_warning", "p99_actual99_verification_enforced_inconclusive", "p99_actual100_verification_enforced_decided", "p99_actual40_smoke_indicative", "p95_actual19_verification_advisory_indicative", "p50_actual5_verification_enforced_decided", "explicit_p50_actual4_enforced_not_gated", "explicit_p50_actual4_advisory_indicative", "p95_100_test15_saturated", "p95_1000_test15", "p99_300_test100_saturated", "p95_935_test192", "p90_32_test10_saturated", "p90_33_test10_first_rank", "p95_85_test25_saturated", "p95_86_test25_first_rank", "p99_949_test50_saturated", "p99_950_test50_first_rank_exact_boundary", "p95_189_test10_saturated", "p95_190_test10_first_rank_exact_boundary", "p99_474_test25_saturated", "p99_475_test25_first_rank_exact_boundary", "p99_553_test160_saturated", "p99_554_test160_first_rank", "p50_20_test10", "p95_500_test100_alpha001", "p99_554_test161_saturated", "p99_400_planned200_rate080_warning", "p99_554_planned200_rate080_no_warning", "p95_1000_planned20_rate075", "p90_30_planned12_rate090_warning"],
       "bindingFields": ["applies", "degenerate", "expected_test_samples", "minimum_baseline_trials", "minimum_contributing_samples", "outcome", "planned_samples_needed", "planning_rank", "rank", "saturated", "warning"],
       "informationalFields": {},
-      "md5": "42669b7d552d7c9d342691909536dc0b"
+      "md5": "e6edff43030bf394ea1dc4d441897365"
     },
     "latency_threshold": {
       "file": "latency_threshold.json",
@@ -157,7 +157,7 @@
       "cases": ["worked_example_p95_935_samples_test192", "boundary_equal_sizes_p95_935_test935", "p90_200_samples_test200", "p50_200_samples_test50", "large_baseline_small_test_p95_1000_test15", "saturated_p95_100_test15", "saturated_p99_300_test100", "small_baseline_p95_50_test50", "large_baseline_p95_5000_test500", "alpha001_p95_500_test100", "identical_values_p95_100_test50", "heavy_tailed_p99_100_test100", "refused_planned_test_larger_than_baseline", "latency_counts_not_compared_p50"],
       "bindingFields": ["configuration_error", "rank", "saturated", "threshold"],
       "informationalFields": ["baseline_percentile", "breach_probability", "n", "test_rank"],
-      "md5": "e1f541feb3ff209bbd7f2ede2b004c7c"
+      "md5": "eeba2ce2d4837028cfa77070f16ecfa6"
     },
     "multi_criteria_scenario_consult_advice": {
       "file": "multi_criteria_scenario_consult_advice.json",

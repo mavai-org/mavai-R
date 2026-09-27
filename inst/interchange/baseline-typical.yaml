@@ -1,7 +1,8 @@
 # Worked example: the typical baseline artefact — every block populated,
 # modelled on a real document-extraction corpus. Two criteria, one of them
 # carrying partial-credit standings; failure reasons on both diagnostic axes;
-# a stated latency block whose sample count admits p50 only.
+# a stated latency block over the ten samples that produced a response, whose
+# count admits p50 and p90 but not p95.
 #
 # The Wilson band this record supports: p̂ = 0.20, bound = 0.0686, width
 # 0.131 — not a boundary record and narrower than the 0.20 presentation
@@ -96,11 +97,12 @@ cost:
   totalTokens: 41880
   avgTokensPerSample: 4188
 latency:
-  basis: "passing-samples"
-  contributingSamples: 2
+  basis: "responded-samples"
+  contributingSamples: 10
   totalSamples: 10
-  p50Ms: 7980
-  sortedPassingLatenciesMs: [7420, 8540]
+  p50Ms: 7890
+  p90Ms: 9360
+  sortedPassingLatenciesMs: [6980, 7210, 7420, 7650, 7890, 8120, 8540, 8830, 9360, 11240]
 expiration:
   expiresInDays: 90
   expiresAt: "2026-10-31T12:00:00Z"
