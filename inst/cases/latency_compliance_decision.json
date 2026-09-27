@@ -344,6 +344,30 @@
       }
     },
     {
+      "name": "explicit_p50_n4_alpha010_pass",
+      "description": "P(Y >= 4) = 0.0625 <= 0.10: y_min = 4 and PASS is possible with 4 latencies, below the p50 non-degeneracy minimum of 5, which does not gate an explicit requirement.",
+      "inputs": {
+        "percentile": 0.5,
+        "threshold_ms": 300,
+        "alpha": 0.1,
+        "intent": "VERIFICATION",
+        "planned_samples": 4,
+        "latencies": [150, 200, 249, 299]
+      },
+      "expected": {
+        "test_samples": 4,
+        "within_threshold": 4,
+        "y_min": 4,
+        "pass_possible": true,
+        "verdict": "PASS",
+        "configuration_error": [],
+        "false_compliance": 0.0625,
+        "clopper_pearson_lower": 0.562341325190349,
+        "observed_percentile_ms": 200,
+        "advisory_percentile_pass": true
+      }
+    },
+    {
       "name": "exact_boundary_p50_n5",
       "description": "P(Y >= 5) = 1/32 = alpha exactly: the inclusive rule admits 5 of 5.",
       "inputs": {

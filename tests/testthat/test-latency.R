@@ -233,3 +233,12 @@ test_that("non-degeneracy warns before the run and decides after it", {
   expect_identical(latency_nondegeneracy_decision(0.99, 40, "SMOKE", TRUE)$outcome, "INDICATIVE")
   expect_identical(latency_nondegeneracy_decision(0.95, 19, "VERIFICATION", FALSE)$outcome, "INDICATIVE")
 })
+
+test_that("the non-degeneracy gate branches by threshold source", {
+  e <- latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", TRUE, "explicit")
+  expect_false(e$applies)
+  expect_true(e$degenerate)
+  expect_identical(e$outcome, "DECIDED")
+  expect_identical(latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", FALSE, "explicit")$outcome, "INDICATIVE")
+  expect_identical(latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", TRUE, "baseline-derived")$outcome, "INCONCLUSIVE")
+})

@@ -98,6 +98,10 @@ generate_latency_compliance_decision_cases <- function() {
       s(200, exact_binomial_k_min(0.90, 200, 0.01) - 1L, 800)),
     latency_compliance_case("p50_n40_pass_at_y_min", 0.50, 300, 0.05, "VERIFICATION", 40L,
       s(40, exact_binomial_k_min(0.50, 40, 0.05), 300)),
+    # Fewer latencies than the percentile non-degeneracy minimum (5 at p50):
+    # that gate does not apply to this rule, only its own feasibility.
+    latency_compliance_case("explicit_p50_n4_alpha010_pass", 0.50, 300, 0.10, "VERIFICATION", 4L,
+      s(4, 4, 300), "P(Y >= 4) = 0.0625 <= 0.10: y_min = 4 and PASS is possible with 4 latencies, below the p50 non-degeneracy minimum of 5, which does not gate an explicit requirement."),
     # Exact boundary: P(Y >= 5) = 1/32 = alpha at p50, n_s = 5.
     latency_compliance_case("exact_boundary_p50_n5", 0.50, 300, 0.03125, "VERIFICATION", 5L,
       s(5, 5, 300), "P(Y >= 5) = 1/32 = alpha exactly: the inclusive rule admits 5 of 5.")

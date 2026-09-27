@@ -40,3 +40,11 @@ test_that("a VERIFICATION plan below the feasibility minimum is refused", {
   refused <- Filter(function(c) c$name == "p95_plan_58_verification_refused", cases)[[1]]
   expect_equal(refused$expected$configuration_error, list("COMPLIANCE_INFEASIBLE"))
 })
+
+test_that("an explicit p50 requirement at alpha 0.10 is decidable from 4 latencies", {
+  v <- latency_compliance_verdict(rep(100, 4), 300, 0.50, 0.10)
+  expect_identical(v$y_min, 4L)
+  expect_true(v$pass_possible)
+  expect_identical(v$verdict, "PASS")
+  expect_lt(4, latency_min_samples(0.50))
+})

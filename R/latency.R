@@ -109,6 +109,9 @@ latency_threshold_binomial_rank <- function(n, p, confidence) {
 #' @return Integer. Minimum sample count.
 #' @export
 latency_min_samples <- function(p) {
+  # p50: 5 is an engineering minimum (a median of 3 or 4 values is too
+  # fragile to act on); the mathematical minimum, the smallest n whose
+  # nearest-rank median is neither the sample minimum nor its maximum, is 3.
   if (p <= 0.50) return(5L)
   if (p <= 0.90) return(10L)
   if (p <= 0.95) return(20L)
@@ -175,6 +178,10 @@ latency_precedence_planning <- function(baseline_trials, planned_samples, baseli
 
 #' Pre-run non-degeneracy check for a latency percentile assertion
 #'
+#' For a baseline-derived assertion or an advisory raw comparison; an
+#' enforced explicit requirement has its own exact feasibility condition
+#' instead (latency/compliance-exact-binomial).
+#'
 #' Before the run the number of successful latencies is an expectation,
 #' floor(planned_samples * baseline_success_rate), not a lower bound. A
 #' shortfall against the §12.5.2 minimum gives a warning and a planning
@@ -195,22 +202,32 @@ latency_nondegeneracy_planning <- function(p, planned_samples, baseline_success_
 
 #' Post-run non-degeneracy decision for a latency percentile assertion
 #'
-#' Made on the actual number of successful latencies. Below the §12.5.2
-#' minimum the percentile is degenerate: an enforced assertion under
-#' VERIFICATION intent cannot be decided and is INCONCLUSIVE; under SMOKE
-#' intent or in advisory mode the percentile is evaluated and marked
-#' INDICATIVE (§12.5.4). At or above the minimum the assertion is DECIDED
-#' by its rule.
+#' Made on the actual number of successful latencies, and only where the
+#' decision statistic is the empirical percentile. The gate applies to a
+#' baseline-derived assertion (latency/precedence) and to an advisory raw
+#' percentile comparison; it does not apply to an enforced explicit
+#' requirement, which is decided by latency/compliance-exact-binomial on
+#' the within-threshold count and has its own exact feasibility condition.
+#' Below the §12.5.2 minimum an enforced baseline-derived assertion under
+#' VERIFICATION intent is INCONCLUSIVE; under SMOKE intent or in advisory
+#' mode the percentile is evaluated and marked INDICATIVE (§12.5.4).
+#' Otherwise the assertion is DECIDED by its rule.
 #'
-#' @return A list: degenerate, outcome (DECIDED, INCONCLUSIVE or
+#' @param threshold_source "explicit" or "baseline-derived".
+#' @return A list: applies, degenerate, outcome (DECIDED, INCONCLUSIVE or
 #'   INDICATIVE).
 #' @export
-latency_nondegeneracy_decision <- function(p, test_samples, intent, enforced) {
+latency_nondegeneracy_decision <- function(p, test_samples, intent, enforced,
+                                           threshold_source = "baseline-derived") {
   if (!intent %in% c("VERIFICATION", "SMOKE")) stop("intent must be VERIFICATION or SMOKE", call. = FALSE)
+  if (!threshold_source %in% c("explicit", "baseline-derived")) {
+    stop("threshold_source must be explicit or baseline-derived", call. = FALSE)
+  }
+  applies <- !(threshold_source == "explicit" && enforced)
   degenerate <- test_samples < latency_min_samples(p)
-  outcome <- if (!degenerate) "DECIDED" else
+  outcome <- if (!applies || !degenerate) "DECIDED" else
     if (intent == "VERIFICATION" && enforced) "INCONCLUSIVE" else "INDICATIVE"
-  list(degenerate = degenerate, outcome = outcome)
+  list(applies = applies, degenerate = degenerate, outcome = outcome)
 }
 
 #' Generate latency percentile minimum-sample-size and existence cases
@@ -298,13 +315,14 @@ generate_latency_percentile_minimums_cases <- function() {
       expected = latency_nondegeneracy_planning(p, planned, rate)
     ))
   }
-  nd_decision_case <- function(name, p, test_samples, intent, enforced, description = NULL) {
+  nd_decision_case <- function(name, p, test_samples, intent, enforced, description = NULL,
+                               threshold_source = "baseline-derived") {
     case <- list(name = name, approach = "nondegeneracy_decision")
     if (!is.null(description)) case$description <- description
     c(case, list(
       inputs = list(percentile = p, test_samples = as.integer(test_samples),
-                    intent = intent, enforced = enforced),
-      expected = latency_nondegeneracy_decision(p, test_samples, intent, enforced)
+                    intent = intent, enforced = enforced, threshold_source = threshold_source),
+      expected = latency_nondegeneracy_decision(p, test_samples, intent, enforced, threshold_source)
     ))
   }
   nondegeneracy_cases <- list(
@@ -319,7 +337,13 @@ generate_latency_percentile_minimums_cases <- function() {
       "The pre-run warning at 110 planned (88 expected) does not bind: a run that returns 100 successful latencies is decided."),
     nd_decision_case("p99_actual40_smoke_indicative", 0.99, 40, "SMOKE", TRUE),
     nd_decision_case("p95_actual19_verification_advisory_indicative", 0.95, 19, "VERIFICATION", FALSE),
-    nd_decision_case("p50_actual5_verification_enforced_decided", 0.50, 5, "VERIFICATION", TRUE)
+    nd_decision_case("p50_actual5_verification_enforced_decided", 0.50, 5, "VERIFICATION", TRUE),
+    nd_decision_case("explicit_p50_actual4_enforced_not_gated", 0.50, 4, "VERIFICATION", TRUE,
+      "An enforced explicit requirement is decided by latency/compliance-exact-binomial on the within-threshold count; the percentile non-degeneracy gate does not apply (at alpha 0.10, 4 of 4 can PASS: latency_compliance_decision/explicit_p50_n4_alpha010_pass).",
+      threshold_source = "explicit"),
+    nd_decision_case("explicit_p50_actual4_advisory_indicative", 0.50, 4, "VERIFICATION", FALSE,
+      "The same percentile compared raw in advisory mode: the gate marks it indicative.",
+      threshold_source = "explicit")
   )
 
   planning_cases <- list(
@@ -351,8 +375,12 @@ generate_latency_percentile_minimums_cases <- function() {
       "non-degeneracy check: the expected successful count against the emission minimum, giving ",
       "a warning and the planning figure planned_samples_needed, never a refusal. Cases with ",
       "approach 'nondegeneracy_decision' carry the binding decision on the actual count after the ",
-      "run: below the minimum an enforced VERIFICATION assertion is INCONCLUSIVE, and a SMOKE or ",
-      "advisory one INDICATIVE; otherwise DECIDED by its rule. The withdrawn Wilks minimums are no longer ",
+      "run, where the decision statistic is the empirical percentile: the gate applies to a ",
+      "baseline-derived assertion and to an advisory raw comparison, not to an enforced explicit ",
+      "requirement (applies = false; decided by latency/compliance-exact-binomial). Below the ",
+      "minimum an enforced baseline-derived VERIFICATION assertion is INCONCLUSIVE, and a SMOKE or ",
+      "advisory one INDICATIVE; otherwise DECIDED by its rule. The p50 minimum of 5 is an ",
+      "engineering minimum; the mathematical one is 3. The withdrawn Wilks minimums are no longer ",
       "published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly ",
       "(the test percentile is the test maximum); the inclusive rule admits the rank, and double ",
       "precision alone does not: implementations follow the exact-boundary convention (companion ",
@@ -368,9 +396,10 @@ generate_latency_percentile_minimums_cases <- function() {
       "minimum_baseline_trials = the smallest n_b >= expected_test_samples with a rank. ",
       "Non-degeneracy planning: warning = expected_test_samples < minimum_contributing_samples; ",
       "planned_samples_needed = the smallest planned size with floor(planned * rate) >= the ",
-      "minimum. Non-degeneracy decision: degenerate = test_samples < the minimum; outcome = ",
-      "DECIDED, else INCONCLUSIVE when intent is VERIFICATION and the assertion enforced, else ",
-      "INDICATIVE."
+      "minimum. Non-degeneracy decision: applies = not (threshold_source explicit and enforced); ",
+      "degenerate = test_samples < the minimum; outcome = DECIDED when the gate does not apply or ",
+      "the percentile is not degenerate, else INCONCLUSIVE when intent is VERIFICATION and the ",
+      "assertion enforced, else INDICATIVE."
     ),
     tolerance = 0,
     cases = c(emission_cases, nondegeneracy_cases, existence_cases, planning_cases)
