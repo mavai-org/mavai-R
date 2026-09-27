@@ -251,7 +251,7 @@ chk("12.5.3", "expectation is not a lower bound", sprintf("against a baseline of
 
 nd <- latency_nondegeneracy_planning(0.99, 110, 0.80)
 stopifnot(nd$warning, !latency_nondegeneracy_planning(0.99, nd$planned_samples_needed, 0.80)$warning)
-chk("12.5.3", "non-degeneracy expected count", sprintf("$n_{\\text{planned}} = 110$ and a baseline response rate $\\hat{r} = 0.80$ expects %d successful samples, below the p99 minimum of %d",
+chk("12.5.3", "non-degeneracy expected count", sprintf("$n_{\\text{planned}} = 110$ and a baseline passing rate $\\hat{p} = 0.80$ expects %d successful samples, below the p99 minimum of %d",
     nd$expected_test_samples, nd$minimum_contributing_samples))
 chk("12.5.3", "non-degeneracy planning figure", sprintf("%d planned samples give an expected %d", nd$planned_samples_needed,
     latency_nondegeneracy_planning(0.99, nd$planned_samples_needed, 0.80)$expected_test_samples))
