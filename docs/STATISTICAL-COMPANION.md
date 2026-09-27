@@ -703,7 +703,7 @@ V_{\text{contract}} \;=\; \begin{cases}
 \end{cases}
 $$
 
-with the per-criterion verdicts retained in full on the composite artefact. A service judged against both a requirement and its baseline carries two criteria over the same postconditions, a compliance criterion and a regression criterion (see *Two Testing Paradigms*); the rule composes them like any other criteria, and the compliance criterion's $\alpha$ enters the false-compliance envelope and the regression criterion's the false-degradation-signal envelope. A consumer reads the contract verdict and the supporting per-criterion verdicts in one place.
+with the per-criterion verdicts retained in full on the composite artefact. When the test also enforces latency constraints, this functional composite is $V_{\text{rate}}$, and the test's verdict $V_{\text{test}}$ composes it with the latency verdict by the same rule (§12.3.2). A service judged against both a requirement and its baseline carries two criteria over the same postconditions, a compliance criterion and a regression criterion (see *Two Testing Paradigms*); the rule composes them like any other criteria, and the compliance criterion's $\alpha$ enters the false-compliance envelope and the regression criterion's the false-degradation-signal envelope. A consumer reads the contract verdict and the supporting per-criterion verdicts in one place.
 
 The structural composite is the methodology's representation of "the contract is satisfied." A baseline may carry an aggregate $\hat{p}$ over the conjunction of all postconditions as a descriptive statistic — useful for dashboards and trend reporting — but the aggregate is not threshold-bearing: thresholds are not derived from it and verdicts are not framed against it. The hiding result of §1.4.4 demonstrates why a conjunction-based threshold is structurally unable to detect the per-criterion movement the methodology exists to surface.
 
@@ -2341,17 +2341,18 @@ Transparent Statistics Mode exposes the complete statistical reasoning behind ev
 
 ### 10.2 Output Structure
 
-Under criterion decomposition (§1.4), a run's verdict is a structured tuple over the per-criterion verdicts of its contract, all over the run's one sampling. Transparent Statistics Mode exposes the contract-level composite at the top, followed by a per-criterion analysis block for each criterion declared on the contract. A view across several tests over different samplings — every test of one service, say — is a reporting matter (§1.4.7): it presents each test's report beside its sampling and forms no composite verdict of its own.
+Under criterion decomposition (§1.4), a run's functional verdict is a structured tuple over the per-criterion verdicts of its contract, all over the run's one sampling, and the test's verdict composes it with the verdict of any enforced latency constraints (§12.3.2). Transparent Statistics Mode exposes the test verdict at the top, followed by a per-criterion analysis block for each criterion declared on the contract and a latency block for each latency constraint. A view across several tests over different samplings — every test of one service, say — is a reporting matter (§1.4.7): it presents each test's report beside its sampling and forms no composite verdict of its own.
 
 **Contract-level header.**
 
 | Section                   | Content                                                                                                                                                                                                                                                                                                                                                                  | Statistical Purpose                                                         |
 |---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| **Composite Verdict**     | PASS / FAIL / INCONCLUSIVE per §1.4.6, with the triggering criteria named                                                                                                                                                                                                                                                                                            | At-a-glance answer to "did the contract pass?"                              |
+| **Test Verdict**          | $V_{\text{test}}$, PASS / FAIL / INCONCLUSIVE per §12.3.2 — the structural composite of the functional composite $V_{\text{rate}}$ (§1.4.6) and the latency verdict $V_{\text{latency}}$ — with the triggering functional criteria and latency constraints named, and $V_{\text{rate}}$ and $V_{\text{latency}}$ shown beside it | At-a-glance answer to "did the test pass?"                                  |
 | **Per-Criterion Summary** | One line per criterion: verdict (PASS/FAIL/INCONCLUSIVE) and mode (inferential/observational)                                                                                                                                                                                                                                                                            | Surface every per-criterion outcome on the front page                       |
-| **Type-I envelopes**      | Procedure-direction-specific disclosed envelopes over every decision the test makes, functional and enforced latency: $\alpha_{\text{false-degradation-signal}} \le \sum_{c \in \text{regression}} \alpha_c + \sum_{j \in \text{baseline-derived latency}} \alpha_j$, and $\alpha_{\text{false-compliance}} \le \sum_{c \in \text{compliance}} \alpha_c + \sum_{j \in \text{explicit latency}} \alpha_j$, over enforced latency constraints only (§1.4.6, §12.3.1). A test reports each envelope only when it makes decisions of that direction. | The composite verdict's family-wise bounds, labelled by procedure direction |
+| **Latency Summary**       | One line per latency constraint: percentile and threshold, source (explicit or baseline-derived), mode (enforced or advisory), decision rule, and verdict (PASS / FAIL / INCONCLUSIVE for an enforced constraint; a pass or a warning for an advisory one, which does not enter $V_{\text{latency}}$). Absent when the test asserts no latency constraint | Surface every latency outcome on the front page, beside the criteria         |
+| **Type-I envelopes**      | Procedure-direction-specific disclosed envelopes over every decision the test makes, functional and enforced latency: $\alpha_{\text{false-degradation-signal}} \le \sum_{c \in \text{regression}} \alpha_c + \sum_{j \in \text{baseline-derived latency}} \alpha_j$, and $\alpha_{\text{false-compliance}} \le \sum_{c \in \text{compliance}} \alpha_c + \sum_{j \in \text{explicit latency}} \alpha_j$, over enforced latency constraints only (§1.4.6, §12.3.1). A test reports each envelope only when it makes decisions of that direction. | The test verdict's family-wise bounds, labelled by procedure direction |
 
-**Per-criterion analysis block** — repeated for each criterion declared on the contract.
+**Per-criterion analysis block** — repeated for each criterion declared on the contract. Each enforced latency constraint has a latency analysis block of the same shape: its rule and $\alpha_j$, the successful-latency count, the decision artefact ($y_{\min}$ and the within-threshold count for an explicit requirement; the rank, the threshold and the test's percentile, or saturation, for a baseline-derived one), and its verdict.
 
 | Section                   | Content (inferential criterion)                                                                                                                                                                                                                     | Content (observational criterion)                                                                                                                 |
 |---------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -2392,7 +2393,7 @@ These fields are emitted whether or not the contract under test exercises the la
 
 ### 10.3 Example output: the consult-advice tests
 
-The consult-advice requirements of §1.4.8 are evidenced over three input populations, so they are exercised by three tests, each bound to its own contract and running over one sampling: an EMPIRICAL inferential criterion over production prompts, an SLO inferential criterion over inputs chosen to elicit clinical terminology, and an observational criterion over adversarial probes. This is the one canonical consult-advice example; §1.4.8 and §1.5.6 describe the same runs, and every number below is generated by the mavai-R oracle (`scripts/companion_numbers.R`). The output opens with a reporting view that lists the three verdicts, then gives each test's report: its composite verdict and envelope, then one analysis block per criterion. Inferential blocks carry the three-strand verdict; the observational block reports a single deterministic assertion.
+The consult-advice requirements of §1.4.8 are evidenced over three input populations, so they are exercised by three tests, each bound to its own contract and running over one sampling: an EMPIRICAL inferential criterion over production prompts, an SLO inferential criterion over inputs chosen to elicit clinical terminology, and an observational criterion over adversarial probes. This is the one canonical consult-advice example; §1.4.8 and §1.5.6 describe the same runs, and every number below is generated by the mavai-R oracle (`scripts/companion_numbers.R`). The output opens with a reporting view that lists the three verdicts, then gives each test's report: its test verdict and envelope, then one analysis block per criterion. None of the three tests asserts a latency constraint, so each test verdict is its functional composite (§12.3.2). Inferential blocks carry the three-strand verdict; the observational block reports a single deterministic assertion.
 
 ```
 ══════════════════════════════════════════════════════════════════════════════
@@ -2409,8 +2410,9 @@ CONSULT-ADVICE: REPORTING VIEW ACROSS THREE TESTS
 TEST 1 of 3: consult-advice@5
 ══════════════════════════════════════════════════════════════════════════════
 
-COMPOSITE VERDICT
+TEST VERDICT
   Test verdict:               PASS
+  Latency:                    none asserted (test verdict = functional)
   Sampling:                   V_prod v5, 1000 samples
   Type-I envelope (§1.4.6):
     False-degradation-signal  ∑ α_c  ≤  0.05    (C_well-formed)
@@ -2486,8 +2488,9 @@ VERDICT
 TEST 2 of 3: consult-advice-readability@1
 ══════════════════════════════════════════════════════════════════════════════
 
-COMPOSITE VERDICT
+TEST VERDICT
   Test verdict:               FAIL  (triggered by C_layperson-readable)
+  Latency:                    none asserted (test verdict = functional)
   Sampling:                   V_complexity v2, 800 samples
   Type-I envelope (§1.4.6):
     False-compliance          ∑ α_c  ≤  0.001   (C_layperson-readable)
@@ -2556,8 +2559,9 @@ VERDICT
 TEST 3 of 3: consult-advice-self-harm-probe@1
 ══════════════════════════════════════════════════════════════════════════════
 
-COMPOSITE VERDICT
+TEST VERDICT
   Test verdict:               PASS
+  Latency:                    none asserted (test verdict = functional)
   Sampling:                   V_probe v3, 200 samples
   Type-I envelopes:          none  (observational criterion only)
 
@@ -2674,6 +2678,7 @@ A conformant implementation of this companion is one for which the following hol
 - When a p-value is reported, it carries its method, null, alternative, and tail, and matches the orientation of the decision rule that produced the verdict (§7.1, §10.2).
 - A latency threshold for which no rank achieves $\alpha$ at the actual number of successful latencies is reported as INCONCLUSIVE with `saturated: true`, never as a threshold; before the run the same search gives only a warning and a planning figure (§12.4.2, §12.5.3).
 - An enforced explicit latency requirement is decided by `latency/compliance-exact-binomial`; the comparison of the observed percentile with the threshold is reported only as an advisory figure (§12.3).
+- The report's top-level verdict is the test verdict $V_{\text{test}}$: the structural composite of the functional composite and the latency verdict over the enforced constraints, naming the criteria and latency constraints that decided it; advisory constraints never enter it (§12.3.2, §10.2).
 - For clustered or repeated-prompt designs, the report either applies an approved estimator matched to the declared `targetEstimand`, or demotes the claim to a named realised-run or finite-corpus claim (withdrawing the calibrated reading, §8.2.1), or returns INCONCLUSIVE for population-level VERIFICATION (§8.2.1, §8.4.6).
 - A criterion's denominator is **the full sampling** $N$ (§1.4.5a): a trial is a success only on a clean PASS; a transform/no-value failure is a counted FAIL (carrying that reason), not an exclusion. There is no per-criterion denominator policy and no `CONDITIONAL`/`MARGINAL` enum; no input is filtered out, since every sample is seen by every criterion.
 - Availability, when wanted as a distinct metric, is its own criterion; it does not gate or alter another criterion's denominator (§1.4.5a, §10.2).
@@ -2788,21 +2793,37 @@ $$\mathcal{C} = \{ (p_j, \tau_j, \text{mode}_j) : j = 1, \ldots, m \}$$
 
 where $p_j$ is a percentile level (one of $\{0.50, 0.90, 0.95, 0.99\}$), $\tau_j$ is the corresponding threshold in milliseconds, explicit or derived from a baseline (§12.3.3), and $\text{mode}_j$ is **enforced** or **advisory** (§12.6).
 
-An **enforced** constraint is decided by the rule for its threshold source: an explicit threshold by `latency/compliance-exact-binomial` (§12.3.4), a baseline-derived threshold by `latency/precedence` (§12.4.2). The latency assertion passes if and only if every enforced constraint passes:
+An **enforced** constraint is decided by the rule for its threshold source: an explicit threshold by `latency/compliance-exact-binomial` (§12.3.4), a baseline-derived threshold by `latency/precedence` (§12.4.2). Its verdict $V_j$ is PASS, FAIL or INCONCLUSIVE — INCONCLUSIVE when too few successful latencies arrived for any count to pass, when the percentile is degenerate, or when no rank achieves $\alpha$ (§12.5.3). The latency dimension's verdict is formed from the enforced constraints in §12.3.2.
 
-$$\text{PASS}_{\text{latency}} = \bigwedge_{j \,\in\, \text{enforced}} \text{PASS}_j$$
-
-An **advisory** constraint compares the observed percentile with its threshold, $Q(p_j) \le \tau_j$, and reports a warning when it does not hold. It never enters the conjunction and never changes the verdict.
+An **advisory** constraint compares the observed percentile with its threshold, $Q(p_j) \le \tau_j$, and reports a warning when it does not hold. It never enters $V_{\text{latency}}$ and never changes the test's verdict.
 
 **Envelope.** Each enforced constraint is decided at its own level $\alpha_j$. As for functional criteria (§1.4.6), the family of enforced constraints discloses a union-bound envelope, split by direction: the probability of one or more false latency degradation signals is at most $\sum_{j} \alpha_j$ over the enforced baseline-derived constraints, and the probability of one or more false latency compliance claims is at most $\sum_{j} \alpha_j$ over the enforced explicit constraints. Both bounds hold under arbitrary dependence among the percentiles, which, computed from the same latencies, are strongly dependent. Advisory constraints contribute to neither.
 
 #### 12.3.2 Combined Verdict
 
-Pass-rate and latency are **distinct** quality dimensions (orthogonal as concerns, not necessarily statistically independent — see §12.7). The overall test verdict requires both to pass:
+Pass-rate and latency are **distinct** quality dimensions (orthogonal as concerns, not necessarily statistically independent — see §12.7). The test's verdict composes them by the structural rule of §1.4.6, applied twice.
 
-$$\text{PASS}_{\text{test}} = \text{PASS}_{\text{rate}} \wedge \text{PASS}_{\text{latency}}$$
+The **latency verdict** is the structural composite of the enforced constraints:
 
-with $\text{PASS}_{\text{latency}}$ over the enforced constraints only. This reflects the operational reality that a service must be both *correct* and *responsive*. A payment API that succeeds 99.5% of the time but takes 30 seconds for 1% of requests fails its SLA just as surely as one that returns incorrect results.
+$$
+V_{\text{latency}} \;=\; \begin{cases}
+\text{PASS}         & \text{if every enforced constraint passes,} \\
+\text{FAIL}         & \text{if any enforced constraint fails,} \\
+\text{INCONCLUSIVE} & \text{otherwise.}
+\end{cases}
+$$
+
+Advisory constraints never participate. With $V_{\text{rate}}$ the functional dimension's verdict — the structural composite of the test's criteria (§1.4.6) — the **test verdict** is
+
+$$
+V_{\text{test}} \;=\; \begin{cases}
+\text{PASS}         & \text{if } V_{\text{rate}} = \text{PASS} \text{ and } V_{\text{latency}} = \text{PASS}, \\
+\text{FAIL}         & \text{if either dimension is FAIL,} \\
+\text{INCONCLUSIVE} & \text{otherwise.}
+\end{cases}
+$$
+
+A test with no functional criteria has $V_{\text{test}} = V_{\text{latency}}$; a test with no enforced latency constraint has $V_{\text{test}} = V_{\text{rate}}$. The mixed outcomes follow: functional PASS with latency FAIL is FAIL, functional PASS with latency INCONCLUSIVE is INCONCLUSIVE, functional INCONCLUSIVE with latency PASS is INCONCLUSIVE, and a FAIL in either dimension outweighs an INCONCLUSIVE in the other. The report names what decided a FAIL or an INCONCLUSIVE: the functional criteria and the latency constraints with that verdict (§10.2). Configuration refusals (§5.7.1) come before any verdict and are unchanged: a refused test has no $V_{\text{test}}$. This reflects the operational reality that a service must be both *correct* and *responsive*. A payment API that succeeds 99.5% of the time but takes 30 seconds for 1% of requests fails its SLA just as surely as one that returns incorrect results.
 
 #### 12.3.3 Threshold Sources
 
@@ -3065,7 +3086,9 @@ The list is restricted to elements that are intrinsic to the model. Operationali
 | **Threshold origin**                  | The provenance category of an inferential threshold (SLA, SLO, POLICY, EMPIRICAL, UNSPECIFIED), recorded with the requirement or, for EMPIRICAL, the baseline reference.                                                                                                                                                                                                                                                                                                                                 | §7.4                            |
 | **Sample-size requirement** | The per-criterion sample count from which the exact power of the operative rule stays at its target, with the feasibility gate that refuses a compliance design too small to pass. | §§5.4–5.5, §5.7.1 |
 | **Per-criterion verdict**             | PASS, FAIL, or INCONCLUSIVE on a criterion: for **compliance** criteria, the observed count's relation to $k_{\min}$; for **regression** criteria, the observed success count's relation to the Fisher cutoff $c_c$ derived from the baseline's counts at $\alpha_c$; for **observational** criteria, the zero-failure observation. Carries the supporting statistics, the threshold and origin, $\alpha_c$, and the population specification. | §1.4.3, §1.4.5, §1.4.6          |
-| **Composite verdict**                 | A structured tuple over per-criterion verdicts.                                                                                                                                                                                                                                                                                                                                                                                                                            | §1.4.6                          |
+| **Composite verdict**                 | A structured tuple over per-criterion verdicts; its structural composite is the functional verdict $V_{\text{rate}}$.                                                                                                                                                                                                                                                                                                                                                                                                                            | §1.4.6                          |
+| **Latency verdict** | $V_{\text{latency}}$, the structural composite of a test's enforced latency constraints: PASS if every one passes, FAIL if any fails, INCONCLUSIVE otherwise. Advisory constraints never participate. | §12.3.2 |
+| **Test verdict** | $V_{\text{test}}$, the top-level verdict of a test: the structural composite of $V_{\text{rate}}$ and $V_{\text{latency}}$ — PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise; $V_{\text{latency}}$ alone when the test has no functional criteria, $V_{\text{rate}}$ alone when it enforces no latency constraint. The report names the criteria and latency constraints that decided it. | §12.3.2, §10.2 |
 | **Composite Type-I envelopes**        | Procedure-direction-specific union-bound aggregates over inferential criteria: the **false-degradation-signal envelope** $\alpha_{\text{fds}} \leq \sum_{c \in \text{regression}} \alpha_c$ and the **false-compliance envelope** $\alpha_{\text{fc}} \leq \sum_{c \in \text{compliance}} \alpha_c$. At the level of the whole test they also include the enforced latency decisions: baseline-derived latency constraints in the false-degradation-signal envelope, explicit latency requirements in the false-compliance envelope (§12.3.1). A test reports each envelope only when it makes decisions of that direction; mixed tests report both. Observational criteria and advisory latency comparisons contribute to neither.          | §1.4.6                          |
 | **Baseline**                          | A family of per-criterion point estimators $\{\hat{p}_c\}$ with supporting $\{n_c\}$ and $\{K_c\}$, qualified by the factor record, covariate profile, structural reference, and optional expiration window under which it was measured. Consumed by inferential criteria of origin EMPIRICAL, whose counts derive the cutoff $c_c$ at resolution time.                                                                                                                                        | §1.5                            |
 
