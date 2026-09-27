@@ -414,7 +414,7 @@
     },
     "latency": {
       "type": "object",
-      "description": "Absent as a whole when no invocation produced a response. The block describes the samples whose invocation produced a response, whatever the criteria then said (companion §12.2.1). Percentiles are STATED value-or-absent: an absent key means 'not stateable at this sample count under the emitter's gate', never zero.",
+      "description": "Absent as a whole when no sample passed. Percentiles are STATED value-or-absent: an absent key means 'not stateable at this sample count under the emitter's gate', never zero.",
       "required": [
         "basis",
         "contributingSamples",
@@ -424,7 +424,7 @@
       "additionalProperties": true,
       "properties": {
         "basis": {
-          "const": "responded-samples"
+          "const": "passing-samples"
         },
         "contributingSamples": {
           "type": "integer",
@@ -453,7 +453,7 @@
             "type": "number",
             "minimum": 0
           },
-          "description": "Recorded durations of the samples whose invocation produced a response, milliseconds, ascending (the field name is historical). For shape-only consumption."
+          "description": "Recorded passing-trial durations, milliseconds, ascending. For shape-only consumption."
         }
       }
     }

@@ -120,9 +120,7 @@ generate_latency_compliance_decision_cases <- function() {
       "the observed percentile with tau is advisory and reported only. Binding: test_samples,",
       "within_threshold, y_min, pass_possible, verdict, configuration_error. Informational:",
       "false_compliance, clopper_pearson_lower, observed_percentile_ms, advisory_percentile_pass.",
-      "The latencies are those of the samples whose invocation produced a response, whatever the",
-      "criteria then said (companion §12.2.1). Frameworks MUST evaluate these cases through their",
-      "production verdict path."
+      "Frameworks MUST evaluate these cases through their production verdict path."
     ),
     method = paste(
       "latency/compliance-exact-binomial v1: Y = #{latencies <= tau}; y_min = min{y :",

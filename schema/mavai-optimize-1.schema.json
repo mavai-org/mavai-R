@@ -323,11 +323,11 @@
     },
     "latency": {
       "type": "object",
-      "description": "Absent as a whole when no invocation produced a response. The block describes the samples whose invocation produced a response, whatever the criteria then said (companion §12.2.1). Percentiles are STATED value-or-absent under the emitter's minimum-sample gate; at optimize's typically small per-iteration sample counts, most will be absent — that is the gate working.",
+      "description": "Absent as a whole when no sample passed. Percentiles are STATED value-or-absent under the emitter's minimum-sample gate; at optimize's typically small per-iteration sample counts, most will be absent — that is the gate working.",
       "required": ["basis", "contributingSamples", "totalSamples", "sortedPassingLatenciesMs"],
       "additionalProperties": true,
       "properties": {
-        "basis": { "const": "responded-samples" },
+        "basis": { "const": "passing-samples" },
         "contributingSamples": { "type": "integer", "minimum": 1 },
         "totalSamples": { "type": "integer", "minimum": 1 },
         "p50Ms": { "type": "number", "minimum": 0 },

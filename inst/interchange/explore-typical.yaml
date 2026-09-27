@@ -1,9 +1,8 @@
 # Worked example: a typical exploration artefact.
 # One document per explored experiment configuration. Percentiles are STATED
-# by the emitter under its minimum-sample gate: here all 20 samples produced a
-# response (the three failures were judged, not undelivered), so latency is
-# stated over 20 and admits p50 (floor 5) and p95 (floor 20) but not p99
-# (floor 100) — absence means "not stateable", never zero.
+# by the emitter under its minimum-sample gate: here 17 passing samples state
+# p50 (floor 5) but not p95 (floor 20) nor p99 (floor 100) — absence means
+# "not stateable", never zero.
 schemaVersion: "mavai-explore-1"
 serviceContractId: "shopping-basket"
 experimentId: "model-comparison"
@@ -167,9 +166,8 @@ cost:
   totalTokens: 2000
   avgTokensPerSample: 100
 latency:
-  basis: "responded-samples"
-  contributingSamples: 20
+  basis: "passing-samples"
+  contributingSamples: 17
   totalSamples: 20
   p50Ms: 16
-  p95Ms: 25
-  sortedPassingLatenciesMs: [11, 12, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19, 20, 21, 22, 25, 30]
+  sortedPassingLatenciesMs: [11, 12, 12, 13, 13, 14, 14, 15, 16, 16, 17, 17, 18, 19, 20, 22, 25]

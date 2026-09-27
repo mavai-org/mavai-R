@@ -19,8 +19,7 @@ nearest_rank_percentile <- function(latencies, p) {
 
 #' Latency summary statistics
 #'
-#' Computes mean and maximum from a vector of latencies of the samples whose
-#' invocation produced a response (companion §12.2.1).
+#' Computes mean and maximum from a vector of successful-response latencies.
 #' The sample standard deviation is deliberately omitted: the threshold
 #' derivation in latency_threshold_derive() is non-parametric and does not
 #' use it, and reporting s for a distribution that is not well-characterised
@@ -183,10 +182,8 @@ latency_precedence_planning <- function(baseline_trials, planned_samples, baseli
 #' enforced explicit requirement has its own exact feasibility condition
 #' instead (latency/compliance-exact-binomial).
 #'
-#' Before the run the number of successful latencies (samples whose
-#' invocation produces a response) is an expectation,
-#' floor(planned_samples * baseline_success_rate), not a lower bound, with
-#' baseline_success_rate the baseline run's fraction of such samples. A
+#' Before the run the number of successful latencies is an expectation,
+#' floor(planned_samples * baseline_success_rate), not a lower bound. A
 #' shortfall against the §12.5.2 minimum gives a warning and a planning
 #' figure, the smallest planned sample size whose expected count reaches
 #' the minimum; nothing here is binding.
@@ -362,9 +359,6 @@ generate_latency_percentile_minimums_cases <- function() {
     suite = "latency_percentile_minimums",
     description = paste0(
       "Minimum sample sizes and the existence gate for empirical latency percentiles (p50/p90/p95/p99). ",
-      "A successful latency is that of a sample whose invocation produced a response, whatever the ",
-      "criteria then said (companion §12.2.1); baseline_success_rate is the baseline run's fraction ",
-      "of such samples. ",
       "Cases with approach 'emission_non_degeneracy' carry the Statistical Companion §12.5.2 ",
       "minimums for emitting a percentile in experiment artefacts (baseline, exploration, ",
       "optimization) and verdicts: below the minimum the percentile key is omitted entirely ",
@@ -621,9 +615,7 @@ generate_latency_threshold_cases <- function() {
       "whose exact, distribution-free no-degradation breach probability for the test's",
       "nearest-rank percentile is at most alpha, and the observed baseline latency at that rank.",
       "When no rank achieves alpha the result is INCONCLUSIVE with saturated = true and no rank or",
-      "threshold. A test percentile equal to the threshold is not a breach. The latencies are",
-      "those of the samples whose invocation produced a response, whatever the criteria then",
-      "said (companion §12.2.1). Inputs carry the two",
+      "threshold. A test percentile equal to the threshold is not a breach. Inputs carry the two",
       "runs' sampling sizes, baseline_samples (N_b) and planned_samples (N_t), beside the",
       "successful latencies: a test planned larger than its baseline run is refused before the",
       "run (configuration_error [TEST_LARGER_THAN_BASELINE], no rank, test_samples null), for",

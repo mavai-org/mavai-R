@@ -110,7 +110,7 @@
       "required": ["basis", "contributingSamples", "totalSamples", "sortedPassingLatenciesMs"],
       "additionalProperties": true,
       "properties": {
-        "basis": { "const": "responded-samples", "description": "The population the block describes: the samples whose invocation produced a response, whatever the criteria then said (companion §12.2.1)." },
+        "basis": { "const": "passing-samples", "description": "The population the block describes." },
         "contributingSamples": { "type": "integer", "minimum": 0 },
         "totalSamples": { "type": "integer", "minimum": 0 },
         "p50Ms": { "type": "number", "minimum": 0 },
@@ -120,11 +120,11 @@
         "sortedPassingLatenciesMs": {
           "type": "array",
           "items": { "type": "number", "minimum": 0 },
-          "description": "Recorded durations of the samples whose invocation produced a response, milliseconds, ascending (the field name is historical: a sample counts whether or not it passed the criteria). This vector — not the percentiles — is what a later test consumes to derive a latency bound at its own confidence."
+          "description": "Recorded passing-trial durations, milliseconds, ascending. This vector — not the percentiles — is what a later test consumes to derive a latency bound at its own confidence."
         }
       },
-      "description": "Absent as a whole when no invocation produced a response. Each percentile is present iff the emitter's conformance-tested minimum-sample gate admits it; an absent key means 'not stateable at this sample count', never zero.",
-      "$comment": "Companion §12.2.1: latency is the one place a denominator legitimately narrows, being conditional on a response having been produced."
+      "description": "Absent as a whole when no sample passed. Each percentile is present iff the emitter's conformance-tested minimum-sample gate admits it; an absent key means 'not stateable at this sample count', never zero.",
+      "$comment": "Companion §12: latency is the one place a denominator legitimately narrows, being conditional on success."
     },
     "expiration": {
       "type": "object",

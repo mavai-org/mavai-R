@@ -3,9 +3,9 @@
 # convergence summary, which must be internally consistent with the iteration
 # it names (a semantic obligation on emitters, cross-checked by their
 # conformance tests). Per-iteration sample counts are typically small, so most
-# latency percentiles are absent — that is the emitter's gate working: every
-# sample of each iteration produced a response (the failures were judged), so
-# each iteration's five latencies state p50 (floor 5) and nothing above it.
+# latency percentiles are absent — that is the emitter's gate working:
+# iteration 1's five passing samples state p50 (floor 5); two and four
+# passing samples state nothing.
 schemaVersion: "mavai-optimize-1"
 serviceContractId: "shopping-basket"
 experimentId: "temperature-optimization"
@@ -78,11 +78,10 @@ iterations:
       totalTimeMs: 2400
       avgTimePerSampleMs: 480
     latency:
-      basis: "responded-samples"
-      contributingSamples: 5
+      basis: "passing-samples"
+      contributingSamples: 2
       totalSamples: 5
-      p50Ms: 460
-      sortedPassingLatenciesMs: [390, 420, 460, 510, 560]
+      sortedPassingLatenciesMs: [420, 510]
   - iteration: 1
     factors:
       model: "small-model"
@@ -121,7 +120,7 @@ iterations:
       totalTimeMs: 2270
       avgTimePerSampleMs: 454
     latency:
-      basis: "responded-samples"
+      basis: "passing-samples"
       contributingSamples: 5
       totalSamples: 5
       p50Ms: 450
@@ -153,11 +152,10 @@ iterations:
       totalTimeMs: 2330
       avgTimePerSampleMs: 466
     latency:
-      basis: "responded-samples"
-      contributingSamples: 5
+      basis: "passing-samples"
+      contributingSamples: 4
       totalSamples: 5
-      p50Ms: 470
-      sortedPassingLatenciesMs: [410, 440, 470, 480, 530]
+      sortedPassingLatenciesMs: [410, 440, 480, 530]
 convergence:
   totalIterations: 3
   bestIteration: 1

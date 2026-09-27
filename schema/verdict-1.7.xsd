@@ -282,9 +282,6 @@
        Latency dimension
        =================================================================== -->
 
-  <!-- 1.7: latency describes the samples whose invocation produced a
-       response, whatever the criteria then said (Statistical Companion
-       §12.2.1); @successful-samples counts them. -->
   <xs:complexType name="LatencyType">
     <xs:sequence>
       <xs:element name="observed"    type="tns:ObservedPercentilesType" minOccurs="0"/>

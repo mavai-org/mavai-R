@@ -44,7 +44,7 @@ criteria:
     trials: 100
     successes: 100
 latency:
-  basis: "responded-samples"
+  basis: "passing-samples"
   contributingSamples: 100
   totalSamples: 100
   p50Ms: 240
