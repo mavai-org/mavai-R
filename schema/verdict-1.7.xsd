@@ -282,6 +282,9 @@
        Latency dimension
        =================================================================== -->
 
+  <!-- 1.7: latency describes the samples that pass every functional
+       criterion (Statistical Companion §12.2.1); @successful-samples counts
+       them. -->
   <xs:complexType name="LatencyType">
     <xs:sequence>
       <xs:element name="observed"    type="tns:ObservedPercentilesType" minOccurs="0"/>
