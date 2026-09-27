@@ -36,10 +36,11 @@ whose decision rules produced it, the verdict names the versioned rule that
 decided (`regression/fisher`, `compliance/exact-binomial`,
 `latency/precedence`, `latency/compliance-exact-binomial`), a configuration
 refused before any sample ran carries every applicable configuration-error
-code, as an ordered list, in place of a verdict value, and a criterion
-carrying both a normative and an empirical bar states each bar's verdict
+code, as an ordered list, in place of a verdict value, and a service judged
+against both a requirement and its baseline carries two criteria over the
+same postcondition, each with its own rule and verdict
 (`verdict-1.7-typical.xml`, `verdict-1.7-refused.xml`,
-`verdict-1.7-joint.xml`). Earlier XSD versions
+`verdict-1.7-two-criteria.xml`). Earlier XSD versions
 are unchanged.
 
 **This repository is the publication channel for these artefacts, not their

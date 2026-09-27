@@ -88,16 +88,12 @@ test_that("Generator output matches the committed fixture", {
   }
 })
 
-test_that("a criterion with both bars combines them by the structural composite rule", {
+test_that("no inferential criterion carries two bars, and regression strands never disagree", {
   cases <- generate_criterion_verdict_inferential_cases()$cases
-  get <- function(n) Filter(function(c) c$name == n, cases)[[1]]$expected
-  expect_identical(get("joint_pass_both_bars")$verdict, "PASS")
-  expect_identical(get("joint_fail_empirical_bar")$failing_bars, list("empirical"))
-  expect_identical(get("joint_fail_normative_bar")$failing_bars, list("normative"))
-  inc <- get("joint_inconclusive_normative_bar")
-  expect_identical(inc$verdict, "INCONCLUSIVE")
-  expect_identical(vapply(inc$bars, `[[`, character(1), "verdict"), c("INCONCLUSIVE", "PASS"))
-  expect_identical(get("joint_fail_dominates_inconclusive")$verdict, "FAIL")
-  expect_identical(get("joint_refused_test_larger_than_baseline")$configuration_error,
-                   list("TEST_LARGER_THAN_BASELINE"))
+  for (case in cases) {
+    expect_false(identical(case$approach, "joint"), info = case$name)
+    if (identical(case$procedure, "REGRESSION")) {
+      expect_false(identical(case$expected$operational_caution_category, "STRANDS_DISAGREE"), info = case$name)
+    }
+  }
 })

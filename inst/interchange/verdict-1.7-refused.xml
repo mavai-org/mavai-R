@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Worked example: a verdict-1.7 record for a refused configuration.
 
-     The configuration carries both bars on one criterion: a normative
-     requirement of 0.999 and an empirical baseline of 100 trials, for a
-     test planned at 200 samples. Both parts are invalid. The test is
+     The test carries two criteria over the same postcondition: a
+     compliance criterion with a requirement of 0.999 and a regression
+     criterion against a baseline of 100 trials, planned at 200 samples. Both parts are invalid. The test is
      larger than its baseline, which mavai's design policy refuses (the
      baseline must be at least as large as any test that consumes it), and
      at 200 samples no count can demonstrate 0.999 at alpha 0.05 (the

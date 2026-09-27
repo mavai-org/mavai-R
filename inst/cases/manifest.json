@@ -73,11 +73,11 @@
           "version": 1
         }
       ],
-      "caseCount": 19,
-      "cases": ["regression_clear_pass_consult_advice_well_formed", "regression_clear_fail_K_far_below_cutoff", "regression_borderline_pass_K_equals_cutoff", "regression_borderline_fail_K_one_below_cutoff", "regression_inconclusive_zero_evaluable", "regression_tiny_test_near_perfect_baseline", "regression_policy_diff_conditional", "regression_policy_diff_marginal", "compliance_clear_pass", "compliance_clear_fail", "compliance_strands_disagree_consult_advice_layperson", "compliance_inconclusive_zero_evaluable", "compliance_inconclusive_feasibility_refused", "joint_pass_both_bars", "joint_fail_empirical_bar", "joint_fail_normative_bar", "joint_inconclusive_normative_bar", "joint_fail_dominates_inconclusive", "joint_refused_test_larger_than_baseline"],
-      "bindingFields": ["bars", "clopper_pearson_lower", "configuration_error", "cutoff_integer", "displayed_rate", "failing_bars", "feasibility_gate", "k_min", "n_c", "observed_rate_status", "operational_caution_category", "p_hat_c", "p_value", "p_value_method", "p_value_tail", "r_obs", "statistical_verdict", "verdict"],
+      "caseCount": 13,
+      "cases": ["regression_clear_pass_consult_advice_well_formed", "regression_clear_fail_K_far_below_cutoff", "regression_borderline_pass_K_equals_cutoff", "regression_borderline_fail_K_one_below_cutoff", "regression_inconclusive_zero_evaluable", "regression_tiny_test_near_perfect_baseline", "regression_policy_diff_conditional", "regression_policy_diff_marginal", "compliance_clear_pass", "compliance_clear_fail", "compliance_strands_disagree_consult_advice_layperson", "compliance_inconclusive_zero_evaluable", "compliance_inconclusive_feasibility_refused"],
+      "bindingFields": ["clopper_pearson_lower", "configuration_error", "cutoff_integer", "displayed_rate", "feasibility_gate", "k_min", "n_c", "observed_rate_status", "operational_caution_category", "p_hat_c", "p_value", "p_value_method", "p_value_tail", "r_obs", "statistical_verdict", "verdict"],
       "informationalFields": {},
-      "md5": "0ffa325c20e1a2f4482c31cc69a4d3a0"
+      "md5": "d750679e5e3ef69063a30b2669e9300e"
     },
     "criterion_verdict_observational": {
       "file": "criterion_verdict_observational.json",
@@ -172,11 +172,11 @@
           "version": 1
         }
       ],
-      "caseCount": 6,
-      "cases": ["consult_advice_well_formed", "consult_advice_readability", "consult_advice_self_harm_probe", "consult_advice_readability_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch"],
+      "caseCount": 11,
+      "cases": ["consult_advice_well_formed", "consult_advice_readability", "consult_advice_self_harm_probe", "consult_advice_readability_passing_counterfactual", "paired_evaluability_content_non_unit_r_obs", "cross_policy_structural_mismatch", "two_criteria_pass", "two_criteria_fail_regression", "two_criteria_fail_compliance", "two_criteria_inconclusive", "two_criteria_fail_dominates_inconclusive"],
       "bindingFields": ["composite_verdict", "conformance_status", "false_compliance_envelope", "false_degradation_signal_envelope", "per_criterion_verdicts", "structural_error", "triggering_criteria"],
       "informationalFields": {},
-      "md5": "136292b59487412ae77afb92922891b7"
+      "md5": "6724ae3ce868b57a46b5284db4f51d84"
     },
     "power_analysis": {
       "file": "power_analysis.json",
@@ -256,10 +256,10 @@
         }
       ],
       "caseCount": 21,
-      "cases": ["compliance_fail_48_of_50_threshold_90", "compliance_pass_49_of_50_threshold_90", "compliance_fail_40_of_50_threshold_90", "compliance_fail_45_of_50_threshold_90", "compliance_fail_0_of_50_threshold_90", "compliance_pass_920_of_1000_threshold_90", "compliance_refused_50_of_50_threshold_95", "compliance_smoke_50_of_50_threshold_95", "regression_pass_91_of_100_baseline_951_of_1000", "regression_fail_90_of_100_baseline_951_of_1000", "regression_pass_95_of_100_baseline_99_of_100", "regression_fail_95_of_100_baseline_100_of_100", "regression_refused_test_larger_than_baseline", "regression_pass_25_of_25_baseline_951_of_1000_alpha001", "joint_refused_empirical_part_test_larger_than_baseline", "joint_refused_normative_part_infeasible", "joint_refused_both_parts", "joint_pass_both_bars", "joint_fail_empirical_bar", "joint_fail_normative_bar", "joint_fail_both_bars"],
-      "bindingFields": ["bars", "configuration_error", "failing_bars", "verdict"],
+      "cases": ["compliance_fail_48_of_50_threshold_90", "compliance_pass_49_of_50_threshold_90", "compliance_fail_40_of_50_threshold_90", "compliance_fail_45_of_50_threshold_90", "compliance_fail_0_of_50_threshold_90", "compliance_pass_920_of_1000_threshold_90", "compliance_refused_50_of_50_threshold_95", "compliance_smoke_50_of_50_threshold_95", "regression_pass_91_of_100_baseline_951_of_1000", "regression_fail_90_of_100_baseline_951_of_1000", "regression_pass_95_of_100_baseline_99_of_100", "regression_fail_95_of_100_baseline_100_of_100", "regression_refused_test_larger_than_baseline", "regression_pass_25_of_25_baseline_951_of_1000_alpha001", "two_criteria_refused_regression_part_test_larger_than_baseline", "two_criteria_refused_compliance_part_infeasible", "two_criteria_refused_both_parts", "two_criteria_pass", "two_criteria_fail_regression", "two_criteria_fail_compliance", "two_criteria_fail_both"],
+      "bindingFields": ["configuration_error", "criteria", "false_compliance_envelope", "false_degradation_signal_envelope", "triggering_criteria", "verdict"],
       "informationalFields": "observed_rate",
-      "md5": "2c81e518fc286fd163708d3f731ae352"
+      "md5": "ac7fe17bd1b077dfd0f0edad32f52b6a"
     },
     "wilson_ci": {
       "file": "wilson_ci.json",

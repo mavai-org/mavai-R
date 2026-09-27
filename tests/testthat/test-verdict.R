@@ -24,14 +24,14 @@ test_that("the verdict suite agrees with the decision suites", {
   expect_identical(cases[["compliance_smoke_50_of_50_threshold_95"]]$expected$verdict, "FAIL")
 })
 
-test_that("joint configurations are refused whole", {
+test_that("a test carrying a compliance and a regression criterion is refused whole", {
   cases <- by_name(generate_verdict_cases())
-  j <- cases[["joint_refused_empirical_part_test_larger_than_baseline"]]
-  expect_identical(j$approach, "joint")
+  j <- cases[["two_criteria_refused_regression_part_test_larger_than_baseline"]]
+  expect_identical(j$approach, "two_criteria")
   expect_length(j$decisionRule, 2)
   expect_identical(j$expected$configuration_error, list("TEST_LARGER_THAN_BASELINE"))
   expect_true(is.na(j$expected$verdict))
-  both <- cases[["joint_refused_both_parts"]]$expected$configuration_error
+  both <- cases[["two_criteria_refused_both_parts"]]$expected$configuration_error
   expect_identical(both, list("TEST_LARGER_THAN_BASELINE", "COMPLIANCE_INFEASIBLE"))
 })
 
@@ -42,24 +42,24 @@ test_that("codes are reported in the fixed order whatever the order found", {
   expect_error(configuration_errors("NOT_A_CODE"))
 })
 
-test_that("a valid joint configuration reports both bars and their composite", {
+test_that("two criteria on the same observations compose by the structural composite", {
   cases <- by_name(generate_verdict_cases())
   get <- function(n) cases[[n]]$expected
-  expect_identical(get("joint_pass_both_bars")$verdict, "PASS")
-  e <- get("joint_fail_empirical_bar")
+  expect_identical(get("two_criteria_pass")$verdict, "PASS")
+  e <- get("two_criteria_fail_regression")
   expect_identical(e$verdict, "FAIL")
-  expect_identical(e$failing_bars, list("empirical"))
-  expect_identical(vapply(e$bars, `[[`, character(1), "decisionRule"),
+  expect_identical(e$triggering_criteria, list("c_well_formed_regression"))
+  expect_identical(vapply(e$criteria, `[[`, character(1), "decisionRule"),
                    c("compliance/exact-binomial", "regression/fisher"))
-  expect_identical(vapply(e$bars, `[[`, numeric(1), "alpha"), c(0.01, 0.05))
-  expect_identical(get("joint_fail_normative_bar")$failing_bars, list("normative"))
-  expect_identical(get("joint_fail_both_bars")$failing_bars, list("normative", "empirical"))
-  expect_identical(joint_bar_verdict(list(list(bar = "normative", verdict = "INCONCLUSIVE"),
-                                          list(bar = "empirical", verdict = "PASS")))$verdict,
-                   "INCONCLUSIVE")
+  expect_identical(vapply(e$criteria, `[[`, numeric(1), "alpha"), c(0.01, 0.05))
+  expect_equal(e$false_compliance_envelope, 0.01)
+  expect_equal(e$false_degradation_signal_envelope, 0.05)
+  expect_identical(get("two_criteria_fail_compliance")$triggering_criteria, list("c_well_formed_compliance"))
+  expect_length(get("two_criteria_fail_both")$triggering_criteria, 2)
+  expect_false(exists("joint_bar_verdict"))
 })
 
-test_that("a joint configuration with an invalid part is refused whole", {
+test_that("a test with two criteria and an invalid part is refused whole", {
   v <- evaluate_verdict(190, 200, 0.05, baseline_successes = 95, baseline_trials = 100,
                         threshold = 0.90)
   expect_identical(v$configuration_error, list("TEST_LARGER_THAN_BASELINE"))

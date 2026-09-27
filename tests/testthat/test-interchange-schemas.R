@@ -424,12 +424,12 @@ test_that("the verdict-1.7 XSD refuses an unknown decision rule or configuration
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 
-test_that("the verdict-1.7 XSD carries a criterion's two bars", {
+test_that("the verdict-1.7 XSD has no bar element: two criteria carry the two questions", {
   skip_if_not_installed("xml2")
   xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
-  joint <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-joint.xml"))
-  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(joint, collapse = "\n")), xsd)))
-  mutated <- sub('kind="normative"', 'kind="advisory"', joint, fixed = TRUE)
+  two <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-two-criteria.xml"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(two, collapse = "\n")), xsd)))
+  mutated <- sub('decision-rule-version="1" />', 'decision-rule-version="1"><bar kind="normative" /></criterion>', two, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 

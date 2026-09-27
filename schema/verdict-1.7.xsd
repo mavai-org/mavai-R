@@ -68,12 +68,11 @@
          normative threshold), latency/precedence (a baseline-derived
          latency threshold) or latency/compliance-exact-binomial (an
          explicit latency requirement). Stated whenever a
-         rule decided. A criterion carrying both a normative and an
-         empirical bar states its two verdicts on its criterion row as two
-         <bar> children, each with its own rule and alpha; the row's
-         @verdict combines them by the structural composite rule (PASS if
-         both pass, FAIL if either fails, INCONCLUSIVE otherwise), and a
-         FAIL is read from the bars that failed.
+         rule decided. A service judged against both a requirement and its
+         baseline carries two criteria over the same postconditions, a
+         compliance criterion and a regression criterion, each on its own
+         criterion row with its own rule and verdict; the record's verdict
+         is their structural composite, and <verdict> then states no rule.
 
          @configuration-error on <verdict> — a configuration refused before
          any sample ran: every applicable code, as a space-separated list in
@@ -654,11 +653,6 @@
   </xs:complexType>
 
   <xs:complexType name="CriterionRowType">
-    <!-- 1.7: a criterion carrying both a normative and an empirical bar
-         states each bar's verdict separately. -->
-    <xs:sequence>
-      <xs:element name="bar" type="tns:BarType" minOccurs="0" maxOccurs="2"/>
-    </xs:sequence>
     <xs:attribute name="id"            type="xs:string"       use="required"/>
     <xs:attribute name="verdict"       type="tns:VerdictEnum" use="required"/>
     <xs:attribute name="pass"          type="xs:int"          use="required"/>
@@ -674,26 +668,6 @@
     <xs:attribute name="decision-rule"         type="tns:DecisionRuleEnum" use="optional"/>
     <xs:attribute name="decision-rule-version" type="xs:positiveInteger"   use="optional"/>
   </xs:complexType>
-
-  <!-- 1.7: one bar of a criterion that carries both. The normative bar
-       asks whether the requirement is met, the empirical bar whether the
-       service has degraded from its baseline; they answer different
-       questions, and each decides with its own rule and alpha. -->
-  <xs:complexType name="BarType">
-    <xs:attribute name="kind"                  type="tns:BarKindEnum"      use="required"/>
-    <xs:attribute name="verdict"               type="tns:VerdictEnum"      use="required"/>
-    <xs:attribute name="decision-rule"         type="tns:DecisionRuleEnum" use="required"/>
-    <xs:attribute name="decision-rule-version" type="xs:positiveInteger"   use="required"/>
-    <xs:attribute name="alpha"                 type="xs:double"            use="required"/>
-    <xs:attribute name="threshold"             type="xs:double"            use="optional"/>
-  </xs:complexType>
-
-  <xs:simpleType name="BarKindEnum">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="normative"/>
-      <xs:enumeration value="empirical"/>
-    </xs:restriction>
-  </xs:simpleType>
 
   <xs:complexType name="CompositeType">
     <xs:attribute name="value" type="tns:VerdictEnum" use="required"/>

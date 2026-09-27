@@ -38,7 +38,9 @@
 #'                            For REGRESSION the threshold is c / n_c; for
 #'                            COMPLIANCE it is p_req.
 #'   - operational_caution_category: ADEQUATE_POWER /
-#'                            STRANDS_DISAGREE / FEASIBILITY_REFUSED /
+#'                            STRANDS_DISAGREE (compliance only: for
+#'                            regression K_c >= c iff p_hat_c >= c / n_c) /
+#'                            FEASIBILITY_REFUSED /
 #'                            ZERO_EVALUABLE / FAIL_CLEAR /
 #'                            CONFIGURATION_REFUSED.
 
@@ -76,13 +78,9 @@ regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   observed_rate_status <- if (p_hat_c > displayed) "ABOVE_THRESHOLD"
                           else if (p_hat_c < displayed) "BELOW_THRESHOLD"
                           else "AT_THRESHOLD"
-  caution <- if (verdict == "PASS" && observed_rate_status == "ABOVE_THRESHOLD") {
-    "ADEQUATE_POWER"
-  } else if (verdict == "FAIL" && observed_rate_status == "BELOW_THRESHOLD") {
-    "FAIL_CLEAR"
-  } else {
-    "STRANDS_DISAGREE"
-  }
+  # K_c >= c iff p_hat_c >= c / n_c: for regression the observed-rate
+  # strand restates the verdict and cannot disagree with it.
+  caution <- if (verdict == "PASS") "ADEQUATE_POWER" else "FAIL_CLEAR"
 
   list(
     n_c = as.integer(n_c), r_obs = r_obs,
@@ -158,36 +156,6 @@ compliance_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
   )
 }
 
-#' The verdict of a criterion carrying both a normative and an empirical bar
-#'
-#' Both bars decide on the same observations, each with its own rule and
-#' alpha, and are reported separately; the criterion's verdict is their
-#' structural composite (`joint_bar_verdict()`), and a FAIL names the bar
-#' that failed. A configuration error of either part refuses the whole
-#' criterion, every applicable code reported.
-#' @keywords internal
-joint_criterion_verdict <- function(n_attempted, n_evaluable, K_c, policy,
-                                    p_req, compliance_alpha,
-                                    baseline_successes, baseline_trials, regression_alpha) {
-  cv <- compliance_verdict(n_attempted, n_evaluable, K_c, compliance_alpha, policy, p_req)
-  rv <- regression_verdict(n_attempted, n_evaluable, K_c, regression_alpha, policy,
-                           baseline_successes, baseline_trials)
-  errs <- configuration_errors(unlist(rv$configuration_error))
-  if (length(errs)) {
-    return(list(configuration_error = errs, verdict = NA_character_,
-                bars = list(), failing_bars = list()))
-  }
-  bars <- list(
-    list(bar = "normative", decisionRule = "compliance/exact-binomial",
-         alpha = compliance_alpha, verdict = cv$verdict, k_min = cv$k_min),
-    list(bar = "empirical", decisionRule = "regression/fisher",
-         alpha = regression_alpha, verdict = rv$verdict, cutoff_integer = rv$cutoff_integer)
-  )
-  j <- joint_bar_verdict(bars)
-  list(configuration_error = errs, verdict = j$verdict, bars = bars,
-       failing_bars = j$failing_bars)
-}
-
 #' Generate inferential-criterion verdict reference cases
 #'
 #' @return A list suitable for JSON serialisation.
@@ -239,32 +207,6 @@ generate_criterion_verdict_inferential_cases <- function() {
     case
   }
 
-  joint_case <- function(name, n_attempted, n_evaluable, K_c, policy, p_req,
-                         baseline_successes, baseline_trials,
-                         compliance_alpha = 0.01, regression_alpha = 0.05, description = NULL) {
-    case <- list(
-      name = name,
-      approach = "joint",
-      decisionRule = list("compliance/exact-binomial", "regression/fisher"),
-      inputs = list(
-        n_attempted = as.integer(n_attempted),
-        n_evaluable = as.integer(n_evaluable),
-        K_c = as.integer(K_c),
-        denominator_policy = policy,
-        p_req = p_req,
-        compliance_alpha = compliance_alpha,
-        baseline_successes = as.integer(baseline_successes),
-        baseline_trials = as.integer(baseline_trials),
-        regression_alpha = regression_alpha
-      ),
-      expected = joint_criterion_verdict(n_attempted, n_evaluable, K_c, policy, p_req,
-                                         compliance_alpha, baseline_successes,
-                                         baseline_trials, regression_alpha)
-    )
-    if (!is.null(description)) case$description <- description
-    case
-  }
-  M <- "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
 
   cases <- list(
     # REGRESSION — clear PASS: K well above cutoff.
@@ -355,25 +297,7 @@ generate_criterion_verdict_inferential_cases <- function() {
     com_case("compliance_inconclusive_feasibility_refused",
              n_attempted = 5, n_evaluable = 5, K_c = 5,
              alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-             p_req = 0.999),
-
-    # BOTH BARS — one criterion with a normative and an empirical bar. Each
-    # bar decides with its own rule and alpha; the criterion's verdict is
-    # the structural composite, and a FAIL names the failing bar.
-    joint_case("joint_pass_both_bars", 1000, 1000, 945, M, 0.90, 951, 1000,
-               description = "0.90 demonstrated at alpha 0.01 and no degradation at alpha 0.05: PASS."),
-    joint_case("joint_fail_empirical_bar", 1000, 1000, 925, M, 0.90, 951, 1000,
-               description = "The requirement is demonstrated, the service has degraded from the baseline: FAIL, naming the empirical bar."),
-    joint_case("joint_fail_normative_bar", 1000, 1000, 945, M, 0.95, 930, 1000,
-               description = "No degradation, but 0.95 is not demonstrated: FAIL, naming the normative bar."),
-    joint_case("joint_inconclusive_normative_bar", 100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, 1000,
-               compliance_alpha = 0.05,
-               description = "Only 20 trials are evaluable: no count of 20 can demonstrate 0.95 (normative bar INCONCLUSIVE), and 20 of 20 shows no degradation (empirical bar PASS). INCONCLUSIVE."),
-    joint_case("joint_fail_dominates_inconclusive", 100, 20, 15, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, 1000,
-               compliance_alpha = 0.05,
-               description = "Normative bar INCONCLUSIVE, empirical bar FAIL: FAIL, naming the empirical bar."),
-    joint_case("joint_refused_test_larger_than_baseline", 200, 200, 190, M, 0.90, 95, 100,
-               description = "The empirical part is refused (200 > 100), so the whole criterion is.")
+             p_req = 0.999)
   )
 
   list(
@@ -385,12 +309,8 @@ generate_criterion_verdict_inferential_cases <- function() {
       "K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears",
       "a requirement (H_1: p_c > p_req) under compliance/exact-binomial and",
       "decides K_c >= k_min. The effective denominator n_c is derived from",
-      "the §1.4.5a policy. Each single-bar case carries the three-strand verdict.",
-      "Cases with approach joint are criteria carrying both bars: each bar decides with",
-      "its own rule and alpha and is reported in bars; the criterion's verdict is their",
-      "structural composite (PASS if both pass, FAIL if either fails, INCONCLUSIVE",
-      "otherwise), and failing_bars names the bars that failed. configuration_error is",
-      "the list of every applicable code (empty when valid)."
+      "the §1.4.5a policy. Each case carries the three-strand verdict.",
+      "configuration_error is the list of every applicable code (empty when valid)."
     ),
     method = paste(
       "REGRESSION: regression/fisher cutoff c from (K_b, n_b, n_c,",

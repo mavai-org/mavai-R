@@ -75,3 +75,13 @@ test_that("Generator output matches committed fixture", {
                  info = generated$cases[[i]]$name)
   }
 })
+
+test_that("a requirement and a baseline are two criteria composed as usual", {
+  result <- generate_multi_criteria_scenario_cases()
+  get <- function(n) Filter(function(c) c$name == n, result$cases)[[1]]$expected
+  expect_identical(get("two_criteria_pass")$composite_verdict, "PASS")
+  expect_identical(get("two_criteria_fail_regression")$triggering_criteria, list("c_well_formed_regression"))
+  expect_identical(get("two_criteria_fail_compliance")$triggering_criteria, list("c_well_formed_compliance"))
+  expect_identical(get("two_criteria_inconclusive")$composite_verdict, "INCONCLUSIVE")
+  expect_identical(get("two_criteria_fail_dominates_inconclusive")$composite_verdict, "FAIL")
+})

@@ -359,6 +359,53 @@ generate_multi_criteria_scenario_cases <- function() {
     expected = expected_scenario(case_3_per_crit)
   )
 
+  # --- A requirement and a baseline on the same postconditions: two
+  #     criteria, one compliance and one regression, over one sampling and
+  #     the same observations; the ordinary structural composite decides.
+  dual_baseline <- one_sampling_baseline("consult-advice-dual@1", list(
+    inf_crit("c_well_formed_compliance", procedure = "COMPLIANCE",
+             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             n_attempted = 1000, n_evaluable = 1000, K_c = 951),
+    inf_crit("c_well_formed_regression", procedure = "REGRESSION",
+             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             n_attempted = 1000, n_evaluable = 1000, K_c = 951)
+  ))
+  dual_case <- function(name, description, n_attempted, n_evaluable, K_c, policy, p_req,
+                        baseline_successes, compliance_alpha = 0.01, regression_alpha = 0.05) {
+    b <- dual_baseline
+    for (i in 1:2) {
+      b$criteria[[i]]$denominator_policy <- policy
+      b$criteria[[i]]$observation <- obs_block(1000, 1000, baseline_successes, policy, "inferential")
+    }
+    scenario_case(name, description, b, list(
+      inf_test_obs("c_well_formed_compliance", procedure = "COMPLIANCE", policy = policy,
+                   alpha = compliance_alpha, n_attempted = n_attempted,
+                   n_evaluable = n_evaluable, K_c = K_c, p_req = p_req),
+      inf_test_obs("c_well_formed_regression", procedure = "REGRESSION", policy = policy,
+                   alpha = regression_alpha, n_attempted = n_attempted,
+                   n_evaluable = n_evaluable, K_c = K_c,
+                   baseline_successes = baseline_successes, baseline_trials = 1000)
+    ))
+  }
+  M <- "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
+  dual_cases <- list(
+    dual_case("two_criteria_pass",
+      "A requirement of 0.90 (compliance, alpha 0.01) and the baseline 951 of 1000 (regression, alpha 0.05) on the same postconditions: 945 of 1000 passes both. PASS.",
+      1000, 1000, 945, M, 0.90, 951),
+    dual_case("two_criteria_fail_regression",
+      "925 of 1000 demonstrates 0.90 but falls below the regression cutoff of 933. FAIL, triggered by the regression criterion.",
+      1000, 1000, 925, M, 0.90, 951),
+    dual_case("two_criteria_fail_compliance",
+      "Against the baseline 930 of 1000, 945 shows no degradation, but it does not demonstrate 0.95. FAIL, triggered by the compliance criterion.",
+      1000, 1000, 945, M, 0.95, 930),
+    dual_case("two_criteria_inconclusive",
+      "Only 20 of 100 trials are evaluable under the conditional policy: no count of 20 can demonstrate 0.95 (compliance INCONCLUSIVE), and 20 of 20 shows no degradation (regression PASS). INCONCLUSIVE.",
+      100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05),
+    dual_case("two_criteria_fail_dominates_inconclusive",
+      "As before with 15 of 20: compliance INCONCLUSIVE, regression FAIL. FAIL, triggered by the regression criterion.",
+      100, 20, 15, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05)
+  )
+
   # --- Cross-policy structural mismatch.
   # The test run flips the criterion's denominator policy relative to
   # the baseline. Methodology: structural error, no numerical
@@ -392,7 +439,7 @@ generate_multi_criteria_scenario_cases <- function() {
     )
   )
 
-  cases <- list(case_1, case_2, case_3_probe, case_2_pass, case_3, case_4)
+  cases <- c(list(case_1, case_2, case_3_probe, case_2_pass, case_3, case_4), dual_cases)
 
   list(
     suite = "multi_criteria_scenario_consult_advice",
@@ -414,7 +461,12 @@ generate_multi_criteria_scenario_cases <- function() {
       "is the passing counterfactual of case 2; case 5 exercises the",
       "structural-composition pattern (availability sibling + conditional",
       "content via availability_criterion_ref, two criteria over one sampling);",
-      "case 6 exercises the cross-policy structural-error refusal."
+      "case 6 exercises the cross-policy structural-error refusal. Cases 7-11",
+      "(two_criteria_*) judge one service against a requirement and its baseline",
+      "on the same postconditions: two criteria over one sampling and the same",
+      "observations, a compliance criterion and a regression criterion, each with",
+      "one rule, one alpha and one verdict, composed by the ordinary structural",
+      "composite, one case for each outcome."
     ),
     method = paste(
       "Per-criterion verdicts computed by regression_verdict /",

@@ -12,7 +12,7 @@
       "version": 1
     }
   ],
-  "description": "Verdict evaluation under the two ruled rules: regression/fisher for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A configuration carrying both bars (approach joint) is refused whole when any part is invalid, reporting every applicable code. When it is valid, each bar decides with its own rule and alpha (compliance_alpha, regression_alpha) and is reported in bars; the verdict is their structural composite (PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise) and failing_bars names the bars that failed. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error, bars, failing_bars. Informational: observed_rate.",
+  "description": "Verdict evaluation under the two ruled rules: regression/fisher for a baseline-derived threshold and compliance/exact-binomial for a given one; each case names its rule in decisionRule. A test carrying a requirement and a baseline on the same postconditions (approach two_criteria) carries two criteria over the same observations, a compliance criterion and a regression criterion, each with one rule and one alpha (compliance_alpha, regression_alpha) and one verdict, reported in criteria; the test's verdict is their structural composite (PASS if both pass, FAIL if either fails, INCONCLUSIVE otherwise), triggering_criteria names the criteria that decided it, and the error envelopes are split by direction. The test is refused whole when any part is invalid, reporting every applicable code. The v1.4.1 point-estimate rule (PASS iff p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict, configuration_error, criteria, triggering_criteria. Informational: observed_rate, false_compliance_envelope, false_degradation_signal_envelope.",
   "method": "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision). compliance/exact-binomial: PASS iff K >= k_min(p_req, n, alpha) (see compliance_decision). Configuration errors are checked first, for every part of the configuration; configuration_error is the list of every applicable code in the fixed order TEST_LARGER_THAN_BASELINE, COMPLIANCE_INFEASIBLE (empty when valid).",
   "tolerance": 1e-10,
   "cases": [
@@ -250,9 +250,9 @@
       }
     },
     {
-      "name": "joint_refused_empirical_part_test_larger_than_baseline",
-      "description": "The normative part is valid; the empirical part is not, so nothing runs.",
-      "approach": "joint",
+      "name": "two_criteria_refused_regression_part_test_larger_than_baseline",
+      "description": "The compliance criterion is valid; the regression criterion's test is larger than its baseline, so nothing runs.",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -260,9 +260,11 @@
       "inputs": {
         "successes": 190,
         "trials": 200,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.9,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 95,
         "baseline_trials": 100,
         "regression_alpha": 0.05
@@ -273,14 +275,16 @@
           "TEST_LARGER_THAN_BASELINE"
         ],
         "observed_rate": 0.95,
-        "bars": [],
-        "failing_bars": []
+        "criteria": [],
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null
       }
     },
     {
-      "name": "joint_refused_normative_part_infeasible",
-      "description": "The empirical part is valid; the normative part cannot PASS at n = 100, so nothing runs.",
-      "approach": "joint",
+      "name": "two_criteria_refused_compliance_part_infeasible",
+      "description": "The regression criterion is valid; the compliance criterion cannot PASS at n = 100, so nothing runs.",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -288,9 +292,11 @@
       "inputs": {
         "successes": 100,
         "trials": 100,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.999,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 950,
         "baseline_trials": 1000,
         "regression_alpha": 0.05
@@ -301,14 +307,16 @@
           "COMPLIANCE_INFEASIBLE"
         ],
         "observed_rate": 1,
-        "bars": [],
-        "failing_bars": []
+        "criteria": [],
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null
       }
     },
     {
-      "name": "joint_refused_both_parts",
+      "name": "two_criteria_refused_both_parts",
       "description": "Both parts are invalid: both codes are reported, TEST_LARGER_THAN_BASELINE first.",
-      "approach": "joint",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -316,9 +324,11 @@
       "inputs": {
         "successes": 200,
         "trials": 200,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.999,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 95,
         "baseline_trials": 100,
         "regression_alpha": 0.05
@@ -330,14 +340,16 @@
           "COMPLIANCE_INFEASIBLE"
         ],
         "observed_rate": 1,
-        "bars": [],
-        "failing_bars": []
+        "criteria": [],
+        "triggering_criteria": [],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null
       }
     },
     {
-      "name": "joint_pass_both_bars",
-      "description": "Normative bar: 945 of 1000 demonstrates 0.90 at alpha 0.01. Empirical bar: 945 meets the cutoff of 933. PASS.",
-      "approach": "joint",
+      "name": "two_criteria_pass",
+      "description": "Compliance: 945 of 1000 demonstrates 0.90 at alpha 0.01. Regression: 945 meets the cutoff of 933. PASS.",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -345,9 +357,11 @@
       "inputs": {
         "successes": 945,
         "trials": 1000,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.9,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 951,
         "baseline_trials": 1000,
         "regression_alpha": 0.05
@@ -356,27 +370,31 @@
         "verdict": "PASS",
         "configuration_error": [],
         "observed_rate": 0.945,
-        "bars": [
+        "criteria": [
           {
-            "bar": "normative",
+            "criterion_id": "c_well_formed_compliance",
+            "procedure": "COMPLIANCE",
             "decisionRule": "compliance/exact-binomial",
             "alpha": 0.01,
             "verdict": "PASS"
           },
           {
-            "bar": "empirical",
+            "criterion_id": "c_well_formed_regression",
+            "procedure": "REGRESSION",
             "decisionRule": "regression/fisher",
             "alpha": 0.05,
             "verdict": "PASS"
           }
         ],
-        "failing_bars": []
+        "triggering_criteria": [],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05
       }
     },
     {
-      "name": "joint_fail_empirical_bar",
-      "description": "The requirement of 0.90 is demonstrated, but 925 falls below the cutoff of 933 derived from the baseline: FAIL, naming the empirical bar.",
-      "approach": "joint",
+      "name": "two_criteria_fail_regression",
+      "description": "The requirement of 0.90 is demonstrated, but 925 falls below the cutoff of 933: FAIL, triggered by the regression criterion.",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -384,9 +402,11 @@
       "inputs": {
         "successes": 925,
         "trials": 1000,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.9,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 951,
         "baseline_trials": 1000,
         "regression_alpha": 0.05
@@ -395,29 +415,33 @@
         "verdict": "FAIL",
         "configuration_error": [],
         "observed_rate": 0.925,
-        "bars": [
+        "criteria": [
           {
-            "bar": "normative",
+            "criterion_id": "c_well_formed_compliance",
+            "procedure": "COMPLIANCE",
             "decisionRule": "compliance/exact-binomial",
             "alpha": 0.01,
             "verdict": "PASS"
           },
           {
-            "bar": "empirical",
+            "criterion_id": "c_well_formed_regression",
+            "procedure": "REGRESSION",
             "decisionRule": "regression/fisher",
             "alpha": 0.05,
             "verdict": "FAIL"
           }
         ],
-        "failing_bars": [
-          "empirical"
-        ]
+        "triggering_criteria": [
+          "c_well_formed_regression"
+        ],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05
       }
     },
     {
-      "name": "joint_fail_normative_bar",
-      "description": "No degradation from the baseline 930 of 1000, but 945 does not demonstrate 0.95: FAIL, naming the normative bar.",
-      "approach": "joint",
+      "name": "two_criteria_fail_compliance",
+      "description": "No degradation from the baseline 930 of 1000, but 945 does not demonstrate 0.95: FAIL, triggered by the compliance criterion.",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -425,9 +449,11 @@
       "inputs": {
         "successes": 945,
         "trials": 1000,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.95,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 930,
         "baseline_trials": 1000,
         "regression_alpha": 0.05
@@ -436,29 +462,33 @@
         "verdict": "FAIL",
         "configuration_error": [],
         "observed_rate": 0.945,
-        "bars": [
+        "criteria": [
           {
-            "bar": "normative",
+            "criterion_id": "c_well_formed_compliance",
+            "procedure": "COMPLIANCE",
             "decisionRule": "compliance/exact-binomial",
             "alpha": 0.01,
             "verdict": "FAIL"
           },
           {
-            "bar": "empirical",
+            "criterion_id": "c_well_formed_regression",
+            "procedure": "REGRESSION",
             "decisionRule": "regression/fisher",
             "alpha": 0.05,
             "verdict": "PASS"
           }
         ],
-        "failing_bars": [
-          "normative"
-        ]
+        "triggering_criteria": [
+          "c_well_formed_compliance"
+        ],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05
       }
     },
     {
-      "name": "joint_fail_both_bars",
-      "description": "Both bars fail; both are named.",
-      "approach": "joint",
+      "name": "two_criteria_fail_both",
+      "description": "Both criteria fail; both are named.",
+      "approach": "two_criteria",
       "decisionRule": [
         "compliance/exact-binomial",
         "regression/fisher"
@@ -466,9 +496,11 @@
       "inputs": {
         "successes": 900,
         "trials": 1000,
+        "compliance_criterion": "c_well_formed_compliance",
         "threshold": 0.95,
         "intent": "VERIFICATION",
         "compliance_alpha": 0.01,
+        "regression_criterion": "c_well_formed_regression",
         "baseline_successes": 951,
         "baseline_trials": 1000,
         "regression_alpha": 0.05
@@ -477,24 +509,28 @@
         "verdict": "FAIL",
         "configuration_error": [],
         "observed_rate": 0.9,
-        "bars": [
+        "criteria": [
           {
-            "bar": "normative",
+            "criterion_id": "c_well_formed_compliance",
+            "procedure": "COMPLIANCE",
             "decisionRule": "compliance/exact-binomial",
             "alpha": 0.01,
             "verdict": "FAIL"
           },
           {
-            "bar": "empirical",
+            "criterion_id": "c_well_formed_regression",
+            "procedure": "REGRESSION",
             "decisionRule": "regression/fisher",
             "alpha": 0.05,
             "verdict": "FAIL"
           }
         ],
-        "failing_bars": [
-          "normative",
-          "empirical"
-        ]
+        "triggering_criteria": [
+          "c_well_formed_compliance",
+          "c_well_formed_regression"
+        ],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05
       }
     }
   ]
