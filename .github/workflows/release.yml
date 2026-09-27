@@ -22,10 +22,15 @@ jobs:
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
+          r-version: '4.5.3'
           use-public-rspm: true
 
-      - name: Install interchange validation dependencies
-        run: Rscript -e 'install.packages(c("jsonvalidate", "yaml", "jsonlite"))'
+      # The full dependency set, as in the conformance job: certification
+      # sources R/, whose exact-boundary arithmetic needs gmp.
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
 
       - name: Validate interchange schemas and worked examples
         run: Rscript scripts/validate_interchange.R

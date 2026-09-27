@@ -43,6 +43,19 @@ dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 for (f in list.files("R", pattern = "\\.R$", full.names = TRUE)) source(f)
 suppressPackageStartupMessages(library(parallel))
+
+# Run f over X on the worker cores and bind the rows. A worker that fails
+# returns a try-error; stop with its message rather than letting rbind fail
+# later with an unrelated one.
+par_rbind <- function(X, f) {
+  res <- mclapply(X, f, mc.cores = cores)
+  bad <- vapply(res, function(r) inherits(r, "try-error"), logical(1))
+  if (any(bad)) {
+    stop("certification worker failed: ", conditionMessage(attr(res[[which(bad)[1]]], "condition")),
+         call. = FALSE)
+  }
+  do.call(rbind, res)
+}
 t_start <- proc.time()[["elapsed"]]
 say <- function(...) message(sprintf(...))
 within_alpha <- function(x, a) x <= a * (1 + 1e-12)
@@ -81,13 +94,13 @@ CFG <- rbind(config_grid(NB_A, RATIO_A, "A"), config_grid(NB_B, RATIO_B, "B"))
 scan <- function(cfg) {
   tasks <- merge(cfg, data.frame(alpha = ALPHAS))
   tasks <- tasks[order(-(tasks$n_b + tasks$n_t) * tasks$n_b), ]
-  out <- do.call(rbind, mclapply(seq_len(nrow(tasks)), function(i) {
+  out <- par_rbind(seq_len(nrow(tasks)), function(i) {
     t <- tasks[i, ]
     w <- fisher_worst_size(t$n_b, t$n_t, t$alpha)
     cbind(t, data.frame(worst_size = w$worst_size, worst_over_alpha = w$worst_size / t$alpha,
                         at_p = w$at_p, p_over_alpha = w$p_over_alpha,
                         within_alpha = within_alpha(w$worst_size, t$alpha), monotone = w$monotone))
-  }, mc.cores = cores))
+  })
   out[order(out$alpha, out$n_b, out$n_t), ]
 }
 
@@ -113,7 +126,7 @@ P_POWER <- c(0.55, 0.60, 0.70, 0.80, 0.90, 0.95, 0.98, 0.99, 0.995, 0.999)
 DELTAS <- c(0.01, 0.02, 0.05, 0.10)
 ptasks <- merge(CFG[CFG$grid == "A", ], data.frame(alpha = ALPHAS))
 ptasks <- ptasks[order(-(ptasks$n_b + ptasks$n_t) * ptasks$n_b), ]
-POW <- do.call(rbind, mclapply(seq_len(nrow(ptasks)), function(i) {
+POW <- par_rbind(seq_len(nrow(ptasks)), function(i) {
   t <- ptasks[i, ]
   cf <- fisher_cutoffs(t$n_b, t$n_t, t$alpha)
   compare <- (t$n_b + 1) * (t$n_t + 1) <= 4e6
@@ -125,7 +138,7 @@ POW <- do.call(rbind, mclapply(seq_len(nrow(ptasks)), function(i) {
                bbpred_power_d05 = if (compare) regression_fail_probability(cb, t$n_b, t$n_t, p, p - 0.05) else NA,
                bbpred_size = if (compare) regression_fail_probability(cb, t$n_b, t$n_t, p, p) else NA)
   }))
-}, mc.cores = cores))
+})
 POW <- POW[order(POW$alpha, POW$n_b, POW$n_t, POW$p), ]
 POW$bbpred_minus_fisher_d05 <- POW$bbpred_power_d05 - POW$power_d05
 say("regression power done (%.0f s)", proc.time()[["elapsed"]] - t_start)
@@ -138,7 +151,7 @@ LNT <- c(5, 10, 15, 25, 50, 100, 192, 200, 500, 935, 1000, 2000)
 lcfg <- merge(merge(expand.grid(n_b = LNB, n_t = LNT), data.frame(p = c(0.50, 0.90, 0.95, 0.99))),
               data.frame(alpha = ALPHAS))
 lcfg <- lcfg[lcfg$n_t <= lcfg$n_b, ]
-LAT <- do.call(rbind, mclapply(seq_len(nrow(lcfg)), function(i) {
+LAT <- par_rbind(seq_len(nrow(lcfg)), function(i) {
   t <- lcfg[i, ]
   k <- latency_precedence_rank_fast(t$n_b, t$n_t, t$p, t$alpha)
   br <- if (is.na(k)) NA_real_ else latency_breach_probability(t$n_b, k, t$n_t, t$p)
@@ -147,7 +160,7 @@ LAT <- do.call(rbind, mclapply(seq_len(nrow(lcfg)), function(i) {
              test_rank = latency_test_rank(t$n_t, t$p), rank = k, saturated = is.na(k),
              breach_at_rank = br, breach_over_alpha = br / t$alpha,
              breach_at_rank_minus_1 = br_prev)
-}, mc.cores = cores))
+})
 LAT <- LAT[order(LAT$alpha, LAT$percentile, LAT$n_b, LAT$n_t), ]
 say("latency done (%.0f s)", proc.time()[["elapsed"]] - t_start)
 
@@ -163,7 +176,7 @@ CMP <- do.call(rbind, lapply(PREQ, function(pr) do.call(rbind, lapply(ALPHAS, fu
              false_compliance = fc, false_compliance_over_alpha = fc / a,
              min_feasible_n = exact_binomial_min_feasible_n(pr, a))
 }))))
-SZ <- do.call(rbind, mclapply(split(merge(merge(data.frame(threshold = PREQ),
+SZ <- par_rbind(split(merge(merge(data.frame(threshold = PREQ),
                                                  data.frame(delta = c(0.01, 0.02, 0.05, 1))),
                                            data.frame(alpha = ALPHAS)),
                                      seq_len(length(PREQ) * 4 * length(ALPHAS))), function(t) {
@@ -172,7 +185,7 @@ SZ <- do.call(rbind, mclapply(split(merge(merge(data.frame(threshold = PREQ),
              alternative_kind = s$alternative_kind, alternative_rate = s$alternative_rate,
              first_crossing = s$first_crossing, required_samples = s$required_samples,
              achieved_power = s$achieved_power, n_max = 20000L)
-}, mc.cores = cores))
+})
 SZ <- unique(SZ[order(SZ$threshold, SZ$alpha, SZ$alternative_rate), ])
 say("compliance done (%.0f s)", proc.time()[["elapsed"]] - t_start)
 
