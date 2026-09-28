@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a verdict-1.7 record in which a baseline-derived latency
+     constraint is saturated.
+
+     The empirical regression criterion passes: 17 of 20 samples succeeded
+     against a baseline of 95 in 100, and the Fisher cutoff is 17. The test
+     also enforces a baseline-derived p95 constraint, decided by
+     latency/precedence over the 95 baseline latencies and the 17 latencies
+     of the samples that passed every functional criterion. With a test of
+     17, the p95 is the test's slowest latency, and even the baseline's
+     slowest latency would be exceeded by an unchanged service with
+     probability 17 / (95 + 17) = 0.152, above alpha 0.05. No baseline rank
+     achieves alpha, so there is no threshold: the evaluation is SATURATED,
+     carries no threshold-ms and no baseline-rank, and is inconclusive
+     (Statistical Companion §12.4.2). A larger baseline is needed.
+
+     The record's verdict is the overall test verdict: the functional
+     composite is PASS and the latency verdict is INCONCLUSIVE, so the test
+     is INCONCLUSIVE, triggered by the p95 latency constraint. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.7" methodology-version="1.5.0" timestamp="2026-09-28T12:00:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="20" samples-executed="20" successes="17" failures="3" elapsed-ms="30400" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="100" baseline-rate="0.95" derived-threshold="0.85" />
+  <termination reason="COMPLETED" />
+  <functional successes="17" failures="3" pass-rate="0.85" />
+  <latency successful-samples="17" strict-violations="0" advisory-violations="0" verdict="INCONCLUSIVE">
+    <observed>
+      <percentile label="p95" value-ms="910" />
+    </observed>
+    <evaluations>
+      <evaluation percentile="p95" observed-ms="910" provenance="baseline-derived" mode="strict" status="SATURATED" baseline-confidence="0.95" baseline-n="95" decision-rule="latency/precedence" decision-rule-version="1" />
+    </evaluations>
+  </latency>
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="17" fail="3" inconclusive="0" total="20" observed-rate="0.85" threshold="0.85" decision-rule="regression/fisher" decision-rule-version="1" />
+    <composite value="PASS" />
+  </per-criterion>
+  <verdict value="INCONCLUSIVE" />
+</verdict-record>

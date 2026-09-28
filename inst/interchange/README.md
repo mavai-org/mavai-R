@@ -42,7 +42,8 @@ same postcondition, each with its own rule and verdict
 and the record's verdict is the overall test verdict, composing the
 functional criteria with the enforced latency constraints
 (`verdict-1.7-typical.xml`, `verdict-1.7-refused.xml`,
-`verdict-1.7-two-criteria.xml`, `verdict-1.7-latency-fail.xml`). Earlier XSD versions
+`verdict-1.7-two-criteria.xml`, `verdict-1.7-latency-fail.xml`,
+`verdict-1.7-latency-saturated.xml`). Earlier XSD versions
 are unchanged.
 
 **This repository is the publication channel for these artefacts, not their
