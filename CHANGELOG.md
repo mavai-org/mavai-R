@@ -5,7 +5,11 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.11.0] — unreleased
+## [0.11.1] — unreleased
+
+**Additive: a saturated latency evaluation can be recorded.** In `verdict-1.7.xsd` a latency evaluation gains the status `SATURATED` - a baseline-derived constraint for which no baseline rank keeps the no-degradation breach probability at or below alpha (Statistical Companion §12.4.2) - and `threshold-ms` becomes optional, absent exactly for that status. XSD 1.0 cannot state the co-constraint, so the interchange tests enforce it over the worked examples. New worked example `verdict-1.7-latency-saturated.xml`: functional PASS, a saturated p95 constraint, the latency and test verdicts INCONCLUSIVE. No fixture, rule or number changes; methodology stays 1.5.0.
+
+## [0.11.0] — 2026-09-27
 
 **Breaking: the fixtures implement Statistical Companion 1.5.0.** The three verdict-producing procedures change, so cutoffs, ranks, sample sizes, feasibility and verdicts change against methodology 1.4.1. Every fixture file and the manifest now say which methodology they implement. The 1.4.1 fixtures remain reproducible from the `v0.10.13` release assets, which are not changed.
 

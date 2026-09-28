@@ -456,3 +456,27 @@ test_that("verdict-1.7 carries the latency dimension's verdict beside the functi
   mutated <- sub('verdict="FAIL">', 'verdict="MAYBE">', lf, fixed = TRUE)
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
+
+test_that("a verdict-1.7 latency evaluation has a threshold unless it is saturated", {
+  # XSD 1.0 cannot state this co-constraint, so the worked examples carry it
+  # here: threshold-ms is absent exactly when status is SATURATED, and a
+  # saturated evaluation is baseline-derived with no baseline rank.
+  skip_if_not_installed("xml2")
+  repo_root <- testthat::test_path("..", "..")
+  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.7-*.xml"))
+  expect_gt(length(examples), 0L)
+  saw_saturated <- FALSE
+  for (f in examples) {
+    doc <- xml2::read_xml(f)
+    for (e in xml2::xml_find_all(doc, "//*[local-name()='evaluation']")) {
+      saturated <- identical(xml2::xml_attr(e, "status"), "SATURATED")
+      saw_saturated <- saw_saturated || saturated
+      expect_identical(is.na(xml2::xml_attr(e, "threshold-ms")), saturated, info = basename(f))
+      if (saturated) {
+        expect_identical(xml2::xml_attr(e, "provenance"), "baseline-derived", info = basename(f))
+        expect_true(is.na(xml2::xml_attr(e, "baseline-rank")), info = basename(f))
+      }
+    }
+  }
+  expect_true(saw_saturated)
+})
