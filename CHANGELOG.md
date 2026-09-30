@@ -5,7 +5,11 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.11.1] — unreleased
+## [0.11.2] — unreleased
+
+**Additive: a criterion row states the count it needed.** In `verdict-1.7.xsd` a criterion row gains the optional `required-pass`: the smallest passing count under the rule that decided it - the Fisher cutoff c for `regression/fisher`, k_min for `compliance/exact-binomial` - so PASS iff `pass >= required-pass`. The row's `threshold` is c / n for regression but the requirement p_req for compliance, which is not the bar; a presentational reader could not show the bar without computing it. Absent when no rule decided the criterion or no count can pass. The worked examples carry it (91 on the regression rows, 97 on the compliance row of `verdict-1.7-two-criteria.xml`, 17 in `verdict-1.7-latency-saturated.xml`); the interchange tests check it against the verdict and, for regression, against the oracle's Fisher cutoff. No fixture, rule or number changes; methodology stays 1.5.0.
+
+## [0.11.1] — 2026-09-28
 
 **Additive: a saturated latency evaluation can be recorded.** In `verdict-1.7.xsd` a latency evaluation gains the status `SATURATED` - a baseline-derived constraint for which no baseline rank keeps the no-degradation breach probability at or below alpha (Statistical Companion §12.4.2) - and `threshold-ms` becomes optional, absent exactly for that status. XSD 1.0 cannot state the co-constraint, so the interchange tests enforce it over the worked examples. New worked example `verdict-1.7-latency-saturated.xml`: functional PASS, a saturated p95 constraint, the latency and test verdicts INCONCLUSIVE. No fixture, rule or number changes; methodology stays 1.5.0.
 

@@ -429,7 +429,8 @@ test_that("the verdict-1.7 XSD has no bar element: two criteria carry the two qu
   xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
   two <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-two-criteria.xml"))
   expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(two, collapse = "\n")), xsd)))
-  mutated <- sub('decision-rule-version="1" />', 'decision-rule-version="1"><bar kind="normative" /></criterion>', two, fixed = TRUE)
+  mutated <- sub('required-pass="97" />', 'required-pass="97"><bar kind="normative" /></criterion>', two, fixed = TRUE)
+  expect_false(identical(mutated, two))
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 
@@ -479,4 +480,51 @@ test_that("a verdict-1.7 latency evaluation has a threshold unless it is saturat
     }
   }
   expect_true(saw_saturated)
+})
+
+test_that("a verdict-1.7 criterion decided by a pass-rate rule states the count it needed", {
+  # 0.11.2: every criterion row decided by regression/fisher or
+  # compliance/exact-binomial carries required-pass, its verdict agrees with
+  # pass >= required-pass, and a regression row's count is the oracle's Fisher
+  # cutoff for the record's baseline and test size. (A compliance row's alpha
+  # is not in the record, so its count is checked for consistency only.)
+  skip_if_not_installed("xml2")
+  repo_root <- testthat::test_path("..", "..")
+  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.7-*.xml"))
+  rules <- c("regression/fisher", "compliance/exact-binomial")
+  seen <- character()
+  for (f in examples) {
+    doc <- xml2::read_xml(f)
+    baseline <- xml2::xml_find_first(doc, "//*[local-name()='baseline']")
+    execution <- xml2::xml_find_first(doc, "//*[local-name()='execution']")
+    for (row in xml2::xml_find_all(doc, "//*[local-name()='criterion']")) {
+      rule <- xml2::xml_attr(row, "decision-rule")
+      if (is.na(rule) || !rule %in% rules) next
+      seen <- c(seen, rule)
+      required <- as.integer(xml2::xml_attr(row, "required-pass"))
+      expect_false(is.na(required), info = basename(f))
+      passed <- as.integer(xml2::xml_attr(row, "pass")) >= required
+      expect_identical(xml2::xml_attr(row, "verdict"), if (passed) "PASS" else "FAIL", info = basename(f))
+      if (rule == "regression/fisher") {
+        n_b <- as.integer(xml2::xml_attr(baseline, "samples"))
+        k_b <- as.integer(round(as.numeric(xml2::xml_attr(baseline, "baseline-rate")) * n_b))
+        alpha <- 1 - as.numeric(xml2::xml_attr(execution, "confidence"))
+        n_t <- as.integer(xml2::xml_attr(row, "total"))
+        expect_identical(required, as.integer(fisher_cutoff(k_b, n_b, n_t, alpha)), info = basename(f))
+      }
+    }
+  }
+  expect_setequal(unique(seen), rules)
+})
+
+test_that("the verdict-1.7 XSD refuses a negative or fractional required count", {
+  skip_if_not_installed("xml2")
+  repo_root <- testthat::test_path("..", "..")
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  two <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-two-criteria.xml"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(two, collapse = "\n")), xsd)))
+  for (bad in c('required-pass="-1"', 'required-pass="96.5"')) {
+    mutated <- sub('required-pass="97"', bad, two, fixed = TRUE)
+    expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
+  }
 })

@@ -11,7 +11,8 @@
      the test are weighed jointly, and the integer cutoff is c = 91: the
      test PASSes iff at least 91 of its 100 samples succeed. It observed 93, so it passes. The stated
      threshold is c / n_t = 0.91, the rate the cutoff corresponds to; the
-     Wilson lower bound is descriptive and decides nothing.
+     Wilson lower bound is descriptive and decides nothing. The criterion
+     row states the count itself as @required-pass (0.11.2).
 
      The statistics element names two powers apart at the design
      alternative rate 0.90: the design power (0.550), with the baseline
@@ -66,7 +67,7 @@
     </evaluations>
   </latency>
   <per-criterion>
-    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" />
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" required-pass="91" />
     <composite value="PASS" />
   </per-criterion>
   <verdict value="PASS" />
