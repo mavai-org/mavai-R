@@ -33,7 +33,7 @@
     </evaluations>
   </latency>
   <per-criterion>
-    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="17" fail="3" inconclusive="0" total="20" observed-rate="0.85" threshold="0.85" decision-rule="regression/fisher" decision-rule-version="1" />
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="17" fail="3" inconclusive="0" total="20" observed-rate="0.85" threshold="0.85" decision-rule="regression/fisher" decision-rule-version="1" required-pass="17" />
     <composite value="PASS" />
   </per-criterion>
   <verdict value="INCONCLUSIVE" />
