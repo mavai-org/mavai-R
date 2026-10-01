@@ -29,7 +29,9 @@ The model does not claim to prove that an AI system is safe, truthful, or correc
 
 Each invocation of the service is treated as a [trial]{.gloss term="trial"}. For a given criterion — for example, "the response parses as JSON" or "the answer satisfies a rubric" — the trial either passes or fails. Repeating the invocation over a defined set of inputs produces a count: how many trials passed out of how many attempted. Under stated assumptions of approximate [independence]{.gloss term="independence"} and [stationarity]{.gloss term="stationarity"}, that count can be treated as [binomial]{.gloss term="binomial"} evidence about the service's success rate.
 
-The model uses **[Wilson score bounds]{.gloss term="wilson-score-bound"}** rather than naive observed percentages. This distinction matters: an observed rate is not the same thing as a reliable lower bound. If a service passes 95 out of 100 trials, the model does not pretend the true success rate is exactly 95%. It asks what lower success rate is still compatible with the evidence at the configured [confidence level]{.gloss term="confidence-level"}. That lower bound — not the raw percentage — is what compliance and regression decisions are made against.
+The model does not decide on the raw observed percentage. An observed rate is not the same thing as evidence: if a service passes 93 out of 100 trials, the model does not pretend the true success rate is exactly 93%. Each verdict is instead decided by an **exact statistical test**, which turns the question into a bar on the pass count: the smallest number of passes that counts as sufficient evidence. The bar is set so that the chance of a wrong verdict stays within the configured [confidence level]{.gloss term="confidence-level"}. Against a requirement of 90% with 100 trials at the 99% level, for example, the bar is 97 passes, so 93 passes FAILS even though 93% exceeds 90%. The requirement is the claim; the count is the evidence the claim needs. Which test sets the bar depends on the question being asked (section 4).
+
+Reports also show a [Wilson score interval]{.gloss term="wilson-score-interval"} around each observed rate. It describes how uncertain the rate is; it plays no part in the verdict.
 
 ## 4. Compliance vs regression
 
@@ -38,7 +40,9 @@ The model distinguishes two testing questions that are often confused.
 - A **compliance test** asks whether the service has shown enough evidence to satisfy an external requirement, such as an SLA, SLO, or policy threshold.
 - A **regression test** asks whether current behaviour has degraded relative to a measured baseline.
 
-Both use repeated observations and one-sided decision rules, but the interpretation of PASS and FAIL differs. A compliance PASS means evidence supports compliance at the configured level. A regression PASS means no degradation signal was observed at the configured cutoff; it does *not* prove equivalence to the baseline.
+Each question has its own test. Compliance of a success rate is decided by the [exact binomial test]{.gloss term="exact-binomial-test"}, which asks whether the pass count reaches the bar the requirement demands. Regression of a success rate is decided by the one-sided [Fisher exact test]{.gloss term="fisher-exact-test"}, which compares the test's pass count with the baseline's and allows for the fact that the baseline is itself only a sample. Latency follows the same split: a latency requirement is judged by the exact binomial test applied to the count of responses within the time limit, and latency regression by a [precedence test]{.gloss term="precedence-test"}, which compares the test's percentile against the ordered baseline latencies without assuming any shape for their distribution.
+
+Both compliance and regression test kinds use repeated observations and one-sided decision rules, but the interpretation of PASS and FAIL differs. A compliance PASS means evidence supports compliance at the configured level. A regression PASS means no degradation signal was observed at the configured cutoff; it does *not* prove equivalence to the baseline.
 
 Keeping these two questions separate is the single most important discipline for avoiding overclaiming.
 
@@ -55,7 +59,7 @@ A natural objection to any rate-based model is: "surely some failures are unacce
 - An **empirical clause** says, in effect, "this behaviour must succeed at least this often." It is bounded by a rate.
 - A **categorical clause** says, "this must not happen." It is not bounded by a rate at all.
 
-The model does not pretend that setting a threshold to 99.999% converts a categorical obligation into a statistical one. Intolerable failures are handled architecturally — by guardrails, filters, schemas, refusal mechanisms — and those architectural controls can themselves be tested statistically.
+The model does not pretend that setting a threshold to 99.999% converts a categorical obligation into a statistical one. Intolerable failures are handled architecturally — by guardrails, filters, schemas, refusal mechanisms — and those architectural controls can (and indeed should!) themselves be tested statistically.
 
 > Tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically.
 
@@ -76,22 +80,25 @@ The model does not remove uncertainty. It measures it.
 
 It does not guarantee that future behaviour will match past behaviour. It assumes, and then documents, the conditions under which repeated observations can be interpreted: approximate independence, stationarity, and a defined input population. Where those assumptions are doubtful, the model does not magically repair them; it surfaces the doubt as part of the evidence trail.
 
-A reported confidence level is therefore not a claim that an individual verdict has a certain probability of being correct. It is a statement about the long-run behaviour of the decision procedure under the stated assumptions. The model is frequentist by default for exactly this reason: it is a discipline for producing defensible evidence, not a machine for producing certainty.
+A reported confidence level is therefore not a claim that an individual verdict has a certain probability of being correct. It is a statement about the long-run behaviour of the decision procedure under the stated assumptions. The model is frequentist by design, for exactly this reason: it is a discipline for producing defensible evidence, not a machine for producing certainty.
 
 ## Glossary
 
 Short definitions of the key statistical terms used above. The full [glossary](https://r.mavai.org/glossary.pdf) lives alongside this overview; only the terms that appear in the body are repeated here.
 
 - **Binomial** — the distribution of the count of passes in a fixed number of independent trials with the same success probability. The companion uses binomial reasoning to relate observed pass counts to the underlying success rate.
-- **Confidence level** — the long-run frequency with which the procedure's interval would cover the true parameter if the experiment were repeated under the same conditions. A 95% confidence level is a property of the procedure, not a probability attached to any single verdict.
-- **Frequentist** — the school of statistical inference in which probabilities describe the long-run behaviour of procedures over repeated sampling, not degrees of belief about individual events. The mavai model is frequentist by default; this is why a confidence level is a property of the procedure rather than a probability of the verdict.
+- **Confidence level** — the long-run reliability of a statistical procedure if the experiment were repeated under the same conditions. For a decision, a 99% level means the test reaches the wrong verdict in the direction it guards against (a false PASS for compliance, a false alarm for regression) at most 1% of the time; for an interval, that the interval covers the true value 99% of the time. It is a property of the procedure, not a probability attached to any single verdict.
+- **Exact binomial test** — a test on a pass count that uses the binomial distribution itself rather than an approximation to it, so its error rate holds at every sample size. The model uses it for compliance: PASS when the count reaches the bar the requirement demands.
+- **Fisher exact test** — a test that compares two pass counts, here the baseline's and the test's, without assuming the baseline's rate is known exactly. The model uses its one-sided form for regression: FAIL when the test's count falls too far below what the baseline makes plausible.
+- **Frequentist** — the school of statistical inference in which probabilities describe the long-run behaviour of procedures over repeated sampling, not degrees of belief about individual events. The mavai model is frequentist by design (the companion sets out why it prefers this to a Bayesian alternative); this is why a confidence level is a property of the procedure rather than a probability of the verdict.
 - **Independence** — the assumption that the outcome of one trial does not influence the outcome of another. Required for binomial reasoning to apply; the model asks for *approximate* independence and records the assumption rather than assuming it away.
-- **One-sided decision rule** — a test that asks whether the evidence exceeds (or fails to exceed) a single threshold in one direction only — for example, "is the lower bound on the success rate at least 0.9?" — rather than testing equality against a two-sided interval.
+- **One-sided decision rule** — a test that asks whether the evidence exceeds (or fails to exceed) a single threshold in one direction only — for example, "did at least 97 of 100 trials pass?", where 97 is the bar that a 90% requirement demands — rather than testing equality against a two-sided interval.
 - **Percentile** — the value below which a stated fraction of observations fall. Latency is summarised by empirical percentiles (e.g. p95) rather than means, because the upper tail is what users and SLAs care about.
 - **Population** — the set of inputs and conditions about which a verdict is meant to generalise. The model's claims are only as strong as the population definition recorded alongside them.
+- **Precedence test** — a test that compares two samples of measurements by the order in which their values fall, assuming nothing about the shape of their distribution. The model uses it for latency regression: FAIL when the test's percentile lies beyond a baseline latency it should rarely exceed.
 - **Stationarity** — the assumption that the underlying success rate does not drift over the period during which trials are collected. Like independence, this is assumed and documented, not proven.
 - **Trial** — a single invocation of the service, evaluated against a criterion, yielding a pass or a fail. The basic unit of evidence in the functional model.
-- **Wilson score bound** — a confidence bound on a binomial proportion that behaves well at extreme rates (near 0 or 1) and at small sample sizes, where the naive normal approximation fails. The model uses the Wilson *lower* bound for compliance decisions on success-rate criteria.
+- **Wilson score interval** — a confidence interval on a binomial proportion that behaves well at extreme rates (near 0 or 1) and at small sample sizes, where the naive normal approximation fails. The model reports it to describe the uncertainty around an observed rate; it decides no verdict. (Up to companion 1.4.1 it did; the exact tests above replaced it.)
 
 ---
 
