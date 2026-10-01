@@ -7,10 +7,26 @@
 - id: confidence-level
   term: confidence level
   short: >
-    The long-run frequency with which the procedure's interval would
-    cover the true parameter if the experiment were repeated under the
-    same conditions. A property of the procedure, not of any single
-    verdict.
+    The long-run reliability of a statistical procedure over repeated
+    experiments. For a decision, 99% means the test reaches the wrong
+    verdict it guards against at most 1% of the time; for an interval,
+    that it covers the true value 99% of the time. A property of the
+    procedure, not of any single verdict.
+
+- id: exact-binomial-test
+  term: exact binomial test
+  short: >
+    A test on a pass count that uses the binomial distribution itself,
+    so its error rate holds at every sample size. The model uses it for
+    compliance: PASS when the count reaches the bar the requirement
+    demands.
+
+- id: fisher-exact-test
+  term: Fisher exact test
+  short: >
+    A test that compares two pass counts, the baseline's and the
+    test's, without assuming the baseline's rate is known exactly. The
+    model uses its one-sided form for regression.
 
 - id: frequentist
   term: frequentist
@@ -47,6 +63,13 @@
     generalise. Claims are only as strong as the population definition
     recorded alongside them.
 
+- id: precedence-test
+  term: precedence test
+  short: >
+    A test that compares two samples of measurements by the order in
+    which their values fall, assuming nothing about the shape of their
+    distribution. The model uses it for latency regression.
+
 - id: stationarity
   term: stationarity
   short: >
@@ -65,10 +88,10 @@
     yielding a pass or a fail. The basic unit of evidence in the
     functional model.
 
-- id: wilson-score-bound
-  term: Wilson score bound
+- id: wilson-score-interval
+  term: Wilson score interval
   short: >
-    A confidence bound on a binomial proportion that behaves well at
+    A confidence interval on a binomial proportion that behaves well at
     extreme rates and small sample sizes, where the naive normal
-    approximation fails. The model uses the Wilson lower bound for
-    compliance decisions.
+    approximation fails. The model reports it to describe the
+    uncertainty around an observed rate; it decides no verdict.
