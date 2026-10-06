@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a verdict-1.8 record with the latency dimension
+     advisory.
+
+     The run is that of verdict-1.8-latency-fail.xml, with the run-time
+     switch making latency advisory - as a developer does where the
+     development environment is significantly slower than the production
+     environment a normative latency requirement refers to (Statistical
+     Companion 1.6.0, §12.6).
+
+     The empirical regression criterion passes: 93 of 100 samples succeeded
+     against a baseline of 951 in 1000, and the Fisher cutoff is 91. The
+     explicit requirement p90 <= 600 ms is still decided by
+     latency/compliance-exact-binomial over the 93 successful latencies:
+     80 are at or below 600 ms, at least 89 are needed, so the evaluation
+     FAILs and the latency dimension's verdict is FAIL. <latency> states
+     mode="advisory": the verdict is reported, but it does not enter the
+     test verdict and adds nothing to the Type-I envelopes.
+
+     The record's verdict composes the enforced dimension only: the
+     functional composite, PASS. The test passes; a reader shows the latency
+     FAIL beside it, labelled advisory, and never as deciding it. Enforced,
+     the same run FAILs. One rule decided the enforced dimension, so
+     <verdict> states it. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.8" methodology-version="1.6.0" timestamp="2026-10-06T12:05:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="100" samples-executed="100" successes="93" failures="7" elapsed-ms="151300" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="1000" baseline-rate="0.951" derived-threshold="0.91" />
+  <termination reason="COMPLETED" />
+  <functional successes="93" failures="7" pass-rate="0.93" />
+  <latency successful-samples="93" verdict="FAIL" mode="advisory">
+    <observed>
+      <percentile label="p90" value-ms="640" />
+    </observed>
+    <evaluations>
+      <evaluation percentile="p90" observed-ms="640" threshold-ms="600" provenance="explicit" status="FAIL" decision-rule="latency/compliance-exact-binomial" decision-rule-version="1" within-threshold="80" required-within="89" />
+    </evaluations>
+  </latency>
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" required-pass="91" />
+    <composite value="PASS" mode="enforced" />
+  </per-criterion>
+  <verdict value="PASS" decision-rule="regression/fisher" decision-rule-version="1" />
+</verdict-record>

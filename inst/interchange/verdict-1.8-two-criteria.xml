@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a verdict-1.8 record for a service judged against both
+     a requirement and its baseline.
+
+     The two questions are two criteria over the same postcondition and the
+     same 100 samples. The compliance criterion asks whether a contractual
+     requirement of 0.90 is met (compliance/exact-binomial at alpha 0.01);
+     the regression criterion asks whether the service has degraded from
+     its baseline of 951 successes in 1000 trials (regression/fisher at
+     alpha 0.05). Each has one rule, one alpha, one threshold origin and one
+     verdict.
+
+     93 of 100 succeeded. The regression criterion passes: the Fisher cutoff
+     is 91. The compliance criterion fails: demonstrating 0.90 at alpha 0.01
+     needs at least 97 of 100. Each row states its count as
+     @required-pass (0.11.2): 97 on the compliance row, whose @threshold
+     is the requirement 0.90 and not the bar, and 91 on the regression
+     row. The record's verdict is the ordinary structural composite of the
+     two criteria, FAIL, triggered by the compliance criterion; <verdict>
+     states no single rule because two decided. The functional dimension is
+     enforced, the default under Statistical Companion 1.6.0, which the
+     composite states as @mode. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.8" methodology-version="1.6.0" timestamp="2026-09-26T12:10:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="100" samples-executed="100" successes="93" failures="7" elapsed-ms="151300" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="1000" baseline-rate="0.951" derived-threshold="0.91" />
+  <termination reason="COMPLETED" />
+  <functional successes="93" failures="7" pass-rate="0.93" />
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values-compliance" verdict="FAIL" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.90" decision-rule="compliance/exact-binomial" decision-rule-version="1" required-pass="97" />
+    <criterion id="extraction-matches-reviewed-values-regression" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" required-pass="91" />
+    <composite value="FAIL" mode="enforced" />
+  </per-criterion>
+  <verdict value="FAIL" />
+</verdict-record>

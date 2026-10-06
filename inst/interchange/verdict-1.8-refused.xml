@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a verdict-1.8 record for a refused configuration.
+
+     The test carries two criteria over the same postcondition: a
+     compliance criterion with a requirement of 0.999 and a regression
+     criterion against a baseline of 100 trials, planned at 200 samples. Both parts are invalid. The test is
+     larger than its baseline, which mavai's design policy refuses (the
+     baseline must be at least as large as any test that consumes it), and
+     at 200 samples no count can demonstrate 0.999 at alpha 0.05 (the
+     feasibility minimum is 2,995). Every applicable code is reported, in
+     the fixed order, so the developer can correct both at once. The
+     configuration is refused before any sample runs, so the record states
+     no verdict value, and the termination reason is CONFIGURATION_REFUSED.
+     The refusal is not INCONCLUSIVE, which is reserved for outcomes that
+     depend on the data. A refusal applies whatever the dimensions' modes:
+     an advisory dimension is refused as an enforced one is (Statistical
+     Companion 1.6.0, §12.6). -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.8" methodology-version="1.6.0" timestamp="2026-09-26T12:05:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="200" samples-executed="0" successes="0" failures="0" elapsed-ms="3" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <termination reason="CONFIGURATION_REFUSED" detail="the test (200 samples) is larger than its baseline (100 trials); no count of 200 can demonstrate 0.999 (feasibility minimum 2995)" />
+  <verdict configuration-error="TEST_LARGER_THAN_BASELINE COMPLIANCE_INFEASIBLE" />
+</verdict-record>
