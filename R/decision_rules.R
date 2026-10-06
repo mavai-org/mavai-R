@@ -25,7 +25,7 @@
 #' functions (`phyper`, `dbinom`/`pbinom`, `qbeta`, `lchoose`/`lbeta`);
 #' nothing is simulated.
 
-METHODOLOGY_VERSION <- "1.5.0"
+METHODOLOGY_VERSION <- "1.6.0"
 
 # Version of the fixture file shape (cases.schema.json and the manifest).
 # 1 was the unversioned shape up to fixtures 0.10.13; 2 adds
@@ -554,8 +554,8 @@ latency_precedence_threshold <- function(baseline_latencies, test_samples, p, al
 #' no count can pass at the realised n_s (n_s below the feasibility
 #' minimum ceiling(log(alpha) / log(p))) the verdict is INCONCLUSIVE: too
 #' few successful latencies to decide. The raw comparison of the observed
-#' nearest-rank percentile with tau is reported beside the verdict as an
-#' advisory figure; it decides nothing.
+#' nearest-rank percentile with tau is reported beside the verdict as a
+#' raw figure; it decides nothing.
 #'
 #' @param latencies Successful latencies (ms).
 #' @param threshold_ms The declared threshold tau.
@@ -563,7 +563,7 @@ latency_precedence_threshold <- function(baseline_latencies, test_samples, p, al
 #' @param alpha One-sided level.
 #' @return A list: test_samples, within_threshold, y_min, pass_possible,
 #'   verdict, false_compliance, clopper_pearson_lower,
-#'   observed_percentile_ms, advisory_percentile_pass.
+#'   observed_percentile_ms, raw_percentile_pass.
 #' @export
 latency_compliance_verdict <- function(latencies, threshold_ms, p, alpha) {
   latency_percentile_P(p)
@@ -582,6 +582,6 @@ latency_compliance_verdict <- function(latencies, threshold_ms, p, alpha) {
     false_compliance = if (possible) pbinom(y_min - 1, n_s, p, lower.tail = FALSE) else NA_real_,
     clopper_pearson_lower = if (n_s == 0) NA_real_ else clopper_pearson_lower(y, n_s, alpha),
     observed_percentile_ms = observed,
-    advisory_percentile_pass = if (n_s == 0) NA else observed <= threshold_ms
+    raw_percentile_pass = if (n_s == 0) NA else observed <= threshold_ms
   )
 }

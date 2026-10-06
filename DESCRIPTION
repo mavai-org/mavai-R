@@ -1,13 +1,13 @@
 Package: mavair
 Title: Reference Statistical Computations for the mavai Project Family
-Version: 0.11.2
+Version: 0.12.0
 Authors@R: person("mavai-org", email = "info@mavai.org", role = c("aut", "cre"))
 Description: Generates language-agnostic reference datasets for statistical
     computations used in probabilistic testing frameworks. Provides canonical
     expected outputs — computed in R using established statistical packages — so
     that implementations in Java (punit), Rust (feotest), Python (baseltest),
     and future languages can verify conformance. Covers the Statistical
-    Companion 1.5.0 decision rules (the one-sided Fisher exact test for
+    Companion 1.6.0 decision rules (the one-sided Fisher exact test for
     empirical regression, the exact binomial test for normative
     compliance, the precedence rank for latency), their configuration errors,
     exact power and sizing, Wilson score intervals as descriptive primitives,

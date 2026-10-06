@@ -18,8 +18,8 @@
 #' Binding: test_samples, within_threshold, y_min, pass_possible,
 #' verdict, configuration_error. Informational: false_compliance,
 #' clopper_pearson_lower, observed_percentile_ms and
-#' advisory_percentile_pass (the raw percentile comparison, which is
-#' advisory and decides nothing).
+#' raw_percentile_pass (the raw percentile comparison, a labelled figure
+#' that decides nothing).
 
 #' Latencies for a case: `within` values at or below tau, the rest above
 #' @keywords internal
@@ -39,13 +39,13 @@ latency_compliance_case <- function(name, percentile, threshold_ms, alpha, inten
     list(test_samples = NA_integer_, within_threshold = NA_integer_, y_min = NA_integer_,
          pass_possible = NA, verdict = NA_character_, configuration_error = configuration_errors(err),
          false_compliance = NA_real_, clopper_pearson_lower = NA_real_,
-         observed_percentile_ms = NA_real_, advisory_percentile_pass = NA)
+         observed_percentile_ms = NA_real_, raw_percentile_pass = NA)
   } else {
     v <- latency_compliance_verdict(latencies, threshold_ms, percentile, alpha)
     c(v[c("test_samples", "within_threshold", "y_min", "pass_possible", "verdict")],
       list(configuration_error = configuration_errors()),
       v[c("false_compliance", "clopper_pearson_lower", "observed_percentile_ms",
-          "advisory_percentile_pass")])
+          "raw_percentile_pass")])
   }
   case <- list(name = name)
   if (!is.null(description)) case$description <- description
@@ -70,10 +70,10 @@ generate_latency_compliance_decision_cases <- function() {
       s(100, 99, 500)),
     latency_compliance_case("p95_n100_fail_below_y_min", 0.95, 500, 0.05, "VERIFICATION", 100L,
       s(100, 98, 500)),
-    latency_compliance_case("p95_n100_advisory_pass_not_demonstrated", 0.95, 500, 0.05,
+    latency_compliance_case("p95_n100_raw_pass_not_demonstrated", 0.95, 500, 0.05,
       "VERIFICATION", 100L, s(100, 95, 500),
-      "The observed p95 is within 500 ms (95 of 100 at or below), so the advisory comparison passes; compliance is not demonstrated."),
-    latency_compliance_case("p95_n100_advisory_fail", 0.95, 500, 0.05, "VERIFICATION", 100L,
+      "The observed p95 is within 500 ms (95 of 100 at or below), so the raw comparison passes; compliance is not demonstrated."),
+    latency_compliance_case("p95_n100_raw_fail", 0.95, 500, 0.05, "VERIFICATION", 100L,
       s(100, 94, 500), "94 of 100 within: the observed p95 exceeds 500 ms and the verdict is FAIL."),
     latency_compliance_case("tie_at_threshold_counts_within", 0.95, 500, 0.05, "VERIFICATION", 100L,
       c(rep(500, 99), 900),
@@ -117,9 +117,10 @@ generate_latency_compliance_decision_cases <- function() {
       "p_req = p over the realised number of successful latencies. A VERIFICATION plan whose",
       "planned samples are below the feasibility minimum is refused as COMPLIANCE_INFEASIBLE; a",
       "run whose realised successful count is below it is INCONCLUSIVE. The raw comparison of",
-      "the observed percentile with tau is advisory and reported only. Binding: test_samples,",
+      "the observed percentile with tau is a labelled figure and decides nothing; an advisory",
+      "requirement (companion §12.6) is decided by the same rule as an enforced one. Binding: test_samples,",
       "within_threshold, y_min, pass_possible, verdict, configuration_error. Informational:",
-      "false_compliance, clopper_pearson_lower, observed_percentile_ms, advisory_percentile_pass.",
+      "false_compliance, clopper_pearson_lower, observed_percentile_ms, raw_percentile_pass.",
       "The latencies are those of the samples that passed every functional criterion (companion",
       "§12.2.1). Frameworks MUST evaluate these cases through their production verdict path."
     ),
@@ -130,7 +131,7 @@ generate_latency_compliance_decision_cases <- function() {
       "VERIFICATION and planned_samples < ceiling(log(alpha) / log(p)). false_compliance =",
       "P_p(Y >= y_min); clopper_pearson_lower = qbeta(alpha, Y, n_s - Y + 1) (0 at Y = 0);",
       "observed_percentile_ms is the nearest-rank percentile, rank ceiling(p n_s);",
-      "advisory_percentile_pass = observed_percentile_ms <= tau."
+      "raw_percentile_pass = observed_percentile_ms <= tau."
     ),
     tolerance = 1e-10,
     cases = cases

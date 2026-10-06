@@ -170,23 +170,26 @@ generate_verdict_cases <- function() {
   )
 
   # The overall test verdict: the functional dimension (V_rate) and the
-  # enforced latency constraints (V_latency) composed by the structural rule.
-  # The latencies are those of the samples that passed every functional
-  # criterion, so their number equals the functional successes.
+  # latency dimension (V_latency), each decided by its rules, composed by the
+  # structural rule over the dimensions the run enforces. The run-time switch
+  # (advisory: none, functional, latency or both) makes a dimension advisory:
+  # decided and reported, never entering V_test. The latencies are those of
+  # the samples that passed every functional criterion, so their number
+  # equals the functional successes.
   lat <- latency_compliance_sample
   set.seed(29)
   baseline_100 <- sort(round(rlnorm(100, meanlog = log(400), sdlog = 0.3)))
-  test_case <- function(name, description, functional, constraints) {
+  test_case <- function(name, description, functional, constraints, advisory = character()) {
     fv <- if (is.null(functional)) NULL else {
       do.call(evaluate_verdict, functional[setdiff(names(functional), "criterion_id")])
     }
     crit <- if (is.null(fv)) list() else list(list(criterion_id = functional$criterion_id, verdict = fv$verdict))
     kv <- lapply(constraints, latency_constraint_verdict)
-    tv <- test_verdict(crit, kv)
+    tv <- test_verdict(crit, kv, advisory)
     frule <- if (is.null(functional)) NULL else if (!is.null(functional$baseline_trials)) R else C
     krules <- unlist(lapply(kv, function(k) k$decisionRule))
-    rules <- unique(c(frule, krules[!is.na(krules)]))
-    inputs <- list(functional = functional, latency_constraints = constraints)
+    rules <- unique(c(frule, krules))
+    inputs <- list(functional = functional, latency_constraints = constraints, advisory = as.list(advisory))
     if (is.null(functional)) inputs$functional <- NULL
     list(name = name, approach = "test_verdict", description = description,
          decisionRule = as.list(rules),
@@ -194,30 +197,49 @@ generate_verdict_cases <- function() {
          expected = c(list(criteria = crit, latency_constraints = kv), tv))
   }
   fpass <- c(list(criterion_id = "c_extraction"), reg(91, 100, 951, 1000))
-  explicit <- function(id, n, within, tau = 500, p = 0.95, mode = "enforced", alpha = 0.05) {
-    list(constraint_id = id, source = "explicit", mode = mode, percentile = p, alpha = alpha,
+  explicit <- function(id, n, within, tau = 500, p = 0.95, alpha = 0.05) {
+    list(constraint_id = id, source = "explicit", percentile = p, alpha = alpha,
          threshold_ms = tau, latencies = lat(n, within, tau))
   }
+  ffail <- c(list(criterion_id = "c_extraction"), reg(90, 100, 951, 1000))
   test_cases <- list(
     test_case("test_functional_pass_latency_fail",
       "Functional PASS (91 of 100 meets the cutoff of 91); the enforced p95 <= 500 ms requirement FAILs (85 of 91 latencies within, y_min 91). V_test FAIL, triggered by the latency constraint.",
       fpass, list(explicit("p95_le_500ms", 91, 85))),
     test_case("test_functional_pass_latency_inconclusive",
       "Functional PASS; the enforced baseline-derived p99 constraint is saturated (a test of 91 latencies against a baseline of 100: no rank achieves alpha), so V_latency is INCONCLUSIVE and so is V_test.",
-      fpass, list(list(constraint_id = "p99_vs_baseline", source = "baseline-derived", mode = "enforced",
+      fpass, list(list(constraint_id = "p99_vs_baseline", source = "baseline-derived",
                        percentile = 0.99, alpha = 0.05, baseline_latencies = baseline_100,
                        latencies = sort(round(baseline_100[1:91] * 0.97))))),
     test_case("test_functional_fail_latency_pass",
       "Functional FAIL (90 of 100 below the cutoff of 91); the enforced p95 <= 500 ms requirement passes (90 of 90 within). V_test FAIL, triggered by the criterion.",
-      c(list(criterion_id = "c_extraction"), reg(90, 100, 951, 1000)), list(explicit("p95_le_500ms", 90, 90))),
+      ffail, list(explicit("p95_le_500ms", 90, 90))),
     test_case("test_latency_only",
       "No functional criteria: V_test = V_latency. The enforced p95 <= 500 ms requirement over 100 latencies, 99 within: PASS.",
       NULL, list(explicit("p95_le_500ms", 100, 99))),
-    test_case("test_advisory_breach_does_not_change_verdict",
-      "Functional PASS and the enforced p95 <= 500 ms requirement PASS (91 of 91 within); an advisory p99 <= 450 ms comparison is breached (ADVISORY_WARN) and does not participate. V_test PASS.",
-      fpass, list(explicit("p95_le_500ms", 91, 91),
-                  list(constraint_id = "p99_le_450ms_advisory", source = "explicit", mode = "advisory",
-                       percentile = 0.99, alpha = 0.05, threshold_ms = 450, latencies = lat(91, 91, 500))))
+    # The run-time switch, one case per setting, on a test in which both
+    # dimensions fail: functional FAIL (90 of 100 below the cutoff of 91) and
+    # the p95 <= 500 ms requirement FAIL (82 of 90 within).
+    test_case("test_switch_none_both_fail",
+      "No dimension advisory (the default): both dimensions are enforced, both FAIL, and V_test is FAIL, triggered by the criterion and the latency constraint.",
+      ffail, list(explicit("p95_le_500ms", 90, 82))),
+    test_case("test_switch_functional_both_fail",
+      "The functional dimension advisory: the criterion is still decided by regression/fisher and V_rate FAIL is reported, but V_test composes the latency dimension alone: FAIL, triggered by the latency constraint only.",
+      ffail, list(explicit("p95_le_500ms", 90, 82)), advisory = "functional"),
+    test_case("test_switch_latency_both_fail",
+      "The latency dimension advisory: the requirement is still decided by latency/compliance-exact-binomial and V_latency FAIL is reported, but V_test composes the functional dimension alone: FAIL, triggered by the criterion only.",
+      ffail, list(explicit("p95_le_500ms", 90, 82)), advisory = "latency"),
+    test_case("test_switch_both_both_fail",
+      "Both dimensions advisory: each is decided and reported FAIL, and V_test is the composite over no enforced dimension, PASS, with nothing triggering it. The test cannot fail on its assertions.",
+      ffail, list(explicit("p95_le_500ms", 90, 82)), advisory = c("functional", "latency")),
+    test_case("test_switch_latency_fail_does_not_fail_test",
+      "Functional PASS (91 of 100 meets the cutoff of 91); the latency dimension advisory, and its p95 <= 500 ms requirement FAILs by its rule (85 of 91 within). V_latency FAIL is reported beside V_test, which is PASS. Enforced, the same run FAILs (test_functional_pass_latency_fail).",
+      fpass, list(explicit("p95_le_500ms", 91, 85)), advisory = "latency"),
+    test_case("test_switch_functional_latency_saturated",
+      "The functional dimension advisory and FAIL; the enforced baseline-derived p99 constraint is INCONCLUSIVE (90 latencies, below the p99 minimum of 100, and against a baseline of 100 no rank achieves alpha), so V_latency is INCONCLUSIVE and so is V_test, triggered by the latency constraint.",
+      ffail, list(list(constraint_id = "p99_vs_baseline", source = "baseline-derived",
+                       percentile = 0.99, alpha = 0.05, baseline_latencies = baseline_100,
+                       latencies = sort(round(baseline_100[1:90] * 0.97)))), advisory = "functional")
   )
   cases <- c(cases, test_cases)
 
@@ -237,14 +259,19 @@ generate_verdict_cases <- function() {
       "p_hat >= threshold) and its Wald z statistic are withdrawn. Binding: verdict,",
       "configuration_error, criteria, triggering_criteria. Informational: observed_rate,",
       "false_compliance_envelope, false_degradation_signal_envelope. Cases with approach",
-      "test_verdict give the overall test verdict: the functional dimension's verdict",
-      "(rate_verdict, the structural composite of the criteria), the latency dimension's",
-      "(latency_verdict, the same composite over the enforced latency constraints; advisory",
-      "constraints never participate) and test_verdict, their composite (PASS if both pass, FAIL",
-      "if either fails, INCONCLUSIVE otherwise; a dimension that is absent is left out), with",
-      "triggering naming the criteria and enforced constraints that decided it. Latencies are",
+      "test_verdict give the overall test verdict (methodology 1.6.0): the functional dimension's",
+      "verdict (rate_verdict, the structural composite of the criteria) and the latency",
+      "dimension's (latency_verdict, the same composite over the latency constraints, each",
+      "decided by its rule), each with its mode (functional_mode, latency_mode: enforced, or",
+      "advisory when the input advisory, the run-time switch setting, names the dimension; null",
+      "for a dimension the test does not carry), and test_verdict, the structural composite of",
+      "the enforced dimensions (PASS if every one passes, FAIL if any fails, INCONCLUSIVE",
+      "otherwise; PASS when no dimension is enforced), with triggering naming the criteria and",
+      "constraints of the enforced dimensions that decided it. An advisory dimension is decided",
+      "exactly as an enforced one and reported; it never enters test_verdict. Latencies are",
       "those of the samples that passed every functional criterion. Binding: rate_verdict,",
-      "latency_verdict, test_verdict, triggering, each constraint's verdict."
+      "latency_verdict, functional_mode, latency_mode, test_verdict, triggering, each",
+      "constraint's verdict."
     ),
     method = paste(
       "regression/fisher: PASS iff K_t >= c(K_b, n_b, n_t, alpha) (see regression_decision).",

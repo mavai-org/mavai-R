@@ -8,10 +8,10 @@ test_that("an explicit latency requirement is the compliance rule on the within-
   expect_lte(v$false_compliance, 0.05)
 })
 
-test_that("the raw percentile comparison is advisory and can pass where compliance is not shown", {
+test_that("the raw percentile comparison decides nothing and can pass where compliance is not shown", {
   lat <- c(rep(400, 95), rep(700, 5))
   v <- latency_compliance_verdict(lat, 500, 0.95, 0.05)
-  expect_true(v$advisory_percentile_pass)
+  expect_true(v$raw_percentile_pass)
   expect_equal(v$verdict, "FAIL")
   # At the null boundary F(tau) = 0.95 the raw comparison passes about 62% of the time.
   expect_equal(pbinom(94, 100, 0.95, lower.tail = FALSE), 0.616, tolerance = 1e-3)

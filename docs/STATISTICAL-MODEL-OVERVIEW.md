@@ -19,7 +19,7 @@ The mavai model focuses on two quality dimensions:
 - **Functional stochasticity** — whether the service produces an acceptable result. Correctness is modelled as repeated pass/fail observations.
 - **Temporal stochasticity** — how long successful invocations take. Latency is modelled through empirical percentiles rather than averages.
 
-A contract may exercise either dimension on its own or both together; when both are in scope, the overall verdict requires each to pass, and the model does not assume the two are statistically independent.
+A contract may exercise either dimension on its own or both together; when both are in scope, the overall verdict requires each to pass, and the model does not assume the two are statistically independent. Every assertion in either dimension counts towards the verdict by default; a run-time switch can make one dimension, or both, advisory, so that its verdict is still reached and reported but cannot fail the test.
 
 What the model is *not* for:
 

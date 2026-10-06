@@ -1,6 +1,6 @@
 {
   "suite": "multi_criteria_scenario_consult_advice",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "1.6.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
@@ -16,7 +16,7 @@
       "version": 1
     }
   ],
-  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0 decision rules (regression/fisher, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). One run has one sampling, shared by every criterion of its contract. Cases 1-3 are the one canonical consult-advice example: three tests, each bound to its own contract and running over its own sampling - 953 of 1000 over V_prod against the baseline 951 of 1000 (C_well_formed, PASS); 788 of 800 over V_complexity against the 0.98 requirement at alpha 0.001 (C_layperson_readable, FAIL); no failure in 200 adversarial probes over V_probe (C_no_self_harm, PASS). A view across the three tests is reporting, not a composite of one run. Every consult-advice number in the companion is generated from them. Case 4 is the passing counterfactual of case 2; case 5 exercises the structural-composition pattern (availability sibling + conditional content via availability_criterion_ref, two criteria over one sampling); case 6 exercises the cross-policy structural-error refusal. Cases 7-11 (two_criteria_*) judge one service against a requirement and its baseline on the same postconditions: two criteria over one sampling and the same observations, a compliance criterion and a regression criterion, each with one rule, one alpha and one verdict, composed by the ordinary structural composite, one case for each outcome; two of them carry an enforced latency constraint. Every case states the overall test verdict: latency_verdict (the structural composite of the enforced latency constraints, null without any) and test_verdict (the composite of the functional composite and latency_verdict), with test_triggering naming the criteria and constraints that decided it.",
+  "description": "End-to-end scenarios per companion §10.3 and §10.6 under the 1.5.0 decision rules (regression/fisher, compliance/exact-binomial). Each case ties together a baseline, a test run, and the expected scenario output (per-criterion verdicts, composite verdict, both procedure-direction envelopes, conformance-status metadata). One run has one sampling, shared by every criterion of its contract. Cases 1-3 are the one canonical consult-advice example: three tests, each bound to its own contract and running over its own sampling - 953 of 1000 over V_prod against the baseline 951 of 1000 (C_well_formed, PASS); 788 of 800 over V_complexity against the 0.98 requirement at alpha 0.001 (C_layperson_readable, FAIL); no failure in 200 adversarial probes over V_probe (C_no_self_harm, PASS). A view across the three tests is reporting, not a composite of one run. Every consult-advice number in the companion is generated from them. Case 4 is the passing counterfactual of case 2; case 5 exercises the structural-composition pattern (availability sibling + conditional content via availability_criterion_ref, two criteria over one sampling); case 6 exercises the cross-policy structural-error refusal. Cases 7-11 (two_criteria_*) judge one service against a requirement and its baseline on the same postconditions: two criteria over one sampling and the same observations, a compliance criterion and a regression criterion, each with one rule, one alpha and one verdict, composed by the ordinary structural composite, one case for each outcome; two of them carry a latency constraint, enforced by default. Every case states the overall test verdict: latency_verdict (the structural composite of the latency constraints, null without any) and test_verdict (the composite of the functional composite and latency_verdict, both enforced), with test_triggering naming the criteria and constraints that decided it.",
   "method": "Per-criterion verdicts computed by regression_verdict / compliance_verdict / observational_verdict and composed by composite_verdict. The §10.6 conformance_status block names formula_value_fixtures: passed and calibration_fixtures: not-published, anchoring the conformance contract a downstream framework is expected to replicate.",
   "tolerance": 1e-09,
   "cases": [
@@ -1250,7 +1250,7 @@
     },
     {
       "name": "two_criteria_inconclusive_latency_pass",
-      "description": "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an enforced explicit p50 <= 300 ms requirement over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
+      "description": "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an explicit p50 <= 300 ms requirement, enforced by default, over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -1339,7 +1339,6 @@
             {
               "constraint_id": "p50_le_300ms",
               "source": "explicit",
-              "mode": "enforced",
               "percentile": 0.5,
               "alpha": 0.05,
               "threshold_ms": 300,
@@ -1401,8 +1400,6 @@
           {
             "constraint_id": "p50_le_300ms",
             "source": "explicit",
-            "mode": "enforced",
-            "participates": true,
             "decisionRule": "latency/compliance-exact-binomial",
             "verdict": "PASS"
           }
@@ -1513,7 +1510,6 @@
             {
               "constraint_id": "p50_le_300ms",
               "source": "explicit",
-              "mode": "enforced",
               "percentile": 0.5,
               "alpha": 0.05,
               "threshold_ms": 300,
@@ -1575,8 +1571,6 @@
           {
             "constraint_id": "p50_le_300ms",
             "source": "explicit",
-            "mode": "enforced",
-            "participates": true,
             "decisionRule": "latency/compliance-exact-binomial",
             "verdict": "FAIL"
           }

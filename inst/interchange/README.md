@@ -43,8 +43,20 @@ and the record's verdict is the overall test verdict, composing the
 functional criteria with the enforced latency constraints
 (`verdict-1.7-typical.xml`, `verdict-1.7-refused.xml`,
 `verdict-1.7-two-criteria.xml`, `verdict-1.7-latency-fail.xml`,
-`verdict-1.7-latency-saturated.xml`). Earlier XSD versions
-are unchanged.
+`verdict-1.7-latency-saturated.xml`). From 1.8 (Statistical Companion
+1.6.0, under which every assertion is enforced by default and a run-time
+switch makes the functional dimension, the latency dimension or both
+advisory) each dimension states its mode, `enforced` or `advisory`, beside
+its verdict (`<composite mode>`, `<latency mode>`); every latency evaluation
+is decided by its rule and states that rule's outcome, whatever the mode
+(`ADVISORY_WARN` and the evaluation's own mode are withdrawn); and the
+record's verdict composes the enforced dimensions only, an advisory one
+being reported beside it (`verdict-1.8-typical.xml`,
+`verdict-1.8-two-criteria.xml`, `verdict-1.8-refused.xml`,
+`verdict-1.8-latency-fail.xml`, `verdict-1.8-latency-saturated.xml`, and one
+example per advisory setting: `verdict-1.8-functional-advisory.xml`,
+`verdict-1.8-latency-advisory.xml`, `verdict-1.8-both-advisory.xml`).
+Earlier XSD versions are unchanged.
 
 **This repository is the publication channel for these artefacts, not their
 authority.** The formats are specified canonically in the mavai family's

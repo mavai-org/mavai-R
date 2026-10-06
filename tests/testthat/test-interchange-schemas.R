@@ -458,13 +458,13 @@ test_that("verdict-1.7 carries the latency dimension's verdict beside the functi
   expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
 })
 
-test_that("a verdict-1.7 latency evaluation has a threshold unless it is saturated", {
+test_that("a verdict-1.7 or 1.8 latency evaluation has a threshold unless it is saturated", {
   # XSD 1.0 cannot state this co-constraint, so the worked examples carry it
   # here: threshold-ms is absent exactly when status is SATURATED, and a
   # saturated evaluation is baseline-derived with no baseline rank.
   skip_if_not_installed("xml2")
   repo_root <- testthat::test_path("..", "..")
-  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.7-*.xml"))
+  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.[78]-*.xml"))
   expect_gt(length(examples), 0L)
   saw_saturated <- FALSE
   for (f in examples) {
@@ -482,7 +482,7 @@ test_that("a verdict-1.7 latency evaluation has a threshold unless it is saturat
   expect_true(saw_saturated)
 })
 
-test_that("a verdict-1.7 criterion decided by a pass-rate rule states the count it needed", {
+test_that("a verdict-1.7 or 1.8 criterion decided by a pass-rate rule states the count it needed", {
   # 0.11.2: every criterion row decided by regression/fisher or
   # compliance/exact-binomial carries required-pass, its verdict agrees with
   # pass >= required-pass, and a regression row's count is the oracle's Fisher
@@ -490,7 +490,7 @@ test_that("a verdict-1.7 criterion decided by a pass-rate rule states the count 
   # is not in the record, so its count is checked for consistency only.)
   skip_if_not_installed("xml2")
   repo_root <- testthat::test_path("..", "..")
-  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.7-*.xml"))
+  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.[78]-*.xml"))
   rules <- c("regression/fisher", "compliance/exact-binomial")
   seen <- character()
   for (f in examples) {
@@ -527,4 +527,97 @@ test_that("the verdict-1.7 XSD refuses a negative or fractional required count",
     mutated <- sub('required-pass="97"', bad, two, fixed = TRUE)
     expect_false(isTRUE(xml2::xml_validate(xml2::read_xml(paste(mutated, collapse = "\n")), xsd)))
   }
+})
+
+# ── verdict-1.8: every assertion enforced by default, advisory by switch ──
+
+verdict_18 <- function(name) {
+  readLines(file.path(repo_root, "inst", "interchange", paste0("verdict-1.8-", name, ".xml")))
+}
+valid_18 <- function(lines) {
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.8.xsd"))
+  isTRUE(xml2::xml_validate(xml2::read_xml(paste(lines, collapse = "\n")), xsd))
+}
+
+test_that("a 1.7-shaped record is not a 1.8 record, and 1.7 still validates its own", {
+  skip_if_not_installed("xml2")
+  body <- readLines(file.path(repo_root, "inst", "interchange", "verdict-1.7-typical.xml"))
+  expect_false(valid_18(sub('version="1.7"', 'version="1.8"', body, fixed = TRUE)))
+  xsd17 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.7.xsd"))
+  expect_true(isTRUE(xml2::xml_validate(xml2::read_xml(paste(body, collapse = "\n")), xsd17)))
+})
+
+test_that("the verdict-1.8 XSD refuses the withdrawn advisory vocabulary", {
+  skip_if_not_installed("xml2")
+  lf <- verdict_18("latency-fail")
+  expect_true(valid_18(lf))
+  # the raw advisory warning and the strict-only fail are gone
+  expect_false(valid_18(sub('status="FAIL"', 'status="ADVISORY_WARN"', lf, fixed = TRUE)))
+  expect_false(valid_18(sub('status="FAIL"', 'status="STRICT_FAIL"', lf, fixed = TRUE)))
+  # the mode is the dimension's, never an evaluation's, and is enforced or advisory
+  expect_false(valid_18(sub('provenance="explicit"', 'provenance="explicit" mode="enforced"', lf, fixed = TRUE)))
+  expect_false(valid_18(sub('mode="enforced">', 'mode="strict">', lf, fixed = TRUE)))
+  # the violation counts are withdrawn
+  expect_false(valid_18(sub('successful-samples="93"', 'successful-samples="93" strict-violations="1"', lf, fixed = TRUE)))
+  # every evaluation states the rule that decided it
+  expect_false(valid_18(sub(' decision-rule="latency/compliance-exact-binomial"', "", lf, fixed = TRUE)))
+  # the functional dimension states its mode
+  expect_false(valid_18(sub(' mode="enforced" />', " />", lf, fixed = TRUE)))
+  expect_false(valid_18(sub('<composite value="PASS" mode="enforced" />', '<composite value="PASS" mode="environment" />', lf, fixed = TRUE)))
+})
+
+test_that("a verdict-1.8 record's test verdict composes its enforced dimensions only", {
+  # XSD 1.0 cannot state these rules, so the worked examples carry them:
+  # <latency>/@mode is present exactly when <latency>/@verdict is; the
+  # latency verdict is the composite of every evaluation by its rule,
+  # whatever the mode; an explicit evaluation's status agrees with its
+  # counts; and <verdict>/@value is test_verdict() over the dimensions
+  # whose mode is enforced (PASS when none is).
+  skip_if_not_installed("xml2")
+  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.8-*.xml"))
+  expect_gte(length(examples), 8L)
+  status_verdict <- c(PASS = "PASS", FAIL = "FAIL", INFEASIBLE = "INCONCLUSIVE", SATURATED = "INCONCLUSIVE")
+  seen <- character()
+  for (f in examples) {
+    doc <- xml2::read_xml(f)
+    at <- function(xpath, attr) xml2::xml_attr(xml2::xml_find_first(doc, xpath), attr)
+    value <- at("/*[local-name()='verdict-record']/*[local-name()='verdict']", "value")
+    if (is.na(value)) next  # a refused record has no verdict and no dimension
+    latency <- xml2::xml_find_first(doc, "//*[local-name()='latency']")
+    criteria <- list()
+    advisory <- character()
+    composite <- xml2::xml_find_first(doc, "//*[local-name()='composite']")
+    if (!inherits(composite, "xml_missing")) {
+      rows <- xml2::xml_find_all(doc, "//*[local-name()='criterion' and @decision-rule]")
+      criteria <- lapply(rows, function(r) list(criterion_id = xml2::xml_attr(r, "id"),
+                                                verdict = xml2::xml_attr(r, "verdict")))
+      expect_identical(xml2::xml_attr(composite, "value"),
+                       structural_composite(vapply(criteria, `[[`, "", "verdict")), info = basename(f))
+      if (xml2::xml_attr(composite, "mode") == "advisory") advisory <- c(advisory, "functional")
+    }
+    constraints <- list()
+    if (!inherits(latency, "xml_missing")) {
+      expect_identical(is.na(xml2::xml_attr(latency, "mode")), is.na(xml2::xml_attr(latency, "verdict")),
+                       info = basename(f))
+      evals <- xml2::xml_find_all(latency, ".//*[local-name()='evaluation']")
+      for (e in evals) {
+        status <- xml2::xml_attr(e, "status")
+        constraints[[length(constraints) + 1]] <- list(constraint_id = xml2::xml_attr(e, "percentile"),
+                                                        verdict = status_verdict[[status]])
+        if (!is.na(xml2::xml_attr(e, "required-within"))) {
+          passed <- as.integer(xml2::xml_attr(e, "within-threshold")) >= as.integer(xml2::xml_attr(e, "required-within"))
+          expect_identical(status, if (passed) "PASS" else "FAIL", info = basename(f))
+        }
+      }
+      if (length(evals)) {
+        expect_identical(xml2::xml_attr(latency, "verdict"),
+                         structural_composite(vapply(constraints, `[[`, "", "verdict")), info = basename(f))
+        if (xml2::xml_attr(latency, "mode") == "advisory") advisory <- c(advisory, "latency")
+      }
+    }
+    tv <- test_verdict(criteria, constraints, advisory)
+    expect_identical(value, tv$test_verdict, info = basename(f))
+    seen <- c(seen, if (length(advisory)) paste(advisory, collapse = "+") else "none")
+  }
+  expect_true(all(c("none", "functional", "latency", "functional+latency") %in% seen))
 })

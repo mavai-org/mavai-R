@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a typical verdict-1.8 record.
+
+     1.8 records whether each dimension was enforced or advisory (Statistical
+     Companion 1.6.0). Every assertion is enforced by default; a run-time
+     switch, never a per-test annotation, can make the functional
+     dimension, the latency dimension or both advisory. This run uses the
+     default: the composite and <latency> both state mode="enforced", and
+     the record's verdict composes both dimensions.
+
+     The run below is an empirical regression test: a baseline of 951
+     successes in 1000 trials, a test of 100 samples, alpha 0.05. Under
+     regression/fisher the integer cutoff is c = 91: the test PASSes iff at
+     least 91 of its 100 samples succeed. It observed 93, so it passes. The
+     stated threshold is c / n_t = 0.91; the Wilson lower bound is
+     descriptive and decides nothing. The criterion row states the count
+     itself as @required-pass.
+
+     The statistics element names two powers apart at the design
+     alternative rate 0.90: the design power (0.550) and the power of this
+     resolved test (0.549). The size at the assumed common rate 0.951 is
+     0.0340.
+
+     The test also carries an explicit latency requirement over its 93
+     successful latencies, p90 <= 800 ms, decided by
+     latency/compliance-exact-binomial: 91 of the 93 latencies are at or
+     below 800 ms, and at alpha 0.05 at least 89 must be for compliance to
+     be demonstrated, so it passes.
+
+     The 1.7 typical record also carried an advisory p99 <= 900 ms, compared
+     raw. Under 1.6.0 an advisory requirement is decided by its rule like
+     any other, and no count of 100 planned samples can demonstrate a p99
+     at alpha 0.05 (299 are needed), so that configuration is refused
+     (COMPLIANCE_INFEASIBLE) whether the latency dimension is enforced or
+     advisory. It is therefore not carried here.
+
+     The record's verdict is the overall test verdict: the functional
+     composite (PASS) and the latency dimension's verdict (PASS) composed
+     by the structural rule. Two rules decided, so each is stated where it
+     decided and <verdict> states none. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.8" methodology-version="1.6.0" timestamp="2026-10-06T12:00:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="100" samples-executed="100" successes="93" failures="7" elapsed-ms="148200" intent="VERIFICATION" confidence="0.95" />
+  <statistics confidence-level="0.95" standard-error="0.0255" wilson-lower="0.8757" threshold="0.91" threshold-origin="EMPIRICAL" size-at-assumed-common-rate="0.0340" design-alternative-rate="0.90" design-power="0.550" resolved-test-power="0.549" />
+  <covariates aligned="true" />
+  <inputs>
+    <input index="0" excerpt="offer-letter-standard.pdf" />
+    <input index="1" excerpt="offer-letter-amended.pdf" />
+  </inputs>
+  <provenance origin="EMPIRICAL" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="1000" baseline-rate="0.951" derived-threshold="0.91" />
+  <termination reason="COMPLETED" />
+  <functional successes="93" failures="7" pass-rate="0.93">
+    <failure-distribution>
+      <check name="states the premium amount" count="7" kind="evaluated" />
+    </failure-distribution>
+  </functional>
+  <latency successful-samples="93" verdict="PASS" mode="enforced">
+    <observed>
+      <percentile label="p90" value-ms="640" />
+    </observed>
+    <evaluations>
+      <evaluation percentile="p90" observed-ms="640" threshold-ms="800" provenance="explicit" status="PASS" decision-rule="latency/compliance-exact-binomial" decision-rule-version="1" within-threshold="91" required-within="89" />
+    </evaluations>
+  </latency>
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="93" fail="7" inconclusive="0" total="100" observed-rate="0.93" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" required-pass="91" />
+    <composite value="PASS" mode="enforced" />
+  </per-criterion>
+  <verdict value="PASS" />
+</verdict-record>

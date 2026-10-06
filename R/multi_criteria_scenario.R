@@ -412,19 +412,19 @@ generate_multi_criteria_scenario_cases <- function() {
     dual_case("two_criteria_inconclusive",
       "Only 20 of 100 trials are evaluable under the conditional policy: no count of 20 can demonstrate 0.95 (compliance INCONCLUSIVE), and 20 of 20 shows no degradation (regression PASS). INCONCLUSIVE.",
       100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05),
-    # The overall test verdict with an enforced latency constraint: the 20
+    # The overall test verdict with a latency constraint, enforced by default: the 20
     # samples that passed both criteria are the latency population.
     dual_case("two_criteria_inconclusive_latency_pass",
-      "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an enforced explicit p50 <= 300 ms requirement over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
+      "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an explicit p50 <= 300 ms requirement, enforced by default, over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
       100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05,
       latency_constraints = list(list(constraint_id = "p50_le_300ms", source = "explicit",
-        mode = "enforced", percentile = 0.50, alpha = 0.05, threshold_ms = 300,
+        percentile = 0.50, alpha = 0.05, threshold_ms = 300,
         latencies = latency_compliance_sample(20, 18, 300)))),
     dual_case("two_criteria_inconclusive_latency_fail",
       "The same with 12 of 20 latencies within 300 ms: V_latency FAIL, and FAIL dominates, so V_test FAIL, triggered by the latency constraint.",
       100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05,
       latency_constraints = list(list(constraint_id = "p50_le_300ms", source = "explicit",
-        mode = "enforced", percentile = 0.50, alpha = 0.05, threshold_ms = 300,
+        percentile = 0.50, alpha = 0.05, threshold_ms = 300,
         latencies = latency_compliance_sample(20, 12, 300)))),
     dual_case("two_criteria_fail_dominates_inconclusive",
       "As before with 15 of 20: compliance INCONCLUSIVE, regression FAIL. FAIL, triggered by the regression criterion.",
@@ -491,10 +491,10 @@ generate_multi_criteria_scenario_cases <- function() {
       "on the same postconditions: two criteria over one sampling and the same",
       "observations, a compliance criterion and a regression criterion, each with",
       "one rule, one alpha and one verdict, composed by the ordinary structural",
-      "composite, one case for each outcome; two of them carry an enforced latency",
-      "constraint. Every case states the overall test verdict: latency_verdict (the",
-      "structural composite of the enforced latency constraints, null without any) and",
-      "test_verdict (the composite of the functional composite and latency_verdict), with",
+      "composite, one case for each outcome; two of them carry a latency constraint,",
+      "enforced by default. Every case states the overall test verdict: latency_verdict (the",
+      "structural composite of the latency constraints, null without any) and test_verdict",
+      "(the composite of the functional composite and latency_verdict, both enforced), with",
       "test_triggering naming the criteria and constraints that decided it."
     ),
     method = paste(
