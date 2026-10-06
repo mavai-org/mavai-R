@@ -228,17 +228,19 @@ test_that("non-degeneracy warns before the run and decides after it", {
   expect_true(pl$warning)
   expect_identical(pl$planned_samples_needed, 125L)
   expect_false(latency_nondegeneracy_planning(0.99, 125, 0.80)$warning)
-  expect_identical(latency_nondegeneracy_decision(0.99, 99, "VERIFICATION", TRUE)$outcome, "INCONCLUSIVE")
-  expect_identical(latency_nondegeneracy_decision(0.99, 100, "VERIFICATION", TRUE)$outcome, "DECIDED")
-  expect_identical(latency_nondegeneracy_decision(0.99, 40, "SMOKE", TRUE)$outcome, "INDICATIVE")
-  expect_identical(latency_nondegeneracy_decision(0.95, 19, "VERIFICATION", FALSE)$outcome, "INDICATIVE")
+  expect_identical(latency_nondegeneracy_decision(0.99, 99, "VERIFICATION")$outcome, "INCONCLUSIVE")
+  expect_identical(latency_nondegeneracy_decision(0.99, 100, "VERIFICATION")$outcome, "DECIDED")
+  expect_identical(latency_nondegeneracy_decision(0.99, 40, "SMOKE")$outcome, "INDICATIVE")
+  # Methodology 1.6.0: the mode does not enter; an advisory assertion is
+  # decided by the same rule, so below the minimum under VERIFICATION it is
+  # INCONCLUSIVE, never merely indicative.
+  expect_identical(latency_nondegeneracy_decision(0.95, 19, "VERIFICATION")$outcome, "INCONCLUSIVE")
 })
 
 test_that("the non-degeneracy gate branches by threshold source", {
-  e <- latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", TRUE, "explicit")
+  e <- latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", "explicit")
   expect_false(e$applies)
   expect_true(e$degenerate)
   expect_identical(e$outcome, "DECIDED")
-  expect_identical(latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", FALSE, "explicit")$outcome, "INDICATIVE")
-  expect_identical(latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", TRUE, "baseline-derived")$outcome, "INCONCLUSIVE")
+  expect_identical(latency_nondegeneracy_decision(0.50, 4, "VERIFICATION", "baseline-derived")$outcome, "INCONCLUSIVE")
 })

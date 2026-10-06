@@ -178,9 +178,8 @@ latency_precedence_planning <- function(baseline_trials, planned_samples, baseli
 
 #' Pre-run non-degeneracy check for a latency percentile assertion
 #'
-#' For a baseline-derived assertion or an advisory raw comparison; an
-#' enforced explicit requirement has its own exact feasibility condition
-#' instead (latency/compliance-exact-binomial).
+#' For a baseline-derived assertion; an explicit requirement has its own
+#' exact feasibility condition instead (latency/compliance-exact-binomial).
 #'
 #' Before the run the number of successful latencies is an expectation,
 #' floor(planned_samples * baseline_success_rate), not a lower bound. A
@@ -204,29 +203,29 @@ latency_nondegeneracy_planning <- function(p, planned_samples, baseline_success_
 #'
 #' Made on the actual number of successful latencies, and only where the
 #' decision statistic is the empirical percentile. The gate applies to a
-#' baseline-derived assertion (latency/precedence) and to an advisory raw
-#' percentile comparison; it does not apply to an enforced explicit
-#' requirement, which is decided by latency/compliance-exact-binomial on
-#' the within-threshold count and has its own exact feasibility condition.
-#' Below the §12.5.2 minimum an enforced baseline-derived assertion under
-#' VERIFICATION intent is INCONCLUSIVE; under SMOKE intent or in advisory
-#' mode the percentile is evaluated and marked INDICATIVE (§12.5.4).
+#' baseline-derived assertion (latency/precedence); it does not apply to an
+#' explicit requirement, which is decided by latency/compliance-exact-binomial
+#' on the within-threshold count and has its own exact feasibility
+#' condition. Below the §12.5.2 minimum a baseline-derived assertion under
+#' VERIFICATION intent is INCONCLUSIVE, enforced or advisory (an advisory
+#' assertion is decided by the same rule, companion §12.6); under SMOKE
+#' intent the percentile is evaluated and marked INDICATIVE (§12.5.4).
 #' Otherwise the assertion is DECIDED by its rule.
 #'
 #' @param threshold_source "explicit" or "baseline-derived".
 #' @return A list: applies, degenerate, outcome (DECIDED, INCONCLUSIVE or
 #'   INDICATIVE).
 #' @export
-latency_nondegeneracy_decision <- function(p, test_samples, intent, enforced,
+latency_nondegeneracy_decision <- function(p, test_samples, intent,
                                            threshold_source = "baseline-derived") {
   if (!intent %in% c("VERIFICATION", "SMOKE")) stop("intent must be VERIFICATION or SMOKE", call. = FALSE)
   if (!threshold_source %in% c("explicit", "baseline-derived")) {
     stop("threshold_source must be explicit or baseline-derived", call. = FALSE)
   }
-  applies <- !(threshold_source == "explicit" && enforced)
+  applies <- threshold_source == "baseline-derived"
   degenerate <- test_samples < latency_min_samples(p)
   outcome <- if (!applies || !degenerate) "DECIDED" else
-    if (intent == "VERIFICATION" && enforced) "INCONCLUSIVE" else "INDICATIVE"
+    if (intent == "VERIFICATION") "INCONCLUSIVE" else "INDICATIVE"
   list(applies = applies, degenerate = degenerate, outcome = outcome)
 }
 
@@ -315,14 +314,14 @@ generate_latency_percentile_minimums_cases <- function() {
       expected = latency_nondegeneracy_planning(p, planned, rate)
     ))
   }
-  nd_decision_case <- function(name, p, test_samples, intent, enforced, description = NULL,
+  nd_decision_case <- function(name, p, test_samples, intent, description = NULL,
                                threshold_source = "baseline-derived") {
     case <- list(name = name, approach = "nondegeneracy_decision")
     if (!is.null(description)) case$description <- description
     c(case, list(
       inputs = list(percentile = p, test_samples = as.integer(test_samples),
-                    intent = intent, enforced = enforced, threshold_source = threshold_source),
-      expected = latency_nondegeneracy_decision(p, test_samples, intent, enforced, threshold_source)
+                    intent = intent, threshold_source = threshold_source),
+      expected = latency_nondegeneracy_decision(p, test_samples, intent, threshold_source)
     ))
   }
   nondegeneracy_cases <- list(
@@ -331,18 +330,16 @@ generate_latency_percentile_minimums_cases <- function() {
     nd_planning_case("p99_planned125_rate080_no_warning", 0.99, 125, 0.80),
     nd_planning_case("p95_planned30_rate090_no_warning", 0.95, 30, 0.90),
     nd_planning_case("p90_planned12_rate075_warning", 0.90, 12, 0.75),
-    nd_decision_case("p99_actual99_verification_enforced_inconclusive", 0.99, 99, "VERIFICATION", TRUE,
-      "One successful latency short of the p99 minimum after the run: the enforced assertion is INCONCLUSIVE."),
-    nd_decision_case("p99_actual100_verification_enforced_decided", 0.99, 100, "VERIFICATION", TRUE,
+    nd_decision_case("p99_actual99_verification_inconclusive", 0.99, 99, "VERIFICATION",
+      "One successful latency short of the p99 minimum after the run: the assertion is INCONCLUSIVE, whether the latency dimension is enforced or advisory."),
+    nd_decision_case("p99_actual100_verification_decided", 0.99, 100, "VERIFICATION",
       "The pre-run warning at 110 planned (88 expected) does not bind: a run that returns 100 successful latencies is decided."),
-    nd_decision_case("p99_actual40_smoke_indicative", 0.99, 40, "SMOKE", TRUE),
-    nd_decision_case("p95_actual19_verification_advisory_indicative", 0.95, 19, "VERIFICATION", FALSE),
-    nd_decision_case("p50_actual5_verification_enforced_decided", 0.50, 5, "VERIFICATION", TRUE),
-    nd_decision_case("explicit_p50_actual4_enforced_not_gated", 0.50, 4, "VERIFICATION", TRUE,
-      "An enforced explicit requirement is decided by latency/compliance-exact-binomial on the within-threshold count; the percentile non-degeneracy gate does not apply (at alpha 0.10, 4 of 4 can PASS: latency_compliance_decision/explicit_p50_n4_alpha010_pass).",
-      threshold_source = "explicit"),
-    nd_decision_case("explicit_p50_actual4_advisory_indicative", 0.50, 4, "VERIFICATION", FALSE,
-      "The same percentile compared raw in advisory mode: the gate marks it indicative.",
+    nd_decision_case("p99_actual40_smoke_indicative", 0.99, 40, "SMOKE"),
+    nd_decision_case("p95_actual19_verification_inconclusive", 0.95, 19, "VERIFICATION",
+      "Below the p95 minimum of 20 under VERIFICATION: INCONCLUSIVE. Before methodology 1.6.0 an advisory assertion here was compared raw and marked indicative; it is now decided by its rule like any other, and the mode changes only whether the outcome binds."),
+    nd_decision_case("p50_actual5_verification_decided", 0.50, 5, "VERIFICATION"),
+    nd_decision_case("explicit_p50_actual4_not_gated", 0.50, 4, "VERIFICATION",
+      "An explicit requirement is decided by latency/compliance-exact-binomial on the within-threshold count; the percentile non-degeneracy gate does not apply (at alpha 0.10, 4 of 4 can PASS: latency_compliance_decision/explicit_p50_n4_alpha010_pass).",
       threshold_source = "explicit")
   )
 
@@ -378,10 +375,11 @@ generate_latency_percentile_minimums_cases <- function() {
       "a warning and the planning figure planned_samples_needed, never a refusal. Cases with ",
       "approach 'nondegeneracy_decision' carry the binding decision on the actual count after the ",
       "run, where the decision statistic is the empirical percentile: the gate applies to a ",
-      "baseline-derived assertion and to an advisory raw comparison, not to an enforced explicit ",
-      "requirement (applies = false; decided by latency/compliance-exact-binomial). Below the ",
-      "minimum an enforced baseline-derived VERIFICATION assertion is INCONCLUSIVE, and a SMOKE or ",
-      "advisory one INDICATIVE; otherwise DECIDED by its rule. The p50 minimum of 5 is an ",
+      "baseline-derived assertion, not to an explicit requirement (applies = false; decided by ",
+      "latency/compliance-exact-binomial). Below the minimum a baseline-derived VERIFICATION ",
+      "assertion is INCONCLUSIVE and a SMOKE one INDICATIVE; otherwise DECIDED by its rule. The ",
+      "latency dimension's enforcement mode (companion §12.6) does not enter: an advisory ",
+      "assertion is decided by the same rule. The p50 minimum of 5 is an ",
       "engineering minimum; the mathematical one is 3. The withdrawn Wilks minimums are no longer ",
       "published. Cases named exact_boundary have breach(n_b) = n_t / (n_b + n_t) = alpha exactly ",
       "(the test percentile is the test maximum); the inclusive rule admits the rank, and double ",
@@ -398,10 +396,10 @@ generate_latency_percentile_minimums_cases <- function() {
       "minimum_baseline_trials = the smallest n_b >= expected_test_samples with a rank. ",
       "Non-degeneracy planning: warning = expected_test_samples < minimum_contributing_samples; ",
       "planned_samples_needed = the smallest planned size with floor(planned * rate) >= the ",
-      "minimum. Non-degeneracy decision: applies = not (threshold_source explicit and enforced); ",
+      "minimum. Non-degeneracy decision: applies = (threshold_source is baseline-derived); ",
       "degenerate = test_samples < the minimum; outcome = DECIDED when the gate does not apply or ",
-      "the percentile is not degenerate, else INCONCLUSIVE when intent is VERIFICATION and the ",
-      "assertion enforced, else INDICATIVE."
+      "the percentile is not degenerate, else INCONCLUSIVE when intent is VERIFICATION, else ",
+      "INDICATIVE."
     ),
     tolerance = 0,
     cases = c(emission_cases, nondegeneracy_cases, existence_cases, planning_cases)

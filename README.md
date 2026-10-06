@@ -27,8 +27,9 @@ independently. No need to trust a Java or Rust implementation.
 
 ## What's covered
 
-The reference data implements the decision rules of Statistical Companion
-1.5.0 over two quality dimensions of the mavai methodology: **pass-rate
+The reference data implements Statistical Companion 1.6.0 (the decision
+rules of 1.5.0, with every assertion enforced by default) over two quality
+dimensions of the mavai methodology: **pass-rate
 analysis** (binomial) and **latency analysis** (non-parametric, empirical
 percentile based). For the full statistical treatment, see the
 [Statistical Companion](docs/STATISTICAL-COMPANION.md). For the contract
@@ -66,7 +67,7 @@ the `v0.10.13` release assets.
 | Feasibility | `inst/cases/feasibility.json` | Whether a normative test of this size can PASS at all |
 | Power analysis | `inst/cases/power_analysis.json` | Exact compliance sizing (margin, midway or declared alternative), regression design power and resolved-test power, and minimum detectable degradation |
 | Risk-driven sizing | `inst/cases/risk_driven_sizing.json` | Exact sizing of the regression rule at a declared design alternative rate, with refusals |
-| Verdict | `inst/cases/verdict.json` | Verdicts under both ruled rules, including joint configurations |
+| Verdict | `inst/cases/verdict.json` | Verdicts under both ruled rules, including joint configurations, and the test verdict under each setting of the advisory switch |
 
 ### Latency conformance
 
@@ -75,7 +76,7 @@ the `v0.10.13` release assets.
 | Latency percentile | `inst/cases/latency_percentile.json` | Nearest-rank empirical percentiles and summary statistics |
 | Latency threshold | `inst/cases/latency_threshold.json` | The precedence rank and threshold, or saturation |
 | Latency percentile minimums | `inst/cases/latency_percentile_minimums.json` | Emission minimums, precedence existence on the actual count, and the pre-run planning check |
-| Latency compliance decision | `inst/cases/latency_compliance_decision.json` | Explicit latency requirements: verdicts, refusals and INCONCLUSIVE outcomes, with the advisory percentile comparison |
+| Latency compliance decision | `inst/cases/latency_compliance_decision.json` | Explicit latency requirements: verdicts, refusals and INCONCLUSIVE outcomes, with the raw percentile comparison |
 
 The multi-criteria suites (`criterion_verdict_*`, `composite_verdict`,
 `baseline_object`, `multi_criteria_scenario_consult_advice`) are
@@ -119,7 +120,7 @@ Each suite file contains:
 ```json
 {
   "suite": "wilson_ci",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "1.6.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
   "description": "Wilson score confidence intervals (two-sided)",

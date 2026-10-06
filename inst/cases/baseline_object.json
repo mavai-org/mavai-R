@@ -1,6 +1,6 @@
 {
   "suite": "baseline_object",
-  "methodologyVersion": "1.5.0",
+  "methodologyVersion": "1.6.0",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
   "description": "Reference baseline objects per companion §1.5 + §1.4.5a. Cases are schema fixtures rather than computation fixtures: each case is a canonical baseline at a stated index (service-contract identity and resolved covariate values) with no expected output (the case itself is the example). Used by downstream frameworks to exercise parser conformance and the structural checks (covariate match, structural-reference match, policy match) that §§1.5.2 and 1.4.5a require.",

@@ -18,7 +18,7 @@
 
 MANIFEST_VERSION <- 2L
 
-# Suites every mavai implementation must support under methodology 1.5.0.
+# Suites every mavai implementation must support under methodology 1.6.0.
 FAMILY_MANDATORY_SUITES <- c(
   "wilson_ci",
   "wilson_lower",
@@ -34,7 +34,8 @@ FAMILY_MANDATORY_SUITES <- c(
 # decision that lives only in a design document is a decision consumers
 # cannot see.
 TIER_RATIONALE <- paste0(
-  "Methodology 1.5.0 replaces the three decision rules and the mandatory roster with them. ",
+  "Methodology 1.5.0 replaced the three decision rules and the mandatory roster with them; 1.6.0 keeps ",
+  "both and changes only which verdicts bind (every assertion enforced by default). ",
   "The roster is the methodological spine of the three rules: the Wilson interval and lower ",
   "bound (kept as descriptive primitives; no rule decides with them), the empirical-regression ",
   "verdict (regression/fisher), the normative-compliance verdict (compliance/exact-binomial), ",
@@ -63,7 +64,7 @@ INFORMATIONAL_FIELDS <- list(
   compliance_decision = c("false_compliance", "clopper_pearson_lower"),
   latency_threshold = c("breach_probability", "test_rank", "n", "baseline_percentile"),
   latency_compliance_decision = c("false_compliance", "clopper_pearson_lower",
-                                  "observed_percentile_ms", "advisory_percentile_pass"),
+                                  "observed_percentile_ms", "raw_percentile_pass"),
   verdict = c("observed_rate"),
   power_analysis = c("first_crossing")
 )
