@@ -381,7 +381,7 @@ The refusal takes two forms, depending on the test's intent:
 - **Under VERIFICATION** — the evidential posture used for compliance against an SLA, SLO, or policy threshold — saturation is treated as a configuration error. The verdict is **INCONCLUSIVE**. The author is being told: "this sample size is too small to deliver the affirmative statistical claim you have asked for."
 - **Under SMOKE** — directional signal, not a compliance claim — the maximum observed latency $t_{(n_s)}$ may be displayed alongside the flag `saturated: true`. The number is shown so the operator has *something* to look at, but it is explicitly labelled as not constituting an exact upper bound at the configured confidence.
 
-In the worked example above, an advisory report would show $t_{(200)} = 589\text{ms}$ (the maximum observed latency) with `saturated: true`. It is *not* a 95% upper bound on the true $Q(0.99)$; it is the best statistic the sample can offer, clearly flagged as such.
+In the worked example above, a SMOKE report would show $t_{(200)} = 589\text{ms}$ (the maximum observed latency) with `saturated: true`. It is *not* a 95% upper bound on the true $Q(0.99)$; it is the best statistic the sample can offer, clearly flagged as such.
 
 ### 8.4 Back to the ladder
 

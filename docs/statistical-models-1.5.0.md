@@ -1,6 +1,6 @@
 # Statistical models of the mavai methodology — an overview
 
-*Statistical Companion 1.5.0 (mavai-R 0.11.x). A summary for orientation; the companion is normative.*
+*Statistical Companion 1.5.0 and 1.6.0 (mavai-R 0.11.x and 0.12.x): 1.6.0 keeps the four rules of 1.5.0 and changes only which verdicts bind. A summary for orientation; the companion is normative.*
 
 ## Introduction
 
@@ -10,7 +10,7 @@ All four rules share the same shape. Before any sample runs, they fix an integer
 
 The Wilson score interval, which decided verdicts up to 1.4.1, remains only as a descriptive interval around an observed rate. It decides nothing.
 
-A test's overall verdict combines the pass-rate verdict and the latency verdict. It is PASS if both pass, FAIL if either fails, and INCONCLUSIVE otherwise. Advisory latency comparisons are reported but never counted.
+A test's overall verdict combines the pass-rate verdict and the latency verdict. It is PASS if both pass, FAIL if either fails, and INCONCLUSIVE otherwise. Since Statistical Companion 1.6.0 both dimensions count by default, whatever the source of their thresholds; a run-time switch can make the pass-rate dimension, the latency dimension or both advisory, in which case that dimension is still decided by its rule and reported, but it is left out of the overall verdict and cannot fail the test.
 
 ## 1. Regression of a pass rate — `regression/fisher`
 
