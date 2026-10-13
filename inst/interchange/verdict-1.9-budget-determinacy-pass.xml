@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a token budget exhausted under evaluate-partial, decided PASS.
+
+     on-exhausted: evaluate-partial. The budget stopped the run after 95
+     of 100 planned samples; 92 passed. The planned-n cutoff is 91, and 92
+     already reaches it, so no outcome of the 5 samples not run could
+     change the planned-n decision: PASS by determinacy. The rule is never
+     applied at the truncated count. The service was paced at 50 requests
+     per minute (an effective 1200 ms between starts), recorded in
+     <pacing>.
+
+     The run is the typical record's empirical regression test: a baseline
+     of 951 successes in 1000 trials, 100 samples planned, alpha 0.05, so
+     under regression/fisher the planned-n cutoff is c = 91
+     (@required-pass). The service's budget: stopped it early. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.9" methodology-version="1.6.0" timestamp="2026-10-13T12:00:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="100" samples-executed="95" successes="92" failures="3" elapsed-ms="140980" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <provenance origin="EMPIRICAL" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="1000" baseline-rate="0.951" derived-threshold="0.91" />
+  <termination reason="TOKEN_BUDGET_EXHAUSTED" on-exhausted="EVALUATE_PARTIAL" />
+  <pacing max-rpm="50" effective-min-delay-ms="1200" effective-rps="0.8333" />
+  <cost total-time-ms="140980" total-tokens="142500" avg-time-per-sample-ms="1484" avg-tokens-per-sample="1500" />
+  <functional successes="92" failures="3" pass-rate="0.9684" />
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="PASS" pass="92" fail="3" inconclusive="0" total="95" observed-rate="0.9684" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" required-pass="91" />
+    <composite value="PASS" mode="enforced" />
+  </per-criterion>
+  <verdict value="PASS" />
+</verdict-record>

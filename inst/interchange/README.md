@@ -56,6 +56,14 @@ being reported beside it (`verdict-1.8-typical.xml`,
 `verdict-1.8-latency-fail.xml`, `verdict-1.8-latency-saturated.xml`, and one
 example per advisory setting: `verdict-1.8-functional-advisory.xml`,
 `verdict-1.8-latency-advisory.xml`, `verdict-1.8-both-advisory.xml`).
+From 1.9 (the run-controls amendment of `mavai-services/1`, 2026-10-13) a
+run stopped by its budget states the exhaustion behaviour applied on
+`<termination on-exhausted>` (`INCONCLUSIVE`, `FAIL` or `EVALUATE_PARTIAL`,
+the last deciding each criterion by determinacy at the planned sample
+count), and `<pacing>` records a declared pacing's keys with only its
+effective delay required (`verdict-1.9-budget-inconclusive.xml`,
+`verdict-1.9-budget-determinacy-pass.xml`,
+`verdict-1.9-budget-determinacy-fail.xml`, `verdict-1.9-budget-fail.xml`).
 Earlier XSD versions are unchanged.
 
 **This repository is the publication channel for these artefacts, not their

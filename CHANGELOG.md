@@ -5,6 +5,14 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.13.0] — unreleased
+
+**Additive: run controls in `mavai-services/1`, and verdict-1.9.** The run-controls amendment (2026-10-13) lets a service definition declare its pacing and its budget. No fixture in `inst/cases/` changes.
+
+*Formats*: `mavai-services-1.schema.json` gains the reader-level `pacing` key — accepted in every type's `configuration:` and in exploration and optimization overlays, a covariate — with `max-requests-per-second`, `max-requests-per-minute` and `min-ms-per-sample`, at least one; and a sibling `budget:` block, not a covariate, with `time-ms` and `tokens` (one of them required), `token-charge` and `on-exhausted` (`inconclusive`, `fail`, `evaluate-partial`). A bare registration's configuration may hold only reader-level keys. The corpus gains 2 valid cases (`services-run-controls.yaml`, `services-run-controls-bare.yaml`, requiring `type:echo`) and 9 structurally refused ones, each with its category in the manifest: `pacing-empty`, `pacing-rate-not-positive`, `pacing-unknown-key`, `budget-limit-missing`, `budget-limit-not-positive`, `budget-on-exhausted-vocabulary`, `budget-unknown-key`, `budget-in-configuration`, `budget-in-exploration`.
+
+*Verdict interchange*: new `verdict-1.9.xsd`, additive over 1.8 (a 1.8 record relabelled 1.9 validates). `<termination>` gains `@on-exhausted` — `INCONCLUSIVE`, `FAIL` or `EVALUATE_PARTIAL` — present exactly when the reason is `TIME_BUDGET_EXHAUSTED` or `TOKEN_BUDGET_EXHAUSTED`; under `EVALUATE_PARTIAL` a criterion is decided only by determinacy at the planned sample count (PASS once its passes reach `@required-pass`, FAIL once they plus the samples not run cannot, INCONCLUSIVE otherwise), never at the truncated count. `<pacing>`'s declared values and concurrency attributes become optional, `@min-ms-per-sample` is added, and `@effective-min-delay-ms` stays required. Four worked examples, one per behaviour and outcome; tests pin the rules XSD 1.0 cannot state.
+
 ## [0.12.0] — unreleased
 
 **Breaking: the fixtures implement Statistical Companion 1.6.0, under which every assertion is enforced by default.** Functional criteria and latency constraints, normative and empirical, count towards the test verdict by default; a run-time switch makes the functional dimension, the latency dimension or both advisory. An advisory dimension is decided by its proper rule and reported, but never enters the test verdict and never fails the test. No decision rule, cutoff, rank or worked number changes; which verdicts bind does, so a test verdict can. Every fixture file and the manifest now state methodology 1.6.0.

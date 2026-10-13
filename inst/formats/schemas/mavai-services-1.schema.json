@@ -64,7 +64,7 @@
         },
         "configuration": {
           "type": "object",
-          "$comment": "Part I: exactly one configuration: block — the complete set of covariate values the service runs under; no parameter lives anywhere else in the definition (the uniformity rule)."
+          "$comment": "Part I: exactly one configuration: block — the complete set of covariate values the service runs under; no parameter lives anywhere else in the definition (the uniformity rule). Every type's configuration also accepts the reader-level keys (SII.8, run-controls amendment 2026-10-13: pacing); a bare registration's may hold only those, or be empty."
         },
         "explorations": {
           "type": "array",
@@ -77,7 +77,8 @@
           "minItems": 1,
           "items": {"$ref": "#/$defs/optimizationEntry"},
           "$comment": "Part I (amendment 2026-07-25): a non-empty list of optimize-experiment entries, consumed only by the optimize verb — measure, test, and explore never read it."
-        }
+        },
+        "budget": {"$ref": "#/$defs/budget"}
       },
       "allOf": [
         {
@@ -101,13 +102,15 @@
           "else": {
             "properties": {
               "configuration": {
+                "properties": {"pacing": {"$ref": "#/$defs/pacing"}},
                 "additionalProperties": {"$ref": "#/$defs/scalarValue"},
-                "$comment": "SII.7: for a user-registered type the factory's signature is the configuration schema (validated by the reader at load time, not expressible here); values are scalars."
+                "$comment": "SII.7: for a user-registered type the factory's signature is the configuration schema (validated by the reader at load time, not expressible here); values are scalars. The reader-level pacing key (SII.8) is the reader's, never the factory's."
               },
               "explorations": {
                 "items": {
                   "type": "object",
                   "minProperties": 1,
+                  "properties": {"pacing": {"$ref": "#/$defs/pacing"}},
                   "additionalProperties": {"$ref": "#/$defs/scalarValue"}
                 }
               },
@@ -117,6 +120,7 @@
                     "initial": {
                       "type": "object",
                       "minProperties": 1,
+                      "properties": {"pacing": {"$ref": "#/$defs/pacing"}},
                       "additionalProperties": {"$ref": "#/$defs/scalarValue"}
                     }
                   }
@@ -225,9 +229,10 @@
             "enum": ["response-schema", "prompt-caching", "thinking", "image-input", "document-input", "audio-input"]
           },
           "$comment": "SII.3 (amendment 2026-07-25): the author-declared capability allowance — a closed set; the per-modality media capabilities gate the encoding of file-sourced input parts (an undeclared capability is never sent silently). Adapter-encodability refusals are semantic, manifest-carried; the allowance is fingerprinted into provenance."
-        }
+        },
+        "pacing": {"$ref": "#/$defs/pacing"}
       },
-      "$comment": "SII.3: the type: language-model configuration block holds every parameter; no parameter may appear outside it. Token-related parameters are deliberately absent from v0. Secrets never appear in this file — credentials are environment-only."
+      "$comment": "SII.3: the type: language-model configuration block holds every parameter; no parameter may appear outside it. Token budgets live in the sibling budget: block (SII.8), never here. Secrets never appear in this file — credentials are environment-only."
     },
     "languageModelDelta": {
       "type": "object",
@@ -251,9 +256,33 @@
           "items": {
             "enum": ["response-schema", "prompt-caching", "thinking", "image-input", "document-input", "audio-input"]
           }
-        }
+        },
+        "pacing": {"$ref": "#/$defs/pacing"}
       },
       "$comment": "Part I / SII.6: a partial language-model configuration — an exploration entry's deviations, or an optimization entry's initial: overlay — the same key vocabulary, nothing required."
+    },
+    "pacing": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "max-requests-per-second": {"type": "number", "exclusiveMinimum": 0},
+        "max-requests-per-minute": {"type": "number", "exclusiveMinimum": 0},
+        "min-ms-per-sample": {"type": "integer", "minimum": 1}
+      },
+      "$comment": "SII.8 (run-controls amendment, 2026-10-13): the reader-level pacing key, accepted in every type's configuration and never bound to a user factory. At least one of the three; the effective delay is the largest any of them implies, start to start, outside every measured latency. A covariate: fingerprinted, explorable."
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "time-ms": {"type": "integer", "minimum": 1},
+        "tokens": {"type": "integer", "minimum": 1},
+        "token-charge": {"type": "integer", "minimum": 0},
+        "on-exhausted": {"enum": ["inconclusive", "fail", "evaluate-partial"]}
+      },
+      "anyOf": [{"required": ["time-ms"]}, {"required": ["tokens"]}],
+      "$comment": "SII.8 (run-controls amendment, 2026-10-13): a run control beside configuration:, not a covariate, bounding one run of the consuming verb. time-ms or tokens is required; token-charge (default 0) and on-exhausted (default inconclusive) cannot stand alone. Exploration and optimization entries cannot carry it."
     }
   }
 }
