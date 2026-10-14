@@ -253,3 +253,28 @@ test_that("an optimization entry with an unknown key is refused", {
   ))
   expect_false(services_validator()(as_json(doc)))
 })
+
+test_that("the built-in steppers carry their stepper-config schemas", {
+  # SII.9 (numeric-steppers amendment, 2026-10-13): linear-sweep and
+  # refining-grid are family built-ins with closed stepper-config schemas;
+  # a user stepper's stepper-config stays open (its factory is the schema).
+  entry <- function(...) {
+    doc <- minimal_services()
+    doc$services$greeter$optimizations <- list(list(..., `max-iterations` = 10L))
+    services_validator()(as_json(doc))
+  }
+  grid <- list(key = "temperature", lo = 0, hi = 1, step = 0.25, `min-step` = 0.0625)
+  expect_true(entry(stepper = "linear-sweep",
+                    `stepper-config` = list(key = "temperature", step = 0.1, stop = 1)))
+  expect_true(entry(stepper = "refining-grid", `stepper-config` = grid))
+  expect_true(entry(stepper = "refining-grid", `stepper-config` = grid,
+                    scorer = "pass-rate", objective = "maximize"))
+  expect_false(entry(stepper = "linear-sweep"))
+  expect_false(entry(stepper = "linear-sweep",
+                     `stepper-config` = list(key = "temperature", step = 0, stop = 1)))
+  expect_false(entry(stepper = "refining-grid", `stepper-config` = grid, objective = "minimize"))
+  expect_false(entry(stepper = "refining-grid", `stepper-config` = grid, scorer = "politeness"))
+  expect_false(entry(stepper = "refining-grid",
+                     `stepper-config` = c(grid, list(`confirmation-epochs` = -1L))))
+  expect_true(entry(stepper = "my-stepper", `stepper-config` = list(anything = 1L)))
+})

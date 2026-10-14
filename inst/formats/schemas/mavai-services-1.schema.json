@@ -135,6 +135,27 @@
       "type": "object",
       "required": ["stepper", "max-iterations"],
       "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"stepper": {"const": "linear-sweep"}}, "required": ["stepper"]},
+          "then": {
+            "required": ["stepper-config"],
+            "properties": {"stepper-config": {"$ref": "#/$defs/linearSweepConfig"}}
+          }
+        },
+        {
+          "if": {"properties": {"stepper": {"const": "refining-grid"}}, "required": ["stepper"]},
+          "then": {
+            "required": ["stepper-config"],
+            "properties": {
+              "stepper-config": {"$ref": "#/$defs/refiningGridConfig"},
+              "scorer": {"const": "pass-rate"},
+              "objective": {"const": "maximize"}
+            },
+            "$comment": "SII.9: refining-grid decides on the all-criteria pass rate, so another scorer or objective: minimize is refused."
+          }
+        }
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -148,7 +169,7 @@
         },
         "stepper-config": {
           "type": "object",
-          "$comment": "Part I: bound against the stepper factory's signature — the factory's signature is the schema (SII.7 discipline), validated by the reader at load time, not expressible here."
+          "$comment": "Part I: bound against the stepper factory's signature — the factory's signature is the schema (SII.7 discipline), validated by the reader at load time, not expressible here. The family built-ins (SII.9) carry their schemas in the allOf above."
         },
         "scorer": {
           "type": "string",
@@ -171,6 +192,34 @@
           "minProperties": 1,
           "$comment": "Part I: iteration 0's configuration replacements, with an exploration entry's overlay semantics; an overlay restating the baseline is refused — semantic, manifest-carried."
         }
+      }
+    },
+    "linearSweepConfig": {
+      "type": "object",
+      "required": ["key", "step", "stop"],
+      "additionalProperties": false,
+      "$comment": "SII.9 (numeric-steppers amendment, 2026-10-13): the family built-in linear-sweep. That key names a configuration key holding a number is semantic, the reader's.",
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "step": {"type": "number", "not": {"const": 0}, "$comment": "SII.9: a zero step re-measures one configuration forever."},
+        "stop": {"type": "number"}
+      }
+    },
+    "refiningGridConfig": {
+      "type": "object",
+      "required": ["key", "lo", "hi", "step", "min-step"],
+      "additionalProperties": false,
+      "$comment": "SII.9 (numeric-steppers amendment, 2026-10-13): the family built-in refining-grid. lo below hi and min-step at most step are cross-key rules, semantic and manifest-carried.",
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "lo": {"type": "number"},
+        "hi": {"type": "number"},
+        "step": {"type": "number", "exclusiveMinimum": 0},
+        "min-step": {"type": "number", "exclusiveMinimum": 0},
+        "confidence": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "min-improvement": {"type": "number", "minimum": 0},
+        "confirmation-epochs": {"type": "integer", "minimum": 0},
+        "prefer": {"enum": ["low", "high"]}
       }
     },
     "languageModelConfiguration": {

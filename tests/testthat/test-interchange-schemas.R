@@ -692,3 +692,34 @@ test_that("a verdict-1.9 record's exhaustion behaviour decides as stated", {
   }
   expect_setequal(unique(seen), c("INCONCLUSIVE", "FAIL", "EVALUATE_PARTIAL"))
 })
+
+test_that("an optimize artefact's convergence.selection is additive and bounded", {
+  # A selecting stepper's optimum (built-in steppers, 0.13.0): optional,
+  # so every earlier artefact still validates; when present, it carries its
+  # pooled evidence and why the stepper stopped.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-optimize-1.schema.json"),
+    engine = "ajv"
+  )
+  read <- function(example) yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", example),
+    handlers = list(seq = function(x) as.list(x), "null" = function(x) NA)
+  )
+  as_json <- function(doc) jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA, na = "null")
+  doc <- read("optimize-selection.yaml")
+  expect_true(validator(as_json(doc)))
+  doc$convergence$selection <- NULL
+  expect_true(validator(as_json(doc)))
+
+  doc <- read("optimize-selection.yaml")
+  doc$convergence$selection$stoppingReason <- NULL
+  expect_false(validator(as_json(doc)))
+
+  doc <- read("optimize-selection.yaml")
+  doc$convergence$selection$rate <- 1.5
+  expect_false(validator(as_json(doc)))
+
+  doc <- read("optimize-selection.yaml")
+  doc$convergence$selection$finalists[[2]]$trials <- 0L
+  expect_false(validator(as_json(doc)))
+})

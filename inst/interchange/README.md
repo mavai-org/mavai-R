@@ -8,7 +8,11 @@ family's report renderer:
 - `mavai-explore-1` — one document per explored experiment configuration
   ([schema](../../schema/mavai-explore-1.schema.json)).
 - `mavai-optimize-1` — one document per optimize run: iteration history plus
-  convergence ([schema](../../schema/mavai-optimize-1.schema.json)).
+  convergence ([schema](../../schema/mavai-optimize-1.schema.json)). A
+  selecting stepper's optimum rides in `convergence.selection` with its
+  pooled evidence (additive, 0.13.0; `optimize-selection.yaml` is the
+  `refining-grid` worked example), and `bestIteration` stays the best
+  single observation.
 - `mavai-baseline-1` — one document per Empirical Baseline: what a measure
   experiment recorded about one service contract's one service, under one
   covariate profile, over one input set
