@@ -121,6 +121,7 @@ categories:
   budget-unknown-key: { spec: "MAVAI-SERVICES-FORMAT.md §II.8 (run controls, 2026-10-13)", refusal: structural }
   budget-in-configuration: { spec: "MAVAI-SERVICES-FORMAT.md §II.8 (run controls, 2026-10-13)", refusal: structural }
   budget-in-exploration: { spec: "MAVAI-SERVICES-FORMAT.md §II.8 (run controls, 2026-10-13)", refusal: structural }
+  budget-in-optimization-initial: { spec: "MAVAI-SERVICES-FORMAT.md §II.5; §II.8 (run controls, 2026-10-13)", refusal: structural }
 
 corpus:
   # ── valid/ ────────────────────────────────────────────────────────
@@ -149,6 +150,8 @@ corpus:
   - { file: services-roots-prompt-file.yaml, format: mavai-services/1, outcome: loads, spec: "MAVAI-SERVICES-FORMAT.md Part I; §II.3 (named path anchors, 2026-07-29)" }
   - { file: services-run-controls.yaml, format: mavai-services/1, outcome: loads, spec: "MAVAI-SERVICES-FORMAT.md Part I; §II.6; §II.8 (run controls, 2026-10-13)" }
   - { file: services-run-controls-bare.yaml, format: mavai-services/1, outcome: loads, spec: "MAVAI-SERVICES-FORMAT.md §II.7; §II.8 (run controls, 2026-10-13)", requires: ["type:echo"] }
+  - { file: services-run-controls-pacing.yaml, format: mavai-services/1, outcome: loads, spec: "MAVAI-SERVICES-FORMAT.md §II.8 (run controls, 2026-10-13)" }
+  - { file: services-run-controls-budget.yaml, format: mavai-services/1, outcome: loads, spec: "MAVAI-SERVICES-FORMAT.md §II.8 (run controls, 2026-10-13)" }
   # ── invalid/ — mavai-contract/1 ───────────────────────────────────
   - { file: format-identifier.yaml, format: mavai-contract/1, outcome: refused, category: format-identifier }
   - { file: missing-required-key.yaml, format: mavai-contract/1, outcome: refused, category: missing-required-key }
@@ -245,3 +248,4 @@ corpus:
   - { file: budget-unknown-key.yaml, format: mavai-services/1, outcome: refused, category: budget-unknown-key }
   - { file: budget-in-configuration.yaml, format: mavai-services/1, outcome: refused, category: budget-in-configuration }
   - { file: budget-in-exploration.yaml, format: mavai-services/1, outcome: refused, category: budget-in-exploration }
+  - { file: budget-in-optimization-initial.yaml, format: mavai-services/1, outcome: refused, category: budget-in-optimization-initial, requires: ["stepper:linear-sweep"] }
