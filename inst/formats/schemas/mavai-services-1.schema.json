@@ -64,7 +64,7 @@
         },
         "configuration": {
           "type": "object",
-          "$comment": "Part I: exactly one configuration: block — the complete set of covariate values the service runs under; no parameter lives anywhere else in the definition (the uniformity rule)."
+          "$comment": "Part I: exactly one configuration: block — the complete set of covariate values the service runs under; no parameter lives anywhere else in the definition (the uniformity rule). Every type's configuration also accepts the reader-level keys (SII.8, run-controls amendment 2026-10-13: pacing); a bare registration's may hold only those, or be empty."
         },
         "explorations": {
           "type": "array",
@@ -77,7 +77,8 @@
           "minItems": 1,
           "items": {"$ref": "#/$defs/optimizationEntry"},
           "$comment": "Part I (amendment 2026-07-25): a non-empty list of optimize-experiment entries, consumed only by the optimize verb — measure, test, and explore never read it."
-        }
+        },
+        "budget": {"$ref": "#/$defs/budget"}
       },
       "allOf": [
         {
@@ -101,13 +102,15 @@
           "else": {
             "properties": {
               "configuration": {
+                "properties": {"pacing": {"$ref": "#/$defs/pacing"}},
                 "additionalProperties": {"$ref": "#/$defs/scalarValue"},
-                "$comment": "SII.7: for a user-registered type the factory's signature is the configuration schema (validated by the reader at load time, not expressible here); values are scalars."
+                "$comment": "SII.7: for a user-registered type the factory's signature is the configuration schema (validated by the reader at load time, not expressible here); values are scalars. The reader-level pacing key (SII.8) is the reader's, never the factory's."
               },
               "explorations": {
                 "items": {
                   "type": "object",
                   "minProperties": 1,
+                  "properties": {"pacing": {"$ref": "#/$defs/pacing"}},
                   "additionalProperties": {"$ref": "#/$defs/scalarValue"}
                 }
               },
@@ -117,6 +120,7 @@
                     "initial": {
                       "type": "object",
                       "minProperties": 1,
+                      "properties": {"pacing": {"$ref": "#/$defs/pacing"}},
                       "additionalProperties": {"$ref": "#/$defs/scalarValue"}
                     }
                   }
@@ -131,6 +135,27 @@
       "type": "object",
       "required": ["stepper", "max-iterations"],
       "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"stepper": {"const": "linear-sweep"}}, "required": ["stepper"]},
+          "then": {
+            "required": ["stepper-config"],
+            "properties": {"stepper-config": {"$ref": "#/$defs/linearSweepConfig"}}
+          }
+        },
+        {
+          "if": {"properties": {"stepper": {"const": "refining-grid"}}, "required": ["stepper"]},
+          "then": {
+            "required": ["stepper-config"],
+            "properties": {
+              "stepper-config": {"$ref": "#/$defs/refiningGridConfig"},
+              "scorer": {"const": "pass-rate"},
+              "objective": {"const": "maximize"}
+            },
+            "$comment": "SII.9: refining-grid decides on the all-criteria pass rate, so another scorer or objective: minimize is refused."
+          }
+        }
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -144,7 +169,7 @@
         },
         "stepper-config": {
           "type": "object",
-          "$comment": "Part I: bound against the stepper factory's signature — the factory's signature is the schema (SII.7 discipline), validated by the reader at load time, not expressible here."
+          "$comment": "Part I: bound against the stepper factory's signature — the factory's signature is the schema (SII.7 discipline), validated by the reader at load time, not expressible here. The family built-ins (SII.9) carry their schemas in the allOf above."
         },
         "scorer": {
           "type": "string",
@@ -167,6 +192,34 @@
           "minProperties": 1,
           "$comment": "Part I: iteration 0's configuration replacements, with an exploration entry's overlay semantics; an overlay restating the baseline is refused — semantic, manifest-carried."
         }
+      }
+    },
+    "linearSweepConfig": {
+      "type": "object",
+      "required": ["key", "step", "stop"],
+      "additionalProperties": false,
+      "$comment": "SII.9 (numeric-steppers amendment, 2026-10-13): the family built-in linear-sweep. That key names a configuration key holding a number is semantic, the reader's.",
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "step": {"type": "number", "not": {"const": 0}, "$comment": "SII.9: a zero step re-measures one configuration forever."},
+        "stop": {"type": "number"}
+      }
+    },
+    "refiningGridConfig": {
+      "type": "object",
+      "required": ["key", "lo", "hi", "step", "min-step"],
+      "additionalProperties": false,
+      "$comment": "SII.9 (numeric-steppers amendment, 2026-10-13): the family built-in refining-grid. lo below hi and min-step at most step are cross-key rules, semantic and manifest-carried.",
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "lo": {"type": "number"},
+        "hi": {"type": "number"},
+        "step": {"type": "number", "exclusiveMinimum": 0},
+        "min-step": {"type": "number", "exclusiveMinimum": 0},
+        "confidence": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "min-improvement": {"type": "number", "minimum": 0},
+        "confirmation-epochs": {"type": "integer", "minimum": 0},
+        "prefer": {"enum": ["low", "high"]}
       }
     },
     "languageModelConfiguration": {
@@ -225,9 +278,10 @@
             "enum": ["response-schema", "prompt-caching", "thinking", "image-input", "document-input", "audio-input"]
           },
           "$comment": "SII.3 (amendment 2026-07-25): the author-declared capability allowance — a closed set; the per-modality media capabilities gate the encoding of file-sourced input parts (an undeclared capability is never sent silently). Adapter-encodability refusals are semantic, manifest-carried; the allowance is fingerprinted into provenance."
-        }
+        },
+        "pacing": {"$ref": "#/$defs/pacing"}
       },
-      "$comment": "SII.3: the type: language-model configuration block holds every parameter; no parameter may appear outside it. Token-related parameters are deliberately absent from v0. Secrets never appear in this file — credentials are environment-only."
+      "$comment": "SII.3: the type: language-model configuration block holds every parameter; no parameter may appear outside it. Token budgets live in the sibling budget: block (SII.8), never here. Secrets never appear in this file — credentials are environment-only."
     },
     "languageModelDelta": {
       "type": "object",
@@ -251,9 +305,33 @@
           "items": {
             "enum": ["response-schema", "prompt-caching", "thinking", "image-input", "document-input", "audio-input"]
           }
-        }
+        },
+        "pacing": {"$ref": "#/$defs/pacing"}
       },
       "$comment": "Part I / SII.6: a partial language-model configuration — an exploration entry's deviations, or an optimization entry's initial: overlay — the same key vocabulary, nothing required."
+    },
+    "pacing": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "max-requests-per-second": {"type": "number", "exclusiveMinimum": 0},
+        "max-requests-per-minute": {"type": "number", "exclusiveMinimum": 0},
+        "min-ms-per-sample": {"type": "integer", "minimum": 1}
+      },
+      "$comment": "SII.8 (run-controls amendment, 2026-10-13): the reader-level pacing key, accepted in every type's configuration and never bound to a user factory. At least one of the three; the effective delay is the largest any of them implies, start to start, outside every measured latency. A covariate: fingerprinted, explorable."
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "time-ms": {"type": "integer", "minimum": 1},
+        "tokens": {"type": "integer", "minimum": 1},
+        "token-charge": {"type": "integer", "minimum": 0},
+        "on-exhausted": {"enum": ["inconclusive", "fail", "evaluate-partial"]}
+      },
+      "anyOf": [{"required": ["time-ms"]}, {"required": ["tokens"]}],
+      "$comment": "SII.8 (run-controls amendment, 2026-10-13): a run control beside configuration:, not a covariate, bounding one run of the consuming verb. time-ms or tokens is required; token-charge (default 0) and on-exhausted (default inconclusive) cannot stand alone. Exploration and optimization entries cannot carry it."
     }
   }
 }

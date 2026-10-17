@@ -621,3 +621,105 @@ test_that("a verdict-1.8 record's test verdict composes its enforced dimensions 
   }
   expect_true(all(c("none", "functional", "latency", "functional+latency") %in% seen))
 })
+
+# ── verdict-1.9: the budget's exhaustion behaviour, the declared pacing ──
+
+verdict_19 <- function(name) {
+  readLines(file.path(repo_root, "inst", "interchange", paste0("verdict-1.9-", name, ".xml")))
+}
+valid_19 <- function(lines) {
+  xsd <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.9.xsd"))
+  isTRUE(xml2::xml_validate(xml2::read_xml(paste(lines, collapse = "\n")), xsd))
+}
+
+test_that("verdict-1.9 is additive: a 1.8 record relabelled 1.9 validates", {
+  skip_if_not_installed("xml2")
+  for (name in c("typical", "two-criteria", "refused", "latency-fail")) {
+    body <- readLines(file.path(repo_root, "inst", "interchange", paste0("verdict-1.8-", name, ".xml")))
+    expect_true(valid_19(sub('version="1.8"', 'version="1.9"', body, fixed = TRUE)), info = name)
+  }
+})
+
+test_that("the verdict-1.9 XSD bounds the exhaustion vocabulary and the pacing record", {
+  skip_if_not_installed("xml2")
+  dp <- verdict_19("budget-determinacy-pass")
+  expect_true(valid_19(dp))
+  # the withdrawn truncated-n behaviour has no spelling
+  expect_false(valid_19(sub('on-exhausted="EVALUATE_PARTIAL"', 'on-exhausted="PASS_INCOMPLETE"', dp, fixed = TRUE)))
+  # a declared pacing may state one key; its effective delay is required
+  expect_false(valid_19(sub(' effective-min-delay-ms="1200"', "", dp, fixed = TRUE)))
+  expect_true(valid_19(sub('max-rpm="50"', 'min-ms-per-sample="1200"', dp, fixed = TRUE)))
+})
+
+test_that("a verdict-1.9 record's exhaustion behaviour decides as stated", {
+  # XSD 1.0 cannot state these rules, so the worked examples carry them:
+  # @on-exhausted is present exactly when the termination reason is a
+  # budget exhaustion; INCONCLUSIVE leaves every criterion and the verdict
+  # INCONCLUSIVE; FAIL fails the verdict by policy; EVALUATE_PARTIAL decides
+  # each criterion by determinacy at the planned n - PASS once its passes
+  # reach @required-pass, FAIL once they plus the samples not run cannot,
+  # INCONCLUSIVE otherwise - and the verdict is the composite.
+  skip_if_not_installed("xml2")
+  examples <- Sys.glob(file.path(repo_root, "inst", "interchange", "verdict-1.9-*.xml"))
+  expect_gte(length(examples), 4L)
+  seen <- character()
+  for (f in examples) {
+    doc <- xml2::read_xml(f)
+    node <- function(name) xml2::xml_find_first(doc, sprintf("//*[local-name()='%s']", name))
+    reason <- xml2::xml_attr(node("termination"), "reason")
+    behaviour <- xml2::xml_attr(node("termination"), "on-exhausted")
+    expect_identical(!is.na(behaviour), reason %in% c("TIME_BUDGET_EXHAUSTED", "TOKEN_BUDGET_EXHAUSTED"), info = basename(f))
+    if (is.na(behaviour)) next
+    seen <- c(seen, behaviour)
+    planned <- as.integer(xml2::xml_attr(node("execution"), "planned-samples"))
+    executed <- as.integer(xml2::xml_attr(node("execution"), "samples-executed"))
+    expect_lt(executed, planned, label = basename(f))
+    rows <- xml2::xml_find_all(doc, "//*[local-name()='criterion' and @decision-rule]")
+    verdicts <- vapply(rows, function(r) {
+      passes <- as.integer(xml2::xml_attr(r, "pass"))
+      needed <- as.integer(xml2::xml_attr(r, "required-pass"))
+      expected <- if (behaviour != "EVALUATE_PARTIAL") "INCONCLUSIVE"
+                  else if (passes >= needed) "PASS"
+                  else if (passes + (planned - executed) < needed) "FAIL"
+                  else "INCONCLUSIVE"
+      expect_identical(xml2::xml_attr(r, "verdict"), expected, info = basename(f))
+      xml2::xml_attr(r, "verdict")
+    }, "")
+    composite <- structural_composite(verdicts)
+    expect_identical(xml2::xml_attr(node("composite"), "value"), composite, info = basename(f))
+    value <- xml2::xml_attr(xml2::xml_find_first(doc, "/*[local-name()='verdict-record']/*[local-name()='verdict']"), "value")
+    expect_identical(value, if (behaviour == "FAIL") "FAIL" else composite, info = basename(f))
+  }
+  expect_setequal(unique(seen), c("INCONCLUSIVE", "FAIL", "EVALUATE_PARTIAL"))
+})
+
+test_that("an optimize artefact's convergence.selection is additive and bounded", {
+  # A selecting stepper's optimum (built-in steppers, 0.13.0): optional,
+  # so every earlier artefact still validates; when present, it carries its
+  # pooled evidence and why the stepper stopped.
+  validator <- jsonvalidate::json_validator(
+    file.path(repo_root, "schema", "mavai-optimize-1.schema.json"),
+    engine = "ajv"
+  )
+  read <- function(example) yaml::read_yaml(
+    file.path(repo_root, "inst", "interchange", example),
+    handlers = list(seq = function(x) as.list(x), "null" = function(x) NA)
+  )
+  as_json <- function(doc) jsonlite::toJSON(doc, auto_unbox = TRUE, digits = NA, na = "null")
+  doc <- read("optimize-selection.yaml")
+  expect_true(validator(as_json(doc)))
+  doc$convergence$selection <- NULL
+  expect_true(validator(as_json(doc)))
+
+  doc <- read("optimize-selection.yaml")
+  doc$convergence$selection$stoppingReason <- NULL
+  expect_false(validator(as_json(doc)))
+
+  doc <- read("optimize-selection.yaml")
+  doc$convergence$selection$rate <- 1.5
+  expect_false(validator(as_json(doc)))
+
+  doc <- read("optimize-selection.yaml")
+  doc$convergence$selection$finalists[[2]]$trials <- 0L
+  expect_false(validator(as_json(doc)))
+})

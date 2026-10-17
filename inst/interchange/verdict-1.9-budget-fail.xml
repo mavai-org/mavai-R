@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a time budget exhausted under fail.
+
+     on-exhausted: fail. The budget stopped the run after 40 of 100
+     planned samples; 39 passed. With 60 samples not run, nothing is
+     determined, so the criterion and the composite are INCONCLUSIVE; the
+     test FAILs by policy, which @on-exhausted states beside the verdict.
+     This is the one case in which <verdict>/@value is not the composite
+     of the enforced dimensions.
+
+     The run is the typical record's empirical regression test: a baseline
+     of 951 successes in 1000 trials, 100 samples planned, alpha 0.05, so
+     under regression/fisher the planned-n cutoff is c = 91
+     (@required-pass). The service's budget: stopped it early. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.9" methodology-version="1.6.0" timestamp="2026-10-13T12:00:00+00:00" generator="worked-example">
+  <identity use-case-id="offer-extraction" />
+  <execution planned-samples="100" samples-executed="40" successes="39" failures="1" elapsed-ms="59360" intent="VERIFICATION" confidence="0.95" />
+  <covariates aligned="true" />
+  <provenance origin="EMPIRICAL" />
+  <baseline source-file="offer-extraction.baseline.yaml" generated-at="2026-09-20T09:30:00+00:00" samples="1000" baseline-rate="0.951" derived-threshold="0.91" />
+  <termination reason="TIME_BUDGET_EXHAUSTED" on-exhausted="FAIL" />
+  <functional successes="39" failures="1" pass-rate="0.975" />
+  <per-criterion>
+    <criterion id="extraction-matches-reviewed-values" verdict="INCONCLUSIVE" pass="39" fail="1" inconclusive="0" total="40" observed-rate="0.975" threshold="0.91" decision-rule="regression/fisher" decision-rule-version="1" required-pass="91" />
+    <composite value="INCONCLUSIVE" mode="enforced" />
+  </per-criterion>
+  <verdict value="FAIL" />
+</verdict-record>
