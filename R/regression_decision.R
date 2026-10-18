@@ -146,6 +146,13 @@ generate_threshold_derivation_cases <- function() {
     # refusal, since the rule never exceeds alpha.
     derivation_case("small_test_large_baseline_951_of_1000_test25_a01", 951, 1000, 25, 0.01),
     derivation_case("small_test_large_baseline_9500_of_10000_test100_a001", 9500, 10000, 100, 0.001),
+    # Low baseline rates at large n: the cutoff's search probes test counts
+    # far above the hypergeometric mode, where a single term of the lower
+    # tail is smaller than a double holds. The p-value there is about 1.
+    derivation_case("low_rate_large_n_100_of_10000_test10000_a05", 100, 10000, 10000, 0.05),
+    derivation_case("low_rate_large_n_2000_of_10000_test10000_a05", 2000, 10000, 10000, 0.05),
+    derivation_case("low_rate_large_n_20000_of_100000_test10000_a05", 20000, 100000, 10000, 0.05),
+    derivation_case("low_rate_large_n_100_of_10000_test1000_a05", 100, 10000, 1000, 0.05),
     # Threshold-first (§6.3): the implied alpha of a declared cutoff, the
     # smallest alpha at which the rule yields it.
     threshold_first_case("tf_951_of_1000_test100_cutoff91", 951, 1000, 100, 91L,
@@ -187,6 +194,7 @@ generate_regression_decision_cases <- function() {
   perfect_c <- fisher_cutoff(100, 100, 100, 0.05)
   equal_c <- fisher_cutoff(951, 1000, 1000, 0.05)
   a01_c <- fisher_cutoff(951, 1000, 1000, 0.01)
+  low_c <- fisher_cutoff(100, 10000, 10000, 0.05)
 
   cases <- list(
     # The §3.4 rate: baseline 951/1000, n_t = 100, c = 91.
@@ -223,6 +231,11 @@ generate_regression_decision_cases <- function() {
                              fisher_cutoff(951, 1000, 25, 0.01)),
     regression_decision_case("small_test_large_baseline_fail_below_cutoff", 951, 1000, 25, 0.01,
                              fisher_cutoff(951, 1000, 25, 0.01) - 1L),
+    # A low baseline rate at large n: 100 of 10000 against a test of 10000.
+    regression_decision_case("low_rate_large_n_pass_at_cutoff", 100, 10000, 10000, 0.05, low_c),
+    regression_decision_case("low_rate_large_n_fail_below_cutoff", 100, 10000, 10000, 0.05, low_c - 1L),
+    regression_decision_case("low_rate_large_n_pass_far_above_mode", 100, 10000, 10000, 0.05, 9000L,
+      "A test far better than its baseline: the p-value of 9000 is about 1, so it PASSes."),
     # The conflation detector: this observation PASSes the regression rule;
     # compliance_decision's conflation_detector_compliance_fail FAILs the
     # same observation against c / n_t taken as a given requirement.

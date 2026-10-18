@@ -5,6 +5,26 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
+## [0.13.1] — unreleased
+
+**Additive: `regression/fisher` cases at low baseline rates with large samples.** Every existing case, the method and the tolerance are unchanged.
+
+There, the cutoff's search probes test counts far above the hypergeometric mode. A lower tail summed downwards from such a count can underflow to 0 when the true p-value is about 1, which pushes the cutoff to the test size. punit 0.15.0 and earlier did this, and the suites had no case that caught it.
+
+- `threshold_derivation` gains four cases at alpha 0.05:
+
+  | Case | Cutoff |
+  |---|---|
+  | `low_rate_large_n_100_of_10000_test10000_a05` | 78 |
+  | `low_rate_large_n_2000_of_10000_test10000_a05` | 1907 |
+  | `low_rate_large_n_20000_of_100000_test10000_a05` | 1931 |
+  | `low_rate_large_n_100_of_10000_test1000_a05` | 5 |
+
+- `regression_decision` gains three verdicts at 100 of 10000 against a test of 10000:
+  - `low_rate_large_n_pass_at_cutoff`;
+  - `low_rate_large_n_fail_below_cutoff`;
+  - `low_rate_large_n_pass_far_above_mode`. Here 9000 observed PASSes because its p-value is about 1.
+
 ## [0.13.0] — unreleased
 
 **Additive: run controls and built-in steppers in `mavai-services/1`, verdict-1.9, and `convergence.selection` in `mavai-optimize-1`.** The run-controls amendment (2026-10-13) lets a service definition declare its pacing and its budget; the numeric-steppers amendment (2026-10-13) makes `linear-sweep` and `refining-grid` family built-in steppers. No fixture in `inst/cases/` changes beyond the case manifest's `fixtureVersion`.
