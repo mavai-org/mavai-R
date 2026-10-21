@@ -12,7 +12,8 @@ test_that("every verdict case names its rule and each rule is exercised", {
   suite <- generate_verdict_cases()
   rules <- unlist(lapply(suite$cases, `[[`, "decisionRule"))
   expect_setequal(unique(rules), c("regression/fisher", "compliance/exact-binomial",
-                                   "latency/precedence", "latency/compliance-exact-binomial"))
+                                   "latency/precedence", "latency/compliance-exact-binomial",
+                                   "compliance/smoke-exact-binomial"))
 })
 
 test_that("the verdict suite agrees with the decision suites", {
@@ -22,7 +23,8 @@ test_that("the verdict suite agrees with the decision suites", {
   expect_identical(cases[["regression_pass_95_of_100_baseline_99_of_100"]]$expected$verdict, "PASS")
   expect_identical(cases[["compliance_refused_50_of_50_threshold_95"]]$expected$configuration_error,
                    list("COMPLIANCE_INFEASIBLE"))
-  expect_identical(cases[["compliance_smoke_50_of_50_threshold_95"]]$expected$verdict, "FAIL")
+  expect_identical(cases[["compliance_smoke_50_of_50_threshold_95"]]$expected$verdict, "PASS")
+  expect_identical(cases[["compliance_smoke_44_of_50_threshold_95"]]$expected$verdict, "FAIL")
 })
 
 test_that("a test carrying a compliance and a regression criterion is refused whole", {

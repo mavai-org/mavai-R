@@ -48,3 +48,20 @@ test_that("an explicit p50 requirement at alpha 0.10 is decidable from 4 latenci
   expect_identical(v$verdict, "PASS")
   expect_lt(4, latency_min_samples(0.50))
 })
+
+test_that("under SMOKE an explicit requirement is decided by the reversed rule at any count", {
+  cases <- setNames(generate_latency_compliance_decision_cases()$cases,
+                    vapply(generate_latency_compliance_decision_cases()$cases, `[[`, character(1), "name"))
+  pass <- cases[["p95_plan_58_smoke_pass"]]$expected
+  expect_identical(pass$decision_rule, "latency/smoke-compliance-exact-binomial")
+  expect_false(pass$pass_possible)
+  expect_identical(pass$verdict, "PASS")
+  expect_identical(cases[["p95_plan_58_smoke_fail_below_required"]]$expected$verdict, "FAIL")
+  expect_identical(cases[["p99_n100_smoke_pass_at_required"]]$expected$required_within, 97L)
+  expect_identical(cases[["p99_n100_smoke_fail_below_required"]]$expected$verdict, "FAIL")
+  expect_identical(cases[["p50_n1_smoke_fail_not_possible"]]$expected$required_within, 0L)
+  expect_identical(cases[["p95_plan_100_realised_0_smoke_inconclusive"]]$expected$verdict, "INCONCLUSIVE")
+  verification <- cases[["p95_n100_pass_at_y_min"]]$expected
+  expect_identical(verification$decision_rule, "latency/compliance-exact-binomial")
+  expect_identical(verification$required_within, verification$y_min)
+})

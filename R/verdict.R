@@ -1,8 +1,9 @@
-#' Evaluate a test verdict under the 1.5.0 decision rules
+#' Evaluate a test verdict under the decision rules
 #'
 #' The verdict of one test run under the rule its threshold's origin
 #' selects: `regression/fisher` for a baseline-derived (empirical)
-#' threshold, `compliance/exact-binomial` for a given (normative) one.
+#' threshold, `compliance/exact-binomial` for a given (normative) one,
+#' or `compliance/smoke-exact-binomial` for a given one under SMOKE intent.
 #'
 #' Configuration errors are checked first, for every criterion of the
 #' test, and every applicable code is reported, as a list in the fixed
@@ -60,13 +61,12 @@ evaluate_verdict <- function(successes, trials, alpha = NULL,
     if (successes >= c_int) "PASS" else "FAIL"
   }
   cmp <- if (normative) {
-    k <- exact_binomial_k_min(threshold, trials, compliance_alpha)
-    if (!is.na(k) && successes >= k) "PASS" else "FAIL"
+    compliance_decide(successes, threshold, trials, compliance_alpha, intent)$verdict
   }
   if (both) {
     criteria <- list(
       list(criterion_id = compliance_criterion, mode = "inferential", procedure = "COMPLIANCE",
-           decisionRule = "compliance/exact-binomial", alpha = compliance_alpha, verdict = cmp),
+           decisionRule = compliance_rule(intent), alpha = compliance_alpha, verdict = cmp),
       list(criterion_id = regression_criterion, mode = "inferential", procedure = "REGRESSION",
            decisionRule = "regression/fisher", alpha = regression_alpha, verdict = reg)
     )
@@ -103,6 +103,7 @@ verdict_case <- function(name, rule, inputs, description = NULL) {
 generate_verdict_cases <- function() {
   R <- "regression/fisher"
   C <- "compliance/exact-binomial"
+  CS <- "compliance/smoke-exact-binomial"
   cmp <- function(successes, trials, threshold, alpha = 0.05, intent = "VERIFICATION") {
     list(successes = as.integer(successes), trials = as.integer(trials), threshold = threshold,
          alpha = alpha, intent = intent)
@@ -132,8 +133,10 @@ generate_verdict_cases <- function() {
     verdict_case("compliance_pass_920_of_1000_threshold_90", C, cmp(920, 1000, 0.90)),
     verdict_case("compliance_refused_50_of_50_threshold_95", C, cmp(50, 50, 0.95),
       "n = 50 is below the feasibility minimum of 59: refused under VERIFICATION."),
-    verdict_case("compliance_smoke_50_of_50_threshold_95", C, cmp(50, 50, 0.95, intent = "SMOKE"),
-      "SMOKE runs the undersized design; it cannot PASS."),
+    verdict_case("compliance_smoke_50_of_50_threshold_95", CS, cmp(50, 50, 0.95, intent = "SMOKE"),
+      "SMOKE runs the undersized design under compliance/smoke-exact-binomial: 50 of 50 PASSes."),
+    verdict_case("compliance_smoke_44_of_50_threshold_95", CS, cmp(44, 50, 0.95, intent = "SMOKE"),
+      "Six misses in 50 are evidence that the rate falls short of 95%: SMOKE FAILs."),
     # Empirical bar: the one-sided Fisher cutoff.
     verdict_case("regression_pass_91_of_100_baseline_951_of_1000", R, reg(91, 100, 951, 1000)),
     verdict_case("regression_fail_90_of_100_baseline_951_of_1000", R, reg(90, 100, 951, 1000)),

@@ -205,7 +205,7 @@ latency_nondegeneracy_planning <- function(p, planned_samples, baseline_success_
 #' decision statistic is the empirical percentile. The gate applies to a
 #' baseline-derived assertion (latency/precedence); it does not apply to an
 #' explicit requirement, which is decided by latency/compliance-exact-binomial
-#' on the within-threshold count and has its own exact feasibility
+#' (under SMOKE latency/smoke-compliance-exact-binomial) on the within-threshold count and has its own exact feasibility
 #' condition. Below the §12.5.2 minimum a baseline-derived assertion under
 #' VERIFICATION intent is INCONCLUSIVE, enforced or advisory (an advisory
 #' assertion is decided by the same rule, companion §12.6); under SMOKE
