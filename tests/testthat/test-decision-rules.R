@@ -200,3 +200,19 @@ test_that("declared decimals are exact rationals", {
   expect_true(exact_decimal(0.05) == gmp::as.bigq(1, 20))
   expect_true(exact_decimal(0.0463574016) == gmp::as.bigq(463574016, 10^10))
 })
+
+test_that("compliance/smoke-exact-binomial's required_pass bounds the failing counts", {
+  expect_identical(smoke_binomial_required_pass(0.99, 100, 0.05), 97L)
+  expect_identical(smoke_binomial_required_pass(0.99, 30, 0.05), 29L)
+  expect_identical(smoke_binomial_required_pass(0.50, 1, 0.05), 0L)
+  expect_identical(smoke_binomial_required_pass(0.50, 5, 0.03125), 1L)  # P(K <= 0) = alpha exactly
+  for (n in c(1L, 5L, 20L, 100L)) for (p in c(0.5, 0.9, 0.99)) {
+    req <- smoke_binomial_required_pass(p, n, 0.05)
+    expect_true(req >= 0L && req <= n)
+    if (req > 0) expect_lte(pbinom(req - 1, n, p), 0.05 + 1e-12)
+    if (req < n) expect_gt(pbinom(req, n, p), 0.05)
+  }
+  expect_identical(compliance_decide(97, 0.99, 100, 0.05, "SMOKE")$verdict, "PASS")
+  expect_identical(compliance_decide(96, 0.99, 100, 0.05, "SMOKE")$verdict, "FAIL")
+  expect_identical(compliance_decide(100, 0.99, 100, 0.05, "VERIFICATION")$verdict, "FAIL")
+})

@@ -2,7 +2,7 @@
 title: "Statistical Companion Document"
 subtitle: "Formal Statistical Foundations for the Mavai® Methodology"
 author: |
-  Version 1.6.0 · last updated 2026-10-06\
+  Version 1.7.0 · last updated 2026-10-21\
   Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA\
   Mavai® is a registered trademark of Michael Mannion in Switzerland (No. 856092).
 ---
@@ -28,6 +28,7 @@ author: |
 | 15 | **2026-08** | **Zero baseline stated.** New §4.3.4: a baseline with no successes cannot support a test, and the design is refused. This milestone appeared while the title still read 1.4.1.                                                                                                                                                                                                                                                                                                                                                                                |
 | 16 | **2026-09** | **1.5.0: new decision rules.** A statistical review showed that the 1.4.1 rules did not keep false alarms at the stated level, and recommended replacing Wilson with more statistically honest rules, each chosen for its circumstance: Fisher's test for regression, the exact binomial test for compliance and for explicit latency limits, and a rank rule for latency regression. Wilson remains the descriptive interval only, and decides nothing. Verdicts can differ from 1.4.1; earlier results can be reproduced from the mavai-R 0.10.13 fixtures. |
 | 17 | **2026-10** | **1.6.0: every assertion enforced by default.** Correctness and latency assertions, given or baseline-derived, now count towards the verdict by default; in 1.5.0 latency assertions only warned unless enforcement was switched on. A run-time switch, not a per-test setting, can make correctness, latency or both advisory: an advisory assertion is still decided by its rule and reported, but it cannot fail the test. No decision rule changes; verdicts can, since a latency breach that warned under 1.5.0 now fails the test by default.           |
+| 18 | **2026-10** | **1.7.0: SMOKE decides by its own rule.** Under 1.5.0 a normative SMOKE test was decided like a VERIFICATION one, so a test too small to demonstrate its requirement could only FAIL: the 1.5.0 review rightly found that such a FAIL carries no evidence, and the companion said so instead of giving SMOKE a rule of its own. Under SMOKE the burden of proof is now reversed (§5.7.3): a normative criterion FAILs only on evidence that the service falls short of its requirement, and a PASS means only that no such evidence was found. Two rules are added, `compliance/smoke-exact-binomial` and `latency/smoke-compliance-exact-binomial`, both exact binomial tests and so existing machinery; VERIFICATION is unchanged. |
 
 Each milestone builds on the one before; milestones 11, 16 and 17 withdraw earlier claims. The Bernoulli/binomial model of milestone 1 is still the model; since milestone 16, Wilson describes results but no longer decides verdicts.
 
@@ -1571,7 +1572,7 @@ The mavai methodology distinguishes between two epistemic intentions when runnin
 | Intent           | Purpose                                               | Feasibility gate | Verdict language              |
 |------------------|-------------------------------------------------------|------------------|-------------------------------|
 | **VERIFICATION** | Evidential — produce statistically defensible verdict | Enforced         | Full compliance framing       |
-| **SMOKE**        | Sentinel — detect gross regressions cheaply           | Bypassed         | Softened, exploratory framing |
+| **SMOKE**        | Sentinel — detect gross regressions cheaply           | Bypassed         | Non-evidential; a normative criterion FAILs only on evidence of non-compliance (§5.7.3) |
 
 The default intent is **VERIFICATION**. Developers may opt into SMOKE when appropriate.
 
@@ -1611,7 +1612,7 @@ This refusal is **distinct from a SUT failure** — it indicates a configuration
 | Code                        | Refused configuration                                                                                                                                                                                                                                                           | Intent                                                                  |
 |-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
 | `TEST_LARGER_THAN_BASELINE` | A test whose planned sample size $N_t$ exceeds the sample size $N_b$ of the baseline it consumes — judged once on the two samplings, for every criterion the test carries, pass-rate and latency alike; refused by mavai's design policy, not for statistical invalidity (§3.4) | Refused regardless of intent                                            |
-| `COMPLIANCE_INFEASIBLE`     | A normative design with $n < N_{\min}$                                                                                                                                                                                                                                          | VERIFICATION; SMOKE runs and reports that PASS is not possible (§5.7.3) |
+| `COMPLIANCE_INFEASIBLE`     | A normative design with $n < N_{\min}$                                                                                                                                                                                                                                          | VERIFICATION; SMOKE runs and is decided by `compliance/smoke-exact-binomial` (§5.7.3) |
 
 The latency success counts are never compared with each other for this rule: they are not known before the run, and they cannot exceed $N_t$. When a test carries both a compliance criterion and a regression criterion and any part is invalid, the whole test is refused; a run never proceeds half-valid. Every applicable code is reported, as a list in the fixed order of the table — `TEST_LARGER_THAN_BASELINE`, then `COMPLIANCE_INFEASIBLE` — so that a configuration with two invalid parts names both and the developer can correct both at once. A valid test with both is decided criterion by criterion and composed as *Two Testing Paradigms* describes. The existing zero-baseline treatment (§4.3.4) and the latency existence check (§12.5.2.1) are not configuration errors: the latency rank search run before the test, on the expected number of successful latencies, gives a warning and a planning figure, and the one run after it, on the actual count, yields INCONCLUSIVE with `saturated: true` when no rank exists. An explicit latency requirement below its feasibility minimum is refused as `COMPLIANCE_INFEASIBLE` under VERIFICATION when even its planned samples could not pass (§12.3).
 
@@ -1628,17 +1629,34 @@ SMOKE tests are appropriate when:
 - **The test is exploratory** — developers are still discovering the system's performance characteristics
 - **The target is aspirational** — the threshold expresses an SLA that will later be verified with a properly sized test
 
-#### 5.7.3 FAIL Asymmetry for SMOKE Tests
+#### 5.7.3 How SMOKE Decides
 
 For **regression** SMOKE tests a statistical asymmetry governs how verdicts should be read:
 
 > A **FAIL** verdict from an undersized regression test is directionally reliable — the test count fell below the cutoff, and the direction of the evidence is clear even if the magnitude is uncertain. A **PASS** verdict from an undersized test provides weak evidence — the test had little power to detect a degradation.
 
-For **normative** (compliance) SMOKE tests the asymmetry does not hold. A normative test with $N < N_{\min}$ cannot PASS at any outcome, so its FAIL is certain before it runs and carries no evidence about the service. The SMOKE output says so:
+For **normative** (compliance) SMOKE tests the compliance rule of §3.6 cannot serve: below $N_{\min}$ no count can PASS, so its FAIL would be certain before the test ran and would carry no evidence about the service. A developer who declares SMOKE has already said that the test is too small to demonstrate the requirement. The question a SMOKE test asks is the sentinel's question: *is there evidence that the service falls short?* SMOKE therefore reverses the burden of proof, at every sample size, with `compliance/smoke-exact-binomial`, version 1:
 
-- **SMOKE PASS**: Softened language — "The observed result is consistent with the target."
+$$H_0: p \ge p_{\mathrm{req}}, \qquad H_1: p < p_{\mathrm{req}}, \qquad \text{FAIL iff } P_{p_{\mathrm{req}}}(K \le k) \le \alpha, \quad K \sim \text{Bin}(n, p_{\mathrm{req}}).$$
+
+The lower tail rises with $k$, so the failing counts are $0, \ldots, f$, and the binding count is
+
+$$k_{\text{smoke}} \;=\; 1 + \max\bigl\{k : P_{p_{\mathrm{req}}}(K \le k) \le \alpha\bigr\}, \qquad \text{PASS iff } K \ge k_{\text{smoke}},$$
+
+with $k_{\text{smoke}} = 0$ when no count can FAIL. It is the verdict record's `required-pass` under this rule, so early termination reads it like any other rule's: success is guaranteed once $K$ reaches it, and failure is inevitable once the failures exceed $n - k_{\text{smoke}}$. The probability of a FAIL when the service exactly meets its requirement is at most $\alpha$. Equivalently, FAIL iff the one-sided Clopper–Pearson upper bound $\text{Beta}^{-1}(1 - \alpha;\, K + 1,\, n - K)$ is at most $p_{\mathrm{req}}$. The exact-boundary convention of §10.6 applies.
+
+**Example** ($p_{\mathrm{req}} = 0.99$, $\alpha = 0.05$, $n = 100$, a size VERIFICATION refuses, since PASS needs 299): $k_{\text{smoke}} = 97$. 100 of 100 PASSes, and so does 97; 96 FAILs, four misses in 100 being evidence that the rate is below 99%. Two misses in the first 30 of a run are already evidence of it, $P(K \le 28) = 0.036$ at $n = 30$; at the five-sample SMOKE default any miss FAILs, $P(K \le 4) = 0.049$.
+
+A SMOKE PASS is not evidence of compliance, at any size: it states that the run found no evidence of non-compliance. A SMOKE FAIL is evidence of non-compliance at level $\alpha$. When $k_{\text{smoke}} = 0$ (rare: a low requirement over very few samples, such as 50% over one) no outcome can FAIL, and the result says so.
+
+**Epistemic status.** Exact, like §3.6: $K$ is binomial under the i.i.d. Bernoulli model. Reversing the null hypothesis is a different question asked of the same model, not a new method.
+
+The output words each outcome for what it is:
+
+- **SMOKE PASS (regression)**: "The observed result is consistent with the baseline."
 - **SMOKE FAIL (regression)**: Still clear — "The observed result is inconsistent with the baseline."
-- **SMOKE FAIL (normative, $N < N_{\min}$)**: "PASS not possible at this size; this result carries no evidence about the service."
+- **SMOKE PASS (normative)**: "No evidence that the service falls short of its requirement at this size."
+- **SMOKE FAIL (normative)**: "Evidence that the service falls short of its requirement."
 - **VERIFICATION PASS (compliance)**: "Evidence supports compliance with the requirement at the configured level."
 - **VERIFICATION FAIL (compliance)**: "Compliance with the requirement was not demonstrated at the configured level."
 
@@ -1646,10 +1664,11 @@ For **normative** (compliance) SMOKE tests the asymmetry does not hold. A normat
 
 When a SMOKE test runs against a normative threshold (SLA, SLO, or POLICY):
 
-| Condition         | Caveat                                                                                                                                   |
-|-------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| $N < N_{\min}$    | "PASS not possible at this size ($N = x$, need at least $y$). This result carries no evidence about the service."                        |
-| $N \geq N_{\min}$ | "PASS is possible at this size. Consider setting `intent = VERIFICATION` for evidential strength, and check the power statement (§5.5)." |
+| Condition                  | Caveat                                                                                                                                   |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| $N < N_{\min}$             | "This size cannot demonstrate compliance ($N = x$, need at least $y$). The SMOKE result reports only whether there is evidence of non-compliance." |
+| $N \geq N_{\min}$          | "PASS is possible at this size. Consider setting `intent = VERIFICATION` for evidential strength, and check the power statement (§5.5)." |
+| $k_{\text{smoke}} = 0$     | "FAIL not possible at this size; this result carries no evidence about the service."                                                      |
 
 These caveats appear in both summary and verbose output modes.
 
@@ -2248,7 +2267,7 @@ Every formula below is tagged with its **epistemic status**:
 - **Heuristic** — a rule of thumb, useful operationally, not a confidence statement.
 - **Non-parametric / distribution-free** — exact for any continuous $F$ under i.i.d. sampling.
 
-### The four decision rules
+### The decision rules
 
 | Rule                                   | Decides                         | Binding artefact                                                                       | Epistemic status                                                         | Section |
 |----------------------------------------|---------------------------------|----------------------------------------------------------------------------------------|--------------------------------------------------------------------------|---------|
@@ -2256,6 +2275,8 @@ Every formula below is tagged with its **epistemic status**:
 | `compliance/exact-binomial` v1         | Normative compliance            | $k_{\min}$; PASS iff $K \ge k_{\min}$                                                  | Exact                                                                    | §3.6    |
 | `latency/precedence` v1                | Latency regression              | Rank $k$, or `saturated` (INCONCLUSIVE)                                                | Exact under continuity; conservative under ties                          | §12.4.2 |
 | `latency/compliance-exact-binomial` v1 | An explicit latency requirement | $y_{\min}$; PASS iff $Y \ge y_{\min}$, $Y$ the successful latencies at or below $\tau$ | Exact                                                                    | §12.3.4 |
+| `compliance/smoke-exact-binomial` v1   | Normative compliance under SMOKE | $k_{\text{smoke}}$; PASS iff $K \ge k_{\text{smoke}}$                                | Exact                                                                    | §5.7.3  |
+| `latency/smoke-compliance-exact-binomial` v1 | An explicit latency requirement under SMOKE | $y_{\text{smoke}}$; PASS iff $Y \ge y_{\text{smoke}}$                    | Exact                                                                    | §12.3.4 |
 
 ### Estimation *(MLE / plug-in estimation)*
 
@@ -2284,6 +2305,12 @@ $$\text{Power}_{\text{resolved}} = P_{p_{\mathrm{design}}}\bigl(K_t < c(K_b)\big
 $$k_{\min} = \min\bigl\{k : P_{p_{\mathrm{req}}}(K \ge k) \le \alpha\bigr\}, \qquad \text{PASS iff } K \ge k_{\min}$$
 
 Equivalently, PASS iff the one-sided Clopper–Pearson lower bound $\text{Beta}^{-1}(\alpha;\, K,\, n - K + 1)$ is at least $p_{\mathrm{req}}$.
+
+### SMOKE Compliance Decision *(Exact — `compliance/smoke-exact-binomial`)*
+
+$$k_{\text{smoke}} = 1 + \max\bigl\{k : P_{p_{\mathrm{req}}}(K \le k) \le \alpha\bigr\} \;(0 \text{ when none}), \qquad \text{PASS iff } K \ge k_{\text{smoke}}$$
+
+Equivalently, FAIL iff the one-sided Clopper–Pearson upper bound $\text{Beta}^{-1}(1 - \alpha;\, K + 1,\, n - K)$ is at most $p_{\mathrm{req}}$.
 
 ### Compliance Feasibility *(Exact)*
 
@@ -2650,7 +2677,7 @@ Calibration is established at three levels, which are kept apart. The theorems o
 
 **Composite envelopes.** The §1.4.6 envelopes are union bounds over per-criterion sizes that are each at most $\alpha_c$; they hold under arbitrary dependence and need no separate calibration fixture.
 
-**Exact boundaries.** Every exact rule compares a probability with $\alpha$ by an inclusive rule: a Fisher p-value at most $\alpha$ FAILs the test count, a binomial upper tail at most $\alpha$ admits the count (compliance and latency compliance), a breach probability at most $\alpha$ admits the latency rank. At an exact boundary the probability equals $\alpha$, and double-precision evaluation can land on either side of it — the Fisher p-value of 2 test successes in 4 against a baseline of 12 in 12 is exactly 1/20 but computes as slightly above 0.05. Implementations therefore follow one convention: compute the probability with the standard library; when $|\text{value} - \alpha| \le 10^{-9}\,\alpha$, recompute it exactly in rational arithmetic from the declared inputs, reading declared rates and levels as the exact decimals they are written as (0.05 is 1/20, 0.995 is 199/200); apply the inclusive rule to the exact value. Each probability is a finite sum of rationals — hypergeometric terms for Fisher, binomial terms for the tails, and ratios of factorials for the breach probability, which at the top rank with $r = n_t$ is simply $n_t/(n_b + n_t)$. The mavai-R fixtures carry cases at exact boundaries, named as such, so that an implementation that compares doubles alone fails them.
+**Exact boundaries.** Every exact rule compares a probability with $\alpha$ by an inclusive rule: a Fisher p-value at most $\alpha$ FAILs the test count, a binomial upper tail at most $\alpha$ admits the count (compliance and latency compliance), a binomial lower tail at most $\alpha$ FAILs the count (the SMOKE rules), a breach probability at most $\alpha$ admits the latency rank. At an exact boundary the probability equals $\alpha$, and double-precision evaluation can land on either side of it — the Fisher p-value of 2 test successes in 4 against a baseline of 12 in 12 is exactly 1/20 but computes as slightly above 0.05. Implementations therefore follow one convention: compute the probability with the standard library; when $|\text{value} - \alpha| \le 10^{-9}\,\alpha$, recompute it exactly in rational arithmetic from the declared inputs, reading declared rates and levels as the exact decimals they are written as (0.05 is 1/20, 0.995 is 199/200); apply the inclusive rule to the exact value. Each probability is a finite sum of rationals — hypergeometric terms for Fisher, binomial terms for the tails, and ratios of factorials for the breach probability, which at the top rank with $r = n_t$ is simply $n_t/(n_b + n_t)$. The mavai-R fixtures carry cases at exact boundaries, named as such, so that an implementation that compares doubles alone fails them.
 
 **Two conformance statuses.** The methodology keeps two conformance statuses apart:
 
@@ -2861,7 +2888,7 @@ and the decision is PASS iff $Y \ge y_{\min}$. A latency equal to $\tau$ counts 
 
 **How many latencies.** The number of successful latencies $n_s$ is known only after the run. PASS is possible only if $n_s \ge \lceil \log\alpha / \log p \rceil$ — 59 at p95 and $\alpha = 0.05$, 299 at p99. A VERIFICATION test whose planned samples are below that minimum is refused before it runs (`COMPLIANCE_INFEASIBLE`), since no count could pass even if every sample succeeded. A run whose actual number of successful latencies falls below it is INCONCLUSIVE: too few latencies to decide.
 
-**SMOKE use.** The raw comparison $Q(p) \le \tau$ stays available for SMOKE-intent runs, and is labelled as a raw percentile comparison wherever it appears. It supports no compliance claim. An advisory requirement (§12.6) is not a raw comparison: it is decided by `latency/compliance-exact-binomial` like any other, and only its effect on the test differs.
+**SMOKE use.** Under SMOKE intent an explicit requirement is decided by `latency/smoke-compliance-exact-binomial`, version 1: the reversed rule of §5.7.3 applied to the same count, FAIL iff $P_p(Y \le y) \le \alpha$, PASS iff $Y \ge y_{\text{smoke}} = 1 + \max\{y : P_p(Y \le y) \le \alpha\}$ (0 when none). It decides at any number of successful latencies from one upward, and a run with none is INCONCLUSIVE. At p99 over 100 latencies $y_{\text{smoke}} = 97$: four latencies above $\tau$ FAIL. The raw comparison $Q(p) \le \tau$ is reporting context only, under either intent, and is labelled as a raw percentile comparison wherever it appears. It supports no compliance claim. An advisory requirement (§12.6) is not a raw comparison: it is decided by `latency/compliance-exact-binomial` like any other, and only its effect on the test differs.
 
 **Epistemic status.** Exact result: $Y$ is binomial with success probability $F(\tau)$ for i.i.d. successful latencies, whatever their distribution.
 
@@ -3048,7 +3075,7 @@ Every assertion a test declares is **enforced** by default: its functional crite
 
 **Configuration refusals still apply.** A design that cannot be decided is refused whatever binds: `TEST_LARGER_THAN_BASELINE` and, under VERIFICATION, `COMPLIANCE_INFEASIBLE` (§5.7.1, §12.5.3) refuse an advisory dimension's assertions as they refuse an enforced one's. Under both settings a test therefore cannot fail on its assertions, but it still errors on a refusal or a defect.
 
-**Intent is a separate matter.** The switch does not change the test's intent. A SMOKE-intent run (§5.7.2) keeps its own treatment: its pass-rate verdicts carry no verification claim, an undersized percentile is marked indicative (§12.5.4), and the raw percentile comparison of §12.3.4 stays available as a labelled figure.
+**Intent is a separate matter.** The switch does not change the test's intent. A SMOKE-intent run (§5.7.2) keeps its own treatment: its normative pass-rate and explicit latency verdicts are decided by the SMOKE rules (§5.7.3, §12.3.4) and carry no verification claim, an undersized percentile is marked indicative (§12.5.4), and the raw percentile comparison of §12.3.4 stays available as a labelled figure.
 
 **Why enforcement is the default.** In methodology 1.5.0 latency assertions were advisory by default and enforcement was opted into, on the ground that a baseline recorded on dedicated CI hardware — $Q_{0.95} = 480\text{ms}$, say — would fail a developer's laptop that observes $Q_{0.95} = 650\text{ms}$ under competing load. That situation is a choice of evidence, not a reason for an assertion not to count. If the threshold is empirical, the laptop's test consumes a baseline measured on the laptop, and a FAIL against it is a genuine regression. If the threshold is normative, it states what production must achieve, and the developer whose laptop cannot meet it switches latency to advisory there and reads the verdict the rule still reaches. A default that made one dimension count only on request would let a declared assertion decide nothing without anyone choosing that it should.
 

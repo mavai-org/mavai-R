@@ -64,7 +64,7 @@ generate_feasibility_cases <- function() {
       "Verification feasibility under compliance/exact-binomial: can a normative test of this",
       "size PASS at all? Feasible iff n >= ceiling(log(alpha) / log(p_req)). Under VERIFICATION",
       "intent an infeasible design is refused as COMPLIANCE_INFEASIBLE (see compliance_decision);",
-      "under SMOKE it runs and reports that PASS is not possible at this size."
+      "under SMOKE it runs and is decided by compliance/smoke-exact-binomial, which needs no minimum."
     ),
     method = paste(
       "PASS is possible iff P_{p_req}(K >= n) = p_req^n <= alpha;",

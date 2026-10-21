@@ -47,8 +47,9 @@ latency_constraint_verdict <- function(constraint, intent = "VERIFICATION") {
   lat <- constraint$latencies
   out <- list(constraint_id = constraint$constraint_id, source = constraint$source)
   if (constraint$source == "explicit") {
-    out$decisionRule <- "latency/compliance-exact-binomial"
-    out$verdict <- latency_compliance_verdict(lat, constraint$threshold_ms, p, constraint$alpha)$verdict
+    out$decisionRule <- compliance_rule(intent, latency = TRUE)
+    out$verdict <- latency_compliance_verdict(lat, constraint$threshold_ms, p, constraint$alpha,
+                                              intent)$verdict
   } else {
     base <- sort(constraint$baseline_latencies)
     nd <- latency_nondegeneracy_decision(p, length(lat), intent, "baseline-derived")

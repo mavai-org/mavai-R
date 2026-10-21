@@ -15,11 +15,18 @@
 #' check uses the realised count: below the feasibility minimum the
 #' verdict is INCONCLUSIVE.
 #'
-#' Binding: test_samples, within_threshold, y_min, pass_possible,
-#' verdict, configuration_error. Informational: false_compliance,
-#' clopper_pearson_lower, observed_percentile_ms and
-#' raw_percentile_pass (the raw percentile comparison, a labelled figure
-#' that decides nothing).
+#' Under SMOKE intent the requirement is decided by
+#' latency/smoke-compliance-exact-binomial (companion §12.3.4, §5.7.3):
+#' the burden reversed over the same count, FAIL iff P_p(Y <= y) <= alpha,
+#' PASS iff Y >= required_within (0 when no count can FAIL), at any
+#' realised n_s >= 1.
+#'
+#' Binding: decision_rule, test_samples, within_threshold, y_min,
+#' pass_possible, required_within, verdict, configuration_error.
+#' Informational: p_value, false_compliance, false_non_compliance,
+#' clopper_pearson_lower, observed_percentile_ms and raw_percentile_pass
+#' (the raw percentile comparison, a labelled figure that decides
+#' nothing).
 
 #' Latencies for a case: `within` values at or below tau, the rest above
 #' @keywords internal
@@ -36,19 +43,23 @@ latency_compliance_case <- function(name, percentile, threshold_ms, alpha, inten
                                     planned_samples, latencies, description = NULL) {
   err <- compliance_configuration_error(percentile, planned_samples, alpha, intent)
   expected <- if (!is.na(err)) {
-    list(test_samples = NA_integer_, within_threshold = NA_integer_, y_min = NA_integer_,
-         pass_possible = NA, verdict = NA_character_, configuration_error = configuration_errors(err),
-         false_compliance = NA_real_, clopper_pearson_lower = NA_real_,
-         observed_percentile_ms = NA_real_, raw_percentile_pass = NA)
+    list(decision_rule = NA_character_, test_samples = NA_integer_, within_threshold = NA_integer_,
+         y_min = NA_integer_, pass_possible = NA, required_within = NA_integer_,
+         verdict = NA_character_, configuration_error = configuration_errors(err),
+         p_value = NA_real_, false_compliance = NA_real_, false_non_compliance = NA_real_,
+         clopper_pearson_lower = NA_real_, observed_percentile_ms = NA_real_,
+         raw_percentile_pass = NA)
   } else {
-    v <- latency_compliance_verdict(latencies, threshold_ms, percentile, alpha)
-    c(v[c("test_samples", "within_threshold", "y_min", "pass_possible", "verdict")],
+    v <- latency_compliance_verdict(latencies, threshold_ms, percentile, alpha, intent)
+    c(v[c("decision_rule", "test_samples", "within_threshold", "y_min", "pass_possible",
+          "required_within", "verdict")],
       list(configuration_error = configuration_errors()),
-      v[c("false_compliance", "clopper_pearson_lower", "observed_percentile_ms",
-          "raw_percentile_pass")])
+      v[c("p_value", "false_compliance", "false_non_compliance", "clopper_pearson_lower",
+          "observed_percentile_ms", "raw_percentile_pass")])
   }
   case <- list(name = name)
   if (!is.null(description)) case$description <- description
+  if (is.na(err)) case$decisionRule <- compliance_rule(intent, latency = TRUE)
   c(case, list(
     inputs = list(percentile = percentile, threshold_ms = threshold_ms, alpha = alpha,
                   intent = intent, planned_samples = as.integer(planned_samples),
@@ -81,8 +92,19 @@ generate_latency_compliance_decision_cases <- function() {
     # Feasibility: at p95, alpha 0.05, no count can pass below 59 latencies.
     latency_compliance_case("p95_plan_58_verification_refused", 0.95, 500, 0.05, "VERIFICATION", 58L,
       numeric(0), "The plan of 58 is below the feasibility minimum of 59 even if every sample succeeds."),
-    latency_compliance_case("p95_plan_58_smoke_inconclusive", 0.95, 500, 0.05, "SMOKE", 58L,
-      s(58, 58, 500), "SMOKE runs the undersized plan; 58 of 58 within the threshold cannot PASS."),
+    latency_compliance_case("p95_plan_58_smoke_pass", 0.95, 500, 0.05, "SMOKE", 58L,
+      s(58, 58, 500), "SMOKE runs the undersized plan under its own rule: 58 of 58 within the threshold shows no evidence of non-compliance."),
+    latency_compliance_case("p95_plan_58_smoke_fail_below_required", 0.95, 500, 0.05, "SMOKE", 58L,
+      s(58, smoke_binomial_required_pass(0.95, 58, 0.05) - 1L, 500),
+      "One below required_within: evidence that the p95 exceeds 500 ms."),
+    latency_compliance_case("p99_n100_smoke_pass_at_required", 0.99, 1200, 0.05, "SMOKE", 100L,
+      s(100, 97, 1200)),
+    latency_compliance_case("p99_n100_smoke_fail_below_required", 0.99, 1200, 0.05, "SMOKE", 100L,
+      s(100, 96, 1200), "Four latencies above 1200 ms in 100 are evidence that the p99 exceeds it."),
+    latency_compliance_case("p50_n1_smoke_fail_not_possible", 0.50, 300, 0.05, "SMOKE", 1L,
+      s(1, 0, 300), "No count can FAIL with one successful latency at p50: required_within is 0."),
+    latency_compliance_case("p95_plan_100_realised_0_smoke_inconclusive", 0.95, 500, 0.05, "SMOKE", 100L,
+      numeric(0), "No sample succeeded, so there is no latency to decide on: INCONCLUSIVE under either intent."),
     latency_compliance_case("p95_plan_60_realised_58_inconclusive", 0.95, 500, 0.05, "VERIFICATION", 60L,
       s(58, 58, 500),
       "The plan is feasible, but two samples fail and 58 successful latencies remain: too few to decide."),
@@ -118,16 +140,21 @@ generate_latency_compliance_decision_cases <- function() {
       "planned samples are below the feasibility minimum is refused as COMPLIANCE_INFEASIBLE; a",
       "run whose realised successful count is below it is INCONCLUSIVE. The raw comparison of",
       "the observed percentile with tau is a labelled figure and decides nothing; an advisory",
-      "requirement (companion §12.6) is decided by the same rule as an enforced one. Binding: test_samples,",
-      "within_threshold, y_min, pass_possible, verdict, configuration_error. Informational:",
-      "false_compliance, clopper_pearson_lower, observed_percentile_ms, raw_percentile_pass.",
+      "requirement (companion §12.6) is decided by the same rule as an enforced one. Under SMOKE the",
+      "requirement is decided by latency/smoke-compliance-exact-binomial at any realised count: FAIL iff",
+      "P_p(Y <= y) <= alpha, PASS iff Y >= required_within. Binding: decision_rule, test_samples,",
+      "within_threshold, y_min, pass_possible, required_within, verdict, configuration_error.",
+      "Informational: p_value, false_compliance, false_non_compliance, clopper_pearson_lower,",
+      "observed_percentile_ms, raw_percentile_pass.",
       "The latencies are those of the samples that passed every functional criterion (companion",
       "§12.2.1). Frameworks MUST evaluate these cases through their production verdict path."
     ),
     method = paste(
       "latency/compliance-exact-binomial v1: Y = #{latencies <= tau}; y_min = min{y :",
       "P_p(Y >= y) <= alpha}, Y ~ Bin(n_s, p) (null when no y <= n_s qualifies); PASS iff",
-      "Y >= y_min; INCONCLUSIVE when y_min is null. COMPLIANCE_INFEASIBLE iff intent is",
+      "Y >= y_min; INCONCLUSIVE when y_min is null. latency/smoke-compliance-exact-binomial v1:",
+      "required_within = 1 + max{y : P_p(Y <= y) <= alpha} (0 when none); PASS iff Y >= required_within;",
+      "INCONCLUSIVE when n_s = 0. required_within is y_min under VERIFICATION. COMPLIANCE_INFEASIBLE iff intent is",
       "VERIFICATION and planned_samples < ceiling(log(alpha) / log(p)). false_compliance =",
       "P_p(Y >= y_min); clopper_pearson_lower = qbeta(alpha, Y, n_s - Y + 1) (0 at Y = 0);",
       "observed_percentile_ms is the nearest-rank percentile, rank ceiling(p n_s);",

@@ -723,3 +723,12 @@ test_that("an optimize artefact's convergence.selection is additive and bounded"
   doc$convergence$selection$finalists[[2]]$trials <- 0L
   expect_false(validator(as_json(doc)))
 })
+
+test_that("verdict-1.10 admits the SMOKE rules and verdict-1.9 does not", {
+  skip_if_not_installed("xml2")
+  example <- xml2::read_xml(file.path(repo_root, "inst", "interchange", "verdict-1.10-smoke-pass.xml"))
+  expect_true(isTRUE(xml2::xml_validate(example,
+    xml2::read_xml(file.path(repo_root, "schema", "verdict-1.10.xsd")))))
+  expect_false(isTRUE(xml2::xml_validate(example,
+    xml2::read_xml(file.path(repo_root, "schema", "verdict-1.9.xsd")))))
+})

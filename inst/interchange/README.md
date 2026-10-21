@@ -38,7 +38,7 @@ same build step that validates the YAML examples. From 1.7
 (Statistical Companion 1.5.0) the record states the methodology version
 whose decision rules produced it, the verdict names the versioned rule that
 decided (`regression/fisher`, `compliance/exact-binomial`,
-`latency/precedence`, `latency/compliance-exact-binomial`), a configuration
+`latency/precedence`, `latency/compliance-exact-binomial`, and from 1.10 the two SMOKE rules), a configuration
 refused before any sample ran carries every applicable configuration-error
 code, as an ordered list, in place of a verdict value, and a service judged
 against both a requirement and its baseline carries two criteria over the
@@ -68,6 +68,12 @@ count), and `<pacing>` records a declared pacing's keys with only its
 effective delay required (`verdict-1.9-budget-inconclusive.xml`,
 `verdict-1.9-budget-determinacy-pass.xml`,
 `verdict-1.9-budget-determinacy-fail.xml`, `verdict-1.9-budget-fail.xml`).
+From 1.10 (Statistical Companion 1.7.0) a normative criterion or an
+explicit latency requirement under SMOKE intent is decided by
+`compliance/smoke-exact-binomial` or `latency/smoke-compliance-exact-binomial`,
+the burden of proof reversed, and states it; `@required-pass` is then the
+largest failing count plus one (`verdict-1.10-smoke-pass.xml`,
+`verdict-1.10-smoke-fail.xml`).
 Earlier XSD versions are unchanged.
 
 **This repository is the publication channel for these artefacts, not their

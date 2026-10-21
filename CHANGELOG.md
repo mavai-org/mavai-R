@@ -5,7 +5,22 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.13.1] — unreleased
+## [0.14.0] — unreleased
+
+**Breaking: SMOKE decides a normative criterion by its own rule (Statistical Companion 1.7.0).** Under 1.5.0 and 1.6.0 a normative criterion under SMOKE intent was decided by `compliance/exact-binomial`, so a design too small to demonstrate its requirement could only FAIL, whatever the service did. Under SMOKE the burden of proof is now reversed, at every size: FAIL iff P(K <= k | n, p_req) <= alpha, PASS iff K >= `required_pass`, the largest failing count plus one (0 when no count can FAIL). VERIFICATION is unchanged.
+
+- New decision rules `compliance/smoke-exact-binomial` v1 and `latency/smoke-compliance-exact-binomial` v1 (companion §5.7.3, §12.3.4); methodology version 1.7.0 on every suite and the manifest.
+- `compliance_decision`: every case gains the binding `decision_rule` and `required_pass` and the informational `p_value` and `false_non_compliance`. `headline_995_n477_smoke_pass_not_possible` becomes `headline_995_n477_smoke_pass` (now PASS); `p95_n150_smoke_pass_at_k_min` keeps its verdict under the new rule. Thirteen SMOKE cases are added, among them 0.99 over 100 samples (`required_pass` 97), two misses in 30, the five-sample default, a size at which no count can FAIL and an exact boundary on the lower tail.
+- `latency_compliance_decision`: every case gains `decision_rule`, `required_within`, `p_value` and `false_non_compliance`. `p95_plan_58_smoke_inconclusive` becomes `p95_plan_58_smoke_pass` (now PASS); five SMOKE cases are added.
+- `verdict`: `compliance_smoke_50_of_50_threshold_95` is decided by `compliance/smoke-exact-binomial` and now PASSes; `compliance_smoke_44_of_50_threshold_95` is added (FAIL).
+- `feasibility`: the description states what SMOKE now does; no case changes.
+- `cases.schema.json`: the decision-rule identifiers gain the two SMOKE rules; fixture schema version 2 is unchanged.
+
+*Verdict interchange*: new `verdict-1.10.xsd`, additive over 1.9: `DecisionRuleEnum` gains the two SMOKE rules, and `@methodology-version` reads "1.7.0". New worked examples `verdict-1.10-smoke-pass.xml` (97 of 97, success guaranteed) and `verdict-1.10-smoke-fail.xml` (the fourth miss at sample 30, failure inevitable).
+
+*Companion*: Statistical Companion 1.7.0 (§5.7.1, §5.7.3, §5.7.4, §10.6, §12.3.4, the decision-rule summary and the Document History); `companion_numbers.R` checks its new worked figures.
+
+## [0.13.1] — 2026-10-18
 
 **Additive: `regression/fisher` cases at low baseline rates with large samples.** Every existing case, the method and the tolerance are unchanged.
 
@@ -25,7 +40,7 @@ There, the cutoff's search probes test counts far above the hypergeometric mode.
   - `low_rate_large_n_fail_below_cutoff`;
   - `low_rate_large_n_pass_far_above_mode`. Here 9000 observed PASSes because its p-value is about 1.
 
-## [0.13.0] — unreleased
+## [0.13.0] — 2026-10-18
 
 **Additive: run controls and built-in steppers in `mavai-services/1`, verdict-1.9, and `convergence.selection` in `mavai-optimize-1`.** The run-controls amendment (2026-10-13) lets a service definition declare its pacing and its budget; the numeric-steppers amendment (2026-10-13) makes `linear-sweep` and `refining-grid` family built-in steppers. No fixture in `inst/cases/` changes beyond the case manifest's `fixtureVersion`.
 
@@ -37,7 +52,7 @@ There, the cutoff's search probes test counts far above the hypergeometric mode.
 
 *Verdict interchange*: new `verdict-1.9.xsd`, additive over 1.8 (a 1.8 record relabelled 1.9 validates). `<termination>` gains `@on-exhausted` — `INCONCLUSIVE`, `FAIL` or `EVALUATE_PARTIAL` — present exactly when the reason is `TIME_BUDGET_EXHAUSTED` or `TOKEN_BUDGET_EXHAUSTED`; under `EVALUATE_PARTIAL` a criterion is decided only by determinacy at the planned sample count (PASS once its passes reach `@required-pass`, FAIL once they plus the samples not run cannot, INCONCLUSIVE otherwise), never at the truncated count. `<pacing>`'s declared values and concurrency attributes become optional, `@min-ms-per-sample` is added, and `@effective-min-delay-ms` stays required. Four worked examples, one per behaviour and outcome; tests pin the rules XSD 1.0 cannot state.
 
-## [0.12.0] — unreleased
+## [0.12.0] — 2026-10-06
 
 **Breaking: the fixtures implement Statistical Companion 1.6.0, under which every assertion is enforced by default.** Functional criteria and latency constraints, normative and empirical, count towards the test verdict by default; a run-time switch makes the functional dimension, the latency dimension or both advisory. An advisory dimension is decided by its proper rule and reported, but never enters the test verdict and never fails the test. No decision rule, cutoff, rank or worked number changes; which verdicts bind does, so a test verdict can. Every fixture file and the manifest now state methodology 1.6.0.
 

@@ -1,6 +1,6 @@
-#' The Statistical Companion 1.5.0 decision rules.
+#' The Statistical Companion decision rules (methodology 1.7.0).
 #'
-#' Four verdict-producing procedures, each with a versioned identifier
+#' Six verdict-producing procedures, each with a versioned identifier
 #' that travels in every fixture it governs:
 #'
 #'   - `regression/fisher` v1 — empirical regression: the one-sided
@@ -17,6 +17,13 @@
 #'     successful latencies at or below tau, judged by the exact one-sided
 #'     binomial test of compliance/exact-binomial with p_req = p
 #'     (companion §12.3).
+#'   - `compliance/smoke-exact-binomial` v1 — a normative criterion under
+#'     SMOKE intent: the burden reversed, H0: p >= p_req, FAIL iff
+#'     P_{p_req}(K <= k) <= alpha, expressed as `required_pass`, the
+#'     largest failing count plus one (companion §5.7.3).
+#'   - `latency/smoke-compliance-exact-binomial` v1 — an explicit latency
+#'     requirement under SMOKE intent: the same rule over the count of
+#'     successful latencies at or below tau (companion §12.3.4).
 #'
 #' Plus the two configuration errors refused before any sample runs:
 #' `TEST_LARGER_THAN_BASELINE` and `COMPLIANCE_INFEASIBLE`.
@@ -25,7 +32,7 @@
 #' functions (`phyper`, `dbinom`/`pbinom`, `qbeta`, `lchoose`/`lbeta`);
 #' nothing is simulated.
 
-METHODOLOGY_VERSION <- "1.6.0"
+METHODOLOGY_VERSION <- "1.7.0"
 
 # Version of the fixture file shape (cases.schema.json and the manifest).
 # 1 was the unversioned shape up to fixtures 0.10.13; 2 adds
@@ -36,7 +43,10 @@ DECISION_RULES <- list(
   "regression/fisher" = list(id = "regression/fisher", version = 1L),
   "compliance/exact-binomial" = list(id = "compliance/exact-binomial", version = 1L),
   "latency/precedence" = list(id = "latency/precedence", version = 1L),
-  "latency/compliance-exact-binomial" = list(id = "latency/compliance-exact-binomial", version = 1L)
+  "latency/compliance-exact-binomial" = list(id = "latency/compliance-exact-binomial", version = 1L),
+  "compliance/smoke-exact-binomial" = list(id = "compliance/smoke-exact-binomial", version = 1L),
+  "latency/smoke-compliance-exact-binomial" =
+    list(id = "latency/smoke-compliance-exact-binomial", version = 1L)
 )
 
 # The configuration errors, in the fixed order in which a refused
@@ -434,8 +444,8 @@ compliance_exact_sizing <- function(threshold, delta, alpha, power = 0.80, n_max
 #' Configuration error of a normative (compliance) configuration
 #'
 #' `COMPLIANCE_INFEASIBLE` when n is below the feasibility minimum under
-#' VERIFICATION intent; SMOKE is exempt (it runs and reports that PASS is
-#' not possible at this size). NA otherwise.
+#' VERIFICATION intent; SMOKE is exempt (it runs, decided by
+#' compliance/smoke-exact-binomial at any size). NA otherwise.
 #' @export
 compliance_configuration_error <- function(threshold, n, alpha, intent) {
   if (!intent %in% c("VERIFICATION", "SMOKE")) stop("intent must be VERIFICATION or SMOKE", call. = FALSE)
@@ -443,6 +453,75 @@ compliance_configuration_error <- function(threshold, n, alpha, intent) {
     return("COMPLIANCE_INFEASIBLE")
   }
   NA_character_
+}
+
+# ===========================================================================
+# compliance/smoke-exact-binomial, version 1
+# ===========================================================================
+
+#' Binding count of compliance/smoke-exact-binomial
+#'
+#' Under SMOKE intent the burden of proof is reversed: H0: p >= p_req
+#' against H1: p < p_req. K FAILs iff P_{p_req}(K <= k) <= alpha; the lower
+#' tail is non-decreasing in k, so the failing counts are 0..f and
+#' required_pass = f + 1, with PASS iff K >= required_pass. 0 when no
+#' count can FAIL at this size. Always at most n, since P(K <= n) = 1.
+#'
+#' @param threshold p_req.
+#' @param n Test size.
+#' @param alpha One-sided level.
+#' @return Integer in 0..n.
+#' @export
+smoke_binomial_required_pass <- function(threshold, n, alpha) {
+  check_count(n, "n", 1)
+  check_alpha(alpha)
+  lower <- pbinom(0:n, n, threshold)  # P(K <= k), k = 0..n
+  fails <- which(at_most_alpha(lower, alpha,
+                               function(i) 1 - binomial_upper_exact(i, n, threshold)))
+  if (length(fails) == 0) 0L else as.integer(max(fails))
+}
+
+#' The compliance rule an intent selects
+#' @keywords internal
+compliance_rule <- function(intent, latency = FALSE) {
+  if (!intent %in% c("VERIFICATION", "SMOKE")) stop("intent must be VERIFICATION or SMOKE", call. = FALSE)
+  if (latency) {
+    if (intent == "SMOKE") "latency/smoke-compliance-exact-binomial" else "latency/compliance-exact-binomial"
+  } else {
+    if (intent == "SMOKE") "compliance/smoke-exact-binomial" else "compliance/exact-binomial"
+  }
+}
+
+#' A normative criterion decided by the rule its intent selects
+#'
+#' @param successes K.
+#' @param threshold p_req.
+#' @param n Test size.
+#' @param alpha One-sided level.
+#' @param intent VERIFICATION or SMOKE.
+#' @return A list: decision_rule, required_pass (NA under
+#'   compliance/exact-binomial when no count can pass), verdict, p_value
+#'   (the rule's own one-sided p-value at p_req), false_compliance
+#'   (VERIFICATION) and false_non_compliance (SMOKE), each NA under the
+#'   other intent.
+#' @export
+compliance_decide <- function(successes, threshold, n, alpha, intent) {
+  rule <- compliance_rule(intent)
+  if (intent == "SMOKE") {
+    req <- smoke_binomial_required_pass(threshold, n, alpha)
+    list(decision_rule = rule, required_pass = req,
+         verdict = if (successes >= req) "PASS" else "FAIL",
+         p_value = pbinom(successes, n, threshold),
+         false_compliance = NA_real_,
+         false_non_compliance = if (req == 0) 0 else pbinom(req - 1, n, threshold))
+  } else {
+    k <- exact_binomial_k_min(threshold, n, alpha)
+    list(decision_rule = rule, required_pass = k,
+         verdict = if (!is.na(k) && successes >= k) "PASS" else "FAIL",
+         p_value = pbinom(successes - 1, n, threshold, lower.tail = FALSE),
+         false_compliance = if (is.na(k)) 0 else pbinom(k - 1, n, threshold, lower.tail = FALSE),
+         false_non_compliance = NA_real_)
+  }
 }
 
 # ===========================================================================
@@ -557,29 +636,46 @@ latency_precedence_threshold <- function(baseline_latencies, test_samples, p, al
 #' nearest-rank percentile with tau is reported beside the verdict as a
 #' raw figure; it decides nothing.
 #'
+#' Under SMOKE intent the requirement is decided by
+#' latency/smoke-compliance-exact-binomial: the burden reversed over the
+#' same count, FAIL iff P_p(Y <= y) <= alpha, PASS iff Y >= required_within
+#' (the largest failing count plus one, 0 when no count can FAIL). It
+#' decides at any n_s >= 1; with no successful latency it is INCONCLUSIVE.
+#'
 #' @param latencies Successful latencies (ms).
 #' @param threshold_ms The declared threshold tau.
 #' @param p Percentile as a fraction (0.50, 0.90, 0.95, 0.99).
 #' @param alpha One-sided level.
-#' @return A list: test_samples, within_threshold, y_min, pass_possible,
-#'   verdict, false_compliance, clopper_pearson_lower,
-#'   observed_percentile_ms, raw_percentile_pass.
+#' @param intent VERIFICATION or SMOKE.
+#' @return A list: decision_rule, test_samples, within_threshold, y_min
+#'   (the compliance/exact-binomial count, whatever the intent),
+#'   pass_possible, required_within (the deciding rule's binding count),
+#'   verdict, p_value, false_compliance, false_non_compliance,
+#'   clopper_pearson_lower, observed_percentile_ms, raw_percentile_pass.
 #' @export
-latency_compliance_verdict <- function(latencies, threshold_ms, p, alpha) {
+latency_compliance_verdict <- function(latencies, threshold_ms, p, alpha, intent = "VERIFICATION") {
   latency_percentile_P(p)
   check_alpha(alpha)
+  rule <- compliance_rule(intent, latency = TRUE)
   n_s <- length(latencies)
   y <- sum(latencies <= threshold_ms)
   y_min <- if (n_s == 0) NA_integer_ else exact_binomial_k_min(p, n_s, alpha)
   possible <- !is.na(y_min)
   observed <- if (n_s == 0) NA_real_ else sort(latencies)[latency_test_rank(n_s, p)]
+  smoke <- intent == "SMOKE"
+  decided <- if (n_s == 0) NULL else compliance_decide(y, p, n_s, alpha, intent)
+  verdict <- if (is.null(decided) || (!smoke && !possible)) "INCONCLUSIVE" else decided$verdict
   list(
+    decision_rule = rule,
     test_samples = as.integer(n_s),
     within_threshold = as.integer(y),
     y_min = y_min,
     pass_possible = possible,
-    verdict = if (!possible) "INCONCLUSIVE" else if (y >= y_min) "PASS" else "FAIL",
-    false_compliance = if (possible) pbinom(y_min - 1, n_s, p, lower.tail = FALSE) else NA_real_,
+    required_within = if (is.null(decided)) NA_integer_ else decided$required_pass,
+    verdict = verdict,
+    p_value = if (is.null(decided) || (!smoke && !possible)) NA_real_ else decided$p_value,
+    false_compliance = if (!smoke && possible) pbinom(y_min - 1, n_s, p, lower.tail = FALSE) else NA_real_,
+    false_non_compliance = if (smoke && !is.null(decided)) decided$false_non_compliance else NA_real_,
     clopper_pearson_lower = if (n_s == 0) NA_real_ else clopper_pearson_lower(y, n_s, alpha),
     observed_percentile_ms = observed,
     raw_percentile_pass = if (n_s == 0) NA else observed <= threshold_ms
