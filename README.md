@@ -46,6 +46,8 @@ it implements (`methodologyVersion`):
 | `compliance/exact-binomial` v1 | Normative compliance with a given requirement (exact one-sided binomial test) | k_min; PASS iff K >= k_min |
 | `latency/precedence` v1 | Latency regression (precedence rank of the baseline latencies) | rank, or `saturated` (INCONCLUSIVE) |
 | `latency/compliance-exact-binomial` v1 | An explicit latency requirement (exact one-sided binomial test on the count of successful latencies within the threshold) | y_min; PASS iff Y >= y_min, or INCONCLUSIVE when too few latencies arrived |
+| `compliance/smoke-exact-binomial` v1 | Normative compliance under SMOKE intent (the burden reversed: FAIL only on evidence of non-compliance) | required_pass; PASS iff K >= required_pass |
+| `latency/smoke-compliance-exact-binomial` v1 | An explicit latency requirement under SMOKE intent (the same reversed rule on the within-threshold count) | required_within; PASS iff Y >= required_within, or INCONCLUSIVE with no latencies |
 
 Configurations refused before any sample runs carry `configuration_error`, the
 list of every applicable code in the fixed order `TEST_LARGER_THAN_BASELINE`,

@@ -267,6 +267,19 @@ chk("12.3.4", "y_min at p95 of 100", sprintf("$n_s = 100$ successful latencies):
 chk("12.3.4", "feasibility minimums", sprintf("— %d at p95 and $\\alpha = 0.05$, %d at p99",
     exact_binomial_min_feasible_n(0.95, 0.05), exact_binomial_min_feasible_n(0.99, 0.05)))
 
+# --- §5.7.3 and §12.3.4 the SMOKE rules -----------------------------------------
+chk("5.7.3", "SMOKE required count, 0.99 at 100",
+    sprintf("$n = 100$, a size VERIFICATION refuses, since PASS needs %d): $k_{\\text{smoke}} = %d$",
+            exact_binomial_min_feasible_n(0.99, 0.05), smoke_binomial_required_pass(0.99, 100, 0.05)))
+stopifnot(compliance_decide(96, 0.99, 100, 0.05, "SMOKE")$verdict == "FAIL",
+          compliance_decide(97, 0.99, 100, 0.05, "SMOKE")$verdict == "PASS",
+          compliance_decide(28, 0.99, 30, 0.05, "SMOKE")$verdict == "FAIL",
+          compliance_decide(4, 0.99, 5, 0.05, "SMOKE")$verdict == "FAIL")
+chk("5.7.3", "two misses in 30", sprintf("$P(K \\le 28) = %.3f$ at $n = 30$", pbinom(28, 30, 0.99)))
+chk("5.7.3", "five-sample default", sprintf("$P(K \\le 4) = %.3f$", pbinom(4, 5, 0.99)))
+chk("12.3.4", "SMOKE latency count, p99 of 100",
+    sprintf("At p99 over 100 latencies $y_{\\text{smoke}} = %d$", smoke_binomial_required_pass(0.99, 100, 0.05)))
+
 # --- §3.4 design policy: a test larger than its baseline gains power ---------------
 chk("3.4", "power beyond the baseline size", sprintf("the power is %.3f at $n_t = 100$ and %.3f at $n_t = 200$",
     fisher_power(100, 100, 0.05, 0.95, 0.10), fisher_power(100, 200, 0.05, 0.95, 0.10)))

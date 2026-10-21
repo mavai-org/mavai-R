@@ -1,6 +1,6 @@
 # Statistical models of the mavai methodology — an overview
 
-*Statistical Companion 1.5.0 and 1.6.0 (mavai-R 0.11.x and 0.12.x): 1.6.0 keeps the four rules of 1.5.0 and changes only which verdicts bind. A summary for orientation; the companion is normative.*
+*Statistical Companion 1.5.0 to 1.7.0 (mavai-R 0.11.x to 0.14.x): 1.6.0 keeps the four rules of 1.5.0 and changes only which verdicts bind; 1.7.0 adds the two SMOKE rules, which decide a normative criterion under SMOKE intent with the burden of proof reversed (companion §5.7.3). A summary for orientation; the companion is normative.*
 
 ## Introduction
 
@@ -68,3 +68,5 @@ Equivalently, the one-sided Clopper–Pearson lower bound on the rate reaches p_
 | `compliance/exact-binomial` | pass rate | meets requirement? | k_min | COMPLIANCE_INFEASIBLE |
 | `latency/precedence` | latency | slower than baseline? | baseline rank | INCONCLUSIVE when saturated |
 | `latency/compliance-exact-binomial` | latency | meets latency requirement? | y_min | INCONCLUSIVE when too few latencies |
+| `compliance/smoke-exact-binomial` | pass rate, SMOKE | evidence it falls short of the requirement? | required_pass | none: decides at any size |
+| `latency/smoke-compliance-exact-binomial` | latency, SMOKE | evidence it falls short of the latency requirement? | required_within | INCONCLUSIVE with no latencies |
