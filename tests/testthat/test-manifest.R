@@ -37,7 +37,7 @@ test_that("the manifest reflects the suites exactly", {
 test_that("the manifest and every suite carry the methodology and fixture-schema versions", {
   suites <- suites_for_test()
   manifest <- generate_manifest(suites, "0.0.0-test")
-  expect_identical(manifest$methodologyVersion, "1.7.0")
+  expect_identical(manifest$methodologyVersion, "1.7.1")
   expect_identical(manifest$fixtureSchemaVersion, 2L)
   expect_identical(manifest$manifestVersion, 2L)
   expect_setequal(manifest$configurationErrors,
@@ -48,7 +48,7 @@ test_that("the manifest and every suite carry the methodology and fixture-schema
                       "latency/smoke-compliance-exact-binomial"))
   for (s in suites) {
     expect_identical(names(s)[1:4], c("suite", "methodologyVersion", "fixtureSchemaVersion", "decisionRules"))
-    expect_identical(s$methodologyVersion, "1.7.0")
+    expect_identical(s$methodologyVersion, "1.7.1")
   }
 })
 

@@ -84,3 +84,23 @@ test_that("Generator output matches committed fixture", {
                  info = generated$cases[[i]]$name)
   }
 })
+
+test_that("A criterion decided by a SMOKE rule enters neither envelope", {
+  smoke <- function(id, rule, alpha, verdict) {
+    c(inf(id, "COMPLIANCE", alpha, verdict), list(decision_rule = rule))
+  }
+  result <- composite_verdict(make_criteria(
+    inf("verified", "COMPLIANCE", 0.01, "PASS"),
+    smoke("rate", "compliance/smoke-exact-binomial", 0.05, "PASS"),
+    smoke("p95", "latency/smoke-compliance-exact-binomial", 0.05, "PASS"),
+    smoke("named", "compliance/exact-binomial", 0.001, "PASS")
+  ))
+  expect_equal(result$false_compliance_envelope, 0.011)
+  expect_true(is.na(result$false_degradation_signal_envelope))
+
+  only_smoke <- composite_verdict(make_criteria(
+    smoke("rate", "compliance/smoke-exact-binomial", 0.05, "FAIL")
+  ))
+  expect_equal(only_smoke$composite_verdict, "FAIL")
+  expect_true(is.na(only_smoke$false_compliance_envelope))
+})

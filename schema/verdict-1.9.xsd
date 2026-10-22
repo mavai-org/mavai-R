@@ -585,7 +585,7 @@
     <xs:attribute name="on-exhausted" type="tns:OnExhaustedEnum" use="optional"/>
   </xs:complexType>
 
-  <!-- 1.9: the exhaustion behaviours (mavai-services/1 §II.8, catalog RC05). -->
+  <!-- 1.9: the exhaustion behaviours (mavai-services/1 §II.8). -->
   <xs:simpleType name="OnExhaustedEnum">
     <xs:restriction base="xs:string">
       <xs:enumeration value="INCONCLUSIVE"/>

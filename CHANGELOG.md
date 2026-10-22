@@ -5,7 +5,17 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.14.0] — unreleased
+## [0.15.0] — unreleased
+
+**Breaking: SMOKE decisions enter neither Type-I envelope (Statistical Companion 1.7.1).** Companion 1.7.0 did not say which envelope of §1.4.6 a criterion decided by `compliance/smoke-exact-binomial` or `latency/smoke-compliance-exact-binomial` enters. 1.7.1 states that it enters neither: its alpha bounds a false FAIL of a service that meets its requirement, which is neither envelope's error event, and its PASS claims no compliance. No verdict, count or decision rule changes.
+
+- Methodology version 1.7.1 on every suite and the manifest; this is the breaking change.
+- `composite_verdict`: a criterion may name its `decision_rule`; one decided by a SMOKE rule adds nothing to either envelope. Three cases are added: `smoke_only_excluded_from_envelopes`, `smoke_beside_verification_and_regression` and `verification_rule_named_enters_envelope`. Existing cases are unchanged.
+- `verdict-1.9.xsd` and `verdict-1.10.xsd`: a comment no longer carries a requirements-catalog code. No definition changes. The 1.10 comment now reads that a 1.10 record's `@methodology-version` is "1.7.0" or later.
+
+*Companion*: Statistical Companion 1.7.1 (§1.4.6, §5.7.3 and the Document History).
+
+## [0.14.0] — 2026-10-22
 
 **Breaking: SMOKE decides a normative criterion by its own rule (Statistical Companion 1.7.0).** Under 1.5.0 and 1.6.0 a normative criterion under SMOKE intent was decided by `compliance/exact-binomial`, so a design too small to demonstrate its requirement could only FAIL, whatever the service did. Under SMOKE the burden of proof is now reversed, at every size: FAIL iff P(K <= k | n, p_req) <= alpha, PASS iff K >= `required_pass`, the largest failing count plus one (0 when no count can FAIL). VERIFICATION is unchanged.
 
