@@ -1,9 +1,9 @@
 {
   "suite": "composite_verdict",
-  "methodologyVersion": "1.7.0",
+  "methodologyVersion": "1.7.1",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
-  "description": "Composite-verdict aggregation per companion §1.4.6 (composite rule) and SC-RU-05 (envelopes split by procedure direction). The composite rule is: PASS if every per-criterion verdict is PASS; FAIL if any is FAIL; INCONCLUSIVE otherwise. The two envelopes are sums of alpha_c over their own family of inferential criteria: the false-compliance envelope over COMPLIANCE criteria, the false-degradation-signal envelope over REGRESSION criteria. Observational criteria carry no alpha and contribute to neither.",
+  "description": "Composite-verdict aggregation per companion §1.4.6 (composite rule) and SC-RU-05 (envelopes split by procedure direction). The composite rule is: PASS if every per-criterion verdict is PASS; FAIL if any is FAIL; INCONCLUSIVE otherwise. The two envelopes are sums of alpha_c over their own family of inferential criteria: the false-compliance envelope over COMPLIANCE criteria, the false-degradation-signal envelope over REGRESSION criteria. Observational criteria carry no alpha and contribute to neither. A criterion decided by a SMOKE rule (its optional decision_rule is compliance/smoke-exact-binomial or latency/smoke-compliance-exact-binomial) contributes to neither: its alpha bounds a false FAIL and its PASS claims no compliance.",
   "method": "Three-way aggregation (PASS/FAIL/INCONCLUSIVE) plus per-family alpha summation. An envelope is omitted (encoded as null) when no inferential criterion of that procedure direction is present.",
   "tolerance": 1e-12,
   "cases": [
@@ -325,6 +325,103 @@
           "c_guardrail_b"
         ],
         "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null
+      }
+    },
+    {
+      "name": "smoke_only_excluded_from_envelopes",
+      "description": "A SMOKE run of two requirements, pass rate and latency, each decided by its SMOKE rule. Their alpha bounds a false FAIL and their PASS claims no compliance, so neither envelope is emitted (§1.4.6). The latency criterion FAILs, so the composite FAILs.",
+      "inputs": {
+        "criteria": [
+          {
+            "criterion_id": "c_policy_rate",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "alpha": 0.05,
+            "verdict": "PASS",
+            "decision_rule": "compliance/smoke-exact-binomial"
+          },
+          {
+            "criterion_id": "c_p95_latency",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "alpha": 0.05,
+            "verdict": "FAIL",
+            "decision_rule": "latency/smoke-compliance-exact-binomial"
+          }
+        ]
+      },
+      "expected": {
+        "composite_verdict": "FAIL",
+        "triggering_criteria": [
+          "c_p95_latency"
+        ],
+        "false_compliance_envelope": null,
+        "false_degradation_signal_envelope": null
+      }
+    },
+    {
+      "name": "smoke_beside_verification_and_regression",
+      "description": "A SMOKE requirement beside a VERIFICATION requirement and a regression criterion. Only the VERIFICATION requirement enters the false-compliance envelope and only the regression criterion the false-degradation-signal envelope; the SMOKE criterion enters neither.",
+      "inputs": {
+        "criteria": [
+          {
+            "criterion_id": "c_verified_rate",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "alpha": 0.01,
+            "verdict": "PASS"
+          },
+          {
+            "criterion_id": "c_smoke_rate",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "alpha": 0.05,
+            "verdict": "PASS",
+            "decision_rule": "compliance/smoke-exact-binomial"
+          },
+          {
+            "criterion_id": "c_regression",
+            "mode": "inferential",
+            "procedure": "REGRESSION",
+            "alpha": 0.05,
+            "verdict": "PASS"
+          }
+        ]
+      },
+      "expected": {
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": 0.01,
+        "false_degradation_signal_envelope": 0.05
+      }
+    },
+    {
+      "name": "verification_rule_named_enters_envelope",
+      "description": "A requirement whose decision_rule names compliance/exact-binomial, the VERIFICATION rule, enters the false-compliance envelope exactly as one with no decision_rule.",
+      "inputs": {
+        "criteria": [
+          {
+            "criterion_id": "c_named_rule",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "alpha": 0.001,
+            "verdict": "PASS",
+            "decision_rule": "compliance/exact-binomial"
+          },
+          {
+            "criterion_id": "c_unnamed_rule",
+            "mode": "inferential",
+            "procedure": "COMPLIANCE",
+            "alpha": 0.01,
+            "verdict": "PASS"
+          }
+        ]
+      },
+      "expected": {
+        "composite_verdict": "PASS",
+        "triggering_criteria": [],
+        "false_compliance_envelope": 0.011,
         "false_degradation_signal_envelope": null
       }
     }

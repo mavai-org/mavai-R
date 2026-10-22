@@ -1,3 +1,8 @@
+# Rules that decide a criterion under SMOKE intent; their criteria enter
+# neither envelope (companion §1.4.6).
+SMOKE_DECISION_RULES <- c("compliance/smoke-exact-binomial",
+                          "latency/smoke-compliance-exact-binomial")
+
 #' Composite-verdict aggregation (companion §1.4.6, SC-RU-05)
 #'
 #' Aggregates a contract's per-criterion verdicts into the structural
@@ -23,6 +28,10 @@
 #'                                           criteria with procedure
 #'                                           REGRESSION.
 #'   - Observational criteria contribute to neither (they carry no alpha).
+#'   - A criterion decided by a SMOKE rule (`compliance/smoke-exact-binomial`,
+#'     `latency/smoke-compliance-exact-binomial`) contributes to neither: its
+#'     alpha bounds a false FAIL of a service that meets its requirement, and
+#'     its PASS claims no compliance (companion §1.4.6, §5.7.3).
 #'   - An envelope is `NA` (omitted from output) when no inferential
 #'     criterion of that procedure direction is present on the contract.
 #'
@@ -31,7 +40,9 @@
 #'   `"observational"`), `procedure` (`"REGRESSION"` or `"COMPLIANCE"` for
 #'   inferential criteria; `NA` or absent for observational), `alpha`
 #'   (numeric in (0,1) for inferential criteria; `NA` or absent for
-#'   observational), `verdict` (`"PASS"`, `"FAIL"`, or `"INCONCLUSIVE"`).
+#'   observational), `verdict` (`"PASS"`, `"FAIL"`, or `"INCONCLUSIVE"`),
+#'   and optionally `decision_rule` (the rule that decided the criterion;
+#'   absent means the procedure's VERIFICATION rule).
 #' @return A list with `composite_verdict`, `triggering_criteria`,
 #'   `false_compliance_envelope`, `false_degradation_signal_envelope`.
 #' @export
@@ -58,7 +69,8 @@ composite_verdict <- function(criteria) {
     contributing <- vapply(criteria, function(c) {
       isTRUE(c$mode == "inferential") &&
         !is.null(c$procedure) && !is.na(c$procedure) &&
-        c$procedure == procedure_label
+        c$procedure == procedure_label &&
+        !(isTRUE(c$decision_rule %in% SMOKE_DECISION_RULES))
     }, logical(1))
     if (!any(contributing)) return(NA_real_)
     sum(vapply(criteria[contributing], function(c) c$alpha, numeric(1)))
@@ -81,6 +93,12 @@ generate_composite_verdict_cases <- function() {
   crit_inf <- function(id, procedure, alpha, verdict) {
     list(criterion_id = id, mode = "inferential",
          procedure = procedure, alpha = alpha, verdict = verdict)
+  }
+
+  crit_smoke <- function(id, procedure, rule, alpha, verdict) {
+    list(criterion_id = id, mode = "inferential",
+         procedure = procedure, alpha = alpha, verdict = verdict,
+         decision_rule = rule)
   }
 
   crit_obs <- function(id, verdict) {
@@ -177,6 +195,31 @@ generate_composite_verdict_cases <- function() {
         crit_obs("c_guardrail_a", "PASS"),
         crit_obs("c_guardrail_b", "FAIL")
       )
+    ),
+    case(
+      "smoke_only_excluded_from_envelopes",
+      "A SMOKE run of two requirements, pass rate and latency, each decided by its SMOKE rule. Their alpha bounds a false FAIL and their PASS claims no compliance, so neither envelope is emitted (§1.4.6). The latency criterion FAILs, so the composite FAILs.",
+      list(
+        crit_smoke("c_policy_rate", "COMPLIANCE", "compliance/smoke-exact-binomial", 0.05, "PASS"),
+        crit_smoke("c_p95_latency", "COMPLIANCE", "latency/smoke-compliance-exact-binomial", 0.05, "FAIL")
+      )
+    ),
+    case(
+      "smoke_beside_verification_and_regression",
+      "A SMOKE requirement beside a VERIFICATION requirement and a regression criterion. Only the VERIFICATION requirement enters the false-compliance envelope and only the regression criterion the false-degradation-signal envelope; the SMOKE criterion enters neither.",
+      list(
+        crit_inf("c_verified_rate", "COMPLIANCE", 0.01, "PASS"),
+        crit_smoke("c_smoke_rate", "COMPLIANCE", "compliance/smoke-exact-binomial", 0.05, "PASS"),
+        crit_inf("c_regression", "REGRESSION", 0.05, "PASS")
+      )
+    ),
+    case(
+      "verification_rule_named_enters_envelope",
+      "A requirement whose decision_rule names compliance/exact-binomial, the VERIFICATION rule, enters the false-compliance envelope exactly as one with no decision_rule.",
+      list(
+        crit_smoke("c_named_rule", "COMPLIANCE", "compliance/exact-binomial", 0.001, "PASS"),
+        crit_inf("c_unnamed_rule", "COMPLIANCE", 0.01, "PASS")
+      )
     )
   )
 
@@ -190,7 +233,11 @@ generate_composite_verdict_cases <- function() {
       "are sums of alpha_c over their own family of inferential criteria:",
       "the false-compliance envelope over COMPLIANCE criteria, the",
       "false-degradation-signal envelope over REGRESSION criteria.",
-      "Observational criteria carry no alpha and contribute to neither."
+      "Observational criteria carry no alpha and contribute to neither.",
+      "A criterion decided by a SMOKE rule (its optional decision_rule is",
+      "compliance/smoke-exact-binomial or",
+      "latency/smoke-compliance-exact-binomial) contributes to neither:",
+      "its alpha bounds a false FAIL and its PASS claims no compliance."
     ),
     method = paste(
       "Three-way aggregation (PASS/FAIL/INCONCLUSIVE) plus per-family",

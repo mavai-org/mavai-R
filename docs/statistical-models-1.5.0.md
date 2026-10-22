@@ -1,6 +1,6 @@
 # Statistical models of the mavai methodology — an overview
 
-*Statistical Companion 1.5.0 to 1.7.0 (mavai-R 0.11.x to 0.14.x): 1.6.0 keeps the four rules of 1.5.0 and changes only which verdicts bind; 1.7.0 adds the two SMOKE rules, which decide a normative criterion under SMOKE intent with the burden of proof reversed (companion §5.7.3). A summary for orientation; the companion is normative.*
+*Statistical Companion 1.5.0 to 1.7.1 (mavai-R 0.11.x to 0.15.x): 1.6.0 keeps the four rules of 1.5.0 and changes only which verdicts bind; 1.7.0 adds the two SMOKE rules, which decide a normative criterion under SMOKE intent with the burden of proof reversed (companion §5.7.3); 1.7.1 states that their criteria enter neither Type-I envelope. A summary for orientation; the companion is normative.*
 
 ## Introduction
 

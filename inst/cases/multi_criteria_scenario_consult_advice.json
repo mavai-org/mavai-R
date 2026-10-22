@@ -1,6 +1,6 @@
 {
   "suite": "multi_criteria_scenario_consult_advice",
-  "methodologyVersion": "1.7.0",
+  "methodologyVersion": "1.7.1",
   "fixtureSchemaVersion": 2,
   "decisionRules": [
     {
