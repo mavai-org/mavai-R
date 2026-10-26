@@ -34,25 +34,6 @@ test_that("The readability counterfactual reaches k_min", {
   expect_identical(layperson$decisionRule, "compliance/exact-binomial")
 })
 
-test_that("Case 3: paired pattern with non-1.0 r_obs", {
-  result <- generate_multi_criteria_scenario_cases()
-  case <- Filter(function(c) c$name == "paired_evaluability_content_non_unit_r_obs",
-                 result$cases)[[1]]
-  layperson <- Filter(function(v) v$criterion_id == "c_layperson_readable",
-                      case$expected$per_criterion_verdicts)[[1]]
-  expect_true(layperson$r_obs < 1)
-  expect_equal(layperson$denominator_policy, "CONDITIONAL_ON_EVALUABLE")
-})
-
-test_that("Case 4: cross-policy mismatch raises a structural error", {
-  result <- generate_multi_criteria_scenario_cases()
-  case <- Filter(function(c) c$name == "cross_policy_structural_mismatch",
-                 result$cases)[[1]]
-  e <- case$expected
-  expect_equal(e$composite_verdict, "STRUCTURAL_ERROR")
-  expect_equal(e$structural_error$conflicting_criteria, list("c_layperson_readable"))
-})
-
 test_that("Every case carries the §10.6 conformance_status metadata", {
   result <- generate_multi_criteria_scenario_cases()
   for (case in result$cases) {

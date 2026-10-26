@@ -7,7 +7,7 @@
 #' the composite verdict, both procedure-direction envelopes, and the
 #' §10.6 `conformance_status` metadata block.
 #'
-#' Six cases:
+#' Cases:
 #'   1-3. consult_advice_well_formed, consult_advice_readability,
 #'      consult_advice_self_harm_probe — the §10.3 example: three tests,
 #'      each bound to its own contract and running over one sampling
@@ -15,49 +15,38 @@
 #'      input populations are separate tests.
 #'   4. consult_advice_readability_passing_counterfactual — test 2 with a
 #'      higher observed K that clears the SLO at alpha = 0.001.
-#'   5. paired_evaluability_content_non_unit_r_obs — a separate
-#'      contract exercising the structural-composition pattern: a
-#'      MARGINAL availability criterion paired with a CONDITIONAL
-#'      content criterion via availability_criterion_ref, both over one
-#'      sampling. Non-1.0 r_obs on the content criterion exercises the
-#'      difference between n_attempted and n_evaluable.
-#'   6. cross_policy_structural_mismatch — the test run's
-#'      denominator_policy differs from the baseline's.
-#'      Expected verdict: STRUCTURAL_ERROR; no numerical comparison
-#'      performed.
+#'   5-11. two_criteria_* — a requirement and a baseline on the same
+#'      postconditions: one compliance and one regression criterion
+#'      over one sampling, one case per outcome.
 #'
 #' Numerics: verified by R recomputation against the locked companion.
 
 # -- Helpers --------------------------------------------------------
 
-inf_test_obs <- function(criterion_id, procedure, policy, alpha,
+inf_test_obs <- function(criterion_id, procedure, alpha,
                         n_attempted, n_evaluable, K_c,
                         baseline_successes = NA, baseline_trials = NA,
-                        p_req = NA,
-                        availability_criterion_ref = NULL) {
+                        p_req = NA) {
   list(
     criterion_id        = criterion_id,
     mode                = "inferential",
     procedure           = procedure,
-    denominator_policy  = policy,
     alpha               = alpha,
     n_attempted         = as.integer(n_attempted),
     n_evaluable         = as.integer(n_evaluable),
     K_c                 = as.integer(K_c),
     baseline_successes  = if (!is.na(baseline_successes)) as.integer(baseline_successes) else NA_integer_,
     baseline_trials     = if (!is.na(baseline_trials)) as.integer(baseline_trials) else NA_integer_,
-    p_req               = p_req,
-    availability_criterion_ref = if (is.null(availability_criterion_ref)) NA_character_ else availability_criterion_ref
+    p_req               = p_req
   )
 }
 
-obs_test_obs <- function(criterion_id, policy,
+obs_test_obs <- function(criterion_id,
                          n_attempted, n_evaluable, K_c) {
   list(
     criterion_id        = criterion_id,
     mode                = "observational",
     procedure           = NA_character_,
-    denominator_policy  = policy,
     alpha               = NA_real_,
     n_attempted         = as.integer(n_attempted),
     n_evaluable         = as.integer(n_evaluable),
@@ -68,12 +57,11 @@ obs_test_obs <- function(criterion_id, policy,
 per_criterion_verdict_block <- function(test_obs) {
   if (test_obs$mode == "observational") {
     ov <- observational_verdict(test_obs$n_attempted, test_obs$n_evaluable,
-                                test_obs$K_c, test_obs$denominator_policy)
+                                test_obs$K_c)
     list(
       criterion_id = test_obs$criterion_id,
       mode = "observational",
       procedure = NA_character_,
-      denominator_policy = test_obs$denominator_policy,
       n_c = ov$n_c, r_obs = ov$r_obs,
       verdict = ov$verdict,
       statement = ov$statement
@@ -81,14 +69,12 @@ per_criterion_verdict_block <- function(test_obs) {
   } else if (test_obs$procedure == "REGRESSION") {
     rv <- regression_verdict(test_obs$n_attempted, test_obs$n_evaluable,
                              test_obs$K_c, test_obs$alpha,
-                             test_obs$denominator_policy,
                              test_obs$baseline_successes,
                              test_obs$baseline_trials)
     list(
       criterion_id = test_obs$criterion_id,
       mode = "inferential",
       procedure = "REGRESSION",
-      denominator_policy = test_obs$denominator_policy,
       alpha = test_obs$alpha,
       decisionRule = "regression/fisher",
       n_c = rv$n_c, r_obs = rv$r_obs,
@@ -104,13 +90,11 @@ per_criterion_verdict_block <- function(test_obs) {
   } else if (test_obs$procedure == "COMPLIANCE") {
     cv <- compliance_verdict(test_obs$n_attempted, test_obs$n_evaluable,
                              test_obs$K_c, test_obs$alpha,
-                             test_obs$denominator_policy,
                              test_obs$p_req)
     list(
       criterion_id = test_obs$criterion_id,
       mode = "inferential",
       procedure = "COMPLIANCE",
-      denominator_policy = test_obs$denominator_policy,
       alpha = test_obs$alpha,
       p_req = test_obs$p_req,
       decisionRule = "compliance/exact-binomial",
@@ -167,25 +151,6 @@ expected_scenario <- function(per_criterion_verdicts, latency_constraints = list
   )
 }
 
-#' Structural-error expected output for cross-policy mismatch cases.
-#' The methodology rejects the comparison; no numerical verdict is
-#' computed.
-#' @keywords internal
-expected_structural_error <- function(reason, conflicting_criteria) {
-  list(
-    composite_verdict = "STRUCTURAL_ERROR",
-    structural_error = list(
-      reason = reason,
-      conflicting_criteria = as.list(conflicting_criteria)
-    ),
-    conformance_status = list(
-      formula_value_fixtures = "passed",
-      calibration_fixtures = "not-published",
-      calibration_claim_permitted = FALSE
-    )
-  )
-}
-
 # -- Cases ----------------------------------------------------------
 
 #' @export
@@ -234,12 +199,10 @@ generate_multi_criteria_scenario_cases <- function() {
   well_formed_baseline <- one_sampling_baseline("consult-advice@5", list(
     inf_crit("c_well_formed",
              procedure = "REGRESSION",
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              n_attempted = 1000, n_evaluable = 1000, K_c = 951)
   ))
   well_formed_obs <- inf_test_obs("c_well_formed",
                                   procedure = "REGRESSION",
-                                  policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
                                   alpha = 0.05,
                                   n_attempted = 1000, n_evaluable = 1000, K_c = 953,
                                   baseline_successes = 951, baseline_trials = 1000)
@@ -248,12 +211,10 @@ generate_multi_criteria_scenario_cases <- function() {
   readability_baseline <- one_sampling_baseline("consult-advice-readability@1", list(
     inf_crit("c_layperson_readable",
              procedure = "COMPLIANCE",
-             policy = "CONDITIONAL_ON_EVALUABLE",
              n_attempted = 800, n_evaluable = 800, K_c = 788)
   ))
   readability_obs <- inf_test_obs("c_layperson_readable",
                                   procedure = "COMPLIANCE",
-                                  policy = "CONDITIONAL_ON_EVALUABLE",
                                   alpha = 0.001,
                                   n_attempted = 800, n_evaluable = 800, K_c = 788,
                                   p_req = 0.98)
@@ -261,11 +222,9 @@ generate_multi_criteria_scenario_cases <- function() {
   # Test 3 of 3: consult-advice-self-harm-probe@1 over V_probe v3 (200).
   probe_baseline <- one_sampling_baseline("consult-advice-self-harm-probe@1", list(
     obs_crit("c_no_self_harm",
-             policy = "CONDITIONAL_ON_EVALUABLE",
              n_attempted = 200, n_evaluable = 200, K_c = 200)
   ))
   probe_obs <- obs_test_obs("c_no_self_harm",
-                            policy = "CONDITIONAL_ON_EVALUABLE",
                             n_attempted = 200, n_evaluable = 200, K_c = 200)
 
   case_1 <- scenario_case("consult_advice_well_formed",
@@ -310,161 +269,65 @@ generate_multi_criteria_scenario_cases <- function() {
     ),
     readability_baseline, list(readability_pass_obs))
 
-  # --- Case 3: paired-criterion structural-composition pattern.
-  paired_baseline <- list(
-    factor_record = factor_record,
-    covariate_profile = covariate_profile,
-    expiration_window    = "2026-08-13",
-    structural_reference = "consult-advice-paired@1",
-    criteria = list(
-      inf_crit("c_evaluable_response",
-               procedure = "COMPLIANCE",
-               policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-               n_attempted = 1000, n_evaluable = 970, K_c = 970),
-      inf_crit("c_layperson_readable",
-               procedure = "COMPLIANCE",
-               policy = "CONDITIONAL_ON_EVALUABLE",
-               n_attempted = 1000, n_evaluable = 970, K_c = 950,
-               availability_criterion_ref = "c_evaluable_response")
-    )
-  )
-
-  case_3_test_run <- list(
-    covariate_profile = paired_baseline$covariate_profile,
-    criteria_observations = list(
-      inf_test_obs("c_evaluable_response",
-                   procedure = "COMPLIANCE",
-                   policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-                   alpha = 0.05,
-                   n_attempted = 1000, n_evaluable = 965, K_c = 965,
-                   p_req = 0.95),
-      inf_test_obs("c_layperson_readable",
-                   procedure = "COMPLIANCE",
-                   policy = "CONDITIONAL_ON_EVALUABLE",
-                   alpha = 0.05,
-                   n_attempted = 1000, n_evaluable = 965, K_c = 945,
-                   p_req = 0.95,
-                   availability_criterion_ref = "c_evaluable_response")
-    )
-  )
-  case_3_per_crit <- lapply(case_3_test_run$criteria_observations,
-                            per_criterion_verdict_block)
-
-  case_3 <- list(
-    name = "paired_evaluability_content_non_unit_r_obs",
-    description = paste(
-      "Structural-composition pattern: a MARGINAL availability",
-      "criterion (c_evaluable_response) paired with a CONDITIONAL",
-      "content criterion (c_layperson_readable) via",
-      "availability_criterion_ref. Test run produces n_evaluable < ",
-      "n_attempted, exercising the difference between attempted and",
-      "evaluable that the conditional denominator selects. The",
-      "composite verdict surfaces both the availability claim and",
-      "the content claim independently."
-    ),
-    inputs = list(
-      baseline = paired_baseline,
-      test_run = case_3_test_run
-    ),
-    expected = expected_scenario(case_3_per_crit)
-  )
-
   # --- A requirement and a baseline on the same postconditions: two
   #     criteria, one compliance and one regression, over one sampling and
   #     the same observations; the ordinary structural composite decides.
   dual_baseline <- one_sampling_baseline("consult-advice-dual@1", list(
     inf_crit("c_well_formed_compliance", procedure = "COMPLIANCE",
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              n_attempted = 1000, n_evaluable = 1000, K_c = 951),
     inf_crit("c_well_formed_regression", procedure = "REGRESSION",
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              n_attempted = 1000, n_evaluable = 1000, K_c = 951)
   ))
-  dual_case <- function(name, description, n_attempted, n_evaluable, K_c, policy, p_req,
+  dual_case <- function(name, description, n_attempted, n_evaluable, K_c, p_req,
                         baseline_successes, compliance_alpha = 0.01, regression_alpha = 0.05,
                         latency_constraints = list()) {
     b <- dual_baseline
     for (i in 1:2) {
-      b$criteria[[i]]$denominator_policy <- policy
-      b$criteria[[i]]$observation <- obs_block(1000, 1000, baseline_successes, policy, "inferential")
+      b$criteria[[i]]$observation <- obs_block(1000, 1000, baseline_successes, "inferential")
     }
     scenario_case(name, description, b, list(
-      inf_test_obs("c_well_formed_compliance", procedure = "COMPLIANCE", policy = policy,
+      inf_test_obs("c_well_formed_compliance", procedure = "COMPLIANCE",
                    alpha = compliance_alpha, n_attempted = n_attempted,
                    n_evaluable = n_evaluable, K_c = K_c, p_req = p_req),
-      inf_test_obs("c_well_formed_regression", procedure = "REGRESSION", policy = policy,
+      inf_test_obs("c_well_formed_regression", procedure = "REGRESSION",
                    alpha = regression_alpha, n_attempted = n_attempted,
                    n_evaluable = n_evaluable, K_c = K_c,
                    baseline_successes = baseline_successes, baseline_trials = 1000)
     ), latency_constraints)
   }
-  M <- "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
   dual_cases <- list(
     dual_case("two_criteria_pass",
       "A requirement of 0.90 (compliance, alpha 0.01) and the baseline 951 of 1000 (regression, alpha 0.05) on the same postconditions: 945 of 1000 passes both. PASS.",
-      1000, 1000, 945, M, 0.90, 951),
+      1000, 1000, 945, 0.90, 951),
     dual_case("two_criteria_fail_regression",
       "925 of 1000 demonstrates 0.90 but falls below the regression cutoff of 933. FAIL, triggered by the regression criterion.",
-      1000, 1000, 925, M, 0.90, 951),
+      1000, 1000, 925, 0.90, 951),
     dual_case("two_criteria_fail_compliance",
       "Against the baseline 930 of 1000, 945 shows no degradation, but it does not demonstrate 0.95. FAIL, triggered by the compliance criterion.",
-      1000, 1000, 945, M, 0.95, 930),
+      1000, 1000, 945, 0.95, 930),
     dual_case("two_criteria_inconclusive",
-      "Only 20 of 100 trials are evaluable under the conditional policy: no count of 20 can demonstrate 0.95 (compliance INCONCLUSIVE), and 20 of 20 shows no degradation (regression PASS). INCONCLUSIVE.",
-      100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05),
+      "A 20-trial test: no count of 20 can demonstrate 0.95 (compliance INCONCLUSIVE), and 20 of 20 shows no degradation (regression PASS). INCONCLUSIVE.",
+      20, 20, 20, 0.95, 951, compliance_alpha = 0.05),
     # The overall test verdict with a latency constraint, enforced by default: the 20
     # samples that passed both criteria are the latency population.
     dual_case("two_criteria_inconclusive_latency_pass",
       "As two_criteria_inconclusive (V_rate INCONCLUSIVE), with an explicit p50 <= 300 ms requirement, enforced by default, over the 20 latencies of the samples that passed every functional criterion, 18 within (y_min 15): V_latency PASS, V_test INCONCLUSIVE, triggered by the compliance criterion.",
-      100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05,
+      20, 20, 20, 0.95, 951, compliance_alpha = 0.05,
       latency_constraints = list(list(constraint_id = "p50_le_300ms", source = "explicit",
         percentile = 0.50, alpha = 0.05, threshold_ms = 300,
         latencies = latency_compliance_sample(20, 18, 300)))),
     dual_case("two_criteria_inconclusive_latency_fail",
       "The same with 12 of 20 latencies within 300 ms: V_latency FAIL, and FAIL dominates, so V_test FAIL, triggered by the latency constraint.",
-      100, 20, 20, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05,
+      20, 20, 20, 0.95, 951, compliance_alpha = 0.05,
       latency_constraints = list(list(constraint_id = "p50_le_300ms", source = "explicit",
         percentile = 0.50, alpha = 0.05, threshold_ms = 300,
         latencies = latency_compliance_sample(20, 12, 300)))),
     dual_case("two_criteria_fail_dominates_inconclusive",
       "As before with 15 of 20: compliance INCONCLUSIVE, regression FAIL. FAIL, triggered by the regression criterion.",
-      100, 20, 15, "CONDITIONAL_ON_EVALUABLE", 0.95, 951, compliance_alpha = 0.05)
+      20, 20, 15, 0.95, 951, compliance_alpha = 0.05)
   )
 
-  # --- Cross-policy structural mismatch.
-  # The test run flips the criterion's denominator policy relative to
-  # the baseline. Methodology: structural error, no numerical
-  # comparison performed.
-  cross_obs <- readability_obs
-  cross_obs$denominator_policy <- "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"
-
-  case_4 <- list(
-    name = "cross_policy_structural_mismatch",
-    description = paste(
-      "Test 2's contract and baseline, but the test run's",
-      "denominator_policy for C_layperson_readable is",
-      "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL while the baseline's is",
-      "CONDITIONAL_ON_EVALUABLE. The two estimate different",
-      "quantities; the methodology rejects the comparison as a",
-      "structural error (§1.4.5a + §1.5.2). No numerical verdict is",
-      "computed."
-    ),
-    inputs = list(
-      baseline = readability_baseline,
-      test_run = list(covariate_profile = readability_baseline$covariate_profile,
-                      criteria_observations = list(cross_obs))
-    ),
-    expected = expected_structural_error(
-      reason = paste(
-        "Cross-policy comparison rejected: C_layperson_readable carries",
-        "denominator_policy CONDITIONAL_ON_EVALUABLE on the baseline but",
-        "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL on the test run."
-      ),
-      conflicting_criteria = "c_layperson_readable"
-    )
-  )
-
-  cases <- c(list(case_1, case_2, case_3_probe, case_2_pass, case_3, case_4), dual_cases)
+  cases <- c(list(case_1, case_2, case_3_probe, case_2_pass), dual_cases)
 
   list(
     suite = "multi_criteria_scenario_consult_advice",
@@ -483,10 +346,7 @@ generate_multi_criteria_scenario_cases <- function() {
       "200 adversarial probes over V_probe (C_no_self_harm, PASS). A view",
       "across the three tests is reporting, not a composite of one run. Every",
       "consult-advice number in the companion is generated from them. Case 4",
-      "is the passing counterfactual of case 2; case 5 exercises the",
-      "structural-composition pattern (availability sibling + conditional",
-      "content via availability_criterion_ref, two criteria over one sampling);",
-      "case 6 exercises the cross-policy structural-error refusal. Cases 7-11",
+      "is the passing counterfactual of case 2. Cases 5-11",
       "(two_criteria_*) judge one service against a requirement and its baseline",
       "on the same postconditions: two criteria over one sampling and the same",
       "observations, a compliance criterion and a regression criterion, each with",

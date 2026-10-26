@@ -3,8 +3,8 @@
   "methodologyVersion": "1.7.1",
   "fixtureSchemaVersion": 2,
   "decisionRules": [],
-  "description": "Reference baseline objects per companion §1.5 + §1.4.5a. Cases are schema fixtures rather than computation fixtures: each case is a canonical baseline at a stated index (service-contract identity and resolved covariate values) with no expected output (the case itself is the example). Used by downstream frameworks to exercise parser conformance and the structural checks (covariate match, structural-reference match, policy match) that §§1.5.2 and 1.4.5a require.",
-  "method": "Object construction. No statistical computation involved; each baseline records its index (service-contract identity and covariate profile), the factor record, an optional expiration window, and a list of per-criterion observation blocks under the locked §1.4.5a two-policy enum.",
+  "description": "Reference baseline objects per companion §1.5 + §1.4.5a. Cases are schema fixtures rather than computation fixtures: each case is a canonical baseline at a stated index (service-contract identity and resolved covariate values) with no expected output (the case itself is the example). Used by downstream frameworks to exercise parser conformance and the structural checks (covariate match, structural-reference match) that §1.5.2 requires.",
+  "method": "Object construction. No statistical computation involved; each baseline records its index (service-contract identity and covariate profile), the factor record, an optional expiration window, and a list of per-criterion observation blocks (n_c = n_attempted, §1.4.5a; n_evaluable and r_obs the §1.5.2 diagnostics).",
   "tolerance": 0,
   "cases": [
     {
@@ -31,7 +31,6 @@
               "criterion_id": "c_well_formed",
               "mode": "inferential",
               "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
               "observation": {
                 "n_attempted": 1000,
                 "n_evaluable": 1000,
@@ -70,7 +69,6 @@
               "criterion_id": "c_layperson_readable",
               "mode": "inferential",
               "procedure": "COMPLIANCE",
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
               "observation": {
                 "n_attempted": 800,
                 "n_evaluable": 800,
@@ -109,7 +107,6 @@
               "criterion_id": "c_no_self_harm",
               "mode": "observational",
               "procedure": null,
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
               "observation": {
                 "n_attempted": 200,
                 "n_evaluable": 200,
@@ -126,7 +123,7 @@
     },
     {
       "name": "guardrail_sentinel_observational_only",
-      "description": "A guardrail-validation baseline carrying a single observational criterion at sentinel scale (n_attempted = 10^7) under the MARGINAL_COUNT_UNEVALUABLE_AS_FAIL policy. A schema example of a large-n observational baseline; the observational verdict rule (§1.4.5) is unchanged at scale.",
+      "description": "A guardrail-validation baseline carrying a single observational criterion at sentinel scale (n_attempted = 10^7). A schema example of a large-n observational baseline; the observational verdict rule (§1.4.5) is unchanged at scale.",
       "inputs": {
         "baseline": {
           "factor_record": {
@@ -148,7 +145,6 @@
               "criterion_id": "c_no_self_harm_sentinel",
               "mode": "observational",
               "procedure": null,
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
               "observation": {
                 "n_attempted": 10000000,
                 "n_evaluable": 10000000,
@@ -187,7 +183,6 @@
               "criterion_id": "c_well_formed",
               "mode": "inferential",
               "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
               "observation": {
                 "n_attempted": 1000,
                 "n_evaluable": 998,
@@ -226,7 +221,6 @@
               "criterion_id": "c_schema_valid",
               "mode": "inferential",
               "procedure": "REGRESSION",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
               "observation": {
                 "n_attempted": 2000,
                 "n_evaluable": 2000,
@@ -235,99 +229,6 @@
                 "K_c": 2000,
                 "p_hat_c": 1
               }
-            }
-          ]
-        }
-      },
-      "expected": []
-    },
-    {
-      "name": "consult_advice_cross_policy_counterexample",
-      "description": "The consult-advice-readability contract at the same index as #2, except the C_layperson_readable criterion's denominator policy is MARGINAL_COUNT_UNEVALUABLE_AS_FAIL instead of CONDITIONAL_ON_EVALUABLE. Used to exercise the structural-error check that cross-policy comparison between this baseline and the #2 baseline is rejected — the two baselines look identical in every other respect but estimate different quantities under the C_layperson_readable criterion.",
-      "inputs": {
-        "baseline": {
-          "factor_record": {
-            "service": "consult-advice-service@3.1",
-            "model": "claude-sonnet-4-5-20250929",
-            "temperature": 0,
-            "system_prompt": "consult-advice-prompt@5"
-          },
-          "covariate_profile": {
-            "day_of_week": "WEEKDAY",
-            "time_of_day": "08:00-12:00",
-            "region": "EU",
-            "serving_stack": "standard"
-          },
-          "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice-readability@1",
-          "criteria": [
-            {
-              "criterion_id": "c_layperson_readable",
-              "mode": "inferential",
-              "procedure": "COMPLIANCE",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 800,
-                "n_evaluable": 800,
-                "r_obs": 1,
-                "n_c": 800,
-                "K_c": 788,
-                "p_hat_c": 0.985
-              }
-            }
-          ]
-        }
-      },
-      "expected": []
-    },
-    {
-      "name": "paired_evaluability_content_pattern",
-      "description": "Demonstrates the structural-composition pattern of the locked §1.4.5a: a downstream content criterion declared CONDITIONAL_ON_EVALUABLE references a sibling availability / evaluability criterion via availability_criterion_ref. The availability criterion itself is declared MARGINAL_COUNT_UNEVALUABLE_AS_FAIL so that unevaluable trials are counted as failures of availability. The run produced a non-1.0 r_obs on the content criterion, exercising the difference between n_attempted and n_evaluable that the conditional denominator selects.",
-      "inputs": {
-        "baseline": {
-          "factor_record": {
-            "service": "consult-advice-service@3.1",
-            "model": "claude-sonnet-4-5-20250929",
-            "temperature": 0,
-            "system_prompt": "consult-advice-prompt@5"
-          },
-          "covariate_profile": {
-            "day_of_week": "WEEKDAY",
-            "time_of_day": "08:00-12:00",
-            "region": "EU",
-            "serving_stack": "standard"
-          },
-          "expiration_window": "2026-08-13",
-          "structural_reference": "consult-advice-paired@1",
-          "criteria": [
-            {
-              "criterion_id": "c_evaluable_response",
-              "mode": "inferential",
-              "procedure": "COMPLIANCE",
-              "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 970,
-                "r_obs": 0.97,
-                "n_c": 1000,
-                "K_c": 970,
-                "p_hat_c": 0.97
-              }
-            },
-            {
-              "criterion_id": "c_layperson_readable",
-              "mode": "inferential",
-              "procedure": "COMPLIANCE",
-              "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-              "observation": {
-                "n_attempted": 1000,
-                "n_evaluable": 970,
-                "r_obs": 0.97,
-                "n_c": 970,
-                "K_c": 950,
-                "p_hat_c": 0.979381443298969
-              },
-              "availability_criterion_ref": "c_evaluable_response"
             }
           ]
         }

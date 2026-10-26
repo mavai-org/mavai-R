@@ -1,7 +1,6 @@
 test_that("Regression verdict: clear PASS at K well above cutoff", {
   result <- regression_verdict(
     n_attempted = 1000, n_evaluable = 1000, K_c = 953, alpha = 0.05,
-    denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 951, baseline_trials = 1000
   )
   expect_equal(result$verdict, "PASS")
@@ -12,7 +11,6 @@ test_that("Regression verdict: clear PASS at K well above cutoff", {
 test_that("Regression verdict: the §3.4 rate has cutoff 91", {
   result <- regression_verdict(
     n_attempted = 100, n_evaluable = 100, K_c = 91, alpha = 0.05,
-    denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 951, baseline_trials = 1000
   )
   expect_equal(result$cutoff_integer, 91L)
@@ -23,7 +21,6 @@ test_that("Regression verdict: the §3.4 rate has cutoff 91", {
 test_that("Regression verdict: K one below cutoff fails", {
   result <- regression_verdict(
     n_attempted = 100, n_evaluable = 100, K_c = 90, alpha = 0.05,
-    denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 951, baseline_trials = 1000
   )
   expect_equal(result$cutoff_integer, 91L)
@@ -33,7 +30,6 @@ test_that("Regression verdict: K one below cutoff fails", {
 test_that("Regression: a tiny test against a near-perfect baseline is admitted", {
   result <- regression_verdict(
     n_attempted = 5, n_evaluable = 5, K_c = 5, alpha = 0.001,
-    denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
     baseline_successes = 999, baseline_trials = 1000
   )
   expect_identical(result$verdict, "PASS")
@@ -42,8 +38,7 @@ test_that("Regression: a tiny test against a near-perfect baseline is admitted",
 
 test_that("Compliance verdict: clear PASS well above p_req", {
   result <- compliance_verdict(
-    n_attempted = 10000, n_evaluable = 10000, K_c = 9990, alpha = 0.05,
-    denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL", p_req = 0.99
+    n_attempted = 10000, n_evaluable = 10000, K_c = 9990, alpha = 0.05, p_req = 0.99
   )
   expect_equal(result$verdict, "PASS")
   expect_true(result$clopper_pearson_lower > 0.99)
@@ -53,8 +48,7 @@ test_that("Compliance verdict: clear PASS well above p_req", {
 
 test_that("Compliance FAIL with strands disagreeing (§10.3 example)", {
   result <- compliance_verdict(
-    n_attempted = 800, n_evaluable = 800, K_c = 788, alpha = 0.001,
-    denominator_policy = "CONDITIONAL_ON_EVALUABLE", p_req = 0.98
+    n_attempted = 800, n_evaluable = 800, K_c = 788, alpha = 0.001, p_req = 0.98
   )
   expect_equal(result$verdict, "FAIL")
   expect_equal(result$observed_rate_status, "ABOVE_THRESHOLD")
@@ -67,8 +61,7 @@ test_that("Compliance FAIL with strands disagreeing (§10.3 example)", {
 
 test_that("Compliance INCONCLUSIVE at n_c = 0", {
   result <- compliance_verdict(
-    n_attempted = 0, n_evaluable = 0, K_c = 0, alpha = 0.05,
-    denominator_policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL", p_req = 0.95
+    n_attempted = 0, n_evaluable = 0, K_c = 0, alpha = 0.05, p_req = 0.95
   )
   expect_equal(result$verdict, "INCONCLUSIVE")
   expect_equal(result$feasibility_gate, "REFUSE")

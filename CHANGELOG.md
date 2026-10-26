@@ -5,7 +5,21 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.15.0] — unreleased
+## [0.16.0] — unreleased
+
+**Breaking: the withdrawn denominator policy leaves the oracle.** Companion 1.3.1 withdrew the per-criterion denominator policy: a criterion's denominator is the full sampling, and a trial that produced no testable value is a FAIL carrying its reason (§1.4.5a). The generators still took a `denominator_policy`, and four informational suites still carried it. No suite in the family-mandatory roster changes, and no other suite changes.
+
+- `criterion_verdict_inferential`, `criterion_verdict_observational`, `baseline_object` and `multi_criteria_scenario_consult_advice`: no `denominator_policy` input or field; `n_c` is `n_attempted`.
+- Deleted, because they exist only to show the withdrawn policy or the availability reference the catalog withdrew (CR05, CR06): `regression_policy_diff_conditional`, `regression_policy_diff_marginal`, the observational `*_conditional` cases, `policy_diff_950_evaluable_*`, `consult_advice_cross_policy_counterexample`, `paired_evaluability_content_pattern`, `paired_evaluability_content_non_unit_r_obs` and `cross_policy_structural_mismatch`. With the last one, `structural_error` leaves the scenario suite's binding fields.
+- Renamed: the observational `*_marginal` cases lose the suffix. The policy-difference pair is replaced by one case per suite, `regression_no_value_trials_count_as_fail` and `fail_no_value_trials_count_as_fail`: 50 of 1000 trials produced no testable value, and each is a FAIL.
+- `two_criteria_inconclusive`, `two_criteria_inconclusive_latency_pass`, `two_criteria_inconclusive_latency_fail` and `two_criteria_fail_dominates_inconclusive` reached INCONCLUSIVE through 20 evaluable trials of 100 under the conditional policy. They are now 20-trial tests; every verdict and count is unchanged.
+- Kept: `n_evaluable` and `r_obs`, the companion's evaluability diagnostics (§1.5.2); their values are unchanged.
+- `schema/cases.schema.json`: the unused `denominatorPolicy` definition is removed, and a description no longer names the field.
+- The observational verdict statements no longer end with "(policy: …)".
+
+*Companion*: Statistical Companion 1.7.1, Document History milestone 20: §8.4.5 no longer lists a denominator-policy mismatch among the hard invalidators. The glossary's Denominator Policy entry records the withdrawal; four other glossary entries no longer name the policy. The methodology version stays 1.7.1.
+
+## [0.15.0] — 2026-10-22
 
 **Breaking: SMOKE decisions enter neither Type-I envelope (Statistical Companion 1.7.1).** Companion 1.7.0 did not say which envelope of §1.4.6 a criterion decided by `compliance/smoke-exact-binomial` or `latency/smoke-compliance-exact-binomial` enters. 1.7.1 states that it enters neither: its alpha bounds a false FAIL of a service that meets its requirement, which is neither envelope's error event, and its PASS claims no compliance. No verdict, count or decision rule changes.
 

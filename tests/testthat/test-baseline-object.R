@@ -1,13 +1,11 @@
-test_that("Generator emits the expected eight baseline cases", {
+test_that("Generator emits the expected six baseline cases", {
   result <- generate_baseline_object_cases()
   expect_equal(result$suite, "baseline_object")
-  expect_equal(length(result$cases), 8)
+  expect_equal(length(result$cases), 6)
   names <- vapply(result$cases, function(c) c$name, character(1))
   expect_true("consult_advice_eu_weekday" %in% names)
   expect_true("consult_advice_readability_eu_weekday" %in% names)
   expect_true("consult_advice_self_harm_probe_eu_weekday" %in% names)
-  expect_true("paired_evaluability_content_pattern" %in% names)
-  expect_true("consult_advice_cross_policy_counterexample" %in% names)
 })
 
 test_that("Every baseline is one sampling: all its criteria share one n", {
@@ -25,36 +23,22 @@ test_that("Every baseline is one sampling: all its criteria share one n", {
   expect_identical(ids(get("consult_advice_self_harm_probe_eu_weekday")), "c_no_self_harm")
 })
 
-test_that("Paired baseline declares availability_criterion_ref", {
-  result <- generate_baseline_object_cases()
-  case <- Filter(function(c) c$name == "paired_evaluability_content_pattern",
-                 result$cases)[[1]]
-  content <- Filter(function(c) c$criterion_id == "c_layperson_readable",
-                    case$inputs$baseline$criteria)[[1]]
-  expect_equal(content$availability_criterion_ref, "c_evaluable_response")
-  expect_equal(content$denominator_policy, "CONDITIONAL_ON_EVALUABLE")
-})
-
-test_that("All criteria carry the two-value denominator-policy enum", {
+test_that("No criterion carries a denominator policy or an availability reference", {
   result <- generate_baseline_object_cases()
   for (case in result$cases) {
     for (crit in case$inputs$baseline$criteria) {
-      expect_true(
-        crit$denominator_policy %in%
-          c("CONDITIONAL_ON_EVALUABLE", "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL"),
-        info = paste(case$name, crit$criterion_id))
+      expect_null(crit$denominator_policy, info = paste(case$name, crit$criterion_id))
+      expect_null(crit$availability_criterion_ref, info = paste(case$name, crit$criterion_id))
     }
   }
 })
 
-test_that("Every observation block carries the policy-derived n_c", {
+test_that("Every observation block's n_c is the number of trials (§1.4.5a)", {
   result <- generate_baseline_object_cases()
   for (case in result$cases) {
     for (crit in case$inputs$baseline$criteria) {
       o <- crit$observation
-      expected_nc <- if (crit$denominator_policy == "CONDITIONAL_ON_EVALUABLE")
-        o$n_evaluable else o$n_attempted
-      expect_equal(o$n_c, expected_nc, info = paste(case$name, crit$criterion_id))
+      expect_equal(o$n_c, o$n_attempted, info = paste(case$name, crit$criterion_id))
     }
   }
 })
