@@ -13,7 +13,7 @@
 -- Width assignment is two-stage:
 --   1. Each column gets a *minimum* fraction sized to its longest
 --      unbreakable token. Long monospace tokens like
---      `MARGINAL_COUNT_UNEVALUABLE_AS_FAIL` contain no LaTeX break
+--      `TEST_LARGER_THAN_BASELINE` contain no LaTeX break
 --      points (underscores are not break points by default), so the
 --      column must be wide enough to fit the whole token or the text
 --      overflows into adjacent columns.

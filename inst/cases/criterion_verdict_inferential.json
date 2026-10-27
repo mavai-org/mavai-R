@@ -12,7 +12,7 @@
       "version": 1
     }
   ],
-  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/fisher and decides K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The effective denominator n_c is derived from the §1.4.5a policy. Each case carries the three-strand verdict. configuration_error is the list of every applicable code (empty when valid).",
+  "description": "Per-inferential-criterion verdict cases (informational), partitioned by procedure direction. REGRESSION tests for degradation from a baseline (H_1: p_c < p_b) under regression/fisher and decides K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears a requirement (H_1: p_c > p_req) under compliance/exact-binomial and decides K_c >= k_min. The denominator n_c is the number of trials (§1.4.5a); r_obs is the §1.5.2 diagnostic. Each case carries the three-strand verdict. configuration_error is the list of every applicable code (empty when valid).",
   "method": "REGRESSION: regression/fisher cutoff c from (K_b, n_b, n_c, alpha), decision K_c >= c; TEST_LARGER_THAN_BASELINE checked on (n_b, n_attempted). COMPLIANCE: compliance/exact-binomial k_min at n_c, decision K_c >= k_min, p-value = P_{p=p_req}(K >= K_c), INCONCLUSIVE when no count of n_c can pass.",
   "tolerance": 1e-09,
   "cases": [
@@ -26,7 +26,6 @@
         "n_evaluable": 1000,
         "K_c": 953,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 951,
         "baseline_trials": 1000
       },
@@ -54,7 +53,6 @@
         "n_evaluable": 1000,
         "K_c": 850,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 951,
         "baseline_trials": 1000
       },
@@ -81,7 +79,6 @@
         "n_evaluable": 100,
         "K_c": 91,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 951,
         "baseline_trials": 1000
       },
@@ -109,7 +106,6 @@
         "n_evaluable": 100,
         "K_c": 90,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 951,
         "baseline_trials": 1000
       },
@@ -137,7 +133,6 @@
         "n_evaluable": 0,
         "K_c": 0,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 951,
         "baseline_trials": 1000
       },
@@ -164,7 +159,6 @@
         "n_evaluable": 5,
         "K_c": 5,
         "alpha": 0.001,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 999,
         "baseline_trials": 1000
       },
@@ -182,7 +176,7 @@
       }
     },
     {
-      "name": "regression_policy_diff_conditional",
+      "name": "regression_no_value_trials_count_as_fail",
       "procedure": "REGRESSION",
       "decisionRule": "regression/fisher",
       "inputs": {
@@ -191,35 +185,6 @@
         "n_evaluable": 950,
         "K_c": 950,
         "alpha": 0.05,
-        "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
-        "baseline_successes": 951,
-        "baseline_trials": 1000
-      },
-      "expected": {
-        "n_c": 950,
-        "r_obs": 0.95,
-        "p_hat_c": 1,
-        "cutoff_integer": 886,
-        "displayed_rate": 0.932632,
-        "configuration_error": [],
-        "verdict": "PASS",
-        "statistical_verdict": "PASS",
-        "observed_rate_status": "ABOVE_THRESHOLD",
-        "operational_caution_category": "ADEQUATE_POWER"
-      },
-      "description": "Same data as the next case under different policy. CONDITIONAL: only the 950 evaluable trials count; observed rate is 1.0."
-    },
-    {
-      "name": "regression_policy_diff_marginal",
-      "procedure": "REGRESSION",
-      "decisionRule": "regression/fisher",
-      "inputs": {
-        "procedure": "REGRESSION",
-        "n_attempted": 1000,
-        "n_evaluable": 950,
-        "K_c": 950,
-        "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "baseline_successes": 951,
         "baseline_trials": 1000
       },
@@ -235,7 +200,7 @@
         "observed_rate_status": "ABOVE_THRESHOLD",
         "operational_caution_category": "ADEQUATE_POWER"
       },
-      "description": "Same data as the previous case under MARGINAL: unevaluable trials count toward n_c but not K_c, so K_c/n_c = 0.95."
+      "description": "50 of 1000 trials produced no testable value: each is a FAIL with its reason, so n_c = 1000 and K_c = 950 (§1.4.5a); r_obs = 0.95 is the diagnostic (§1.5.2)."
     },
     {
       "name": "compliance_clear_pass",
@@ -247,7 +212,6 @@
         "n_evaluable": 10000,
         "K_c": 9990,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "p_req": 0.99
       },
       "expected": {
@@ -276,7 +240,6 @@
         "n_evaluable": 1000,
         "K_c": 800,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "p_req": 0.95
       },
       "expected": {
@@ -305,7 +268,6 @@
         "n_evaluable": 800,
         "K_c": 788,
         "alpha": 0.001,
-        "denominator_policy": "CONDITIONAL_ON_EVALUABLE",
         "p_req": 0.98
       },
       "expected": {
@@ -335,7 +297,6 @@
         "n_evaluable": 0,
         "K_c": 0,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "p_req": 0.95
       },
       "expected": {
@@ -364,7 +325,6 @@
         "n_evaluable": 5,
         "K_c": 5,
         "alpha": 0.05,
-        "denominator_policy": "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
         "p_req": 0.999
       },
       "expected": {

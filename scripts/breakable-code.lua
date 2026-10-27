@@ -1,7 +1,7 @@
 -- breakable-code.lua
 -- Pandoc filter that inserts \allowbreak after each underscore inside
 -- inline Code elements when targeting LaTeX. SCREAMING_SNAKE_CASE
--- identifiers like `MARGINAL_COUNT_UNEVALUABLE_AS_FAIL` then have
+-- identifiers like `TEST_LARGER_THAN_BASELINE` then have
 -- break opportunities at every underscore, so they wrap inside narrow
 -- table cells instead of overflowing.
 --

@@ -6,13 +6,14 @@
 #' consume it.
 #'
 #' Shared mechanics:
-#'   - Effective denominator n_c derived from policy (§1.4.5a):
-#'       CONDITIONAL_ON_EVALUABLE:           n_c = n_evaluable
-#'       MARGINAL_COUNT_UNEVALUABLE_AS_FAIL: n_c = n_attempted
-#'     K_c is the count of postcondition successes among the evaluable
-#'     trials in either case; unevaluable trials never contribute to
-#'     K_c (the postcondition could not be checked on them).
-#'   - p_hat_c = K_c / n_c (the policy-aware point estimate).
+#'   - The denominator n_c is the number of trials, n_attempted
+#'     (§1.4.5a): every trial counts. K_c counts the trials that
+#'     PASSed; a trial that produced no testable value is a FAIL
+#'     carrying its reason and never contributes to K_c.
+#'   - p_hat_c = K_c / n_c.
+#'   - r_obs = n_evaluable / n_attempted, the share of trials that
+#'     produced a testable value: the §1.5.2 diagnostic, which decides
+#'     nothing.
 #'   - Inconclusive outcomes: n_c == 0; for COMPLIANCE also an n_c too
 #'     small for any count to pass (feasibility gate REFUSE).
 #'
@@ -45,10 +46,8 @@
 #'                            CONFIGURATION_REFUSED.
 
 regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
-                               denominator_policy,
                                baseline_successes, baseline_trials) {
-  n_c <- if (denominator_policy == "CONDITIONAL_ON_EVALUABLE")
-    n_evaluable else n_attempted
+  n_c <- n_attempted
   r_obs <- if (n_attempted == 0) 0 else n_evaluable / n_attempted
   empty <- list(
     n_c = as.integer(n_c), r_obs = r_obs, p_hat_c = NA_real_,
@@ -96,9 +95,8 @@ regression_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
 }
 
 compliance_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
-                               denominator_policy, p_req) {
-  n_c <- if (denominator_policy == "CONDITIONAL_ON_EVALUABLE")
-    n_evaluable else n_attempted
+                               p_req) {
+  n_c <- n_attempted
   r_obs <- if (n_attempted == 0) 0 else n_evaluable / n_attempted
   inconclusive <- function(p_hat_c, cp, caution) list(
     n_c = as.integer(n_c), r_obs = r_obs,
@@ -162,7 +160,7 @@ compliance_verdict <- function(n_attempted, n_evaluable, K_c, alpha,
 #' @export
 generate_criterion_verdict_inferential_cases <- function() {
 
-  reg_case <- function(name, n_attempted, n_evaluable, K_c, alpha, policy,
+  reg_case <- function(name, n_attempted, n_evaluable, K_c, alpha,
                        baseline_successes, baseline_trials, description = NULL) {
     case <- list(
       name = name,
@@ -174,18 +172,17 @@ generate_criterion_verdict_inferential_cases <- function() {
         n_evaluable = as.integer(n_evaluable),
         K_c = as.integer(K_c),
         alpha = alpha,
-        denominator_policy = policy,
         baseline_successes = as.integer(baseline_successes),
         baseline_trials = as.integer(baseline_trials)
       ),
       expected = regression_verdict(n_attempted, n_evaluable, K_c, alpha,
-                                    policy, baseline_successes, baseline_trials)
+                                    baseline_successes, baseline_trials)
     )
     if (!is.null(description)) case$description <- description
     case
   }
 
-  com_case <- function(name, n_attempted, n_evaluable, K_c, alpha, policy,
+  com_case <- function(name, n_attempted, n_evaluable, K_c, alpha,
                        p_req, description = NULL) {
     case <- list(
       name = name,
@@ -197,11 +194,10 @@ generate_criterion_verdict_inferential_cases <- function() {
         n_evaluable = as.integer(n_evaluable),
         K_c = as.integer(K_c),
         alpha = alpha,
-        denominator_policy = policy,
         p_req = p_req
       ),
       expected = compliance_verdict(n_attempted, n_evaluable, K_c, alpha,
-                                    policy, p_req)
+                                    p_req)
     )
     if (!is.null(description)) case$description <- description
     case
@@ -212,14 +208,12 @@ generate_criterion_verdict_inferential_cases <- function() {
     # REGRESSION — clear PASS: K well above cutoff.
     reg_case("regression_clear_pass_consult_advice_well_formed",
              n_attempted = 1000, n_evaluable = 1000, K_c = 953, alpha = 0.05,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000,
              description = "§10.3 C_well_formed: K = 953 well above the derived cutoff."),
 
     # REGRESSION — clear FAIL: K well below cutoff.
     reg_case("regression_clear_fail_K_far_below_cutoff",
              n_attempted = 1000, n_evaluable = 1000, K_c = 850, alpha = 0.05,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000),
 
     # REGRESSION — borderline: K right at cutoff boundary.
@@ -227,76 +221,63 @@ generate_criterion_verdict_inferential_cases <- function() {
     # K = 90 FAILs.
     reg_case("regression_borderline_pass_K_equals_cutoff",
              n_attempted = 100, n_evaluable = 100, K_c = 91, alpha = 0.05,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000,
              description = "The §3.4 rate: cutoff = 91; K = 91 → PASS (boundary)."),
 
     reg_case("regression_borderline_fail_K_one_below_cutoff",
              n_attempted = 100, n_evaluable = 100, K_c = 90, alpha = 0.05,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000,
              description = "The §3.4 rate: cutoff = 91; K = 90 → FAIL."),
 
     # REGRESSION — INCONCLUSIVE via n_c = 0.
     reg_case("regression_inconclusive_zero_evaluable",
              n_attempted = 0, n_evaluable = 0, K_c = 0, alpha = 0.05,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 951, baseline_trials = 1000),
 
     # REGRESSION — a 5-trial test against a near-perfect 1000-trial
     # baseline at alpha 0.001: admitted; 5 of 5 clears the cutoff of 4.
     reg_case("regression_tiny_test_near_perfect_baseline",
              n_attempted = 5, n_evaluable = 5, K_c = 5, alpha = 0.001,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
              baseline_successes = 999, baseline_trials = 1000),
 
-    # REGRESSION — policy difference. Same raw counts under two policies.
-    # n_attempted=1000, n_evaluable=950, K_c=950. Under CONDITIONAL the
-    # effective n_c=950 and the test compares K_c=950 to the cutoff at
-    # n=950 against baseline 951/1000. Under MARGINAL the effective
-    # n_c=1000 and K_c=950 is compared with the cutoff at n=1000.
-    reg_case("regression_policy_diff_conditional",
+    # REGRESSION — trials with no testable value. 50 of 1000 trials
+    # produced no value: each is a FAIL with its reason, so n_c = 1000
+    # and K_c = 950 (§1.4.5a); r_obs = 0.95 is the diagnostic.
+    reg_case("regression_no_value_trials_count_as_fail",
              n_attempted = 1000, n_evaluable = 950, K_c = 950, alpha = 0.05,
-             policy = "CONDITIONAL_ON_EVALUABLE",
              baseline_successes = 951, baseline_trials = 1000,
-             description = "Same data as the next case under different policy. CONDITIONAL: only the 950 evaluable trials count; observed rate is 1.0."),
-
-    reg_case("regression_policy_diff_marginal",
-             n_attempted = 1000, n_evaluable = 950, K_c = 950, alpha = 0.05,
-             policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
-             baseline_successes = 951, baseline_trials = 1000,
-             description = "Same data as the previous case under MARGINAL: unevaluable trials count toward n_c but not K_c, so K_c/n_c = 0.95."),
+             description = "50 of 1000 trials produced no testable value: each is a FAIL with its reason, so n_c = 1000 and K_c = 950 (§1.4.5a); r_obs = 0.95 is the diagnostic (§1.5.2)."),
 
     # COMPLIANCE — clear PASS: observed well above requirement, sample large.
     com_case("compliance_clear_pass",
              n_attempted = 10000, n_evaluable = 10000, K_c = 9990,
-             alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             alpha = 0.05,
              p_req = 0.99),
 
     # COMPLIANCE — clear FAIL: observed rate well below requirement.
     com_case("compliance_clear_fail",
              n_attempted = 1000, n_evaluable = 1000, K_c = 800,
-             alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             alpha = 0.05,
              p_req = 0.95),
 
     # COMPLIANCE — the canonical §10.3 layperson-readable disagreement:
     # p_hat = 0.985, p_req = 0.98, but compliance not demonstrated at α = 0.001.
     com_case("compliance_strands_disagree_consult_advice_layperson",
              n_attempted = 800, n_evaluable = 800, K_c = 788,
-             alpha = 0.001, policy = "CONDITIONAL_ON_EVALUABLE",
+             alpha = 0.001,
              p_req = 0.98,
              description = "§10.3 C_layperson_readable: p_hat = 0.985 > p_req = 0.98, but K = 788 is below k_min at α = 0.001 → FAIL with strands disagreeing."),
 
     # COMPLIANCE — INCONCLUSIVE via n_c = 0.
     com_case("compliance_inconclusive_zero_evaluable",
              n_attempted = 0, n_evaluable = 0, K_c = 0,
-             alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             alpha = 0.05,
              p_req = 0.95),
 
     # COMPLIANCE — INCONCLUSIVE via feasibility gate: no count of 5 can pass.
     com_case("compliance_inconclusive_feasibility_refused",
              n_attempted = 5, n_evaluable = 5, K_c = 5,
-             alpha = 0.05, policy = "MARGINAL_COUNT_UNEVALUABLE_AS_FAIL",
+             alpha = 0.05,
              p_req = 0.999)
   )
 
@@ -308,8 +289,8 @@ generate_criterion_verdict_inferential_cases <- function() {
       "baseline (H_1: p_c < p_b) under regression/fisher and decides",
       "K_c >= c; a configuration the design rule refuses has no verdict. COMPLIANCE tests whether the rate clears",
       "a requirement (H_1: p_c > p_req) under compliance/exact-binomial and",
-      "decides K_c >= k_min. The effective denominator n_c is derived from",
-      "the §1.4.5a policy. Each case carries the three-strand verdict.",
+      "decides K_c >= k_min. The denominator n_c is the number of trials",
+      "(§1.4.5a); r_obs is the §1.5.2 diagnostic. Each case carries the three-strand verdict.",
       "configuration_error is the list of every applicable code (empty when valid)."
     ),
     method = paste(
