@@ -1,6 +1,6 @@
 ---
 title: "Distributional Contracts for Stochastic Systems"
-author: "Version 0.6 · last updated 2026-11-01 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: "Version 0.7 · last updated 2026-11-01 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## 1. Document History
@@ -17,6 +17,7 @@ This is a working document: a formal declaration of what the mavai family of fra
 | 5 | **2026-07** | **Behavioural populations (the third lift).** The single-homogeneous-population assumption inherited silently from Meyer was surfaced and lifted: a distributional contract must be able to express one or more well-defined behavioural populations, elegantly — each population owning its criteria and its own sampling denominator, with the single-population case ($F=1$) recovering the prior model unchanged. Population membership is definitionally a property of the *input*, determined before invocation (a mutually exclusive, collectively exhaustive partition of the input space); no new inferential construct is introduced — each population's evaluation is the existing per-criterion machinery over its own input distribution, in the separate-experiment form §4.1 already licenses. Post-hoc, response-determined membership is recorded as an explicit definitional boundary, not an omission. The contract-level aggregation of per-population verdicts is noted as owed and deliberately not yet stated. |
 | 6 | **2026-11** | **Exact decision rules.** Following Statistical Companion 1.5.0, the Wilson lower bound no longer decides any verdict; it remains the interval reported to describe a result. Degradation from a measured baseline is decided by the one-sided Fisher exact test, compliance with a given requirement by the exact binomial test, and the latency dimension by the companion's two corresponding rules. Each keeps its false-alarm rate within the stated level, which the Wilson-based rules did not in every regime. The feasibility minimums of the sample-size chapter change accordingly. |
 | 7 | **2026-11** | **Aligned with the companion in full.** The paper now states the rest of what Statistical Companion 1.7.1 makes part of a contract's evaluation: test intent (VERIFICATION, which sets out to demonstrate, and SMOKE, which looks only for evidence of falling short); every assertion enforced by default, with a run-time switch that makes a dimension advisory; two error envelopes, one per direction of error; the configurations refused before a run; exact sample sizing; the population a verdict speaks to; and the residual risk an architectural guardrail leaves. |
+| 8 | **2026-11** | **Composition.** A new chapter treats services composed into chains and guarded architectures as distributional contracts in their own right: the composed service is measured end to end, its stages keep their evidence for diagnosis, and component pass rates are not multiplied into an end-to-end claim. The chapter also takes over the contractual side of architectural discharge — how a guardrail commitment is declared and what its record holds — which earlier versions left to the Statistical Companion; the companion keeps the statistics. |
 
 The first three milestones strictly extend one another in the scope of what the contract claims, and none supersedes the Bernoulli/binomial foundation laid in Milestone 1. Milestone 6 keeps that foundation but supersedes the role Milestone 1 gave the Wilson score lower bound: Wilson describes, and exact rules decide. Milestone 4 likewise preserves the foundation — the one-criterion case reproduces the earlier model unchanged — but it does *supersede* one earlier construction: the Milestone-1/3 model swept every no-testable-value outcome into a single excluded *catastrophic* bucket, leaving the quality predicate undefined on it. That bucket is now split — a service that produced no usable value (timeout, malformed output, refusal, or a failed transform step) is a failure carrying a diagnostic reason, while a true catastrophe (the testing machinery itself dying, e.g. `OutOfMemoryError`) remains outside the sample and aborts the run. That supersession is called out explicitly where it occurs.
 
@@ -26,7 +27,7 @@ In stochastic systems, correctness cannot in general be characterised solely by 
 
 This paper extends Bertrand Meyer's Design by Contract [1][2] by lifting postconditions from Boolean predicates over individual executions to statistical assertions over repeated executions. We introduce the notion of a distributional contract, under which the quality of a stochastic service is characterised along two orthogonal dimensions: functional stochasticity — whether the service produces acceptable results with sufficient probability — and temporal stochasticity — whether it responds within acceptable time bounds with sufficient probability. These dimensions require distinct statistical treatments but together address the two most fundamental quality concerns for a stochastic service.
 
-Within the functional dimension, the single notion of an acceptable result is itself refined into a conjunction of separately-checkable *criteria*, each assessed as its own statistical stream rather than folded into one aggregate rate. The obligations a contract carries are further partitioned by form into *rate-bounded* clauses, whose tolerable failure rate is bounded statistically, and *categorical* clauses, whose intolerable failures are bounded architecturally — the rate-bounded threshold being, on a separate axis, either normative or empirical in origin.
+Within the functional dimension, the single notion of an acceptable result is itself refined into a conjunction of separately-checkable *criteria*, each assessed as its own statistical stream rather than folded into one aggregate rate. The obligations a contract carries are further partitioned by form into *rate-bounded* clauses, whose tolerable failure rate is bounded statistically, and *categorical* clauses, whose intolerable failures are bounded architecturally — the rate-bounded threshold being, on a separate axis, either normative or empirical in origin. Finally, services composed into chains and guarded architectures are treated as distributional contracts in their own right, measured end to end rather than inferred from their components.
 
 Since the quantities of interest are not directly observable, they are estimated empirically from repeated executions and assessed using conservative statistical bounds. This yields an operational basis for making statistically grounded assertions, at a defined confidence level, that a stochastic service satisfies its contractual obligations.
 
@@ -146,7 +147,7 @@ A categorical clause is **discharged architecturally**. A dedicated component �
 
 > *Tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically.*
  
-The statistical side of architectural discharge — the residual risk a guardrail leaves, and the rate-bounded clauses that evidence its false-negative and false-positive behaviour — is modelled in the Statistical Companion (§1.4.5b and *Clause Forms*); how the commitment itself is declared and how the adversarial sampling's coverage is recorded are left to a forthcoming chapter of the companion. This paper introduces the form/origin distinction and the rate-bounded/categorical split, which together determine how a given failure mode is discharged.
+How the commitment is declared and what its record holds — the threat model, the component's placement, the bypass analysis, the coverage of the adversarial sampling, the residual risk — is set out in *Guarded Composition* (§8.9), where the guarded service is treated as a composition. The statistical side, the residual risk a guardrail leaves and the rate-bounded clauses that evidence its false-negative and false-positive behaviour, is the Statistical Companion's (§1.4.5b and *Clause Forms*). This section introduces the form/origin distinction and the rate-bounded/categorical split, which together determine how a given failure mode is discharged.
 
 ### 4.7 Inferential and Observational Criteria
 
@@ -162,7 +163,7 @@ A passing observational verdict at $n_c = 1000$ says exactly: *no failure of $c$
 
 The INCONCLUSIVE verdict must not be confused with a per-trial transform/no-value FAIL: a non-evaluable *response* is a FAIL of the criterion with a recorded reason, whereas INCONCLUSIVE is a non-determination at the *verdict* level — the procedure could render neither PASS nor FAIL. The two live at different levels and carry different meanings (Statistical Companion §1.4.5, §1.4.5a).
 
-Observational criteria are the methodology's vehicle for the zero-failures evidence that supports an architectural commitment: a guardrail's false-negative behaviour over an adversarial sampling is reported as an observational verdict, read alongside the commitment it supports rather than as a discharge of the categorical clause in its own right.
+A guardrail's evidence is first its own rate-bounded contract: its miss rate over a harmful-candidate sampling, decided by the exact binomial test (§8.9). Observational criteria complement it: a zero-failures verdict over an adversarial sampling reports that no prohibited outcome got through in that run, and is read alongside the commitment it supports, never as a discharge of the categorical clause in its own right.
 
 ### 4.8 Behavioural Populations: the Third Lift
 
@@ -360,7 +361,319 @@ The gate depends on the test's declared **intent**. A VERIFICATION test sets out
 
 A regression test has no feasibility gate of this kind. Its design check is that it may not be planned larger than the baseline it consumes (`TEST_LARGER_THAN_BASELINE`): a design policy rather than a statistical necessity, under which a need for a larger test is met by a larger baseline (Statistical Companion §3.4).
 
-## 8. The mavai Project Family: Implementations of the Distributional Contract
+## 8. Distributional Contract Composition
+
+The preceding sections define a distributional contract for a stochastic service considered as a single contractual unit. In practice, however, many stochastic applications are not a single service invocation. They are chains, graphs, or guarded architectures in which the output of one component becomes the input to another, and in which deterministic and stochastic components together determine the behaviour ultimately observed by the consumer.
+
+A voice-command application may pass an audio sample through speech-to-text, translation, routing, command construction, and a user-interface API. A health-advice application may pass a generated candidate response through a safety boundary before it is shown to the user. A retrieval-augmented generation service may compose retrieval, ranking, prompt construction, model invocation, citation checking, and final formatting. In each case the behaviour of interest is not exhausted by any one component. The application-level claim is a claim about the composition.
+
+This chapter introduces **distributional contract composition**: the construction of a new distributional contract from two or more component contracts, in such a way that the composed service can be exercised and evaluated as a contract in its own right while preserving the statistical evidence and diagnostic structure of its component stages.
+
+The purpose of composition is not to manufacture an end-to-end probability from component pass rates. That operation is usually unjustified. The purpose is to make the composed stochastic mechanism itself an object of empirical investigation.
+
+> Compose contracts to measure compositions, not to multiply component rates.
+
+The chapter states the contractual meaning of composition, what any composition must preserve, and the principal cautions that prevent misuse. It introduces no new statistics: a composed contract is evaluated with the models the Statistical Companion [3] already defines, and where this chapter names a statistical quantity it cites the companion for its treatment. The guarded architecture of §8.9 — a generator followed by a safety boundary — is the composition through which a categorical clause is discharged, and the companion's model of its residual risk (§1.4.5b) is the statistical side of that arrangement.
+
+### 8.1 A Service Contract as a Statistical Interface
+
+A service contract is not merely a declarative description of expected behaviour. Once exercised, it carries statistical state: per-criterion outcomes, thresholds and their error levels, verdicts, latency observations, the covariate profile, the baseline it was judged against, its factor record, failure reasons, and the population claim it makes. It is therefore useful to regard a service contract as a **statistically characterised interface**.
+
+At the type level, a service contract has the shape of an arrow from inputs to outputs:
+
+$$C : I \rightsquigarrow O$$
+
+where the wavy arrow indicates that the mapping is operational and possibly stochastic rather than a deterministic function. The contract receives an input of type $I$, invokes a service, produces an outcome over type $O$ — a value, or a failure carrying its reason — and evaluates contractual criteria over that outcome. The contract is not only the invocation; it is the invocation together with the obligations and evidence by which the invocation is judged.
+
+Two contracts are type-compatible for sequential composition when the output type of the first can be supplied as the input type of the second:
+
+$$C_1 : A \rightsquigarrow B, \qquad C_2 : B \rightsquigarrow C.$$
+
+Their sequential composition has the operational shape:
+
+$$C_2 \circ C_1 : A \rightsquigarrow C.$$
+
+For a chain of $k$ stages,
+
+$$C_i : I_i \rightsquigarrow I_{i+1}, \qquad i = 1,\ldots,k,$$
+
+the composite contract is:
+
+$$C = C_k \circ \cdots \circ C_2 \circ C_1 : I_1 \rightsquigarrow I_{k+1}.$$
+
+This notation states only the operational shape. It does not state that the statistical evidence carried by the components can be arithmetically combined into a valid end-to-end claim. Type compatibility permits execution; it does not by itself justify reuse of evidence.
+
+### 8.2 The Motivation for First-Class Composition
+
+Without first-class composition, a developer evaluating a stochastic pipeline is left with two poor alternatives.
+
+The first is to hand-write the pipeline as ordinary orchestration and test only the final output. That gives an end-to-end result, but loses the internal statistical anatomy of the run: which stage failed, which criteria were violated, how many samples each stage saw, which covariates were in force, which baseline was implicated, and whether an upstream component shifted the input distribution seen by a downstream one.
+
+The second is to test each component separately and then reason informally from the component reports. That preserves some local evidence, but invites an invalid inference: if each stage has a reported pass rate, the temptation is to combine those rates as though they were independent probabilities over a common population. For stochastic pipelines this is rarely justified. A downstream component is not exercised on the same population in the composed service as it was in its standalone experiment; it is exercised on the distribution of values emitted by the upstream component.
+
+First-class composition exists to avoid both failures. It constructs a composite contract that can be sampled end to end, while preserving the stage-local evidence needed for diagnosis. The composite service becomes empirically addressable as a single contractual object, and the component contracts remain visible as trace-bearing substructures inside it.
+
+The resulting question is no longer:
+
+> What can be calculated from the reported component rates?
+
+but rather:
+
+> What does this composed stochastic mechanism do under this sampling, this factor configuration, these covariates, and this composition policy?
+
+That is the central operational value of composition.
+
+### 8.3 The Composite Contract
+
+A composed contract is itself a distributional contract. It has an input type, an output type, a contract identity, a sampling, criteria, latency observations where applicable, covariates, a factor record, baseline provenance, feasibility constraints, and a run-level verdict. It can therefore be subjected to the same experiment-to-test workflow as any other contract.
+
+The composite contract may carry three classes of criteria.
+
+First, **end-to-end composite criteria** declared by the composite contract itself. These are criteria over the final result of the composed service, judged relative to the original input. In a voice-command pipeline, for example, the final criterion may be that the resulting screen state corresponds to the user's intended command. This is not a property of any one stage. It is a property of the composition.
+
+Second, **cross-stage criteria** that inspect relationships between intermediate artefacts. A router's chosen application area may need to be consistent with the command emitted by a handler; a translated transcript may need to preserve the intent needed by the router; a generated command may need to be traceable to the original input rather than to a hallucinated intermediate value. These criteria are not purely stage-local and not purely final-output criteria. They require access to the composition trace.
+
+Both classes are the composite contract's own criteria. Each is evaluated on every sample of the composite sampling — a sample that never produced the intermediate artefact a criterion needs is a FAIL of that criterion with its reason, exactly as in *The Operational Outcome of a Trial* — and each is decided like any criterion of any contract: by the Fisher test against a baseline or the exact binomial test against a requirement, under the test's declared intent, enforced by default, entering the envelope of its direction (§5, §6.6; Statistical Companion §1.4.6, §3.4, §3.6).
+
+Third, **stage-local criteria** inherited from the component contracts: the criteria by which each stage judges its own output — a transcript is non-empty, a translation is in English, a router selects a valid application area, a command constructor emits valid JSON. Inside the composite they are essential for attribution: they explain how the composed run behaved internally, and they identify where failures entered or propagated. But they are diagnostics, not verdicts of the composite: a stage is evaluated only on the samples that reached it, and §8.5 explains why that count cannot carry an inferential claim. Each component contract keeps its own verdicts where it is evaluated standalone, over its own sampling.
+
+A composition that declares only end-to-end criteria is complete; cross-stage criteria need a trace-aware criterion model and may come later. Their place in the theory is nevertheless clear: they are contractual criteria over the composed execution, not post hoc debugging annotations.
+
+### 8.4 Trace Preservation
+
+Composition must be trace-preserving. Without trace preservation, the feature degenerates into ordinary service orchestration.
+
+A naïve implementation might invoke the first component, extract its value, pass it to the second component, and return only the final result. That is operationally sufficient to run the pipeline, but contractually insufficient. It discards the very evidence that gives distributional composition its meaning.
+
+A composed sample must preserve, at minimum:
+
+- the original input;
+- the final outcome;
+- the ordered stage identities;
+- the input supplied to each reached stage;
+- the outcome produced by each reached stage;
+- each stage's postcondition and criterion results;
+- each stage's duration and resource usage where measured;
+- the total duration and resource usage of the composed invocation;
+- the factor and covariate context under which the stages were invoked;
+- the reason for any failure or non-reach.
+
+The final consumer of the composite service may see only its outcome. The evaluation must retain the richer trace. The trace is the object from which stage-local summaries, reach counts, failure provenance, latency allocation, and cross-stage criteria are computed.
+
+This is the difference between invoking a pipeline and composing contracts. Invocation connects values. Contract composition preserves meaning.
+
+### 8.5 Failure Propagation and Denominators
+
+Sequential composition introduces a denominator distinction that does not arise for a single service contract.
+
+Consider:
+
+$$A \rightsquigarrow B \rightsquigarrow C.$$
+
+If the first stage fails to produce a usable value, the second and third stages are not invoked. At the composite level the sample counts as a failure: the composed service did not produce the final value required by its contract. At the stage level, however, only the first stage was reached. The downstream stages were not passed malformed values; they were not passed values at all.
+
+Two denominators must therefore be kept separate.
+
+The **composite denominator** is the number of attempted end-to-end samples — the size of the composite sampling. Every input contributes to it unless the run is aborted by a true catastrophe of the testing machinery. A composed service that fails to produce a final testable value has produced a FAIL, carrying its reason, of every composite criterion that needed that value: the accounting of *The Operational Outcome of a Trial*, applied to the composition (Statistical Companion §1.4.5a).
+
+A **stage-reach denominator** is the number of composite samples that reached a given stage:
+
+$$n^{\mathrm{reach}}_j = |\{i : \text{sample } i \text{ reached stage } j\}|.$$
+
+The two are different kinds of number. The composite denominator is fixed by design before the run. The stage-reach denominator is not: whether a sample reaches stage $j$ depends on what the upstream stages produced, so $n^{\mathrm{reach}}_j$ is itself a random outcome of the run. This is exactly the post-hoc, response-determined classification that §4.8 places outside the definitions this paper relies on, because the count then needs its own estimate and bound. A stage's in-pipeline rate over its reach denominator is therefore reported as a labelled **descriptive diagnostic**: it carries no verdict, enters no Type-I envelope, and is not the same object as the stage's standalone contract rate, being measured under the upstream-produced distribution and under the condition that the stage was reached.
+
+This distinction is not a minor reporting detail. If a router is invoked on only 700 of 1000 composite samples because an upstream translation stage failed on the other 300, then the router's in-pipeline count is 700, not 1000, and the composite denominator remains 1000. Reporting the router's rate without its reach count would exaggerate the evidential weight of the observation; reporting it as though it were the router's standalone baseline would conflate two populations.
+
+The same discipline applies to latency. The composite latency distribution is the latency of the composed service conditional on composite success — every composite criterion passing — exactly as *The Latency Population* conditions a single contract's latency on success (Statistical Companion §12.2.1). Stage-local latency summaries are conditional on the stage being reached and succeeding, and are diagnostics in the same sense. These conditional populations must be named rather than hidden.
+
+### 8.6 Type Compatibility and Distributional Compatibility
+
+Composition has two compatibility layers.
+
+The first is **type compatibility**. The output type of one stage must be acceptable as the input type of the next. In a language with parametric types this can be checked mechanically. If the first contract produces `EnglishTranscript` and the second consumes `EnglishTranscript`, the composition can be constructed at the type level.
+
+The second is **distributional compatibility**. A downstream contract's evidence is meaningful only over the input population on which that evidence was drawn, or over a population to which the operator is willing to extend the claim. A type match does not establish that relationship.
+
+For example:
+
+```text
+Translator output type: EnglishTranscript
+Router input type:      EnglishTranscript
+```
+
+This composition may type-check. But if the router's baseline was established on clean, human-written English transcripts, while the composed service supplies machine-translated transcripts containing translation artefacts, the router's standalone evidence is not automatically portable. The downstream type is the same; the downstream input distribution is not.
+
+The rule is therefore:
+
+> Type compatibility permits execution; distributional compatibility permits reuse of evidence.
+
+When distributional compatibility is undeclared, doubtful, or false, the composed service must be measured on its own terms. The downstream component's standalone contract may still be useful as a diagnostic reference, but it does not by itself establish the downstream stage's in-pipeline behaviour, and it certainly does not establish the composite contract.
+
+This is the compositional form of the population-claim discipline introduced in §4.1: a verdict is first a claim about the sampling it ran over, and extending it is a declared claim (Statistical Companion §1.4.7, §8.4.6). Composition changes the conditions of that claim, because upstream components generate the values downstream components see — just as a baseline measured under one covariate profile is no reference for a test run under another (Statistical Companion §1.5.3).
+
+### 8.7 Empirical Composite Evidence
+
+The authoritative evidence for a composed contract is obtained by running the composed contract end to end over a declared sampling and evaluating the composite criteria directly.
+
+Let $S_C$ be the event that the composite contract satisfies its end-to-end functional criteria on a sample. The empirical composite experiment observes the stream:
+
+$$X_{i,C} = \mathbf{1}\{S_C \text{ holds on sample } i\},$$
+
+together with the trace-local streams for each reached stage. The composite contract is the service under test: its rate-bounded criteria are decided by the companion's rules, its observational criteria by the zero-failures rule, its latency constraints by the latency rules, and its verdict is the structured composite of *The Composite Verdict*, with its envelopes disclosed — all unchanged from a single contract.
+
+The component traces do not disappear. They answer different questions:
+
+- which stages were reached;
+- which stage-local criteria failed;
+- whether failures were introduced upstream or downstream;
+- whether a downstream stage behaved differently under upstream-produced inputs;
+- how latency and resource usage were distributed across the pipeline;
+- whether a baseline became stale because a child contract, adapter, factor, or covariate changed.
+
+These are not substitutes for the composite verdict. They are the evidence by which the composite verdict is explained.
+
+This distinction should be reflected in reporting. A composition report presents the end-to-end composite verdict first, then stage-local and trace-derived diagnostics. The report may include descriptive stage rates, reach counts, and latency decompositions, but it must not present those summaries as though they were an independently derived proof of the end-to-end result.
+
+### 8.8 Derived Quantities and Their Limits
+
+There are cases in which a derived compositional calculation is meaningful. The guarded architecture of §8.9 is the principal one: the residual event — a prohibited candidate emitted upstream and missed by the boundary — is structurally an event of survival through a boundary, and the companion models it. But that special case should not be mistaken for a general licence to multiply pass rates.
+
+For a sequential chain with stage-success events $S_1,\ldots,S_k$, the end-to-end success event is usually:
+
+$$S_1 \cap S_2 \cap \cdots \cap S_k.$$
+
+The chain rule gives:
+
+$$P(S_1 \cap \cdots \cap S_k) = P(S_1)P(S_2 \mid S_1) \cdots P(S_k \mid S_1,\ldots,S_{k-1}).$$
+
+The standalone product
+
+$$P(S_1)P(S_2)\cdots P(S_k)$$
+
+is a different expression. It requires assumptions — independence, compatible populations, stable conditional behaviour, and appropriately aligned event definitions — that are rarely established in stochastic service pipelines. In many LLM-based architectures, the downstream input distribution is generated precisely by the upstream component, so independence is the wrong default assumption.
+
+Even conservative bounds require care. A union-bound style statement over failure events,
+
+$$P(S_1 \cap \cdots \cap S_k) \geq 1 - \sum_{j=1}^{k} P(\neg S_j),$$
+
+is meaningful only when the events are defined over a compatible common population and the failure probabilities being bounded are the relevant ones for that population. The bound may be conservative, but conservatism does not repair a population mismatch.
+
+Derived quantities are therefore secondary, labelled artefacts. A report may distinguish, for example:
+
+```text
+empirical-end-to-end
+chain-rule-conditional
+union-bound
+independence-assumed
+diagnostic-only
+```
+
+The label is part of the claim. A derived quantity must state the basis on which it was produced, the population to which it applies, and the assumptions under which it is valid. It must not be displayed as equivalent to an empirical measurement of the composed service, and the methodology attaches no verdict to it: outside the guarded case, the Statistical Companion defines no general model for derived compositional claims, and none is needed for the composite contract to be evaluated. The default is simple:
+
+> Measure the composition empirically. Treat derived composition as explicit, assumption-bearing commentary.
+
+### 8.9 Guarded Composition: Discharging a Categorical Clause
+
+A categorical clause — *the service shall not emit self-harm advice* — admits no rate threshold, and §4.6 discharges it architecturally: a guardrail is interposed between the stochastic service and its consumer. That arrangement is a composition. The generator's candidate output is the guardrail's input, and what reaches the consumer is the output of the pair. The guardrail is a component with its own distributional contract, and the guarded service is a composite contract in the sense of this chapter.
+
+The application-level claim concerns the generator-boundary-consumer architecture, not the generator alone and not the guardrail alone. Its statistical side is the companion's: the probability that prohibited content reaches the consumer is the product of the generator's harm rate and the guardrail's conditional miss rate, each evidenced separately — the miss rate by an experiment over a harmful-candidate sampling, the harm rate by production monitoring or a sentinel stream, if at all — and a claim about the product needs an upper bound on each factor at a stated joint confidence (Statistical Companion §1.4.5b). The guardrail's detection is an affirmative safety claim and is therefore decided exactly, by the exact binomial test and its Clopper–Pearson bound (Statistical Companion §2.3.3, *Clause Forms*). None of this makes the residual zero; it makes it bounded.
+
+What the statistics cannot say is what the commitment *is*. That is contractual, and it belongs here. An **architectural commitment** is the documented statement that a categorical clause is discharged by a named component, and it records:
+
+- **the clause** — the categorical obligation being discharged, in the contract's own words;
+- **the threat model** — the ways the prohibited outcome is expected to arise, including the inputs that provoke it;
+- **the component and its placement** — which guardrail, where it sits between generator and consumer, and what it inspects;
+- **the bypass analysis** — whether any path lets output reach the consumer without passing the component;
+- **the detection evidence** — the guardrail's own rate-bounded contract over its harmful-candidate sampling, with its verdict and bound;
+- **the false-positive cost** — what wrongly blocking acceptable output costs the consumer, and the rate-bounded clause that evidences how often it happens;
+- **the coverage ledger** — which threats of the threat model the adversarial sampling actually exercises, and which it does not;
+- **the residual risk** — the bound on the product above, with its basis, or the statement that the generator's harm rate is not estimated and the residual therefore unbounded.
+
+The coverage ledger matters because an adversarial sampling is almost always a finite corpus (§4.1): a guardrail that catches every probe in a set exercising one style of attack has shown nothing about the styles the set omits, and the ledger makes that omission visible instead of leaving it to be assumed away. The record is documentary: it states the commitment for the developer, the reviewer and the auditor, and no framework need consume it as a structured artefact.
+
+The methodology, restated for the composition:
+
+> *Tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically.*
+
+### 8.10 Composition Graph Identity and Baseline Provenance
+
+A baseline for a single service contract is already a structured artefact. It is tied to the contract identity, structural reference, factor record, covariate profile, sampling, and expiry conditions (Statistical Companion §1.5.3, §8.4.2). A composite baseline must carry at least the same discipline, and in practice more.
+
+The identity of a composed contract is not merely the identity of its final output type. It is the identity of a graph: the ordered or otherwise structured arrangement of stages, adapters, criteria, factor configurations, covariate declarations, and composition policies by which the final output is produced. A judge or a guardrail invoked by the composition is a declared service in its own right, and its configuration — model, prompt, thresholds — enters the composition's identity like any stage's.
+
+A composite baseline should therefore record, at minimum:
+
+- the composite contract id;
+- the composition graph identity or hash;
+- the ordered stage ids or graph topology;
+- each child contract id;
+- each child structural reference;
+- each child factor record;
+- the covariates declared and resolved for each stage;
+- any adapter functions between stages;
+- the composition policy, including failure propagation;
+- the final-output criteria;
+- any trace-aware or cross-stage criteria;
+- the latency policy for the composite and for stage-local summaries.
+
+If any of these change materially, the composite baseline should not silently remain valid. A changed child contract, prompt, model, adapter, covariate resolver, routing policy, or final criterion may preserve the same external type while changing the stochastic mechanism under evaluation. Such a change is a baseline-provenance event, to be surfaced rather than absorbed.
+
+This is especially important because a composite can appear stable at the boundary while changing internally. The input type and output type may remain unchanged, and even the final output may appear superficially similar, while a stage replacement shifts the distribution of intermediate values or changes which failures are masked, repaired, or propagated. Composition graph identity is the safeguard against treating such a change as the same empirical object.
+
+### 8.11 An Illustrative API
+
+What composition means in practice is easiest to see in the shape an API for it might take. The sketch below is an illustration of the idea, not a specification: no mavai framework implements it, and the family's frameworks compose today in host code that invokes declared services. A Java rendering might read:
+
+```java
+ServiceContract<VoiceFactors, AudioBlob, ScreenState> pipeline =
+    Contracts.chain("voice-ui-command")
+        .first("stt", sttContract)
+        .then("translate", translatorContract)
+        .then("route", routerContract)
+        .then("handle", handlerContract)
+        .then("execute", uiApiContract)
+        .criteria(finalCriteria)
+        .build();
+```
+
+The point of the sketch is that `pipeline` is itself a `ServiceContract`: it can be baselined, tested, monitored, and reported as the service under evaluation. Its stage contracts remain visible through the composition trace, but the composite has its own criteria, its own denominator, its own population claim, and its own baseline provenance.
+
+The statistics at the interfaces of such an API would look like this:
+
+- **At the composite's boundary:** the composite verdict — the structured tuple over the composite's own criteria, each decided by its named rule (`regression/fisher` or `compliance/exact-binomial`) at its error level, with the two envelopes disclosed and the composite sampling's size as every criterion's denominator.
+- **At each stage boundary inside it:** the stage's reach count $n^{\mathrm{reach}}_j$, its stage-local outcomes over that count labelled as descriptive diagnostics, and the reasons for any failure or non-reach.
+- **For latency:** the composite's percentiles over the samples on which the composite succeeded, decided by the latency rules; stage durations as diagnostics.
+- **For a guarded composition:** the guardrail's detection verdict and its false-positive clause from its own contract, and the residual risk as a labelled derived quantity with its basis, per §8.9.
+
+Whatever form an implementation takes, a composition must preserve the properties this chapter depends on. Stage identifiers are stable and unique. Adjacent stage types are compatible. Child contract identities and their factor records are present and stable. Covariate names do not collide silently. The composition graph identity can be produced and recorded. The failure propagation policy is explicit. The composite's own criteria are declared, even where stage-local criteria are inherited. And each reached stage is evaluated through the same machinery as a standalone evaluation — postconditions, criteria, timing, covariate capture — rather than bypassed because it runs inside a larger contract.
+
+### 8.12 What Composition Is Not
+
+Several exclusions are essential.
+
+First, distributional contract composition is not a claim of automatic probabilistic composability. The existence of component contracts does not imply that their pass rates can be multiplied, averaged, unioned, or otherwise combined into a valid composite rate. Any such operation requires stated assumptions and belongs to a labelled derived analysis, not to the default semantics of composition.
+
+Second, composition is not a substitute for end-to-end evaluation. The composed service induces its own distribution over executions. Where the application-level claim concerns the final behaviour seen by the consumer, the composed service must be sampled and assessed directly.
+
+Third, composition does not make downstream standalone baselines portable. A downstream component measured on one input population may behave differently when fed values produced by an upstream stochastic component. Type compatibility is not distributional compatibility.
+
+Fourth, composition does not collapse criteria. The argument against aggregate rates (§4.4) applies with greater force in a composed service, where failures may be introduced, transformed, masked, or repaired across stages. Stage-local, cross-stage, and final-output criteria remain separately attributable.
+
+Fifth, composition is not ordinary orchestration. Orchestration connects components so that values flow. Contract composition connects contracts so that evidence remains interpretable.
+
+Finally, composition is not a rare-event certification device. A guarded architecture may reduce risk, and the companion's containment model (§1.4.5b) structures that claim, but no finite ordinary sample proves the absence of catastrophic behaviour. High-consequence obligations remain governed by the distinction introduced in §4.6 and recorded in §8.9: tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically, within the limits of finite empirical evidence.
+
+### 8.13 Summary
+
+Distributional contract composition extends the central move of this paper from individual stochastic services to connected stochastic architectures. A service contract is a statistically characterised interface. When such interfaces are connected, the resulting composition must not be treated as an unstructured implementation detail, nor as an invitation to calculate end-to-end quality from standalone component summaries.
+
+A composite contract is a new empirical object. It has its own population claim, denominator, criteria, latency behaviour, baseline identity, and verdict, all evaluated with the machinery a single contract uses. The component contracts remain present as trace-preserving substructures, supplying attribution and diagnostic evidence. A guarded composition is the case through which a categorical clause is discharged, and its architectural commitment is recorded as a contractual statement whose statistics the companion supplies.
+
+The guiding rule is therefore:
+
+> Operational composition is first-class; empirical composition is authoritative; derived composition is secondary, labelled, and assumption-bearing.
+
+## 9. The mavai Project Family: Implementations of the Distributional Contract
 
 The preceding sections developed the distributional contract as a statistical model. This section describes the mavai project family, which implements the model as practical tooling for developers working with stochastic systems.
 
@@ -378,7 +691,7 @@ The methodology is implemented as language-native frameworks, each idiomatic to 
 
 Each framework provides a direct operational realisation of the distributional contract as described in this paper. Their features correspond to the elements of the model.
 
-### 8.1 Expressing a Distributional Contract
+### 9.1 Expressing a Distributional Contract
 
 Each framework gives the developer the means to express a distributional contract as a declarative specification. The functional dimension is defined through one or more **criteria**, each hosting one or more postconditions — syntactic validity, presence of required fields, schema adherence, semantic correctness, absence of disallowed content. Postconditions whose failures carry materially different consequences are placed in separate criteria, each its own statistical stream with its own threshold and confidence level, rather than fused into a single composite assertion; a single criterion is the right expression only where the postconditions are genuinely interchangeable. The developer may additionally declare latency thresholds — percentile-level bounds to which the service must adhere — expressing the temporal dimension of the contract.
 
@@ -388,15 +701,15 @@ The move to a distributional contract also reframes what it means for a postcond
 
 The notion of contract failure is therefore lifted along with the postcondition: a failure is no longer the falsification of a postcondition on one execution, but the failure of a criterion, over a principled number of executions, to deliver the desired outcome with sufficient probability. Accordingly, the frameworks treat an individual failing execution as data, not as an alarm, and reserve the contract-failure verdict for the statistical assessment of the population as a whole.
 
-### 8.2 Stipulated and Empirical Thresholds
+### 9.2 Stipulated and Empirical Thresholds
 
 Both threshold sources are supported across all implementations. A developer may declare a stipulated threshold directly — from an SLA, regulatory requirement, or organisational policy — or may conduct a baseline measurement experiment against which later tests are judged by the Fisher test. The baseline result is recorded as a persistent specification artefact, capturing the success count and sample size together with the conditions under which the baseline was established; the cutoff a test must reach is derived from it when the test runs, since it depends on the test's own size.
 
-### 8.3 The Feasibility Gate
+### 9.3 The Feasibility Gate
 
 All implementations enforce the feasibility constraint described in this paper and honour the test's declared intent. Before any samples are executed, the framework checks the design: a VERIFICATION test whose sample size cannot in principle support a positive verdict against its requirement is refused (`COMPLIANCE_INFEASIBLE`), and a regression test planned larger than the baseline it consumes is refused (`TEST_LARGER_THAN_BASELINE`). A refusal is a configuration error — distinct from a system failure and from any verdict — and it applies whether a dimension is enforced or advisory. This prevents the waste of resources on evaluations whose conclusion is predetermined.
 
-### 8.4 Early Termination
+### 9.4 Early Termination
 
 In some cases, the final verdict can be determined before all planned samples have been executed. Every decision rule reduces to a count of successes the test must reach. If enough failures have been observed that this count can no longer be reached even if all remaining samples pass, continued execution is pointless. Conversely, once the count has been reached, the verdict is determined regardless of the remaining outcomes. The frameworks detect both conditions and terminate early.
 
@@ -404,7 +717,7 @@ Each additional execution beyond the point at which the verdict is fixed consume
 
 Continuing to sample once the verdict is mathematically determined is therefore an active waste of non-renewable budget. The frameworks treat early termination as a first-class obligation rather than an optional optimisation, on the pragmatic grounds that a methodology which ignores the operational cost of its own evaluations is unlikely to be adopted, and less likely still to be sustained.
 
-### 8.5 Operational Safeguards
+### 9.5 Operational Safeguards
 
 The Bernoulli model assumes independence between executions and stationarity of the success probability across the sampling window. These assumptions are not given by the operational environment; they must be actively maintained. The frameworks provide several mechanisms toward this end. A warmup facility allows initial observations to be discarded, mitigating cold-start non-stationarity caused by caches, connection pools, or runtime compilation.
 
@@ -418,15 +731,15 @@ Baseline expiration tracking alerts operators when a specification may no longer
 
 The covariate problem points to a deeper reality: for many stochastic services, behaviour is environmentally dependent in ways that cannot be fully captured at baseline time. A service that meets its distributional contract in a test environment may violate it in production, not because the service itself has changed but because the operating conditions have. It is therefore insufficient, in many cases, to rely on one-time evaluations conducted in controlled settings. What is needed is a mechanism for probing the service's behaviour in situ — in the environment where it actually operates, under the conditions it actually encounters. Sentinel capabilities within the mavai family address this requirement, providing lightweight runtime agents that evaluate the distributional contract continuously against the live deployment, detecting degradation as it occurs rather than after the fact. Continuous evaluation repeats the test, and the per-run error level $\alpha$ bounds one run, not a horizon of them: over $H$ runs against one baseline the probability of at least one false alarm is bounded only by $H\alpha$, so a monitor states the horizon over which it controls false alarms, and choosing that control is part of designing it (Statistical Companion §8.5).
 
-### 8.6 The Experiment-to-Test Workflow
+### 9.6 The Experiment-to-Test Workflow
 
 The frameworks operationalise the measure-then-enforce workflow through a structured progression. A measurement experiment executes the service a large number of times under controlled conditions, producing a specification. Subsequent evaluations run with fewer samples and are assessed against the threshold derived from the specification. The use case — the reusable unit that invokes the service and evaluates the result — is shared between experiments and tests, ensuring that the contract's criteria are applied consistently.
 
-### 8.7 Conformance Across Implementations
+### 9.7 Conformance Across Implementations
 
 Because the distributional contract is a statistical model, not a language-specific construct, all mavai framework implementations must produce identical statistical results for the same inputs. The [mavai-R](https://github.com/mavai-org/mavai-R) project provides the verification mechanism: it generates canonical reference datasets using R — the gold standard for statistical computing — against which each framework validates its statistics engine. This ensures that a distributional contract evaluated by punit in Java produces the same verdict as one evaluated by feotest in Rust, within stated floating-point tolerances. Agreement of results is necessary but not sufficient: with each release mavai-R also publishes a calibration certification, showing that its reference implementation achieves the error rates the regression, compliance and latency rules claim. The withdrawn Wilson-based rules survive in mavai-R only, to reproduce historical outputs (Statistical Companion §10.6, §4.3).
 
-## 9. Conclusion
+## 10. Conclusion
 
 Meyer's Design by Contract gave software engineering a powerful organising principle: the obligations between caller and callee, expressed as preconditions, postconditions, and invariants, and enforced deterministically at runtime. For over three decades it has stood as a beacon for those who care about software correctness. Still, the systems it addressed were, by and large, deterministic: a postcondition either held or it did not, and a single counterexample was definitive evidence of a defect.
 
@@ -440,17 +753,19 @@ The contract is expressed along two orthogonal dimensions: functional stochastic
 
 A contract's obligations also divide by form: rate-bounded clauses, bounded statistically by the machinery above, and categorical clauses, bounded architecturally and evidenced by an observational zero-failures criterion over an adversarial sampling. A rate-bounded clause's threshold is, on a separate axis, either normative in origin — stipulated by an SLA, SLO, policy, or regulation — or empirical, derived conservatively from a measured baseline; *empirical* names that origin, not the clause. Every criterion is subject to the constraint that binds sample size, threshold and confidence in any honest statistical claim.
 
+Services composed into chains and guarded architectures are distributional contracts in their own right. The composed service is measured end to end, with its own criteria, denominator and verdict; its stages keep their evidence as diagnostics; and component rates are not multiplied into an end-to-end claim. A guarded composition is how a categorical clause is discharged, and its architectural commitment is recorded as a contractual statement whose statistics the companion supplies.
+
 The model is deliberately conservative in its statistical choices. Each verdict is decided by an exact rule chosen for its question — the Fisher test for degradation, the exact binomial test for compliance — because only an exact rule keeps the probability of a false verdict within the stated level at every sample size; an approximation, however well-behaved, cannot promise that. The rules are conservative by construction: where they err, they err towards fewer false alarms and fewer false claims of compliance, at a modest cost in sensitivity that was judged a smaller risk than false precision. The Wilson interval remains, to describe what was observed, but it decides nothing.
 
 The mavai project family demonstrates that the distributional contract is not merely a theoretical construct but a practical tool. The frameworks translate each element of the model — the postcondition, the criterion, the threshold, the decision rule, the feasibility gate, the baseline specification — into declarative constructs that a developer can express and a runtime can enforce, across multiple language ecosystems. Sentinel capabilities extend the model beyond one-time evaluation to continuous in-situ monitoring, with false alarms controlled over a stated horizon of runs rather than per run, acknowledging that stochastic services are environmentally dependent and that a contract verified under controlled conditions may not hold in production.
 
 Several questions remain open. The treatment of exogenous covariates in this paper is operational rather than formal: covariates are declared and tracked, but there is no statistical framework for adjusting inference when covariate drift is detected.
 
-The architectural discharge of categorical clauses is introduced here but not fully developed: the companion models the residual risk a guardrail leaves and evidences its false-negative and false-positive rates as ordinary rate-bounded clauses (§1.4.5b), while how an architectural commitment is declared and how the coverage of an adversarial sampling is recorded await a forthcoming chapter of the Statistical Companion. And the independence assumption, while supported by operational safeguards, is ultimately unverifiable from the data alone.
+The architectural commitment of §8.9 is a documentary record; whether it should become a structured artefact that frameworks consume is left open until a consumer needs one. Derived compositional claims beyond the guarded case have no general model, and the chapter on composition treats them as labelled commentary. And the independence assumption, while supported by operational safeguards, is ultimately unverifiable from the data alone.
 
 These are not deficiencies to be apologised for; they are honest boundaries of what a practical framework can achieve. The distributional contract does not claim to resolve the fundamental difficulty of reasoning about stochastic systems. It claims only to provide a disciplined, statistically grounded basis for doing so — one that makes its assumptions explicit, its limitations visible, and its verdicts defensible.
 
-## 10. References
+## 11. References
 
 [1] Meyer, B. "Applying 'Design by Contract'." *IEEE Computer*, vol. 25, no. 10, October 1992, pp. 40–51.
 
