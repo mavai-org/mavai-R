@@ -5,7 +5,17 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.16.0] — unreleased
+## [0.16.1] — unreleased
+
+**Additive: zero-failures criteria in `mavai-contract/1`.** The format amendment of 2026-11-03 lets a criterion declare `zero-failures: true`: an observational criterion, judged PASS iff no trial failed, with no rate, threshold, confidence or decision rule. It is how a categorical clause is stated in a contract file. No case suite changes.
+
+- `inst/formats/schemas/mavai-contract-1.schema.json`: the boolean `zero-failures` key on a criterion; `zero-failures: true` beside `threshold`, `tolerate` or a per-criterion `confidence` is refused.
+- Corpus, valid: `contract-zero-failures` (bare), `contract-zero-failures-provenance` (with `threshold-origin`, `contract-ref` and partial credit), `contract-zero-failures-mixed` (beside a normative and an empirical criterion), `contract-zero-failures-false` (`false` means no amendment).
+- Corpus, invalid, each its own structural category: `zero-failures-with-threshold`, `zero-failures-with-tolerate`, `zero-failures-with-confidence`, `zero-failures-not-boolean`.
+
+Consumers that have not implemented earlier amendments may adopt this release with a declared exemption list (the format-conformance requirement's declared-exemptions rule, 2026-11-03), never by silent omission.
+
+## [0.16.0] — 2026-10-27
 
 **Breaking: the withdrawn denominator policy leaves the oracle.** Companion 1.3.1 withdrew the per-criterion denominator policy: a criterion's denominator is the full sampling, and a trial that produced no testable value is a FAIL carrying its reason (§1.4.5a). The generators still took a `denominator_policy`, and four informational suites still carried it. No suite in the family-mandatory roster changes, and no other suite changes.
 

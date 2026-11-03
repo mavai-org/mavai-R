@@ -39,6 +39,10 @@ categories:
   threshold-empirical-reserved: { spec: "MAVAI-CONTRACT-FORMAT.md Part III", refusal: structural }
   tolerate-with-threshold: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (criteria)", refusal: structural }
   criterion-confidence-with-threshold: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (criteria, 2026-07-25)", refusal: structural }
+  zero-failures-with-threshold: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03)", refusal: structural }
+  zero-failures-with-tolerate: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03)", refusal: structural }
+  zero-failures-with-confidence: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03)", refusal: structural }
+  zero-failures-not-boolean: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03)", refusal: structural }
   threshold-origin-vocabulary: { spec: "MAVAI-CONTRACT-FORMAT.md Part III (provenance, 2026-07-25)", refusal: structural }
   criterion-without-form: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (criteria, 2026-07-25)", refusal: structural }
   postcondition-form-cardinality: { spec: "MAVAI-CONTRACT-FORMAT.md Part I (criteria)", refusal: structural }
@@ -146,6 +150,10 @@ corpus:
   - { file: contract-set-of.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (graded set claims, 2026-07-29)" }
   - { file: contract-set-of-duplicate-member.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (graded set claims, 2026-07-29)" }
   - { file: contract-partial-credit.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (partial credit, 2026-07-27)" }
+  - { file: contract-zero-failures.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03)" }
+  - { file: contract-zero-failures-provenance.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03; partial credit)" }
+  - { file: contract-zero-failures-mixed.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03; criteria)" }
+  - { file: contract-zero-failures-false.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (zero-failures criteria, 2026-11-03)" }
   - { file: contract-default-view.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (subject rule, 2026-07-27)" }
   - { file: contract-default-view-sole-transform.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (subject rule, 2026-07-27)" }
   - { file: contract-roots.yaml, format: mavai-contract/1, outcome: loads, spec: "MAVAI-CONTRACT-FORMAT.md Part I (named path anchors, 2026-07-29)" }
@@ -171,6 +179,10 @@ corpus:
   - { file: threshold-empirical-reserved.yaml, format: mavai-contract/1, outcome: refused, category: threshold-empirical-reserved }
   - { file: tolerate-with-threshold.yaml, format: mavai-contract/1, outcome: refused, category: tolerate-with-threshold }
   - { file: criterion-confidence-with-threshold.yaml, format: mavai-contract/1, outcome: refused, category: criterion-confidence-with-threshold }
+  - { file: zero-failures-with-threshold.yaml, format: mavai-contract/1, outcome: refused, category: zero-failures-with-threshold }
+  - { file: zero-failures-with-tolerate.yaml, format: mavai-contract/1, outcome: refused, category: zero-failures-with-tolerate }
+  - { file: zero-failures-with-confidence.yaml, format: mavai-contract/1, outcome: refused, category: zero-failures-with-confidence }
+  - { file: zero-failures-not-boolean.yaml, format: mavai-contract/1, outcome: refused, category: zero-failures-not-boolean }
   - { file: threshold-origin-vocabulary.yaml, format: mavai-contract/1, outcome: refused, category: threshold-origin-vocabulary }
   - { file: criterion-without-form.yaml, format: mavai-contract/1, outcome: refused, category: criterion-without-form }
   - { file: postcondition-form-cardinality.yaml, format: mavai-contract/1, outcome: refused, category: postcondition-form-cardinality }
