@@ -52,16 +52,18 @@ Real service contracts rarely contain one kind of failure. A malformed JSON resp
 
 The mavai model therefore allows a contract to be decomposed into criteria, each with its own threshold, confidence level, input set, and verdict. The combined contract verdict is **structural**: all required criteria must pass. The model does not assume that criteria are statistically independent merely because they are reported separately.
 
-## 6. Empirical vs categorical clauses
+## 6. Rate-bounded and categorical clauses
 
 A natural objection to any rate-based model is: "surely some failures are unacceptable at any rate." The model takes this seriously and distinguishes two kinds of clause.
 
-- An **empirical clause** says, in effect, "this behaviour must succeed at least this often." It is bounded by a rate.
+- A **rate-bounded clause** says, in effect, "this behaviour must succeed at least this often." It is bounded by a rate. Its threshold is either given — by a contract, SLA or policy — or derived from a measured baseline.
 - A **categorical clause** says, "this must not happen." It is not bounded by a rate at all.
 
-The model does not pretend that setting a threshold to 99.999% converts a categorical obligation into a statistical one. Intolerable failures are handled architecturally — by guardrails, filters, schemas, refusal mechanisms — and those architectural controls can (and indeed should!) themselves be tested statistically.
+The model does not pretend that setting a threshold to 99.999% converts a categorical obligation into a statistical one. A categorical clause can be written into any contract, and it is checked by observation: a single violation shows it has been broken, while a clean run shows only that no violation was seen.
 
-> Tolerable failures are bounded statistically; intolerable failures are bounded architecturally; and the architecture itself is bounded statistically.
+Some services cannot realistically be made to produce the content a categorical clause forbids — a language model will not give harmful health advice on demand often enough for anyone to measure how reliably it avoids it. For these services a guardrail (a filter, classifier or refusal mechanism) is placed between the service and its users, and it is the guardrail that is tested statistically, because it can be fed harmful and harmless content directly.
+
+> Tolerable failures are bounded statistically; intolerable failures are prohibited categorically; and what cannot be tested in the service is tested in its guardrail.
 
 ## 7. What the model offers that ordinary tests cannot
 
