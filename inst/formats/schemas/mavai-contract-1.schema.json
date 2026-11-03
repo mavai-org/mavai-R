@@ -189,6 +189,10 @@
           "exclusiveMaximum": 1,
           "$comment": "Part I, criteria section: required success rate in (0,1); normative by definition. threshold: empirical stays reserved (Part III) — the string fails this type, as mandated."
         },
+        "zero-failures": {
+          "type": "boolean",
+          "$comment": "Part I, zero-failures criteria (amendment 2026-11-03): true declares an observational criterion — judged PASS iff no trial failed, with no rate, threshold, confidence or decision rule. false or absent: the criterion's meaning without the amendment."
+        },
         "tolerate": {
           "type": "number",
           "exclusiveMinimum": 0,
@@ -268,6 +272,11 @@
         "confidence": {
           "not": {"required": ["threshold"]},
           "$comment": "Part I, criteria section (clarified 2026-07-25): a per-criterion confidence: is the empirical criterion's alone — beside threshold: it is refused."
+        },
+        "zero-failures": {
+          "if": {"properties": {"zero-failures": {"const": true}}},
+          "then": {"not": {"anyOf": [{"required": ["threshold"]}, {"required": ["tolerate"]}, {"required": ["confidence"]}]}},
+          "$comment": "Part I, zero-failures criteria (amendment 2026-11-03): zero-failures: true beside threshold:, tolerate: or a per-criterion confidence: is refused — an observational criterion has no rate to require, no risk claim to protect and no confidence level to set."
         }
       },
       "$comment": "Part I, criteria section: content is one or more postcondition forms — declared directly (a compatible subset, all holding together) and/or as a postconditions: list; every criterion declares at least one form of its own (confirmed 2026-07-25). Direct forms judge raw; in:/path: qualifiers belong on postcondition entries."
