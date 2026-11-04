@@ -103,6 +103,53 @@ if (requireNamespace("xml2", quietly = TRUE)) {
   cat("note  xml2 not installed; verdict XSD validation skipped\n")
 }
 
+# ── exploration filename stems ──────────────────────────────────────────────
+#
+# naming-explore-stem.yaml is a derivation case, not a document: given a stem
+# or ordered factors, the expected stem (catalog EX05, whole-stem bound,
+# amendment 2026-11-04). Every expected value is recomputed here by the
+# oracle in R/explore_stem.R, independently of any emitter. Requires digest
+# (Suggests).
+stem_case_path <- "inst/interchange/naming-explore-stem.yaml"
+if (requireNamespace("digest", quietly = TRUE)) {
+  source("R/explore_stem.R", local = TRUE)
+  stem_case <- yaml::read_yaml(stem_case_path)
+  stem_checks <- 0L
+  stem_fail <- function(message) {
+    cat(sprintf("FAIL  %s: %s\n", stem_case_path, message))
+    failures <<- failures + 1L
+  }
+  if (!identical(as.integer(stem_case$maxBytes), EXPLORE_STEM_MAX_BYTES) ||
+      !identical(as.integer(stem_case$hashChars), EXPLORE_STEM_HASH_CHARS)) {
+    stem_fail("maxBytes or hashChars differs from the oracle's bound")
+  }
+  for (entry in c(stem_case$bound, stem_case$stems)) {
+    actual <- if (!is.null(entry$stem)) {
+      explore_stem_bound(entry$stem)
+    } else {
+      explore_stem(entry$factors)
+    }
+    stem_checks <- stem_checks + 1L
+    if (!identical(enc2utf8(actual), enc2utf8(entry$expected))) {
+      stem_fail(sprintf("%s: expected %s, the oracle gives %s",
+                        entry$id, entry$expected, actual))
+    }
+    if (nchar(entry$expected, type = "bytes") > EXPLORE_STEM_MAX_BYTES) {
+      stem_fail(sprintf("%s: the expected stem exceeds %d bytes",
+                        entry$id, EXPLORE_STEM_MAX_BYTES))
+    }
+  }
+  expected <- vapply(c(stem_case$bound, stem_case$stems),
+                     function(e) e$expected, character(1L))
+  if (anyDuplicated(expected)) {
+    stem_fail("two cases expect the same stem; distinct inputs must stay distinct")
+  }
+  cat(sprintf("ok    %s: %d stems recomputed by the oracle\n",
+              stem_case_path, stem_checks))
+} else {
+  cat("note  digest not installed; exploration stem case skipped\n")
+}
+
 # ── the bundle carries what the directory holds ─────────────────────────────
 #
 # A third check, and the one that would have caught mavai-baseline-1 sitting

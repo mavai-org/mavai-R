@@ -5,7 +5,15 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.16.1] — unreleased
+## [0.16.2] — unreleased
+
+**Additive: a conformance case for exploration filename stems.** Catalog EX05 now bounds the whole stem (amendment 2026-11-04), not only each factor value: a configuration with many factors produced a file name over the common 255-byte limit, and a punit run failed at write time after spending its samples. A stem of at most 200 UTF-8 bytes is unchanged; a longer one becomes the longest prefix of whole characters within 191 bytes, `-`, and the first 8 hex characters of the SHA-256 of the whole stem. The same string is the explore document's `configuration` (mavai-explore-1, amendment 2026-11-04; the schema is unchanged). No case suite changes.
+
+- `inst/interchange/naming-explore-stem.yaml`, shipped in `interchange-v0.16.2.zip`: `bound` (given a stem, the bounded stem: within, at and one byte over the bound, two- and three-byte characters, a late difference) and `stems` (given ordered factors, the expected stem, on inputs where the emitters' per-value steps agree).
+- `R/explore_stem.R`: the oracle (`explore_stem`, `explore_stem_bound`, `explore_stem_segment`, `explore_stem_sanitise`), using `digest` (Suggests) for SHA-256.
+- `scripts/validate_interchange.R` recomputes every expected stem with the oracle.
+
+## [0.16.1] — 2026-11-03
 
 **Additive: zero-failures criteria in `mavai-contract/1`.** The format amendment of 2026-11-03 lets a criterion declare `zero-failures: true`: an observational criterion, judged PASS iff no trial failed, with no rate, threshold, confidence or decision rule. It is how a categorical clause is stated in a contract file. No case suite changes.
 
