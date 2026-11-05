@@ -24,6 +24,8 @@ family's report renderer:
   `(serviceContractId, serviceName, covariateProfile, inputsIdentity)`, no
   element of which keys a record alone.
 
+`naming-explore-stem.yaml` is a derivation case, not a document: given a stem or ordered factors, the expected exploration filename stem, which is also the explore document's `configuration` (catalog EX05, whole-stem bound, amendment 2026-11-04). `scripts/validate_interchange.R` recomputes every expected value with the oracle in `R/explore_stem.R`; emitters assert the `bound` part, and those that derive the stem from factor values assert `stems` too.
+
 The **verdict XML interchange** schemas (`verdict-1.0.xsd` through
 `verdict-1.3.xsd`, namespace `http://mavai.org/verdict/1.0`) are published
 alongside them in [`schema/`](../../schema/) under the same terms: test
