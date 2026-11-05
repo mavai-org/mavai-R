@@ -1,6 +1,6 @@
 ---
 title: "Distributional Contracts for Stochastic Systems"
-author: "Version 0.8 · last updated 2026-11-03 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: "Version 0.9 · last updated 2026-11-05 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## 1. Document History
@@ -19,6 +19,7 @@ This is a working document: a formal declaration of what the mavai family of fra
 | 7 | **2026-11** | **Aligned with the companion in full.** The paper now states the rest of what Statistical Companion 1.7.1 makes part of a contract's evaluation: test intent (VERIFICATION, which sets out to demonstrate, and SMOKE, which looks only for evidence of falling short); every assertion enforced by default, with a run-time switch that makes a dimension advisory; two error envelopes, one per direction of error; the configurations refused before a run; exact sample sizing; the population a verdict speaks to; and the residual risk an architectural guardrail leaves. |
 | 8 | **2026-11** | **Composition.** A new chapter treats services composed into chains and guarded architectures as distributional contracts in their own right: the composed service is measured end to end, its stages keep their evidence for diagnosis, and component pass rates are not multiplied into an end-to-end claim. The chapter also takes over the contractual side of architectural discharge — how a guardrail commitment is declared and what its record holds — which earlier versions left to the Statistical Companion; the companion keeps the statistics. |
 | 9 | **2026-11** | **Clause placement and the guardrail separated.** Earlier versions said a categorical clause is discharged architecturally, as though it could not sit on a service's own contract. Like any clause, it can be stated on any contract, and it is evaluated observationally wherever it is stated. The guardrail is a separate architectural pattern, used when the service cannot realistically be made to produce the prohibited content but a guardrail can be tested with it directly. The one-line statement of the methodology is revised accordingly. |
+| 10 | **2026-11** | **The guardrail's two error rates.** The guarded composition now names the Neyman–Pearson principle the methodology already follows for a guardrail's two error rates: the miss is constrained at a declared level, and specificity is measured and guarded, by a floor from an operational commitment and then by a threshold derived from a baseline, rather than given a matching requirement. The architectural commitment states which error is constrained. No clause, verdict or rule changes. |
 
 The first three milestones strictly extend one another in the scope of what the contract claims, and none supersedes the Bernoulli/binomial foundation laid in Milestone 1. Milestone 6 keeps that foundation but supersedes the role Milestone 1 gave the Wilson score lower bound: Wilson describes, and exact rules decide. Milestone 4 likewise preserves the foundation — the one-criterion case reproduces the earlier model unchanged — but it does *supersede* one earlier construction: the Milestone-1/3 model swept every no-testable-value outcome into a single excluded *catastrophic* bucket, leaving the quality predicate undefined on it. That bucket is now split — a service that produced no usable value (timeout, malformed output, refusal, or a failed transform step) is a failure carrying a diagnostic reason, while a true catastrophe (the testing machinery itself dying, e.g. `OutOfMemoryError`) remains outside the sample and aborts the run. That supersession is called out explicitly where it occurs.
 
@@ -586,11 +587,13 @@ What the statistics cannot say is what the commitment *is*. That is contractual,
 - **the component and its placement** — which guardrail, where it sits between generator and consumer, and what it inspects;
 - **the bypass analysis** — whether any path lets output reach the consumer without passing the component;
 - **the detection evidence** — the guardrail's own rate-bounded contract over its harmful-candidate sampling, with its verdict and bound;
-- **the false-positive cost** — what wrongly blocking acceptable output costs the consumer, and the rate-bounded clause that evidences how often it happens;
+- **the false-positive cost** — what wrongly blocking acceptable output costs the consumer, and the rate-bounded clause that guards it: a floor taken from an operational commitment, or a threshold derived from the guardrail's baseline;
 - **the coverage ledger** — which threats of the threat model the adversarial sampling actually exercises, and which it does not;
 - **the residual risk** — the bound on the product above, with its basis, or the statement that the generator's harm rate is not estimated and the residual therefore unbounded.
 
 The coverage ledger matters because an adversarial sampling is almost always a finite corpus (§4.1): a guardrail that catches every probe in a set exercising one style of attack has shown nothing about the styles the set omits, and the ledger makes that omission visible instead of leaving it to be assumed away. The record is documentary: it states the commitment for the developer, the reviewer and the auditor, and no framework need consume it as a structured artefact.
+
+**Two error rates, one constrained.** A guardrail can miss harmful content and can wrongly block acceptable content, and moving its operating threshold trades one error for the other. The methodology resolves the trade as the Neyman–Pearson principle does [24, 25]: the graver error is constrained at a declared level, and the other is kept as small as that constraint allows. For a guardrail that protects users from harmful content the miss is the graver error, so sensitivity carries a normative threshold derived from the tolerable residual harm, decided by the compliance test. Specificity is not given a matching requirement by the same reasoning, because the harm analysis supplies none. It is measured, and it is guarded so that a guardrail that blocks everything cannot pass: by a normative floor taken from an operational commitment, such as an SLO, until a baseline exists, and thereafter by an empirical threshold derived from that baseline, decided by the regression test (§5). The architectural commitment states which error is constrained and why; where a wrongful block is the graver harm, as in front of an emergency-information service, the roles invert. Requiring the specificity clause does not weaken the sensitivity clause (Statistical Companion §1.4.5b).
 
 The methodology, restated for the composition:
 
@@ -813,3 +816,7 @@ These are not deficiencies to be apologised for; they are honest boundaries of w
 [22] Agha, G. and Palmskog, K. "A survey of statistical model checking." *ACM Transactions on Modeling and Computer Simulation*, vol. 28, no. 1, 2018, pp. 1–39.
 
 [23] The mavai project family: probabilistic testing frameworks. Source code and documentation available at https://mavai.org and https://github.com/mavai-org.
+
+[24] Neyman, J. and Pearson, E. S. "On the problem of the most efficient tests of statistical hypotheses." *Philosophical Transactions of the Royal Society of London, Series A*, vol. 231, 1933, pp. 289–337.
+
+[25] Lehmann, E. L. and Romano, J. P. *Testing Statistical Hypotheses*, 4th ed. Springer, 2022.
