@@ -5,7 +5,15 @@ Versions follow the fixture-versioning rules declared in `CLAUDE.md`:
 **minor** bumps on 0.x mark breaking changes to fixture content or shape;
 **patch** bumps mark additive changes.
 
-## [0.16.2] — unreleased
+## [0.16.3] — unreleased
+
+**Additive: the verdict record states a criterion's mode.** A zero-failures criterion is observational (Statistical Companion §1.4.5): PASS iff no trial failed, with no rate, threshold or decision rule. No verdict schema could say so, so an emitter could present one as an inferential row at threshold 1, the conversion §1.4.5 forbids. The verdict XML specification (amendment 2026-11-15) adds the mode. No case suite changes.
+
+- New `schema/verdict-1.11.xsd`, additive over 1.10: `<criterion>` gains an optional `mode`, `CriterionModeEnum` `inferential` (the default when absent) or `observational`. An observational row carries none of `observed-rate`, `threshold`, `decision-rule`, `decision-rule-version` or `required-pass`. `<statistics>` describes inferential criteria only, and a test whose criteria are all observational omits it and states no sizing approach. These are emitter obligations, stated in the schema's comments, which XSD 1.0 cannot enforce. A 1.10 record whose version reads "1.11" is a 1.11 record when every row it carries is inferential.
+- New worked examples, shipped in `interchange-v0.16.3.zip`: `verdict-1.11-zero-failures-pass.xml`, `verdict-1.11-zero-failures-fail.xml`, and `verdict-1.11-mixed.xml` (an observational criterion beside a compliance criterion). Each validates against 1.11 and not against 1.10.
+- `tests/testthat/test-interchange-schemas.R`: the examples validate against 1.11 and not 1.10; an observational row states its counts alone; an all-observational record has no `<statistics>` and no sizing approach; an unknown mode is refused.
+
+## [0.16.2] — 2026-11-05
 
 **Additive: a conformance case for exploration filename stems.** Catalog EX05 now bounds the whole stem (amendment 2026-11-04), not only each factor value: a configuration with many factors produced a file name over the common 255-byte limit, and a punit run failed at write time after spending its samples. A stem of at most 200 UTF-8 bytes is unchanged; a longer one becomes the longest prefix of whole characters within 191 bytes, `-`, and the first 8 hex characters of the SHA-256 of the whole stem. The same string is the explore document's `configuration` (mavai-explore-1, amendment 2026-11-04; the schema is unchanged). No case suite changes.
 
