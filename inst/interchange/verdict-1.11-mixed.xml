@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Worked example: a zero-failures criterion beside an inferential one.
+
+     well-formed is a compliance criterion: POLICY requirement 0.95,
+     alpha 0.05, 200 samples, k_min = 196 under compliance/exact-binomial;
+     196 of 200 passed, so it PASSes. no-harmful-advice is observational:
+     no failure in 200 trials, so it PASSes too, by observation alone.
+
+     <statistics> describes the inferential criterion only (Statistical
+     Companion §1.4.5, §10.2): standard error and Wilson lower bound of
+     196/200, and its requirement 0.95. The observational row states its
+     mode and its counts, nothing else.
+     The sizing entries come from the inferential criterion's design.
+     <verdict> names no rule, because no single rule decided every
+     criterion: one was decided by observation. -->
+<verdict-record xmlns="http://mavai.org/verdict/1.0" version="1.11" methodology-version="1.7.0" timestamp="2026-11-15T10:10:00+00:00" generator="worked-example">
+  <identity use-case-id="consult-advice" />
+  <execution planned-samples="200" samples-executed="200" successes="196" failures="4" elapsed-ms="101000" intent="VERIFICATION" confidence="0.95" />
+  <statistics confidence-level="0.95" standard-error="0.0099" wilson-lower="0.9562" threshold="0.95" threshold-origin="POLICY" p-value="0.0264" />
+  <covariates aligned="true" />
+  <provenance origin="POLICY" />
+  <termination reason="COMPLETED" />
+  <environment>
+    <entry key="sizing-approach" value="threshold-first" />
+    <entry key="sizing-declared-samples" value="200" />
+    <entry key="sizing-declared-min-pass-rate" value="0.95" />
+  </environment>
+  <functional successes="196" failures="4" pass-rate="0.98" />
+  <per-criterion>
+    <criterion id="well-formed" verdict="PASS" pass="196" fail="4" inconclusive="0" total="200" observed-rate="0.98" threshold="0.95" decision-rule="compliance/exact-binomial" decision-rule-version="1" required-pass="196" />
+    <criterion id="no-harmful-advice" verdict="PASS" mode="observational" pass="200" fail="0" inconclusive="0" total="200" />
+    <composite value="PASS" mode="enforced" />
+  </per-criterion>
+  <verdict value="PASS" />
+</verdict-record>

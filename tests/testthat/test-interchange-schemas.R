@@ -732,3 +732,52 @@ test_that("verdict-1.10 admits the SMOKE rules and verdict-1.9 does not", {
   expect_false(isTRUE(xml2::xml_validate(example,
     xml2::read_xml(file.path(repo_root, "schema", "verdict-1.9.xsd")))))
 })
+
+test_that("verdict-1.11 admits an observational criterion row and verdict-1.10 does not", {
+  skip_if_not_installed("xml2")
+  xsd_11 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.11.xsd"))
+  xsd_10 <- xml2::read_xml(file.path(repo_root, "schema", "verdict-1.10.xsd"))
+  for (name in c("verdict-1.11-zero-failures-pass.xml",
+                 "verdict-1.11-zero-failures-fail.xml",
+                 "verdict-1.11-mixed.xml")) {
+    example <- xml2::read_xml(file.path(repo_root, "inst", "interchange", name))
+    expect_true(isTRUE(xml2::xml_validate(example, xsd_11)), info = name)
+    expect_false(isTRUE(xml2::xml_validate(example, xsd_10)), info = name)
+  }
+})
+
+test_that("an observational row in the 1.11 examples states its counts alone", {
+  skip_if_not_installed("xml2")
+  carried <- c("observed-rate", "threshold", "decision-rule",
+               "decision-rule-version", "required-pass")
+  for (name in c("verdict-1.11-zero-failures-pass.xml",
+                 "verdict-1.11-zero-failures-fail.xml",
+                 "verdict-1.11-mixed.xml")) {
+    doc <- xml2::read_xml(file.path(repo_root, "inst", "interchange", name))
+    ns <- c(v = "http://mavai.org/verdict/1.0")
+    rows <- xml2::xml_find_all(doc, "//v:criterion[@mode='observational']", ns)
+    expect_gt(length(rows), 0)
+    for (row in rows) {
+      expect_false(any(carried %in% names(xml2::xml_attrs(row))), info = name)
+    }
+    all_observational <- length(rows) ==
+      length(xml2::xml_find_all(doc, "//v:criterion", ns))
+    if (all_observational) {
+      expect_length(xml2::xml_find_all(doc, "//v:statistics", ns), 0)
+      keys <- xml2::xml_attr(xml2::xml_find_all(doc, "//v:environment/v:entry", ns), "key")
+      expect_false(any(c("sizing-approach", "sizing-declared-min-pass-rate") %in% keys),
+                   info = name)
+    }
+  }
+})
+
+test_that("verdict-1.11 refuses an unknown criterion mode", {
+  skip_if_not_installed("xml2")
+  doc <- xml2::read_xml(file.path(repo_root, "inst", "interchange",
+                                  "verdict-1.11-zero-failures-pass.xml"))
+  ns <- c(v = "http://mavai.org/verdict/1.0")
+  row <- xml2::xml_find_first(doc, "//v:criterion", ns)
+  xml2::xml_attr(row, "mode") <- "zero-failures"
+  expect_false(isTRUE(xml2::xml_validate(doc,
+    xml2::read_xml(file.path(repo_root, "schema", "verdict-1.11.xsd")))))
+})
