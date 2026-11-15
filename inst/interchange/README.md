@@ -76,6 +76,14 @@ explicit latency requirement under SMOKE intent is decided by
 the burden of proof reversed, and states it; `@required-pass` is then the
 largest failing count plus one (`verdict-1.10-smoke-pass.xml`,
 `verdict-1.10-smoke-fail.xml`).
+From 1.11 a criterion row states its mode (Statistical Companion §1.4.5,
+§10.2): `inferential` when absent, or `observational` for a zero-failures
+criterion, whose row states its counts alone, with no observed rate,
+threshold, rule or required count. `<statistics>` describes inferential
+criteria only, and a test whose criteria are all observational omits it and
+states no sizing approach (`verdict-1.11-zero-failures-pass.xml`,
+`verdict-1.11-zero-failures-fail.xml`, and `verdict-1.11-mixed.xml` beside
+a compliance criterion).
 Earlier XSD versions are unchanged.
 
 **This repository is the publication channel for these artefacts, not their
