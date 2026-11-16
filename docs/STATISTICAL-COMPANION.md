@@ -9,43 +9,39 @@ author: |
 
 ## Document History
 
-| #  | Date        | Milestone                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-|----|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1  | **2025-12** | **First issue.** Pass rates modelled as Bernoulli trials and binomial counts, with Wilson intervals.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 2  | **2026-02** | **Latency added.** A second dimension, latency, measured by empirical percentiles.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 3  | **2026-04** | **Stricter latency.** Latency measured on successful calls only, with an exact order-statistic bound in place of the earlier approximation.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| 4  | **2026-05** | **Worked examples corrected.** The examples in §§4.3–4.4 now use the same Wilson construction as the rest of the document.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 5  | **2026-05** | **Independence assumption explained.** New §1.3.1 sets out when treating trials as independent is reasonable.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 6  | **2026-05** | **Several criteria per contract.** Each criterion has its own pass rate and a PASS, FAIL or INCONCLUSIVE verdict; compliance and regression become separate procedures.                                                                                                                                                                                                                                                                                                                                                                                       |
-| 7  | **2026-05** | **Multi-criterion clarifications.** Every trial counts towards each criterion, one sampling is shared by all criteria, and INCONCLUSIVE means only that no verdict could be reached.                                                                                                                                                                                                                                                                                                                                                                          |
-| 8  | **2026-05** | **Criterion scope withdrawn.** Every sample is seen by every criterion.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| 9  | **2026-05** | **Terminology.** "Empirical" clauses are renamed "rate-bounded"; new §1.4.5b covers guardrails.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 10 | **2026-05** | **Guardrail clarifications.** §1.4.5b now says which sampling measures what, and where a guardrail's rates are estimated.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| 11 | **2026-05** | **Accumulation withdrawn.** Baselines are no longer accumulated over time; §1.5.5 covers expiry only.                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 12 | **2026-06** | **Editorial consolidation.** Repeated formulas and examples replaced by cross-references.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| 13 | **2026-07** | **Power for baseline-derived thresholds.** New §5.4.1 sizes a test against the threshold it actually applies.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 14 | **2026-07** | **Operational approaches reconciled.** §6 names its three approaches consistently.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 15 | **2026-08** | **Zero baseline stated.** New §4.3.4: a baseline with no successes cannot support a test, and the design is refused. This milestone appeared while the title still read 1.4.1.                                                                                                                                                                                                                                                                                                                                                                                |
-| 16 | **2026-09** | **1.5.0: new decision rules.** A statistical review showed that the 1.4.1 rules did not keep false alarms at the stated level, and recommended replacing Wilson with more statistically honest rules, each chosen for its circumstance: Fisher's test for regression, the exact binomial test for compliance and for explicit latency limits, and a rank rule for latency regression. Wilson remains the descriptive interval only, and decides nothing. Verdicts can differ from 1.4.1; earlier results can be reproduced from the mavai-R 0.10.13 fixtures. |
-| 17 | **2026-10** | **1.6.0: every assertion enforced by default.** Correctness and latency assertions, given or baseline-derived, now count towards the verdict by default; in 1.5.0 latency assertions only warned unless enforcement was switched on. A run-time switch, not a per-test setting, can make correctness, latency or both advisory: an advisory assertion is still decided by its rule and reported, but it cannot fail the test. No decision rule changes; verdicts can, since a latency breach that warned under 1.5.0 now fails the test by default.           |
-| 18 | **2026-10** | **1.7.0: SMOKE decides by its own rule.** Under 1.5.0 a normative SMOKE test was decided like a VERIFICATION one, so a test too small to demonstrate its requirement could only FAIL: the 1.5.0 review rightly found that such a FAIL carries no evidence, and the companion said so instead of giving SMOKE a rule of its own. Under SMOKE the burden of proof is now reversed (§5.7.3): a normative criterion FAILs only on evidence that the service falls short of its requirement, and a PASS means only that no such evidence was found. Two rules are added, `compliance/smoke-exact-binomial` and `latency/smoke-compliance-exact-binomial`, both exact binomial tests and so existing machinery; VERIFICATION is unchanged. |
-| 19 | **2026-10** | **1.7.1: SMOKE decisions enter neither envelope.** A clarification, not a new rule: a criterion decided by a SMOKE rule adds nothing to either Type-I envelope of §1.4.6, because its $\alpha$ bounds a false FAIL and its PASS claims no compliance. No verdict, count or decision rule changes.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 20 | **2026-10** | **Denominator-policy residue removed.** §8.4.5 no longer lists a denominator-policy mismatch among the hard invalidators: there has been no per-criterion denominator policy since 1.3.1 (§1.4.5a). No verdict, count or rule changes. This milestone appeared while the title still read 1.7.1.                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 21 | **2026-11** | **Architectural commitments placed in Distributional Contracts.** The promised chapter on architectural commitments is not written here: how a guardrail commitment is declared and what its record holds are contractual matters, now set out in the composition chapter of *Distributional Contracts* (§8.9), and the three pointers to the chapter say so. §1.4.5, §1.4.5b and §1.4.8 now agree with *Clause Forms* that a guardrail's own rate-bounded contract leads and an observational zero-failures criterion complements it. No verdict, count or decision rule changes. This milestone appeared while the title still read 1.7.1. |
-| 22 | **2026-11** | **A categorical clause can sit on any contract.** Earlier text said categorical clauses are discharged architecturally and routed out of the service's own experiment, as though they could not be stated on a service's contract. Like any clause, a categorical clause can be stated on any contract and is evaluated observationally wherever it is stated. A guardrail is a separate pattern, used when the service cannot realistically be made to produce the prohibited content but a guardrail can be tested with it directly; its statistics stay here, the pattern itself is *Distributional Contracts*'. The one-line statement of the methodology is revised. No verdict, count or decision rule changes. This milestone appeared while the title still read 1.7.1. |
-| 23 | **2026-11** | **The guardrail's two error rates.** A paragraph of §1.4.5b said which criteria a safety-class contract requires; that is contractual and now sits in *Distributional Contracts* §8.9, which ties the allocation of a guardrail's two error rates to the Neyman–Pearson principle. §1.4.5b states the statistical consequence instead: a verdict requiring both the sensitivity and the specificity criterion to pass is an intersection–union test, so the specificity criterion cannot raise the probability of wrongly passing the sensitivity claim. No verdict, count or decision rule changes. This milestone appeared while the title still read 1.7.1. |
+| #  | Date | Milestone |
+|----|------|-----------|
+| 1 | **2025-12** | **First issue.** Pass rates modelled as Bernoulli trials and binomial counts, with Wilson intervals. |
+| 2 | **2026-02** | **Latency added.** A second dimension, latency, measured by empirical percentiles. |
+| 3 | **2026-04** | **Stricter latency.** Latency measured on successful calls only, with an exact order-statistic bound. |
+| 4 | **2026-05** | **Worked examples corrected.** §§4.3–4.4 use the same construction as the rest of the document. |
+| 5 | **2026-05** | **Independence assumption explained.** New §1.3.1. |
+| 6 | **2026-05** | **Several criteria per contract.** Each criterion has its own pass rate and verdict; compliance and regression become separate procedures. |
+| 7 | **2026-05** | **Multi-criterion clarifications.** Every trial counts towards each criterion; one sampling serves all criteria. |
+| 8 | **2026-05** | **Criterion scope withdrawn.** Every sample is seen by every criterion. |
+| 9 | **2026-05** | **Terminology.** "Empirical" clauses renamed "rate-bounded"; new §1.4.5b covers guardrails. |
+| 10 | **2026-05** | **Guardrail clarifications** in §1.4.5b. |
+| 11 | **2026-05** | **Accumulation withdrawn.** §1.5.5 covers expiry only. |
+| 12 | **2026-06** | **Editorial consolidation.** Repeated formulas and examples replaced by cross-references. |
+| 13 | **2026-07** | **Power for baseline-derived thresholds.** New §5.4.1. |
+| 14 | **2026-07** | **Operational approaches reconciled** in §6. |
+| 15 | **2026-08** | **Zero baseline stated.** New §4.3.4: such a design is refused. |
+| 16 | **2026-09** | **1.5.0: new decision rules.** Fisher's test for regression, the exact binomial test for compliance and explicit latency limits, a rank rule for latency regression; Wilson is descriptive only. Verdicts can differ from 1.4.1, which the mavai-R 0.10.13 fixtures reproduce. |
+| 17 | **2026-10** | **1.6.0: every assertion enforced by default.** A run-time switch can make correctness, latency or both advisory. Verdicts can differ: a latency breach that warned under 1.5.0 fails. |
+| 18 | **2026-10** | **1.7.0: SMOKE decides by its own rule** (§5.7.3), with `compliance/smoke-exact-binomial` and `latency/smoke-compliance-exact-binomial`. VERIFICATION unchanged. |
+| 19 | **2026-10** | **1.7.1: SMOKE decisions enter neither envelope** (§1.4.6). No verdict changes. |
+| 20 | **2026-10** | **Denominator-policy residue removed** from §8.4.5. No verdict changes. |
+| 21 | **2026-11** | **Architectural commitments placed in *Distributional Contracts*** §8.9; §1.4.5, §1.4.5b and §1.4.8 aligned with *Clause Forms*. No verdict changes. |
+| 22 | **2026-11** | **A categorical clause can sit on any contract.** A guardrail is a separate pattern. No verdict changes. |
+| 23 | **2026-11** | **The guardrail's two error rates.** §1.4.5b states the intersection–union property. No verdict changes. |
 
-Each milestone builds on the one before; milestones 11, 16 and 17 withdraw earlier claims. The Bernoulli/binomial model of milestone 1 is still the model; since milestone 16, Wilson describes results but no longer decides verdicts.
+Milestones 11, 16 and 17 withdraw earlier claims.
 
 ---
 
 ## Forward Scope
 
-The items once targeted for 1.4, deferred from 1.3 because each required coordination with downstream frameworks and fixtures, stand as follows in 1.5.0:
-
 - **1.4-S1**: Baseline indexing carries sampling identity. Open. Under the model of §1.4.2 a baseline is one run over one sampling that all its criteria share, and differing input populations are separate contracts with their own baselines (§1.5.6); what remains is recording that sampling's identifier on the baseline.
-- **1.4-S2**: Threshold-notation cleanup separating the Wilson real-valued output, the integer cutoff, the displayed rate, and the compliance requirement. Resolved by milestone 16: no decision rule produces a real-valued Wilson output any more, and the binding artefacts — the regression cutoff $c$, the compliance count $k_{\min}$, the latency rank — are defined in §3.4, §3.6, §12.4.2 and Appendix A, with the displayed rate $c/n_t$ and the requirement $p_{\mathrm{req}}$ kept apart from them.
-- **1.4-S3**: Predictive / two-sample treatment of latency regression. Resolved by milestone 16, with `latency/precedence` (§12.4).
 
 ---
 
@@ -482,7 +478,7 @@ A criterion is evaluated on every trial of the sampling — every sample is pres
 
 A criterion's denominator $n_c$ is therefore simply the size $N$ of the sampling; the success count $K_c$ is the number that PASSed; $\hat{p}_c = K_c / n_c$. **Every trial counts.** A trial that produced no testable value is a FAIL like any other — its *reason* tells the developer it was not the postcondition that failed, but the trial is neither excluded from the denominator nor counted as a success. This is a single, uniform rule: there is no per-criterion denominator policy, no enum to choose, and no exclusion of unproducible trials.
 
-> **Terminology.** Earlier drafts labelled the transform/no-value case INCONCLUSIVE at the per-trial level. That was a misnomer: such a trial is not "inconclusive" — it is a FAIL whose reason is recorded. INCONCLUSIVE has its proper meaning only at the **verdict** level (§1.4.5, §1.4.6): a criterion's *verdict* is INCONCLUSIVE when the statistical procedure cannot render PASS or FAIL at all — no outcome could pass the compliance test at the observed size, $n_c = 0$, or covariates are misaligned. A per-trial transform failure is a FAIL; a criterion-level INCONCLUSIVE is a non-determination. The two must not be conflated.
+> **Terminology.** A trial that yields no testable value is not "inconclusive": it is a FAIL whose reason is recorded. INCONCLUSIVE has its proper meaning only at the **verdict** level (§1.4.5, §1.4.6): a criterion's *verdict* is INCONCLUSIVE when the statistical procedure cannot render PASS or FAIL at all — no outcome could pass the compliance test at the observed size, $n_c = 0$, or covariates are misaligned. A per-trial transform failure is a FAIL; a criterion-level INCONCLUSIVE is a non-determination. The two must not be conflated.
 
 Every sample is seen by every criterion, so nothing narrows a functional criterion's denominator below $N$. The one place a denominator legitimately narrows anywhere in the methodology is the latency dimension (§12.2.1): latency is summarised over the samples that pass every functional criterion, whereas a functional criterion's denominator is always the full sampling.
 
@@ -1158,7 +1154,7 @@ $$c = 91, \qquad \text{decision: PASS iff } K_t \ge 91,$$
 
 with displayed rate $c/n_t = 0.91$. Two artefacts co-exist and have distinct roles in the report: the integer cutoff $c = 91$, the binding decision rule; and the displayed rate $c/n_t = 0.910000$, a human-readable summary of it.
 
-**Structural properties.** The cutoff is non-decreasing in $K_b$: a better baseline never demands less of the test. There is no special case at $K_b = n_b$ — the perfect-baseline map of 1.4.1 is withdrawn (§4.3) — and $c = 0$ at $K_b = 0$ (§4.3.4). The PASS set is always the interval $\{c, \ldots, n_t\}$.
+**Structural properties.** The cutoff is non-decreasing in $K_b$: a better baseline never demands less of the test. There is no special case at $K_b = n_b$ (§4.3), and $c = 0$ at $K_b = 0$ (§4.3.4). The PASS set is always the interval $\{c, \ldots, n_t\}$.
 
 **Calibration semantics.** The random experiment the rule calibrates draws the baseline count and the test count afresh, independently, under one unchanged success probability $p$: $K_b \sim \text{Bin}(n_b, p)$ and $K_t \sim \text{Bin}(n_t, p)$. The probability of a false degradation signal in that experiment is
 
@@ -1208,23 +1204,23 @@ For a baseline of $K_b = 951$ successes in $n_b = 1000$ trials:
 
 **Observation**: smaller tests have lower displayed rates $c/n_t$ at the same $\alpha$, because a small test proves less and can demand less.
 
-The canonical cases below show the rule across baseline sizes and at the boundaries, with the 1.4.1 cutoff beside each for comparison:
+The canonical cases below show the rule across baseline sizes and at the boundaries:
 
-| Case                       | $K_b$ | $n_b$ | $n_t$ | $\alpha$ | $c$                         | $c$ (1.4.1) |
-|----------------------------|-------|-------|-------|----------|-----------------------------|-------------|
-| Ordinary                   | 951   | 1000  | 100   | 0.05     | 91                          | 91          |
-| Ordinary, larger baseline  | 1902  | 2000  | 100   | 0.05     | 91                          | 91          |
-| Equal sizes                | 951   | 1000  | 1000  | 0.05     | 933                         | 939         |
-| Large baseline, small test | 9510  | 10000 | 100   | 0.05     | 91                          | 91          |
-| Near-perfect baseline      | 99    | 100   | 100   | 0.05     | 94                          | 96          |
-| Perfect baseline           | 100   | 100   | 100   | 0.05     | 96                          | 94          |
-| Perfect baseline, large    | 1000  | 1000  | 100   | 0.05     | 99                          | 97          |
-| Zero baseline              | 0     | 100   | 50    | 0.05     | 0                           | 0           |
-| Small baseline             | 27    | 30    | 25    | 0.05     | 18                          | 19          |
-| $\alpha = 0.01$            | 951   | 1000  | 1000  | 0.01     | 925                         | 933         |
-| Test larger than baseline  | 95    | 100   | 200   | 0.05     | `TEST_LARGER_THAN_BASELINE` | 184         |
+| Case                       | $K_b$ | $n_b$ | $n_t$ | $\alpha$ | $c$                         |
+|----------------------------|-------|-------|-------|----------|-----------------------------|
+| Ordinary                   | 951   | 1000  | 100   | 0.05     | 91                          |
+| Ordinary, larger baseline  | 1902  | 2000  | 100   | 0.05     | 91                          |
+| Equal sizes                | 951   | 1000  | 1000  | 0.05     | 933                         |
+| Large baseline, small test | 9510  | 10000 | 100   | 0.05     | 91                          |
+| Near-perfect baseline      | 99    | 100   | 100   | 0.05     | 94                          |
+| Perfect baseline           | 100   | 100   | 100   | 0.05     | 96                          |
+| Perfect baseline, large    | 1000  | 1000  | 100   | 0.05     | 99                          |
+| Zero baseline              | 0     | 100   | 50    | 0.05     | 0                           |
+| Small baseline             | 27    | 30    | 25    | 0.05     | 18                          |
+| $\alpha = 0.01$            | 951   | 1000  | 1000  | 0.01     | 925                         |
+| Test larger than baseline  | 95    | 100   | 200   | 0.05     | `TEST_LARGER_THAN_BASELINE` |
 
-The near-perfect and perfect rows show the repair of §4.3: 99 of 100 gives a cutoff of 94 and 100 of 100 gives 96, where 1.4.1 gave 96 and then 94.
+The near-perfect and perfect rows show the cutoff rising with the baseline: 99 of 100 gives a cutoff of 94, and 100 of 100 gives 96.
 
 ### 3.6 Testing Against a Given Threshold (Compliance)
 
@@ -1289,8 +1285,6 @@ To demonstrate $p > p_{\mathrm{req}}$ at $\alpha = 0.05$ with power 0.80 when th
 
 ## 4. The Perfect Baseline Problem ($\hat{p} = 1$)
 
-> **Status in this revision.** The perfect baseline no longer needs a special treatment. The 1.4.1 construction replaced a perfect baseline's rate by its Wilson lower bound before deriving the test threshold; that map made the cutoff fall at the last step, so that a perfect baseline demanded less of the test than a near-perfect one (§4.3). `regression/fisher` (§3.4) uses the baseline's counts directly, handles $K_b = n_b$ like any other count, and gives a cutoff that never decreases as the baseline improves. This section keeps its numbering; §4.3 records the withdrawn map in place.
-
 ### 4.1 Problem Statement
 
 A critical pathology arises when the baseline experiment observes **zero failures**:
@@ -1324,11 +1318,11 @@ The Rule of Three is an approximation to the Clopper–Pearson construction in t
 
 (Side note: this assumes conditions are stable and runs are independent.)
 
-### 4.3 The Wilson Lower Bound Solution (withdrawn)
+### 4.3 The Perfect Baseline Under the Fisher Rule
 
-This subsection described the 1.4.1 treatment, which is withdrawn as a decision procedure. It computed the one-sided Wilson lower bound of a perfect baseline, $p_0 = n/(n + z^2)$, used $p_0$ in place of $\hat{p}$ as the effective baseline, and then took the Wilson lower bound of $p_0$ at the test size as the threshold. Feeding one lower bound into another applied a discount at $k = n$ only, and the cutoff dropped at the last step: 99 of 100 gave 96 while 100 of 100 gave 94, and 999 of 1000 gave 98 while 1000 of 1000 gave 97. The 1.4.1 rule survives in mavai-R only, as `regression/wilson-reference`, to reproduce historical outputs.
+The Fisher rule (§3.4) takes a perfect baseline's counts as they are; no bound is substituted for its rate. The cutoff stays non-decreasing in $K_b$ up to and including $K_b = n_b$, so a perfect baseline never demands less of the test than a near-perfect one.
 
-**Key implementation requirement** (unchanged): baselines store $(k, n)$, not merely $\hat{p}$. The Fisher rule uses both counts, and only the counts distinguish a perfect baseline of 100 trials from one of 10,000.
+**Key implementation requirement**: baselines store $(k, n)$, not merely $\hat{p}$. The Fisher rule uses both counts, and only the counts distinguish a perfect baseline of 100 trials from one of 10,000.
 
 #### 4.3.1 Wilson Lower Bound Formula
 
@@ -1340,26 +1334,26 @@ When $\hat{p} = 1$, this simplifies to:
 
 $$p_{\text{lower}} = \frac{n}{n + z^2}$$
 
-It remains a descriptive bound (§2.3.1). It no longer enters any threshold derivation.
+It is a descriptive bound (§2.3.1) and enters no threshold derivation.
 
 #### 4.3.2 Worked Example
 
 **Baseline**: $n_b = 1000$ trials, $K_b = 1000$ successes, so $\hat{p}_{\text{baseline}} = 1.0$. **Test**: $n_t = 100$, $\alpha = 0.05$.
 
-The Fisher cutoff (§3.4) is $c = 99$: the test passes with at least 99 successes out of 100. The 1.4.1 construction gave 97 here, through the effective rate $p_0 \approx 0.9973$ and a threshold of $\approx 0.9686$.
+The Fisher cutoff (§3.4) is $c = 99$: the test passes with at least 99 successes out of 100.
 
-This is intentionally less strict than requiring 100 successes out of 100. The experiment's perfect observation establishes strong evidence of high reliability, but the test still has sampling variability, and the Fisher rule prices both samples without treating the perfect baseline as proof of $p = 1$. It is stricter than the 1.4.1 answer because 1000 successes in 1000 trials is strong evidence, and the withdrawn map discounted it twice.
+This is intentionally less strict than requiring 100 successes out of 100. The experiment's perfect observation establishes strong evidence of high reliability, but the test still has sampling variability, and the Fisher rule prices both samples without treating the perfect baseline as proof of $p = 1$.
 
 #### 4.3.3 Reference Table: Cutoffs for 100% Baselines
 
-Each cutoff below is the Fisher cutoff of §3.4 at $\alpha = 0.05$ for a perfect baseline ($K_b = n_b$), with the withdrawn 1.4.1 cutoff beside it:
+Each cutoff below is the Fisher cutoff of §3.4 at $\alpha = 0.05$ for a perfect baseline ($K_b = n_b$):
 
-| Baseline $n_b$ | Test $n_t = 50$: $c$ (1.4.1) | Test $n_t = 100$: $c$ (1.4.1) |
-|----------------|------------------------------|-------------------------------|
-| 100            | 48 (46)                      | 96 (94)                       |
-| 300            | 49 (47)                      | 98 (96)                       |
-| 1000           | 50 (48)                      | 99 (97)                       |
-| 3000           | 50 (48)                      | 100 (98)                      |
+| Baseline $n_b$ | Test $n_t = 50$: $c$ | Test $n_t = 100$: $c$ |
+|----------------|----------------------|-----------------------|
+| 100            | 48                   | 96                    |
+| 300            | 49                   | 98                    |
+| 1000           | 50                   | 99                    |
+| 3000           | 50                   | 100                   |
 
 Against a perfect baseline of 3000 trials, a test of 100 must itself be perfect: at that baseline size, a single failure in 100 is already evidence of degradation at $\alpha = 0.05$.
 
@@ -1386,7 +1380,7 @@ The general requirement of §4.3 — that baselines store $(k, n)$ and not merel
 1. For a 100-sample test, $c = 100$: the test passes only with 100 successes out of 100.
 2. For a 50-sample test, $c = 50$: the test passes only with 50 successes out of 50.
 
-**Result**: Against 2000 flawless baseline transactions, a single failure in a test of 50 or 100 is already a degradation signal at $\alpha = 0.05$, and the false-degradation-signal probability of the procedure stays at or below 5%. The 1.4.1 construction admitted 98 of 100 and 48 of 50 here, because it discounted the perfect baseline twice (§4.3). A team that wants to tolerate the occasional failure in a small test against so strong a baseline should lower $\alpha$ only with its eyes open: the evidence says the service has almost never failed.
+**Result**: Against 2000 flawless baseline transactions, a single failure in a test of 50 or 100 is already a degradation signal at $\alpha = 0.05$, and the false-degradation-signal probability of the procedure stays at or below 5%. A team that wants to tolerate the occasional failure in a small test against so strong a baseline should lower $\alpha$ only with its eyes open: the evidence says the service has almost never failed.
 
 ### 4.5 Theoretical Note: Beta-Binomial Alternative
 
@@ -1449,7 +1443,7 @@ $$\text{Power}(\delta) \;=\; \sum_{k_b=0}^{n_b} P_{p_b}(K_b = k_b)\, P_{p_b - \d
 
 with $c(k_b)$ the Fisher cutoff of §3.4. It is a finite sum; no normal approximation is involved. A normal-approximation formula prices a different rule and can misstate the operative rule's power by many points.
 
-**Example**: Detecting a drop from $p_b = 0.95$ to $p_t = 0.90$ with a baseline of $n_b = 1000$ trials and a test of $n_t = 100$ at $\alpha = 0.05$: the exact power is $0.533$. With 100 samples, the test detects a 5-percentage-point degradation about half the time. (1.4.1 printed 68% here, from a normal-approximation formula; its own rule's exact power was 54.9%.)
+**Example**: Detecting a drop from $p_b = 0.95$ to $p_t = 0.90$ with a baseline of $n_b = 1000$ trials and a test of $n_t = 100$ at $\alpha = 0.05$: the exact power is $0.533$. With 100 samples, the test detects a 5-percentage-point degradation about half the time.
 
 **Epistemic status.** Exact result under the working model; the baseline rate $p_b$ it takes is the operator's assumption about the service, usually the baseline's observed rate.
 
@@ -1506,7 +1500,7 @@ The two operations can disagree, and each answers its own question. For the §10
 
 $$n_{\text{req}} = 1243, \qquad \text{Power}(1243) = 0.8002.$$
 
-At 891 samples — the answer 1.4.1 gave for this example, from a normal approximation against the withdrawn Wilson floor — the exact power is 0.708. Inverting instead at an affordable $n_t = 100$: the detectable rate is $p_{\mathrm{design}} \approx 0.7701$. With 100 samples, only a collapse of roughly ten percentage points from the 87% baseline is detected with 80% power; smaller degradations pass more often than that.
+Inverting at an affordable $n_t = 100$ instead: the detectable rate is $p_{\mathrm{design}} \approx 0.7701$. With 100 samples, only a collapse of roughly ten percentage points from the 87% baseline is detected with 80% power; smaller degradations pass more often than that.
 
 **Scenario walk-through** (design sizing). A baseline run of 2000 trials is planned for a service expected to deliver $p_0 = 0.96$. The operator wants a service that has fallen to $p_{\mathrm{design}} = 0.93$ to fail the test at least four times in five; $\alpha = 0.05$, target power $1-\beta = 0.80$. How many samples must the test run? Watching the cutoff and the power at candidate sizes shows what is being paid for (the cutoff shown is the one a baseline of exactly 1920 successes would give):
 
@@ -1534,7 +1528,7 @@ zero wherever the design is infeasible (§5.7.1), and the required sample size i
 
 **Example**: a 95% requirement, demonstrated with 80% power when the true rate is 97% ($\delta = 0.02$), at $\alpha = 0.05$: $n = 694$. Power first reaches 0.80 at 601 samples but dips below it again before 694.
 
-**Example**: a 99.5% requirement at $\alpha = 0.05$ with 80% power. A margin of 1% leaves the unit interval, so the alternative is the midway rate 99.75%, and the exact size is $n = 4374$. The 1.4.1 text sized this requirement at about 477 samples using the opposite (degradation) orientation; at 477 samples a 99.5% requirement cannot PASS at any outcome, since the feasibility minimum is 598.
+**Example**: a 99.5% requirement at $\alpha = 0.05$ with 80% power. A margin of 1% leaves the unit interval, so the alternative is the midway rate 99.75%, and the exact size is $n = 4374$.
 
 The reference table in §3.6 gives further sizes.
 
@@ -1603,8 +1597,6 @@ A feasible design is one in which PASS is possible; it is not thereby adequately
 | 0.995                       | 598        | At 598 samples PASS requires zero failures             |
 | 0.999                       | 2,995      | Very high reliability                                  |
 | 0.9999                      | 29,956     | Extreme reliability — impractical for most test suites |
-
-(The 1.4.1 gate used the Wilson bound and a rounded $z$; its minimums — 3, 11, 25, 52, 268, 539, 2,704 and 27,058 — admitted designs, such as 99.5% at 539 to 597 samples, that cannot PASS at any outcome under the exact rule.)
 
 **What happens when infeasible**: A VERIFICATION test with $N < N_{\min}$ is refused before any sample runs, with the configuration error **`COMPLIANCE_INFEASIBLE`**. The failure message includes:
 
@@ -2948,11 +2940,11 @@ A test with observed $\hat{Q}_{\text{test}}(p) \leq \tau$ means: the test's perc
 
 A breach ($\hat{Q}_{\text{test}}(p) > \tau$) means: the test's percentile exceeds a threshold that, with no degradation, it would exceed with probability at most $\alpha$ — evidence of latency degradation at that level.
 
-**Confidence versus prediction.** Until milestone 16 the threshold was the binomial order-statistic upper confidence bound on the baseline's true quantile: $\tau = t_{(k)}$ with $k$ the smallest rank at which $P(\text{Bin}(n_b, p) \ge k) \le \alpha$. That construction is a valid theorem about the baseline's quantile, and it remains available as a descriptive bound, but it is not a calibrated threshold for a future test's percentile: it ignores the test's own sampling variation, and its no-degradation breach probability was uncontrolled — 22.3% in the §12.4.5 example at nominal 5%, and worst when the test is small relative to the baseline. The precedence rank answers the question the test asks. The 1.4.1 construction survives in mavai-R only, as `latency/order-statistic-bound`, to reproduce historical outputs.
+**Confidence versus prediction.** The binomial order-statistic upper confidence bound on the baseline's true quantile, $t_{(k)}$ with $k$ the smallest rank at which $P(\text{Bin}(n_b, p) \ge k) \le \alpha$, is a valid theorem about the baseline's quantile and serves as a descriptive bound, but it is not a calibrated threshold for a future test's percentile: it ignores the test's own sampling variation, and its no-degradation breach probability is uncontrolled — 22.3% in the §12.4.5 example at nominal 5%, and worst when the test is small relative to the baseline. The precedence rank answers the question the test asks.
 
-#### 12.4.4 Supporting Comparison: Bootstrap (withdrawn)
+#### 12.4.4 Why Not a Standard-Error Bound
 
-This subsection compared the withdrawn order-statistic confidence bound of §12.4.3 with a percentile bootstrap, as an illustration for engineering readers. The comparison concerns a bound that no longer decides anything, and its fixture (`latency_threshold_bootstrap`) is no longer published; `scripts/bootstrap_compare.R` in mavai-R still reproduces the table for historical reference. A standard-error scaling such as $s/\sqrt{n_s}$ would understate tail-percentile uncertainty on heavy-tailed distributions by a factor that grows with skewness; the rank-based construction of §12.4.2 has no such defect.
+A standard-error scaling such as $s/\sqrt{n_s}$ understates tail-percentile uncertainty on heavy-tailed distributions by a factor that grows with skewness; the rank-based construction of §12.4.2 has no such defect.
 
 #### 12.4.5 Worked Example
 
@@ -2964,7 +2956,7 @@ $$\text{breach}(910) \approx 5.94\% > 5\%, \qquad \text{breach}(911) \approx 4.9
 
 So the threshold is $\tau_{0.95} = t_{(911)} = 875\text{ms}$, the 911th-smallest baseline latency — an observed value in milliseconds, by construction. The baseline's own p95 is its $\lceil 0.95 \cdot 935 \rceil = 889$th value, so the threshold sits 22 ranks above the baseline percentile.
 
-A subsequent test with $\hat{Q}_{0.95, \text{test}} \leq t_{(911)}$ passes; a test percentile above $t_{(911)}$ breaches the threshold and constitutes evidence of degradation at $\alpha = 0.05$. The 1.4.1 construction used rank 900 here, whose no-degradation breach probability for a 192-sample test is 22.34%.
+A subsequent test with $\hat{Q}_{0.95, \text{test}} \leq t_{(911)}$ passes; a test percentile above $t_{(911)}$ breaches the threshold and constitutes evidence of degradation at $\alpha = 0.05$. The confidence bound of §12.4.3 would sit at rank 900 here, whose no-degradation breach probability for a 192-sample test is 22.34%.
 
 ### 12.5 Sample Size Requirements for Percentile Estimation
 
@@ -2992,7 +2984,7 @@ These thresholds ensure that the percentile estimate is not degenerate (i.e., no
 
 A non-degenerate empirical percentile is necessary but **not sufficient** for the precedence rank of §12.4.2 to exist. The existence condition is the one §12.4.2 states: some rank $k \le n_b$ must achieve $\text{breach}(k) \le \alpha$ for the test that will run. Because $\text{breach}(k)$ decreases in $k$, a rank exists exactly when the top rank does, $\text{breach}(n_b) \le \alpha$. The condition depends on the baseline size, the test size, the percentile and $\alpha$ together. The test size that decides is the actual number of successful latencies, known after the run; before the run the search on the expected number serves planning (§12.5.3). At p95 and $\alpha = 0.05$, a baseline of 100 latencies cannot support a threshold for a test of 15, and a baseline of 1000 can (rank 998).
 
-The Wilks (1941) table of minimum sample sizes that stood here, $n_s \ge \lceil \log\alpha / \log p \rceil$, is withdrawn: it was the existence condition of the withdrawn confidence bound of §12.4.3, and it is neither necessary nor sufficient for the precedence rank. The same number returns in another role: for an explicit requirement it is the feasibility minimum of `latency/compliance-exact-binomial` (§12.3.4), the fewest successful latencies at which the all-within outcome passes.
+The Wilks (1941) minimum $n_s \ge \lceil \log\alpha / \log p \rceil$ is neither necessary nor sufficient for the precedence rank. For an explicit requirement it is the feasibility minimum of `latency/compliance-exact-binomial` (§12.3.4): the fewest successful latencies at which the all-within outcome passes.
 
 For planning, the smallest baseline, no smaller than the test, from which a rank exists at $\alpha = 0.05$ is:
 
@@ -3084,7 +3076,7 @@ Every assertion a test declares is **enforced** by default: its functional crite
 
 **Intent is a separate matter.** The switch does not change the test's intent. A SMOKE-intent run (§5.7.2) keeps its own treatment: its normative pass-rate and explicit latency verdicts are decided by the SMOKE rules (§5.7.3, §12.3.4) and carry no verification claim, an undersized percentile is marked indicative (§12.5.4), and the raw percentile comparison of §12.3.4 stays available as a labelled figure.
 
-**Why enforcement is the default.** In methodology 1.5.0 latency assertions were advisory by default and enforcement was opted into, on the ground that a baseline recorded on dedicated CI hardware — $Q_{0.95} = 480\text{ms}$, say — would fail a developer's laptop that observes $Q_{0.95} = 650\text{ms}$ under competing load. That situation is a choice of evidence, not a reason for an assertion not to count. If the threshold is empirical, the laptop's test consumes a baseline measured on the laptop, and a FAIL against it is a genuine regression. If the threshold is normative, it states what production must achieve, and the developer whose laptop cannot meet it switches latency to advisory there and reads the verdict the rule still reaches. A default that made one dimension count only on request would let a declared assertion decide nothing without anyone choosing that it should.
+**Why enforcement is the default.** The case for advisory latency by default is that a baseline recorded on dedicated CI hardware — $Q_{0.95} = 480\text{ms}$, say — would fail a developer's laptop that observes $Q_{0.95} = 650\text{ms}$ under competing load. That situation is a choice of evidence, not a reason for an assertion not to count. If the threshold is empirical, the laptop's test consumes a baseline measured on the laptop, and a FAIL against it is a genuine regression. If the threshold is normative, it states what production must achieve, and the developer whose laptop cannot meet it switches latency to advisory there and reads the verdict the rule still reaches. A default that made one dimension count only on request would let a declared assertion decide nothing without anyone choosing that it should.
 
 ### 12.7 Relationship to Pass-Rate Testing
 
