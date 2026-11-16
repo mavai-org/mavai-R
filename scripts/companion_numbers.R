@@ -119,12 +119,10 @@ canon <- list(list("Ordinary", 951, 1000, 100, 0.05), list("Ordinary, larger bas
               list("Perfect baseline, large", 1000, 1000, 100, 0.05), list("Zero baseline", 0, 100, 50, 0.05),
               list("Small baseline", 27, 30, 25, 0.05), list("$\\alpha = 0.01$", 951, 1000, 1000, 0.01))
 for (r in canon) {
-  chk("3.5", r[[1]], sprintf("| %s | %d | %d | %d | %g | %d | %d |", r[[1]], r[[2]], r[[3]], r[[4]], r[[5]],
-                             fisher_cutoff(r[[2]], r[[3]], r[[4]], r[[5]]),
-                             legacy_wilson_reference_cutoff(r[[2]], r[[3]], r[[4]], r[[5]])))
+  chk("3.5", r[[1]], sprintf("| %s | %d | %d | %d | %g | %d |", r[[1]], r[[2]], r[[3]], r[[4]], r[[5]],
+                             fisher_cutoff(r[[2]], r[[3]], r[[4]], r[[5]])))
 }
-chk("3.5", "refused row", sprintf("| 95 | 100 | 200 | 0.05 | `%s` | %d |", regression_configuration_error(100, 200),
-                                  legacy_wilson_reference_cutoff(95, 100, 200, 0.05)))
+chk("3.5", "refused row", sprintf("| 95 | 100 | 200 | 0.05 | `%s` |", regression_configuration_error(100, 200)))
 
 # --- §3.6 compliance -----------------------------------------------------------
 fc <- function(pr, n) pbinom(exact_binomial_k_min(pr, n, 0.05) - 1, n, pr, lower.tail = FALSE)
@@ -145,33 +143,23 @@ stopifnot(is.na(sz(0.999, 0.01)))
 # --- §4 perfect and zero baselines --------------------------------------------
 chk("4.1", "perfect 1000/1000 at 100", sprintf("the cutoff is $c = %d$", fisher_cutoff(1000, 1000, 100, 0.05)))
 chk("4.3.2", "perfect 1000/1000", sprintf("The Fisher cutoff (§3.4) is $c = %d$", fisher_cutoff(1000, 1000, 100, 0.05)))
-chk("4.3", "legacy drop", sprintf("99 of 100 gave %d while 100 of 100 gave %d", legacy_wilson_reference_cutoff(99, 100, 100, 0.05),
-                                  legacy_wilson_reference_cutoff(100, 100, 100, 0.05)))
-chk("4.3", "legacy drop, 1000", sprintf("999 of 1000 gave %d while 1000 of 1000 gave %d", legacy_wilson_reference_cutoff(999, 1000, 100, 0.05),
-                                        legacy_wilson_reference_cutoff(1000, 1000, 100, 0.05)))
 for (nb in c(100, 300, 1000, 3000)) {
-  chk("4.3.3", sprintf("perfect %d", nb), sprintf("| %d | %d (%d) | %d (%d) |", nb,
-      fisher_cutoff(nb, nb, 50, 0.05), legacy_wilson_reference_cutoff(nb, nb, 50, 0.05),
-      fisher_cutoff(nb, nb, 100, 0.05), legacy_wilson_reference_cutoff(nb, nb, 100, 0.05)))
+  chk("4.3.3", sprintf("perfect %d", nb), sprintf("| %d | %d | %d |", nb,
+      fisher_cutoff(nb, nb, 50, 0.05), fisher_cutoff(nb, nb, 100, 0.05)))
 }
 chk("4.3.4", "zero baseline", if (all(fisher_cutoffs(100, 50, 0.05)[1] == 0L, fisher_cutoffs(1000, 200, 0.001)[1] == 0L))
   "the cutoff is $c = 0$ at every" else "ZERO-BASELINE CUTOFF IS NOT 0")
 chk("4.4", "2000/2000 at 100", sprintf("For a 100-sample test, $c = %d$", fisher_cutoff(2000, 2000, 100, 0.05)))
 chk("4.4", "2000/2000 at 50", sprintf("For a 50-sample test, $c = %d$", fisher_cutoff(2000, 2000, 50, 0.05)))
-chk("4.4", "legacy 2000/2000", sprintf("admitted %d of 100 and %d of 50", legacy_wilson_reference_cutoff(2000, 2000, 100, 0.05),
-                                       legacy_wilson_reference_cutoff(2000, 2000, 50, 0.05)))
 
 # --- §5 power and sizing ----------------------------------------------------------
 chk("5.3", "power 0.95 -> 0.90", sprintf("the exact power is $%.3f$", fisher_power(1000, 100, 0.05, 0.95, 0.05)))
-chk("5.3", "legacy exact power", sprintf("exact power was %.1f%%", 100 * {
-  lc <- legacy_wilson_reference_cutoff(951, 1000, 100, 0.05); pbinom(lc - 1, 100, 0.90) }))
 for (pm in c(0.85, 0.90, 0.92)) {
   req <- vapply(c(0.8, 0.9, 0.95), function(pw) risk_sizing_required_n(0.95, 2000, pm, 0.05, pw), integer(1))
   chk("5.4", sprintf("table p_min %.2f", pm), sprintf("| %d | %d | %d |", req[1], req[2], req[3]))
 }
 chk("5.4.1", "worked example n", sprintf("n_{\\text{req}} = %d", risk_sizing_required_n(0.87, 3000, 0.84, 0.05, 0.80)))
 chk("5.4.1", "worked example power", sprintf("\\text{Power}(1243) = %.4f", risk_sizing_power(1243, 0.87, 3000, 0.84, 0.05)))
-chk("5.4.1", "power at 891", sprintf("the exact power is %.3f", risk_sizing_power(891, 0.87, 3000, 0.84, 0.05)))
 chk("5.4.1", "detectable rate at 100", sprintf("p_{\\mathrm{design}} \\approx %.4f", risk_sizing_detectable_rate(100, 0.87, 3000, 0.05, 0.80)))
 for (n in c(50, 150)) {
   chk("5.4.1", sprintf("walk-through %d", n), sprintf("| %d | %d | %.2f |", n, fisher_cutoff(1920, 2000, n, 0.05),
@@ -186,8 +174,6 @@ chk("5.4.1", "failure above the design rate", sprintf("a service truly at $0.94$
 s95 <- compliance_exact_sizing(0.95, 0.02, 0.05)
 chk("5.5", "95% sizing", sprintf("at $\\alpha = 0.05$: $n = %d$. Power first reaches 0.80 at %d samples", s95$required_samples, s95$first_crossing))
 chk("5.5", "99.5% midway sizing", sprintf("the exact size is $n = %d$", sz(0.995, 0.01)))
-chk("5.5", "99.5% feasibility", sprintf("the feasibility minimum is %d", exact_binomial_min_feasible_n(0.995, 0.05)))
-stopifnot(is.na(exact_binomial_k_min(0.995, 477, 0.05)))
 chk("5.5", "99.9% at alpha 0.10", sprintf("(%s at $\\alpha = 0.10$)", comma(sz(0.999, 0.01, 0.10))))
 chk("5.6", "MDD 1000/100", sprintf("it is %.4f: the design detects a drop to about %.3f",
                                     fisher_minimum_detectable_degradation(1000, 100, 0.05, 0.95),
@@ -195,8 +181,6 @@ chk("5.6", "MDD 1000/100", sprintf("it is %.4f: the design detects a drop to abo
 for (pr in c(0.50, 0.80, 0.90, 0.95, 0.99, 0.995, 0.999, 0.9999)) {
   chk("5.7.1", sprintf("N_min %g", pr), sprintf("| %s | %s |", format(pr, nsmall = 2), comma(exact_binomial_min_feasible_n(pr, 0.05))))
 }
-chk("5.7.1", "legacy N_min list", paste0("its minimums — ", paste(comma(vapply(c(0.5, 0.8, 0.9, 0.95, 0.99, 0.995),
-  function(p) legacy_wilson_feasibility_min_n(p, 0.05), integer(1))), collapse = ", ")))
 
 # --- §6.3 threshold-first ----------------------------------------------------------
 chk("6.3", "implied alpha, cutoff 91", sprintf("A declared cutoff of 91 has implied $\\alpha = %.4f$", fisher_implied_alpha(951, 1000, 100, 91)))
@@ -211,7 +195,7 @@ chk("12.4.5", "breach at k", sprintf("\\text{breach}(%d) \\approx %s \\le 5\\%%"
 lat <- jsonlite::fromJSON(file.path("inst", "cases", "latency_threshold.json"), simplifyVector = FALSE)$cases[[1]]$expected
 chk("12.4.5", "threshold value", sprintf("t_{(%d)} = %d\\text{ms}", lat$rank, lat$threshold))
 chk("12.4.5", "baseline p95", sprintf("Q_{0.95} = %d\\text{ms}", lat$baseline_percentile))
-chk("12.4.5", "legacy rank and breach", sprintf("used rank %d here, whose no-degradation breach probability for a 192-sample test is %s",
+chk("12.4.5", "confidence-bound rank and breach", sprintf("would sit at rank %d here, whose no-degradation breach probability for a 192-sample test is %s",
                                                legacy_order_statistic_rank(935, 0.95, 0.05)$rank,
                                                pct2(latency_breach_probability(935, legacy_order_statistic_rank(935, 0.95, 0.05)$rank, 192, 0.95))))
 chk("12.5.2.1", "1000/15 rank", sprintf("and a baseline of 1000 can (rank %d)", latency_precedence_rank(1000, 15, 0.95, 0.05)))
@@ -303,13 +287,7 @@ for (m in c(5, 10, 20)) {
 }
 chk("8.5", "horizon of 50", sprintf("the independence benchmark gives $\\approx %d\\%%$", round(100 * (1 - 0.95^50))))
 for (pp in c(0.50, 0.90, 0.95, 0.99)) chk("12.2.2", sprintf("rank p%g of 200", 100 * pp), sprintf("| %d |", ceiling(pp * 200)))
-legacy_uncond <- function(nb, nt, p) {
-  lc <- legacy_wilson_reference_cutoff(0:nb, nb, nt, 0.05); regression_fail_probability(lc, nb, nt, p, p)
-}
-chk("5.2", "1.4.1 false alarms, equal sizes", sprintf("about %d%% with equal sizes", round(100 * legacy_uncond(1000, 1000, 0.95))))
-chk("5.2", "1.4.1 false alarms, ten-fold test", sprintf("about %d%% with a baseline of 100 and a test of 1000", round(100 * legacy_uncond(100, 1000, 0.95))))
-chk("5.2", "1.4.1 false alarms, small test", sprintf("(%.2f%% at $p = 0.99$ for a baseline of 1000 and a test of 25)", 100 * legacy_uncond(1000, 25, 0.99)))
-chk("12.4.3", "1.4.1 breach in the worked example", sprintf("%.1f%% in the §12.4.5 example",
+chk("12.4.3", "confidence-bound breach in the worked example", sprintf("%.1f%% in the §12.4.5 example",
     100 * latency_breach_probability(935, legacy_order_statistic_rank(935, 0.95, 0.05)$rank, 192, 0.95)))
 
 # --- report --------------------------------------------------------------------------
