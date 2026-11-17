@@ -1,6 +1,6 @@
 ---
 title: "Distributional Contracts for Stochastic Systems"
-author: "Version 0.9 · last updated 2026-11-05 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: "Version 0.9.1 · last updated 2026-11-17 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## 1. Document History
@@ -774,7 +774,7 @@ These are not deficiencies to be apologised for; they are honest boundaries of w
 
 [2] Meyer, B. *Object-Oriented Software Construction*, 2nd ed. Prentice Hall, 1997.
 
-[3] Mannion, M. F. "Statistical Companion Document: Formal Statistical Foundations for the Mavai® Methodology." Version 1.7.1. The mavai project family, 2026. Available at https://github.com/mavai-org/mavai-R/blob/main/docs/STATISTICAL-COMPANION.md.
+[3] Mannion, M. F. "Statistical Companion Document: Formal Statistical Foundations for the Mavai® Methodology." Version 1.7.2. The mavai project family, 2026. Available at https://github.com/mavai-org/mavai-R/blob/main/docs/STATISTICAL-COMPANION.md.
 
 [4] Younes, H. L. S. and Simmons, R. G. "Statistical probabilistic model checking with a focus on time-bounded properties." *Information and Computation*, vol. 204, no. 9, 2006, pp. 1368–1409.
 

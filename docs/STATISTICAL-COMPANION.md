@@ -2,7 +2,7 @@
 title: "Statistical Companion Document"
 subtitle: "Formal Statistical Foundations for the Mavai® Methodology"
 author: |
-  Version 1.7.1 · last updated 2026-10-22\
+  Version 1.7.2 · last updated 2026-11-17\
   Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA\
   Mavai® is a registered trademark of Michael Mannion in Switzerland (No. 856092).
 ---
