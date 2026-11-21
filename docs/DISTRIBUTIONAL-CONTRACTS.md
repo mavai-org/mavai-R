@@ -662,11 +662,11 @@ The guiding rule is therefore:
 
 ## 9. The mavai Project Family: Implementations of the Distributional Contract
 
-The preceding sections developed the distributional contract as a statistical model. This section describes the mavai project family, which implements the model as practical tooling for developers working with stochastic systems.
+This section describes the mavai project family, which implements the model as practical tooling for developers working with stochastic systems.
 
 The mavai project was created in response to a conspicuous gap in the testing landscape. The shortcomings of existing approaches to testing stochastic systems have been recognised in the literature. Christensen et al. [21] observe that "in practice, testers resort to running probabilistic programs an arbitrary number of times; hoping to trigger existing bugs, but without any guarantees," and propose ProbTest, a black-box unit testing method that uses the coupon collector's problem to determine sample sizes for bug detection in probabilistic programs. Their work confirms the need for statistically principled approaches and demonstrates that the problem admits tractable solutions, though their focus is on bug-finding rather than on contractual quality assurance over deployed services.
 
-The advent of Large Language Models brought stochastic behaviour from the margins of software engineering — where it had been treated as accidental and undesirable — to the centre. Services built on LLMs are inherently non-deterministic: the same input genuinely produces different outputs, and the distribution of those outputs *is* the service's behaviour. Yet the available testing tools offered no principled way to express, measure, or enforce quality expectations over such services. The mavai project family addresses this gap by providing direct operational realisations of the distributional contract across multiple language ecosystems.
+The advent of Large Language Models brought stochastic behaviour from the margins of software engineering — where it had been treated as accidental and undesirable — to the centre. Services built on LLMs are inherently non-deterministic: the same input genuinely produces different outputs, and the distribution of those outputs *is* the service's behaviour. Yet the available testing tools offered no principled way to express, measure, or enforce quality expectations over such services. The mavai project family addresses this gap.
 
 The methodology is implemented as language-native frameworks, each idiomatic to its ecosystem:
 
@@ -676,13 +676,13 @@ The methodology is implemented as language-native frameworks, each idiomatic to 
 | [feotest](https://github.com/mavai-org/feotest) | Rust     | Cargo test integration  | Idiomatic Rust, not a port   |
 | baseltest                                       | Python   | pytest plugin (planned) | —                            |
 
-Each framework provides a direct operational realisation of the distributional contract as described in this paper. Their features correspond to the elements of the model.
+Each framework is a direct operational realisation of the distributional contract, its features corresponding to the elements of the model.
 
 ### 9.1 Expressing a Distributional Contract
 
 Each framework gives the developer the means to express a distributional contract as a declarative specification. The functional dimension is defined through one or more **criteria**, each hosting one or more postconditions — syntactic validity, presence of required fields, schema adherence, semantic correctness, absence of disallowed content. Postconditions are grouped into criteria by the design rule of §4.5, each criterion its own statistical stream with its own threshold and confidence level. The developer may additionally declare latency thresholds — percentile-level bounds to which the service must adhere — expressing the temporal dimension of the contract.
 
-All frameworks evaluate both dimensions by the methods of this paper. Every verdict names the rule that produced it, by its versioned identifier, and reports the Wilson interval beside it only as a description of the observed rate. Every assertion is enforced by default, and a run-time switch can make a dimension advisory, as described under *The Composite Verdict*. Each criterion yields its own verdict, and the frameworks report the structured composite over those verdicts — never a single flattened boolean — together with the disclosed Type-I envelope; the contract passes only if every criterion and the latency constraints pass.
+All frameworks evaluate both dimensions by the methods of this paper. Every verdict names the rule that produced it, by its versioned identifier, and reports the Wilson interval beside it only as a description of the observed rate. The frameworks report the structured composite verdict of §6.6, with its disclosed Type-I envelopes, and follow its enforcement semantics.
 
 The move to a distributional contract also reframes what it means for a postcondition to fail. In Meyer's original formulation, a violated postcondition is evidence of a defect in the supplier: the routine failed to honour its obligation, and the appropriate response is to locate and fix the bug. Under a distributional contract this interpretation is no longer available at the level of an individual execution. A single execution on which a postcondition is not satisfied does not, by itself, establish a defect — it is indistinguishable from a sample outcome drawn from the variability the contract explicitly admits.
 
@@ -694,7 +694,7 @@ Both threshold sources are supported across all implementations. A developer may
 
 ### 9.3 The Feasibility Gate
 
-All implementations enforce the feasibility constraint described in this paper and honour the test's declared intent. Before any samples are executed, the framework checks the design: a VERIFICATION test whose sample size cannot in principle support a positive verdict against its requirement is refused (`COMPLIANCE_INFEASIBLE`), and a regression test planned larger than the baseline it consumes is refused (`TEST_LARGER_THAN_BASELINE`). A refusal is a configuration error — distinct from a system failure and from any verdict — and it applies whether a dimension is enforced or advisory. This prevents the waste of resources on evaluations whose conclusion is predetermined.
+All implementations check the design before any sample runs and refuse the configurations of §7.5 (`COMPLIANCE_INFEASIBLE`, `TEST_LARGER_THAN_BASELINE`), honouring the test's declared intent. A refusal is a configuration error — distinct from a system failure and from any verdict — and it applies whether a dimension is enforced or advisory.
 
 ### 9.4 Early Termination
 
@@ -720,7 +720,7 @@ The covariate problem points to a deeper reality: for many stochastic services, 
 
 ### 9.6 The Experiment-to-Test Workflow
 
-The frameworks operationalise the measure-then-enforce workflow through a structured progression. A measurement experiment executes the service a large number of times under controlled conditions, producing a specification. Subsequent evaluations run with fewer samples and are assessed against the threshold derived from the specification. The use case — the reusable unit that invokes the service and evaluates the result — is shared between experiments and tests, ensuring that the contract's criteria are applied consistently.
+The frameworks operationalise the experiment-then-test workflow of §4.2 and §5: an experiment produces a specification, and later tests, with fewer samples, are judged against it. The use case — the reusable unit that invokes the service and evaluates the result — is shared between experiments and tests, ensuring that the contract's criteria are applied consistently.
 
 ### 9.7 Conformance Across Implementations
 
@@ -736,11 +736,11 @@ This gap can only be addressed by a probabilistic approach. When a service's beh
 
 This paper has proposed such a lifting, drawing on established traditions — statistical model checking [4][5][22], black-box probabilistic verification [7][8], and software reliability engineering [9][19][20] — while recasting their insights in a contractual form suited to day-to-day software engineering practice. The distributional contract preserves the contractual structure of Design by Contract — the notion that a service has obligations to its consumers that can be formally stated and objectively assessed — while replacing pointwise evaluation with statistical inference.
 
-The contract is expressed along two orthogonal dimensions: functional stochasticity, assessed via a Bernoulli model and exact decision rules — the Fisher test for degradation, the exact binomial test for compliance — and temporal stochasticity, assessed via empirical percentile analysis. Within the functional dimension the contract decomposes further into separately-contractual criteria, each its own stream, because a single aggregate rate provably masks movement in the rare-but-consequential criteria a contract most needs to watch; the per-criterion verdicts compose into a structured composite carrying two disclosed Type-I envelopes, one for each direction of error.
+The contract is expressed along two orthogonal dimensions: functional stochasticity, assessed via a Bernoulli model and exact decision rules, and temporal stochasticity, assessed via empirical percentile analysis. Within the functional dimension the contract decomposes further into separately-contractual criteria, each its own stream, because a single aggregate rate provably masks movement in the rare-but-consequential criteria a contract most needs to watch; the per-criterion verdicts compose into a structured composite carrying two disclosed Type-I envelopes, one for each direction of error.
 
 A contract's obligations also divide by form: rate-bounded clauses, bounded statistically by the machinery above, and categorical clauses, which admit no rate and are evaluated by an observational zero-failures criterion, falsified by a single violation and never demonstrated by a clean run. A rate-bounded clause's threshold is, on a separate axis, either normative in origin — stipulated by an SLA, SLO, policy, or regulation — or empirical, derived conservatively from a measured baseline. Every criterion is subject to the constraint that binds sample size, threshold and confidence in any honest statistical claim.
 
-Services composed into chains and guarded architectures are distributional contracts in their own right. The composed service is measured end to end, with its own criteria, denominator and verdict; its stages keep their evidence as diagnostics; and component rates are not multiplied into an end-to-end claim. A guarded composition polices a service that cannot be tested for an outcome it must never produce, and its architectural commitment is recorded as a contractual statement whose statistics the companion supplies.
+Services composed into chains and guarded architectures are distributional contracts in their own right. The composed service is measured end to end, with its own criteria, denominator and verdict; its stages keep their evidence as diagnostics; and component rates are not multiplied into an end-to-end claim. Where a service cannot be tested for an outcome it must never produce, a guardrail is tested in its place.
 
 The model is deliberately conservative in its statistical choices. Each verdict is decided by an exact rule chosen for its question — the Fisher test for degradation, the exact binomial test for compliance — because only an exact rule keeps the probability of a false verdict within the stated level at every sample size; an approximation, however well-behaved, cannot promise that. The rules are conservative by construction: where they err, they err towards fewer false alarms and fewer false claims of compliance, at a modest cost in sensitivity that was judged a smaller risk than false precision. The Wilson interval remains, to describe what was observed, but it decides nothing.
 
