@@ -422,7 +422,7 @@ The model draws on statistical model checking [4][5][22], black-box probabilisti
 
 Some questions remain open. The architectural commitment of §9.2 is a documentary record rather than a structured artefact; derived compositional claims beyond the guarded case have no general model; and the independence of trials, though supported by operational safeguards, cannot be verified from the data alone. These are the honest boundaries of a practical framework. The distributional contract does not remove the difficulty of reasoning about stochastic systems; it gives that reasoning a disciplined basis whose assumptions are explicit and whose verdicts are defensible.
 
-The necessity is practical. Without the discipline of distributional contracts, a claim that a stochastic service is accurate, safe or fast enough rests on observations whose evidential weight nobody has stated: it should be taken with caution by anyone who relies on it, and no auditor should accept it. As stochastic services and algorithms become ordinary parts of software applications, a contractual discipline that cannot speak of distributions leaves fundamental properties of those services unstated.
+Without the discipline of distributional contracts, a claim that a stochastic service is accurate, safe or fast enough rests on observations whose evidential weight nobody has stated: it should be taken with caution by anyone who relies on it, and no auditor should accept it. As stochastic services and algorithms become ordinary parts of software applications, a contractual discipline that cannot speak of distributions leaves fundamental properties of those services unstated.
 
 ## 12. References
 
