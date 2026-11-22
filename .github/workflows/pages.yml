@@ -63,6 +63,7 @@ jobs:
             --toc-depth=3
 
           $PANDOC docs/DISTRIBUTIONAL-CONTRACTS.md \
+            --resource-path=docs \
             --from gfm+tex_math_dollars+yaml_metadata_block \
             --lua-filter=scripts/wrap-tables.lua \
             --lua-filter=scripts/breakable-code.lua \
