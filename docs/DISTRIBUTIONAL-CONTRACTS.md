@@ -211,7 +211,7 @@ A single observed response time tells us almost nothing about a service's tempor
 
 ### 6.2 The Latency Population
 
-Not all executions contribute to the latency distribution. Executions that failed the contract's correctness criteria, for either reason of §4.3, are excluded from the latency population. A fast failure (an immediate validation rejection at $t \approx 0$) and a slow failure (a timeout at $t = 30{,}000\text{ms}$) both reflect error paths, not the latency of successful operation. Including them would contaminate the distribution with durations that are artefacts of failure modes rather than measurements of service responsiveness.
+Executions that failed the contract's correctness criteria, for either reason of §4.3, are excluded from the latency population. A fast failure (an immediate validation rejection at $t \approx 0$) and a slow failure (a timeout at $t = 30{,}000\text{ms}$) both reflect error paths, not the latency of successful operation. Including them would contaminate the distribution with durations that are artefacts of failure modes rather than measurements of service responsiveness.
 
 The latency distribution is therefore conditional on success. Let $\mathcal{L} = \{ t_i : X_i = 1 \}$ be the set of durations from executions that satisfied the contract's correctness criteria, and let $n_s = |\mathcal{L}|$. The distributional contract over temporal stochasticity applies to this conditional distribution $T \mid X = 1$, not to the unconditional distribution over all attempts.
 
@@ -221,7 +221,7 @@ Organisations that require an unconditional response-time guarantee — that is,
 
 ### 6.3 Empirical Percentile Estimation
 
-Because latency distributions resist parametric characterisation, the contract is assessed using non-parametric empirical percentiles computed directly from the observed order statistics. No assumptions are made about the shape of the underlying distribution.
+The contract is assessed using non-parametric empirical percentiles computed directly from the observed order statistics, so that no assumption need be made about the shape of the underlying latency distribution.
 
 Let $t_{(1)} \leq t_{(2)} \leq \cdots \leq t_{(n_s)}$ be the order statistics of the successful latencies. For a percentile level $p \in (0, 1]$, the empirical percentile is:
 
@@ -245,7 +245,7 @@ The overall latency contract is satisfied if and only if all constraints are met
 
 $$\text{PASS}_{\text{latency}} = \bigwedge_{j=1}^{m} \text{PASS}_j$$
 
-As with functional stochasticity, the threshold $\tau_j$ may be stipulated externally — by an SLA specifying, say, that the 95th percentile latency must not exceed 500ms — or derived empirically from a baseline experiment. A breach means what it means on the functional side (§5.4): non-compliance against a stipulated threshold, degradation against a derived one. The informal reading above is not itself the decision rule. A stipulated threshold is decided by the exact binomial test of the functional dimension, applied to the number of successful latencies at or below $\tau_j$ (companion §12.3.4): comparing the observed percentile with $\tau_j$ directly supports no claim at a stated error level, since a service whose true percentile sits exactly at $\tau_j$ passes such a comparison more often than not. A baseline-derived threshold is decided as the next section describes.
+As with functional stochasticity, the threshold $\tau_j$ may be stipulated externally — by an SLA specifying, say, that the 95th percentile latency must not exceed 500ms — or derived empirically from a baseline experiment. A breach means what it means on the functional side (§5.4): non-compliance against a stipulated threshold, degradation against a derived one. A test does not pass merely because its observed percentile is at or below $\tau_j$. The observed percentile varies from run to run, so a service whose true percentile sits exactly at $\tau_j$ would pass that comparison more often than not. Instead, against a stipulated threshold the test counts the successful latencies at or below $\tau_j$ and passes only if that count is large enough to show, by the exact binomial test (§5.4), that at least a fraction $p_j$ of all latencies fall within $\tau_j$ (companion §12.3.4). Against a derived threshold it applies the precedence rule of §6.5.
 
 ### 6.5 Threshold Derivation for Latency
 

@@ -2747,13 +2747,13 @@ Two points are worth naming plainly.
 
 ### 12.1 The Statistical Challenge of Latency
 
-Pass-rate testing models functional outcomes as Bernoulli trials drawn from a binomial distribution (Section 1). Latency presents a fundamentally different statistical challenge. Service latency distributions are typically:
+Pass-rate testing models functional outcomes as Bernoulli trials drawn from a binomial distribution (Section 1). Latency presents a fundamentally different statistical challenge: no comparable model fixes the shape of its distribution. A service's latency distribution can be:
 
 - **Right-skewed**: A long right tail caused by cache misses, garbage collection pauses, network retransmission, or cold starts
 - **Multimodal**: Distinct modes corresponding to fast paths (cached) and slow paths (database lookup, remote API call)
 - **Heavy-tailed**: Extreme outliers that are orders of magnitude larger than the median
 
-These characteristics violate the assumptions of parametric models such as the normal distribution. A system with a 200ms mean and 50ms standard deviation could have a p99 of 350ms (near-normal) or 2000ms (heavy-tailed) — the summary statistics cannot distinguish the two.
+A method that assumes a particular shape, such as the normal distribution, is exposed whenever the service departs from it. A system with a 200ms mean and 50ms standard deviation could have a p99 of 350ms (near-normal) or 2000ms (heavy-tailed) — the summary statistics cannot distinguish the two.
 
 **The mavai approach**: Rather than fitting a parametric distribution to latency data, the methodology uses **non-parametric empirical percentiles** exclusively. This distribution-free approach makes no assumptions about the shape of the latency distribution — it characterises the distribution directly from the observed order statistics.
 
