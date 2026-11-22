@@ -207,7 +207,7 @@ This section develops the contract over the temporal dimension of §3: response 
 
 ### 6.1 Why Latency Demands Distributional Reasoning
 
-A single observed response time tells us almost nothing about a service's temporal behaviour. Service latency distributions are typically right-skewed, often multimodal, and frequently heavy-tailed. A service with a 200ms mean may have a 95th percentile of 350ms or of 2000ms — the mean alone cannot distinguish the two. What matters operationally is not the average case but the tail: the experience of the worst-served fraction of requests. This is why latency contracts are expressed not in terms of means but in terms of percentiles.
+A single observed response time tells us almost nothing about a service's temporal behaviour. Service latency distributions are typically right-skewed, often multimodal, and frequently heavy-tailed. A service with a 200ms mean may have a 95th percentile of 350ms or of 2000ms — the mean alone cannot distinguish the two. What matters operationally is not the average case but the tail: the experience of the worst-served fraction of requests. This is why latency assertions are expressed not in terms of means but in terms of percentiles.
 
 ### 6.2 The Latency Population
 
@@ -215,9 +215,9 @@ Executions that failed the contract's correctness criteria, for either reason of
 
 The latency distribution is therefore conditional on success. Let $\mathcal{L} = \{ t_i : X_i = 1 \}$ be the set of durations from executions that satisfied the contract's correctness criteria, and let $n_s = |\mathcal{L}|$. The distributional contract over temporal stochasticity applies to this conditional distribution $T \mid X = 1$, not to the unconditional distribution over all attempts.
 
-Conditioning on success is the correct modelling choice, but it creates a hazard that must be named explicitly. Because the latency contract applies only to the successful subset, a service could in principle improve its observed percentiles by converting slow-successes into fast-failures — moving mass from the right tail of $T \mid X = 1$ into the failure column entirely. This is not a defect of the conditioning; it is why the correctness criteria and the latency contract are evaluated **jointly, by logical conjunction** (§8.1), each correctness criterion enforced at its own threshold. An operator writing a latency contract should make the accompanying correctness threshold tight enough to catch such a trade: a latency improvement bought with a correctness regression is not an improvement of the contract.
+Conditioning on success is the correct modelling choice, but it creates a hazard that must be named explicitly. Because the latency assertion applies only to the successful subset, a service could in principle improve its observed percentiles by converting slow-successes into fast-failures — moving mass from the right tail of $T \mid X = 1$ into the failure column entirely. This is not a defect of the conditioning; it is why the correctness criteria and the latency assertion are evaluated **jointly, by logical conjunction** (§8.1), each correctness criterion enforced at its own threshold. An operator writing a latency assertion should make the accompanying correctness threshold tight enough to catch such a trade: a latency improvement bought with a correctness regression is not an improvement of the contract.
 
-Organisations that require an unconditional response-time guarantee — that is, a bound on latency marginalised over *all* attempts, including those that fail — should express this as a joint constraint on the correctness criteria and the latency contract, rather than attempt to redefine the latency population itself. The conditional distribution $T \mid X = 1$ is the only population for which non-parametric percentile inference over successful-response latency is meaningful.
+Organisations that require an unconditional response-time guarantee — that is, a bound on latency marginalised over *all* attempts, including those that fail — should express this as a joint constraint on the correctness criteria and the latency assertion, rather than attempt to redefine the latency population itself. The conditional distribution $T \mid X = 1$ is the only population for which non-parametric percentile inference over successful-response latency is meaningful.
 
 ### 6.3 Empirical Percentile Estimation
 
@@ -233,7 +233,7 @@ Strictly speaking, the order-statistic arguments of §6.5 assume a continuous la
 
 ### 6.4 The Latency Assertion
 
-A latency contract specifies a set of percentile constraints:
+A contract's latency assertion specifies a set of percentile constraints:
 
 $$\mathcal{C} = \{ (p_j, \tau_j) : j = 1, \ldots, m \}$$
 
@@ -241,7 +241,7 @@ where $p_j$ is a percentile level (e.g., 0.50, 0.90, 0.95, 0.99) and $\tau_j$ is
 
 $$\text{PASS}_j \iff Q(p_j) \leq \tau_j$$
 
-The overall latency contract is satisfied if and only if all constraints are met:
+The latency assertion is satisfied if and only if all constraints are met:
 
 $$\text{PASS}_{\text{latency}} = \bigwedge_{j=1}^{m} \text{PASS}_j$$
 
