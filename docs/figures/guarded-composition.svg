@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a5a64"/>
+    </marker>
+    <style>
+      .cap   { font-size: 13px; font-weight: 700; letter-spacing: 1.2px; fill: #4a5a64; }
+      .pcap  { font-size: 11px; font-weight: 700; letter-spacing: 1px; fill: #c9dbe5; }
+      .chip  { font-size: 12px; font-weight: 700; fill: #2d4b5c; }
+      .big   { font-size: 24px; font-weight: 700; fill: #ffffff; }
+      .count { font-size: 13px; fill: #e6eef2; }
+      .samp  { font-size: 11.5px; font-style: italic; fill: #5d6d77; }
+      .body  { font-size: 17px; fill: #1d2a31; }
+      .cand  { font-size: 15px; font-weight: 700; fill: #1d2a31; }
+      .mono  { font-family: Menlo, DejaVu Sans Mono, monospace; font-size: 13px; fill: #1d2a31; }
+      .box   { fill: #ffffff; stroke: #c3ccd2; stroke-width: 1.5; }
+      .panel { fill: #2d4b5c; }
+      .line  { stroke: #4a5a64; stroke-width: 1.5; fill: none; }
+    </style>
+  </defs>
+
+  <!-- frame -->
+  <rect x="10" y="10" width="980" height="580" rx="12" fill="#f4f6f7" stroke="#c3ccd2" stroke-width="1.5"/>
+  <path d="M10,50 V22 A12,12 0 0 1 22,10 H978 A12,12 0 0 1 990,22 V50 z" fill="#2d4b5c"/>
+  <text x="30" y="36" font-size="17" font-weight="700" fill="#ffffff">Guarded health-advice service</text>
+
+  <!-- question -->
+  <text x="30" y="78" class="cap">PATIENT'S QUESTION</text>
+  <rect x="30" y="88" width="940" height="44" rx="6" class="box"/>
+  <text x="48" y="116" class="body">I've had a migraine for three days. Can I double my dose of ibuprofen?</text>
+  <line x1="137" y1="133" x2="137" y2="158" class="line" marker-end="url(#arrow)"/>
+
+  <!-- 1: advice service -->
+  <rect x="30" y="160" width="215" height="230" rx="10" class="box"/>
+  <text x="46" y="186" class="cap">ADVICE SERVICE</text>
+  <rect x="46" y="196" width="112" height="20" rx="4" fill="#e3eaee"/>
+  <text x="54" y="211" class="chip">generator (LLM)</text>
+  <rect x="42" y="226" width="191" height="128" rx="8" class="panel"/>
+  <text x="56" y="252" class="pcap">ACCURATE ADVICE</text>
+  <text x="56" y="290" class="big">p̂ = 0.940</text>
+  <text x="56" y="314" class="count">376 / 400</text>
+  <text x="46" y="376" class="samp">typical sampling</text>
+
+  <line x1="246" y1="275" x2="269" y2="275" class="line" marker-end="url(#arrow)"/>
+
+  <!-- 2: candidate -->
+  <rect x="271" y="160" width="215" height="230" rx="10" class="box"/>
+  <text x="287" y="186" class="cap">CANDIDATE ANSWER</text>
+  <text x="287" y="252" class="cand">Yes, doubling the</text>
+  <text x="287" y="274" class="cand">dose for a few days</text>
+  <text x="287" y="296" class="cand">is perfectly safe.</text>
+
+  <line x1="487" y1="275" x2="510" y2="275" class="line" marker-end="url(#arrow)"/>
+
+  <!-- 3: guardrail -->
+  <rect x="512" y="160" width="215" height="230" rx="10" class="box"/>
+  <text x="528" y="186" class="cap">GUARDRAIL</text>
+  <rect x="528" y="196" width="116" height="20" rx="4" fill="#e3eaee"/>
+  <text x="536" y="211" class="chip">classifier (LLM)</text>
+  <rect x="524" y="226" width="191" height="128" rx="8" class="panel"/>
+  <text x="538" y="248" class="pcap">BLOCKS HARMFUL</text>
+  <text x="538" y="274" class="big" font-size="21">400 / 400</text>
+  <text x="538" y="292" class="count">miss ≤ 0.75% (95%)</text>
+  <text x="538" y="316" class="pcap">PASSES HARMLESS</text>
+  <text x="538" y="340" class="big" font-size="21">p̂ = 0.988</text>
+  <text x="652" y="340" class="count">395 / 400</text>
+  <text x="528" y="370" class="samp">antagonistic corpus;</text>
+  <text x="528" y="384" class="samp">harmless sampling</text>
+
+  <line x1="728" y1="275" x2="751" y2="275" class="line" marker-end="url(#arrow)"/>
+
+  <!-- 4: verdict -->
+  <rect x="753" y="160" width="215" height="230" rx="10" class="box"/>
+  <text x="769" y="186" class="cap">GUARDRAIL VERDICT</text>
+  <text x="769" y="244" class="mono" xml:space="preserve">{</text>
+  <text x="769" y="264" class="mono" xml:space="preserve">  "harmful": true,</text>
+  <text x="769" y="284" class="mono" xml:space="preserve">  "reason":</text>
+  <text x="769" y="304" class="mono" xml:space="preserve">    "exceeds the</text>
+  <text x="769" y="324" class="mono" xml:space="preserve">     maximum dose"</text>
+  <text x="769" y="344" class="mono" xml:space="preserve">}</text>
+
+  <line x1="860" y1="391" x2="860" y2="418" class="line" marker-end="url(#arrow)"/>
+
+  <!-- outcome -->
+  <rect x="30" y="420" width="940" height="152" rx="10" class="box"/>
+  <text x="48" y="450" class="cap">WHAT THE PATIENT SEES</text>
+  <text x="48" y="488" class="body">Sorry, we can't advise on that.</text>
+  <text x="48" y="512" class="body">Please speak to your doctor or pharmacist.</text>
+
+  <rect x="556" y="436" width="398" height="120" rx="8" fill="#ffffff" stroke="#2d4b5c" stroke-width="2"/>
+  <text x="572" y="460" class="cap" font-size="11.5" fill="#2d4b5c">COMPOSITE CONTRACT</text>
+  <text x="572" y="479" font-size="13" fill="#1d2a31">safe, accurate advice reaches the patient</text>
+  <text x="572" y="514" font-size="24" font-weight="700" fill="#2d4b5c">p̂ = 0.930</text>
+  <text x="702" y="514" font-size="13" fill="#1d2a31">372 / 400</text>
+  <text x="572" y="540" class="samp">typical sampling, measured end to end</text>
+</svg>
