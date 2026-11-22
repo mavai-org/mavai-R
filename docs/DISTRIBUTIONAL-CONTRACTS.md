@@ -1,6 +1,6 @@
 ---
 title: "Distributional Contracts for Stochastic Systems"
-author: "Version 0.9.2 · last updated 2026-11-21 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: "Version 0.9.2 · last updated 2026-11-22 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## 1. Document History
@@ -14,7 +14,7 @@ This is a working document: a formal declaration of what the mavai family of fra
 | 3 | **2026-04** | **Stricter latency treatment.** The tripartite contract (correctness / availability / latency-given-success) and an exact order-statistic bound. *Service* replaces *system* for the artefact under evaluation. |
 | 4 | **2026-05** | **Criterion decomposition.** The functional dimension becomes a conjunction of criteria, each its own Bernoulli stream, with a tuple-valued composite verdict; rate-bounded and categorical clause forms; every trial counts toward its criterion's denominator. |
 | 5 | **2026-07** | **Behavioural populations** (§4.8). |
-| 6 | **2026-11** | **Exact decision rules and composition.** Fisher's exact test for degradation, the exact binomial test for compliance (Wilson describes only); aligned with Statistical Companion 1.7.x; new chapter on composed and guarded services. Prose tightened and repetition removed. |
+| 6 | **2026-11** | **Exact decision rules and composition.** Fisher's exact test for degradation, the exact binomial test for compliance (Wilson describes only); aligned with Statistical Companion 1.7.x; new chapter on composed and guarded services; the contract verdict given a chapter of its own; sample sizing left to the Statistical Companion. Prose tightened and repetition removed. |
 
 Milestone 4 supersedes the exclusion of no-testable-value outcomes, and milestone 6 the use of Wilson as a decision rule; the Bernoulli/binomial foundation of milestone 1 stands.
 
@@ -26,7 +26,7 @@ This paper extends Bertrand Meyer's Design by Contract [1][2] by lifting postcon
 
 Within the functional dimension, the single notion of an acceptable result is itself refined into a conjunction of separately-checkable *criteria*, each assessed as its own statistical stream rather than folded into one aggregate rate. The obligations a contract carries are further partitioned by form into *rate-bounded* clauses, whose tolerable failure rate is bounded statistically, and *categorical* clauses, which admit no rate and are evaluated by observation — the rate-bounded threshold being, on a separate axis, either normative or empirical in origin. Finally, services composed into chains and guarded architectures are treated as distributional contracts in their own right, measured end to end rather than inferred from their components.
 
-Since the quantities of interest are not directly observable, they are estimated empirically from repeated executions and assessed using conservative statistical bounds. This yields an operational basis for making statistically grounded assertions, at a defined confidence level, that a stochastic service satisfies its contractual obligations. The model is implemented by the mavai family of probabilistic testing frameworks — punit for Java and feotest for Rust — which turn its elements into constructs a developer declares and a test runtime enforces (§9).
+Since the quantities of interest are not directly observable, they are estimated empirically from repeated executions and assessed using conservative statistical bounds. This yields an operational basis for making statistically grounded assertions, at a defined confidence level, that a stochastic service satisfies its contractual obligations. The model is implemented by the mavai family of probabilistic testing frameworks — punit for Java and feotest for Rust — which turn its elements into constructs a developer declares and a test runtime enforces (§10).
 
 The statistical foundations on which these methods rest — the exact decision rules (the one-sided Fisher exact test for degradation from a baseline, the exact binomial test for compliance with a requirement), the feasibility constraint, the per-criterion model, and non-parametric latency inference — are developed and justified in full in the Statistical Companion [3], the canonical methodology document of the mavai family. The present paper builds on that work: it supplies the contractual framing and describes each method to the depth needed to convey the model, deferring the formal statistical justification to the companion.
 
@@ -44,7 +44,7 @@ The uncertainty of a stochastic service has two dimensions, each with its own fo
 
 **Temporal stochasticity** is how long the service takes to respond. A service that typically responds in 200 milliseconds may occasionally take several seconds; each execution yields a duration, and latency is a distribution rather than a fixed property. The contract asserts that a given percentile of that distribution falls below a bound — for example, that the 95th percentile does not exceed 500 milliseconds — and is assessed by non-parametric percentile inference (§6).
 
-The dimensions are orthogonal *contractual concerns*, not independent random variables. A fast response can be incorrect and a slow one correct, so a contract that addresses only one leaves the other unexamined. Yet the two are often correlated — timeouts are correctness failures, refusal paths may be fast, slow successes can be traded into failures — so the methodology assumes no statistical independence between them: it evaluates each separately and composes their verdicts by logical conjunction (§6.6).
+The dimensions are orthogonal *contractual concerns*, not independent random variables. A fast response can be incorrect and a slow one correct, so a contract that addresses only one leaves the other unexamined. Yet the two are often correlated — timeouts are correctness failures, refusal paths may be fast, slow successes can be traded into failures — so the methodology assumes no statistical independence between them: it evaluates each separately and composes their verdicts by logical conjunction (§8.1).
 
 ## 4. Functional Stochasticity
 
@@ -78,7 +78,7 @@ A subsequent **probabilistic test** exercises the same criterion over its own sa
 
 This constraint — that the service is an opaque executable whose properties must be inferred from observed behaviour rather than from an inspectable internal model — is shared with the black-box probabilistic verification tradition. Sen, Viswanathan, and Agha [7] consider statistical model checking of black-box probabilistic systems where properties are inferred from observed traces, and Aichernig and Tappler [8] extend this to stochastic systems with probabilistic behaviour. The present work inherits their black-box constraint but reframes the objective: rather than establishing reachability or property satisfaction within automata-based frameworks, the goal is to assess whether the service meets a contractual quality obligation.
 
-A contract with a single criterion is simply the $m = 1$ case of this model, in which the per-criterion stream coincides with the single Bernoulli model. **From here on, the single-criterion notation $X_i$, $\hat{p}$, $p_{\min}$, $\alpha$ used elsewhere in this paper should be read as the per-criterion $X_{i,c}$, $\hat{p}_c$, $p^*_c$, $\alpha_c$ for any criterion $c$ a contract declares: the criterion's decision rule, the feasibility gate, and the verdict rule all apply unchanged to each stream.** In this way Design by Contract is generalised from pointwise correctness to distributional correctness, criterion by criterion. How the streams compose into one verdict, and the resulting false-alarm budget, are set out in §6.6.
+A contract with a single criterion is simply the $m = 1$ case of this model, in which the per-criterion stream coincides with the single Bernoulli model. **From here on, the single-criterion notation $X_i$, $\hat{p}$, $p_{\min}$, $\alpha$ used elsewhere in this paper should be read as the per-criterion $X_{i,c}$, $\hat{p}_c$, $p^*_c$, $\alpha_c$ for any criterion $c$ a contract declares: the criterion's decision rule, the feasibility gate, and the verdict rule all apply unchanged to each stream.** In this way Design by Contract is generalised from pointwise correctness to distributional correctness, criterion by criterion. How the streams compose into one verdict, and the resulting false-alarm budget, are set out in §8.
 
 The independence and stationarity assumptions apply *per criterion*: within a criterion, the per-execution indicators are treated as i.i.d. under the input distribution the sampling represents. Across criteria the methodology assumes no independence — an execution that returns malformed output may fail several criteria at once — and the consequence of that dependence for the composite verdict is disclosed rather than assumed away.
 
@@ -130,11 +130,11 @@ A **rate-bounded clause** states a proposition of the shape *criterion $c$ shall
 - **normative** (equivalently *stipulated*): the threshold is *given* — by a contract, SLA, SLO, policy, or regulation — and the question is whether the service *meets* it. Nothing is estimated about where the threshold should sit; it is mandated.
 - **empirical**: the threshold is *derived from a baseline experiment*, and the question is whether the service has *regressed* from the rate it previously achieved.
 
-*Empirical* is not the name of the rate-bounded form, because a rate-bounded clause may equally carry a normative threshold that was never measured. The mavai frameworks (§9) keep the two as separate authoring constructs rather than two settings of one knob: a normative target is declared as *meeting* a required rate, and an empirical baseline as an *empirical* derivation. The compliance and regression paradigms of the threshold chapter are exactly these two origins seen from the decision side.
+*Empirical* is not the name of the rate-bounded form, because a rate-bounded clause may equally carry a normative threshold that was never measured. The mavai frameworks (§10) keep the two as separate authoring constructs rather than two settings of one knob: a normative target is declared as *meeting* a required rate, and an empirical baseline as an *empirical* derivation. The compliance and regression paradigms of the threshold chapter are exactly these two origins seen from the decision side.
 
 A **categorical clause** states an obligation that admits no rate threshold at all: *the service shall not emit self-harm advice*, *shall not leak personal data*, *shall not produce illegal content*. It is satisfied or violated in kind, not in rate. No sample budget redenominates it as a rate-bounded claim — observing zero failures in $n$ trials yields at best a rule-of-three upper bound of $\approx 3/n$ on the failure rate, which reaches zero only in the limit — and letting a rate-bounded threshold approach 1 does not promote it into a categorical one; it merely tightens a bound that can never reach certainty. The frameworks recognise the categorical clause in exactly one form: a **zero-failures** declaration, by which the developer states the expectation while explicitly abandoning any pretence of establishing a statistical lower bound. Such a clause is evaluated *observationally* — it reports whether any failure was seen, never an estimated rate (see the next section): a single observed violation falsifies it, and a run without one shows only that none was seen. The two forms are mutually exclusive: every clause is either rate-bounded or categorical, never both. A contract may comprise several criteria, and each criterion is free to state its clause in either form.
 
-A separate question is how a prohibited outcome is kept from the consumer when the service itself cannot be tested for it: a language model cannot realistically be coaxed into producing harmful health advice often enough for its reliability in avoiding it to be established. The answer is architectural: a dedicated component interposed between the service and its consumer — a deterministic filter or a refusal classifier, for example — commonly called a **guardrail**. Unlike the service, the guardrail can be tested directly, because its input is the content itself. It is a separate component with its own contract, not a criterion of the service's contract, and whether one is needed has no bearing on where a categorical clause may be stated. The guarded service, the residual risk it leaves and the record of the commitment are treated as a composition in *Guarded Composition* (§8.9). The methodology, in one line:
+A separate question is how a prohibited outcome is kept from the consumer when the service itself cannot be tested for it: a language model cannot realistically be coaxed into producing harmful health advice often enough for its reliability in avoiding it to be established. The answer is architectural: a dedicated component interposed between the service and its consumer — a deterministic filter or a refusal classifier, for example — commonly called a **guardrail**. Unlike the service, the guardrail can be tested directly, because its input is the content itself. It is a separate component with its own contract, not a criterion of the service's contract, and whether one is needed has no bearing on where a categorical clause may be stated. The guarded service, the residual risk it leaves and the record of the commitment are treated as a composition in *Guarded Composition* (§9.9). The methodology, in one line:
 
 > *Tolerable failures are bounded statistically; intolerable failures are prohibited categorically; and what cannot be tested in the service is tested in its guardrail.*
 
@@ -142,7 +142,7 @@ A separate question is how a prohibited outcome is kept from the consumer when t
 
 Two levels of outcome must be kept distinct. On a **single sample**, a criterion's evaluation is **PASS** or **FAIL** (§4.3); there is no third per-sample outcome, and a sample with no testable value is a FAIL with its reason. Only the criterion's **run-level verdict**, aggregated over the whole sampling, admits a third value, **INCONCLUSIVE**: a non-determination by the procedure, never a statement about any one sample (Statistical Companion §1.4.5, §1.4.5a). A criterion reaches its run verdict in one of two modes.
 
-An **inferential criterion** estimates the rate $p_c$ of the population its sampling is declared to represent from the run's per-sample PASS/FAIL outcomes and tests it against a threshold. Its run verdict is PASS when the evidence clears the threshold at confidence $1 - \alpha_c$, FAIL when it does not, and INCONCLUSIVE when the run cannot support a determination — because there were no trials ($n_c = 0$), or because no count the run could have produced would pass the compliance test. A configuration that could never support a verdict is refused before the run instead, as a configuration error rather than a verdict (§7.5). Where the threshold is empirical in origin and no baseline matches the covariates in force, the test either proceeds against the nearest baseline with that divergence carried on its verdict, or declines to resolve, as the project's covariate policy decides (Statistical Companion §1.4.5, §1.5.3). This is the mode for the question *what is the true rate of behaviour $c$, and does it clear the demanded threshold?*
+An **inferential criterion** estimates the rate $p_c$ of the population its sampling is declared to represent from the run's per-sample PASS/FAIL outcomes and tests it against a threshold. Its run verdict is PASS when the evidence clears the threshold at confidence $1 - \alpha_c$, FAIL when it does not, and INCONCLUSIVE when the run cannot support a determination — because there were no trials ($n_c = 0$), or because no count the run could have produced would pass the compliance test. A configuration that could never support a verdict is refused before the run instead, as a configuration error rather than a verdict (§7). Where the threshold is empirical in origin and no baseline matches the covariates in force, the test either proceeds against the nearest baseline with that divergence carried on its verdict, or declines to resolve, as the project's covariate policy decides (Statistical Companion §1.4.5, §1.5.3). This is the mode for the question *what is the true rate of behaviour $c$, and does it clear the demanded threshold?*
 
 An **observational criterion** asks only whether any failure was seen in the run. It estimates no parameter and carries no threshold:
 
@@ -150,7 +150,7 @@ $$\text{verdict}(c) = \begin{cases} \text{PASS} & \text{if } K_c = n_c \text{ an
 
 A passing observational verdict at $n_c = 1000$ says exactly: *no failure of $c$ was observed in 1000 trials*. It entails no bound on the true population rate. This is the honest expression of a zero-failures expectation: an inferential test against a threshold of $1.0$ cannot pass at any finite sample size, since at a required rate of 1 a run with no failures has probability 1 under the exact binomial test: it is never surprising, so no count is ever evidence of compliance. The frameworks therefore do not accept $1.0$ as an inferential threshold and does not silently convert an observational criterion into one. For transparent reporting only, a passing observational verdict may be annotated with the rule-of-three upper bound of $\approx 3/n_c$ under an explicitly stated i.i.d. Bernoulli model, and high-consequence criteria may report *NO FAILURE OBSERVED* in place of PASS — a label change that leaves the verdict semantics untouched.
 
-This is the mode in which a categorical clause is evaluated, on whichever contract it is stated. Where a guardrail is used, its evidence is first its own rate-bounded contract (§8.9); a zero-failures verdict over an adversarial sampling complements it, reporting that no prohibited outcome got through in that run, and no more.
+This is the mode in which a categorical clause is evaluated, on whichever contract it is stated. Where a guardrail is used, its evidence is first its own rate-bounded contract (§9.9); a zero-failures verdict over an adversarial sampling complements it, reporting that no prohibited outcome got through in that run, and no more.
 
 ### 4.8 Behavioural Populations
 
@@ -160,7 +160,7 @@ One reason a service needs several contracts is that it realises more than one *
 
 Membership of a population is a property of the *input*, determined before invocation: the populations partition the input space, and each population's sample size is a design choice fixed before any run. Classifying trials by *observed response* — membership knowable only after the service has answered — does not define a population in this sense: the per-class count would become a random quantity needing its own prevalence estimate and bound. Defining populations by input makes that machinery unnecessary, since every population's sample size is known before the run.
 
-Each contract's verdict is the composite verdict of §6.6 over its own sampling. A view across a family is reporting, not a verdict, and the samplings are never pooled (Statistical Companion §1.4.7).
+Each contract's verdict is the composite verdict of §8.1 over its own sampling. A view across a family is reporting, not a verdict, and the samplings are never pooled (Statistical Companion §1.4.7).
 
 ## 5. Thresholds and Their Decision Rules
 
@@ -170,7 +170,7 @@ Often no external threshold exists. The service's acceptable performance level i
 
 ### 5.1 The Baseline Experiment
 
-To establish an empirical threshold, a baseline experiment is conducted: the service is executed $n_{\text{exp}}$ times under controlled conditions, and the success count $k$ is recorded together with $n_{\text{exp}}$, giving the observed success rate $\hat{p}_{\text{exp}} = k / n_{\text{exp}}$. Both counts are kept, not only the rate: the decision rule a later test applies needs them, since a baseline of 95 successes in 100 and one of 950 in 1000 have the same rate but very different evidential weight. This point estimate serves as the best available characterisation of the service's current behaviour. It is important to note, as Musa [9] established in the context of software reliability engineering, that any such empirical estimate is meaningful only relative to the distribution of inputs under which the service is exercised. A baseline measured under one operational profile may not generalise to another — an insight that motivates the covariate tracking of §9.5.
+To establish an empirical threshold, a baseline experiment is conducted: the service is executed $n_{\text{exp}}$ times under controlled conditions, and the success count $k$ is recorded together with $n_{\text{exp}}$, giving the observed success rate $\hat{p}_{\text{exp}} = k / n_{\text{exp}}$. Both counts are kept, not only the rate: the decision rule a later test applies needs them, since a baseline of 95 successes in 100 and one of 950 in 1000 have the same rate but very different evidential weight. This point estimate serves as the best available characterisation of the service's current behaviour. It is important to note, as Musa [9] established in the context of software reliability engineering, that any such empirical estimate is meaningful only relative to the distribution of inputs under which the service is exercised. A baseline measured under one operational profile may not generalise to another — an insight that motivates the covariate tracking of §10.5.
 
 Because every criterion is exercised against the same shared sampling, a single baseline experiment records a success rate *per criterion*: the baseline is vectorised across the contract's criteria, $\{\hat{p}_{\text{exp},c}\}$, and a threshold $p^*_c$ is derived for each criterion independently by the construction below.
 
@@ -215,7 +215,7 @@ Executions that failed the contract's correctness criteria, for either reason of
 
 The latency distribution is therefore conditional on success. Let $\mathcal{L} = \{ t_i : X_i = 1 \}$ be the set of durations from executions that satisfied the contract's correctness criteria, and let $n_s = |\mathcal{L}|$. The distributional contract over temporal stochasticity applies to this conditional distribution $T \mid X = 1$, not to the unconditional distribution over all attempts.
 
-Conditioning on success is the correct modelling choice, but it creates a hazard that must be named explicitly. Because the latency contract applies only to the successful subset, a service could in principle improve its observed percentiles by converting slow-successes into fast-failures — moving mass from the right tail of $T \mid X = 1$ into the failure column entirely. This is not a defect of the conditioning; it is why the correctness criteria and the latency contract are evaluated **jointly, by logical conjunction** (§6.6), each correctness criterion enforced at its own threshold. An operator writing a latency contract should make the accompanying correctness threshold tight enough to catch such a trade: a latency improvement bought with a correctness regression is not an improvement of the contract.
+Conditioning on success is the correct modelling choice, but it creates a hazard that must be named explicitly. Because the latency contract applies only to the successful subset, a service could in principle improve its observed percentiles by converting slow-successes into fast-failures — moving mass from the right tail of $T \mid X = 1$ into the failure column entirely. This is not a defect of the conditioning; it is why the correctness criteria and the latency contract are evaluated **jointly, by logical conjunction** (§8.1), each correctness criterion enforced at its own threshold. An operator writing a latency contract should make the accompanying correctness threshold tight enough to catch such a trade: a latency improvement bought with a correctness regression is not an improvement of the contract.
 
 Organisations that require an unconditional response-time guarantee — that is, a bound on latency marginalised over *all* attempts, including those that fail — should express this as a joint constraint on the correctness criteria and the latency contract, rather than attempt to redefine the latency population itself. The conditional distribution $T \mid X = 1$ is the only population for which non-parametric percentile inference over successful-response latency is meaningful.
 
@@ -255,9 +255,23 @@ The methodology derives it with a precedence rule, a classical two-sample compar
 
 A further consequence of the empirical approach is that small sample sizes trivially exclude higher percentiles from meaningful evaluation. The $p$-th percentile requires at least $\lceil 1 / (1 - p) \rceil$ observations before it is distinct from the sample maximum: for $p = 0.95$ this is 20, for $p = 0.99$ it is 100. When $n_s$ falls below such a threshold, the corresponding percentile constraint cannot be assessed at all. And even at the boundary — $n_s = 100$ for $p = 0.99$, for instance — the percentile estimate rests on a single observation separating it from the maximum, which is hardly a basis for a meaningful contractual judgement. In practice, reliable percentile estimation requires $n_s$ to be substantially larger than the theoretical minimum, so that the estimate is determined by a region of the distribution rather than by an isolated order statistic. The frameworks enforce these minimums, with an engineering minimum of 5 for the median, as a non-degeneracy gate. The gate is necessary but not sufficient: a baseline-derived threshold also needs the precedence rank above to exist for the test that will run, and where it does not, the verdict is INCONCLUSIVE (Statistical Companion §12.5.2, §12.5.3).
 
-### 6.6 The Composite Verdict
+## 7. Sample Size and Feasibility
 
-With both dimensions defined, the contract's verdict combines its per-criterion functional verdicts with its latency verdict. Crucially, this is *not* a single flattened boolean: a flat PASS/FAIL surface would obscure exactly the per-criterion outcomes the criterion decomposition exists to expose. The contract verdict is a **structured tuple** over the per-criterion verdicts $V_c \in \{\text{PASS}, \text{FAIL}, \text{INCONCLUSIVE}\}$, with the structural composite
+Sample size, threshold and error level are bound together: fixing any two determines the third, so a contract cannot be at once stringent, highly confident and cheap to verify. The software reliability literature makes the same point for conventional software — testing methods are to be judged by the reliability they deliver in operation [19], and success on carefully chosen examples does not by itself justify confidence in future behaviour [20] — and it bears harder still on stochastic services, where no single execution is decisive. How an experiment or test is sized — from its cost, from the risk it must control, or from a threshold dictated from outside — what power a design attains, and the minimum sample size below which a stipulated threshold cannot be met even by a flawless run are set out in the Statistical Companion (§5, §6). Sizing plans a test; it never decides one. Three consequences bear on how contracts are structured.
+
+**The constraint is per criterion.** Each criterion $c$ binds its own triple $(n_c, p^*_c, \alpha_c)$. The criteria of one experiment share a single sampling and therefore its size $N$, which is set by the **limiting criterion**, the one whose triple demands the largest $N$. A low-baseline or tightly thresholded criterion can therefore dominate the cost of the whole experiment, which per-criterion sizing surfaces where an aggregate would hide it. A criterion that needs evidence about a different input distribution does not inflate this $N$: it belongs to a different contract with its own sampling (§4.1), and a family of $E$ contracts has total sample budget $\sum_e N_e$, its limiting criterion identified contract by contract.
+
+**A test declares its intent.** A VERIFICATION test sets out to demonstrate its requirement. A SMOKE test is declared too small to demonstrate anything — a quick check in a pre-commit hook or a nightly canary, say — and FAILs only on evidence that the service falls short of its requirement, so its PASS means only that no such evidence was found (Statistical Companion §5.7).
+
+**A design that cannot support its verdict is refused before it runs.** A VERIFICATION test against a stipulated threshold that even a flawless run could not pass, and a regression test planned larger than the baseline it consumes, are configuration errors (`COMPLIANCE_INFEASIBLE`, `TEST_LARGER_THAN_BASELINE`), not verdicts (Statistical Companion §5.7.1, §3.4).
+
+## 8. The Contract Verdict
+
+A contract is decided by many rules: one for each functional criterion and one for each latency constraint. This chapter sets out how their verdicts combine into the contract's verdict, what Type-I error that verdict carries, and when its failure fails the test.
+
+### 8.1 The Structured Verdict
+
+The contract's verdict combines its per-criterion functional verdicts with its latency verdict. Crucially, this is *not* a single flattened boolean: a flat PASS/FAIL surface would obscure exactly the per-criterion outcomes the criterion decomposition exists to expose. The contract verdict is a **structured tuple** over the per-criterion verdicts $V_c \in \{\text{PASS}, \text{FAIL}, \text{INCONCLUSIVE}\}$, with the structural composite
 
 $$
 V_{\text{contract}} = \begin{cases}
@@ -271,76 +285,17 @@ and the per-criterion verdicts retained in full on the composite so that a consu
 
 A payment API that succeeds 99.5% of the time but takes 30 seconds for 1% of requests therefore fails its contract just as surely as one that returns incorrect results — and, under the decomposition, a contract in which a rare safety criterion has regressed fails even when an aggregate rate would still look healthy.
 
-Because a contract aggregates many per-criterion tests, its false-alarm budget is itself an aggregate — and it has two directions, because the two procedures guard against different errors. The methodology discloses two **Type-I envelopes**: a *false-compliance* envelope over the compliance criteria, bounding the probability of declaring some requirement met that is not, and a *false-degradation-signal* envelope over the regression criteria, bounding the probability of signalling degradation where none occurred. By the union bound each is at most the sum of its criteria's $\alpha_c$, under arbitrary dependence among them; the bound rests on each criterion's own rule keeping its error within its $\alpha_c$, which the exact rules of §5 guarantee. Latency decisions enter the same two envelopes according to their threshold's origin. Observational criteria enter neither, since they carry no $\alpha$, and neither does a criterion decided under SMOKE intent, whose $\alpha$ bounds a false FAIL and whose PASS claims no compliance (§7.5).
+### 8.2 Type-I Envelopes
+
+Because a contract aggregates many per-criterion tests, its false-alarm budget is itself an aggregate — and it has two directions, because the two procedures guard against different errors. The methodology discloses two **Type-I envelopes**: a *false-compliance* envelope over the compliance criteria, bounding the probability of declaring some requirement met that is not, and a *false-degradation-signal* envelope over the regression criteria, bounding the probability of signalling degradation where none occurred. By the union bound each is at most the sum of its criteria's $\alpha_c$, under arbitrary dependence among them; the bound rests on each criterion's own rule keeping its error within its $\alpha_c$, which the exact rules of §5 guarantee. Latency decisions enter the same two envelopes according to their threshold's origin. Observational criteria enter neither, since they carry no $\alpha$, and neither does a criterion decided under SMOKE intent, whose $\alpha$ bounds a false FAIL and whose PASS claims no compliance (§7).
 
 The envelopes are reported on the composite verdict as disclosed properties, not driven to a target by shrinking the per-criterion $\alpha_c$: a safety criterion held at $\alpha = 0.001$ keeps that level because the consequence of a false claim of safety demands it, and uniformly dividing the $\alpha_c$ would sap exactly the power such a criterion most needs. The Statistical Companion gives the envelopes their precise form in §1.4.6.
 
+### 8.3 Enforcement
+
 Every assertion a contract declares is **enforced** by default — functional criteria and latency constraints alike, whatever the origin of their thresholds — so that its failure fails the test. One set of assertions holds in every environment; what differs between environments is the evidence an assertion is judged against, such as the baseline a test consumes. A run-time switch, never a per-test setting, can make the functional dimension, the latency dimension or both *advisory*: an advisory dimension is still decided by its rules and reported beside the verdict, but it cannot fail the test (Statistical Companion §12.6).
 
-## 7. Sample Size and Feasibility
-
-Not every distributional contract can be meaningfully assessed with a given number of samples. The relationship between sample size, threshold, and confidence is not a free choice — it is a system of constraints in which fixing any two determines the third. This concern echoes a theme in the software reliability literature: Frankl, Hamlet, Littlewood, and Strigini [19] argue that testing methods should be evaluated in terms of the reliability they ultimately deliver in operation, not merely in terms of fault counts, and Hamlet and Taylor [20] demonstrate that success on a set of carefully chosen examples does not, by itself, justify confidence in future behaviour under realistic conditions. These results become sharper still for stochastic services, where the property of interest is inherently probabilistic and no single execution can be decisive. This section examines the three ways in which the constraint system can be resolved.
-
-### 7.1 The Fundamental Constraint
-
-A distributional contract involves three quantities that are bound together by the statistical framework: the sample size $n$, the threshold $p_{\min}$, and the confidence level $1 - \alpha$. It is not possible to simultaneously achieve an arbitrarily tight threshold, high confidence, and a small sample. This is not a limitation of any particular method; it is a fundamental property of statistical inference. Any operational approach to parameterising a distributional contract must fix two of these quantities and accept that the third is determined.
-
-Under the criterion decomposition this constraint is *per criterion*: each criterion $c$ binds its own triple $(n_c, p^*_c, \alpha_c)$ and, where its threshold is normative, has its own feasibility gate. The criteria of one experiment share a single sampling and therefore its size $N$. The **limiting criterion** is the one whose triple demands the largest $N$, and it sets the experiment's required sample size; a low-baseline or tightly-thresholded criterion can therefore dominate the cost of the whole experiment, which per-criterion feasibility gates surface honestly where an aggregate would hide it. A criterion that needs evidence about a different input distribution does not inflate this $N$: it belongs to a different contract with its own sampling (§4.1), and a family of $E$ contracts has total sample budget $\sum_e N_e$, its limiting criterion identified contract by contract.
-
-Three natural approaches emerge, each corresponding to a different practical starting point. The approach — which quantity is fixed first — is independent of the threshold's origin, which alone selects the decision rule, so every approach applies to compliance and regression alike; and the formulas of the approaches plan a test, they never decide one (Statistical Companion §6).
-
-### 7.2 Sample-Size-First: Cost-Driven
-
-In many operational settings, the sample size is fixed by external constraints: the cost of each execution, the time available in a continuous integration pipeline, or the rate limits imposed by an external service. The question becomes: given a fixed $n$ and a threshold $p_{\min}$, what can the resulting evaluation detect or demonstrate?
-
-With the sample size fixed, the decision rule determines what the test can do: the cutoff or passing count it will apply, whether a pass is possible at all (§7.5), and its power — the probability of detecting a degradation, or of demonstrating a requirement, of a declared size. The confidence the evidence actually achieves is known only after the run: it is the error level at which the observed count would just have passed, the computation of the threshold-first approach (Statistical Companion §6.1, §6.3). If the power is unacceptably low, the evaluation remains valid but its evidential weight is limited. It may detect gross violations but will lack the sensitivity to distinguish small degradations from sampling noise.
-
-### 7.3 Confidence-First: Risk-Driven
-
-When the consequence of a false verdict is severe — in safety-critical systems, compliance audits, or contractual obligations — the confidence level and detection capability are the primary requirements. The question becomes: given a threshold $p_{\min}$, a desired confidence $1 - \alpha$, and a minimum detectable effect $\delta$, how many samples are required?
-
-The minimum detectable effect is essential: it names the alternative the test must be able to tell apart from its threshold — for regression, a degradation of size $\delta$ below the baseline's rate; for compliance, a true rate $\delta$ above the requirement. Without it, the sample size has no finite answer — detecting an arbitrarily small difference requires an arbitrarily large sample.
-
-Given these parameters, the required sample size is found exactly, against the decision rule the test will actually apply: it is the smallest $n$ from which the power stays at or above $1 - \beta$. Power under a discrete rule rises in a sawtooth rather than smoothly, so the first sample size to reach the target can fall below it again at the next. Demonstrating a 95% requirement with 80% power when the true rate is 97%, at $\alpha = 0.05$, first reaches that power at 601 samples but holds it only from 694 (Statistical Companion §5.5, §5.6). A regression test is sized the same way against the Fisher test, and may not exceed the size of the baseline it consumes (§5.4.1).
-
-The practical consequence is that stringent contracts demand large samples. Demonstrating a 99.9% requirement at 95% confidence with 80% power, against a true rate of 99.95%, requires 21,883 samples. This is not excessive; it is the honest cost of making a statistically defensible claim about a service operating at that level of reliability.
-
-### 7.4 Threshold-First: Externally-Dictated
-
-In the third approach, the threshold is dictated from outside — a requirement handed down, or a cutoff someone has declared — and the sample size is fixed too; what is derived is the error level the design implies. For a declared requirement, that is the confidence the observed evidence achieves: the smallest $\alpha$ at which its count would have passed the exact binomial test. For a declared cutoff judged against a baseline, it is the false-alarm probability the Fisher test attaches to that cutoff, and a cutoff whose implied $\alpha$ exceeds 0.20 is reported as unsound (Statistical Companion §6.3). The approach is legitimate when the threshold is genuinely non-negotiable, but the implied error level must be read, not assumed. Its commonest misuse is to dictate the baseline's own point estimate as the threshold — $p_{\min} = \hat{p}_{\text{exp}}$ — without the derivation of §5.2, and two ways of judging runs against it must not be conflated.
-
-If runs are compared by *raw point estimate* — $\hat{p}_{\text{test}} \ge \hat{p}_{\text{exp}}$ — then a service whose true rate has not changed falls below the baseline estimate with probability on the order of one half, by sampling variation alone (subject to discreteness and unequal sample sizes).
-
-The Fisher test of §5.2 makes the cost explicit. For a baseline of 951 successes in 1000 and a test of 100, a threshold at the baseline's own rate amounts to a cutoff of 96 successes, and the Fisher test puts the false-alarm probability of that cutoff at 0.555: more than half the runs of an unchanged service would fail (companion §6.3). A raw point estimate is the wrong quantity to enforce against.
-
-Anchoring on the point estimate is therefore useful only as a descriptive or exploratory mode — when the operator is deliberately probing the trade-offs between threshold, sample size, and false-positive rate, and is willing to accept the consequences. It should not be used where the verdict carries operational weight. An enforceable empirical threshold is the Fisher cutoff of §5.2 — a two-sample procedure that allows for the variability of both runs — rather than an anchor on the point estimate.
-
-### 7.5 The Feasibility Gate
-
-Regardless of which approach is taken, there exists for any given stipulated threshold and error level a minimum sample size below which no observation — not even a perfect one — can satisfy the contract. Under the exact binomial test, even a run in which every execution succeeds passes only if such a run would be improbable for a service whose rate is only $p_{\min}$, that is, only if $p_{\min}^n \le \alpha$. The sample size must therefore satisfy:
-
-$$n \geq N_{\min} = \left\lceil \frac{\log \alpha}{\log p_{\min}} \right\rceil$$
-
-If $n < N_{\min}$, the contract is infeasible: the evaluation cannot produce a positive verdict under any outcome. This can and should be detected before any samples are collected. Proceeding with an infeasible configuration wastes resources on an evaluation whose conclusion is predetermined. A feasible design is one in which a pass is *possible*; whether it is likely enough to pass a service that genuinely meets its threshold is a separate question of power (companion §5.5, §5.7.1).
-
-The feasibility gate scales steeply with the threshold. At the default error level $\alpha = 0.05$:
-
-| $p_{\min}$ | $N_{\min}$ |
-|------------|------------|
-| 0.80       | 14         |
-| 0.90       | 29         |
-| 0.95       | 59         |
-| 0.99       | 299        |
-| 0.999      | 2,995      |
-| 0.9999     | 29,956     |
-
-A contract requiring $p \geq 0.9999$ cannot be verified with fewer than 29,956 samples. This is not a deficiency of the method; it is the inescapable cost of making a credible assertion about a service operating at four nines of reliability.
-
-The gate depends on the test's declared **intent**. A VERIFICATION test sets out to demonstrate its requirement, and a design below $N_{\min}$ is refused before any sample runs, as a configuration error (`COMPLIANCE_INFEASIBLE`) rather than a verdict. A SMOKE test is declared too small to demonstrate anything — a quick check in a pre-commit hook or a nightly canary, say — and against a normative threshold it reverses the burden of proof: it is decided by a SMOKE form of the exact binomial test, and FAILs only on evidence that the service falls short of its requirement, so its PASS means only that no such evidence was found. Under SMOKE intent a regression test is decided by the Fisher test as usual; its FAIL is directionally reliable, but its PASS is weak evidence, since an undersized test has little power to detect degradation (Statistical Companion §5.7).
-
-A regression test has no feasibility gate of this kind. Its design check is that it may not be planned larger than the baseline it consumes (`TEST_LARGER_THAN_BASELINE`): a design policy rather than a statistical necessity, under which a need for a larger test is met by a larger baseline (Statistical Companion §3.4).
-
-## 8. Distributional Contract Composition
+## 9. Distributional Contract Composition
 
 The preceding sections define a distributional contract for a stochastic service considered as a single contractual unit. In practice, however, many stochastic applications are not a single service invocation. They are chains, graphs, or guarded architectures in which the output of one component becomes the input to another, and in which deterministic and stochastic components together determine the behaviour ultimately observed by the consumer.
 
@@ -352,9 +307,9 @@ The purpose of composition is not to manufacture an end-to-end probability from 
 
 > Compose contracts to measure compositions, not to multiply component rates.
 
-The chapter states the contractual meaning of composition, what any composition must preserve, and the principal cautions that prevent misuse. It introduces no new statistics: a composed contract is evaluated with the models the Statistical Companion [3] already defines, and where this chapter names a statistical quantity it cites the companion for its treatment. The guarded architecture of §8.9 — a generator followed by a safety boundary — is the composition used when a service cannot be tested for an outcome it must never produce, and the companion's model of its residual risk (§1.4.5b) is the statistical side of that arrangement.
+The chapter states the contractual meaning of composition, what any composition must preserve, and the principal cautions that prevent misuse. It introduces no new statistics: a composed contract is evaluated with the models the Statistical Companion [3] already defines, and where this chapter names a statistical quantity it cites the companion for its treatment. The guarded architecture of §9.9 — a generator followed by a safety boundary — is the composition used when a service cannot be tested for an outcome it must never produce, and the companion's model of its residual risk (§1.4.5b) is the statistical side of that arrangement.
 
-### 8.1 A Service Contract as a Statistical Interface
+### 9.1 A Service Contract as a Statistical Interface
 
 A service contract is not merely a declarative description of expected behaviour. Once exercised, it carries statistical state: per-criterion outcomes, thresholds and their error levels, verdicts, latency observations, the covariate profile, the baseline it was judged against, its factor record, failure reasons, and the population claim it makes. It is therefore useful to regard a service contract as a **statistically characterised interface**.
 
@@ -382,7 +337,7 @@ $$C = C_k \circ \cdots \circ C_2 \circ C_1 : I_1 \rightsquigarrow I_{k+1}.$$
 
 This notation states only the operational shape. It does not state that the statistical evidence carried by the components can be arithmetically combined into a valid end-to-end claim. Type compatibility permits execution; it does not by itself justify reuse of evidence.
 
-### 8.2 The Motivation for First-Class Composition
+### 9.2 The Motivation for First-Class Composition
 
 Without first-class composition, a developer evaluating a stochastic pipeline is left with two poor alternatives.
 
@@ -402,7 +357,7 @@ but rather:
 
 That is the central operational value of composition.
 
-### 8.3 The Composite Contract
+### 9.3 The Composite Contract
 
 A composed contract is itself a distributional contract. It has an input type, an output type, a contract identity, a sampling, criteria, latency observations where applicable, covariates, a factor record, baseline provenance, feasibility constraints, and a run-level verdict. It can therefore be subjected to the same experiment-to-test workflow as any other contract.
 
@@ -412,13 +367,13 @@ First, **end-to-end composite criteria** declared by the composite contract itse
 
 Second, **cross-stage criteria** that inspect relationships between intermediate artefacts. A router's chosen application area may need to be consistent with the command emitted by a handler; a translated transcript may need to preserve the intent needed by the router; a generated command may need to be traceable to the original input rather than to a hallucinated intermediate value. These criteria are not purely stage-local and not purely final-output criteria. They require access to the composition trace.
 
-Both classes are the composite contract's own criteria. Each is evaluated on every sample of the composite sampling — a sample that never produced the intermediate artefact a criterion needs is a FAIL of that criterion with its reason, exactly as in §4.3 — and each is decided like any criterion of any contract: by the Fisher test against a baseline or the exact binomial test against a requirement, under the test's declared intent, enforced by default, entering the envelope of its direction (§5, §6.6; Statistical Companion §1.4.6, §3.4, §3.6).
+Both classes are the composite contract's own criteria. Each is evaluated on every sample of the composite sampling — a sample that never produced the intermediate artefact a criterion needs is a FAIL of that criterion with its reason, exactly as in §4.3 — and each is decided like any criterion of any contract: by the Fisher test against a baseline or the exact binomial test against a requirement, under the test's declared intent, enforced by default, entering the envelope of its direction (§5, §8.2; Statistical Companion §1.4.6, §3.4, §3.6).
 
-Third, **stage-local criteria** inherited from the component contracts: the criteria by which each stage judges its own output — a transcript is non-empty, a translation is in English, a router selects a valid application area, a command constructor emits valid JSON. Inside the composite they are essential for attribution: they explain how the composed run behaved internally, and they identify where failures entered or propagated. But they are diagnostics, not verdicts of the composite: a stage is evaluated only on the samples that reached it, and §8.5 explains why that count cannot carry an inferential claim. Each component contract keeps its own verdicts where it is evaluated standalone, over its own sampling.
+Third, **stage-local criteria** inherited from the component contracts: the criteria by which each stage judges its own output — a transcript is non-empty, a translation is in English, a router selects a valid application area, a command constructor emits valid JSON. Inside the composite they are essential for attribution: they explain how the composed run behaved internally, and they identify where failures entered or propagated. But they are diagnostics, not verdicts of the composite: a stage is evaluated only on the samples that reached it, and §9.5 explains why that count cannot carry an inferential claim. Each component contract keeps its own verdicts where it is evaluated standalone, over its own sampling.
 
 A composition that declares only end-to-end criteria is complete; cross-stage criteria need a trace-aware criterion model and may come later. Their place in the theory is nevertheless clear: they are contractual criteria over the composed execution, not post hoc debugging annotations.
 
-### 8.4 Trace Preservation
+### 9.4 Trace Preservation
 
 Composition must be trace-preserving. Without trace preservation, the feature degenerates into ordinary service orchestration.
 
@@ -441,7 +396,7 @@ The final consumer of the composite service may see only its outcome. The evalua
 
 This is the difference between invoking a pipeline and composing contracts. Invocation connects values. Contract composition preserves meaning.
 
-### 8.5 Failure Propagation and Denominators
+### 9.5 Failure Propagation and Denominators
 
 Sequential composition introduces a denominator distinction that does not arise for a single service contract.
 
@@ -465,7 +420,7 @@ This distinction is not a minor reporting detail. If a router is invoked on only
 
 The same discipline applies to latency. The composite latency distribution is the latency of the composed service conditional on composite success — every composite criterion passing — exactly as §6.2 conditions a single contract's latency on success (Statistical Companion §12.2.1). Stage-local latency summaries are conditional on the stage being reached and succeeding, and are diagnostics in the same sense. These conditional populations must be named rather than hidden.
 
-### 8.6 Type Compatibility and Distributional Compatibility
+### 9.6 Type Compatibility and Distributional Compatibility
 
 Composition has two compatibility layers.
 
@@ -490,7 +445,7 @@ When distributional compatibility is undeclared, doubtful, or false, the compose
 
 This is the compositional form of the population-claim discipline introduced in §4.1: a verdict is first a claim about the sampling it ran over, and extending it is a declared claim (Statistical Companion §1.4.7, §8.4.6). Composition changes the conditions of that claim, because upstream components generate the values downstream components see — just as a baseline measured under one covariate profile is no reference for a test run under another (Statistical Companion §1.5.3).
 
-### 8.7 Empirical Composite Evidence
+### 9.7 Empirical Composite Evidence
 
 The authoritative evidence for a composed contract is obtained by running the composed contract end to end over a declared sampling and evaluating the composite criteria directly.
 
@@ -498,7 +453,7 @@ Let $S_C$ be the event that the composite contract satisfies its end-to-end func
 
 $$X_{i,C} = \mathbf{1}\{S_C \text{ holds on sample } i\},$$
 
-together with the trace-local streams for each reached stage. The composite contract is the service under test: its rate-bounded criteria are decided by the companion's rules, its observational criteria by the zero-failures rule, its latency constraints by the latency rules, and its verdict is the structured composite of §6.6, with its envelopes disclosed — all unchanged from a single contract.
+together with the trace-local streams for each reached stage. The composite contract is the service under test: its rate-bounded criteria are decided by the companion's rules, its observational criteria by the zero-failures rule, its latency constraints by the latency rules, and its verdict is the structured composite of §8.1, with its envelopes disclosed (§8.2) — all unchanged from a single contract.
 
 The component traces do not disappear. They answer different questions:
 
@@ -513,9 +468,9 @@ These are not substitutes for the composite verdict. They are the evidence by wh
 
 This distinction should be reflected in reporting. A composition report presents the end-to-end composite verdict first, then stage-local and trace-derived diagnostics. The report may include descriptive stage rates, reach counts, and latency decompositions, but it must not present those summaries as though they were an independently derived proof of the end-to-end result.
 
-### 8.8 Derived Quantities and Their Limits
+### 9.8 Derived Quantities and Their Limits
 
-There are cases in which a derived compositional calculation is meaningful. The guarded architecture of §8.9 is the principal one: the residual event — a prohibited candidate emitted upstream and missed by the boundary — is structurally an event of survival through a boundary, and the companion models it. But that special case should not be mistaken for a general licence to multiply pass rates.
+There are cases in which a derived compositional calculation is meaningful. The guarded architecture of §9.9 is the principal one: the residual event — a prohibited candidate emitted upstream and missed by the boundary — is structurally an event of survival through a boundary, and the companion models it. But that special case should not be mistaken for a general licence to multiply pass rates.
 
 For a sequential chain with stage-success events $S_1,\ldots,S_k$, the end-to-end success event is usually:
 
@@ -551,7 +506,7 @@ The label is part of the claim. A derived quantity must state the basis on which
 
 > Measure the composition empirically. Treat derived composition as explicit, assumption-bearing commentary.
 
-### 8.9 Guarded Composition
+### 9.9 Guarded Composition
 
 When a service cannot realistically be coaxed into producing the content a categorical clause prohibits — *the service shall not emit self-harm advice* — the guardrail of §4.6 is interposed between the service and its consumer. That arrangement is a composition. The generator's candidate output is the guardrail's input, and what reaches the consumer is the output of the pair. The guardrail is a component with its own distributional contract, and the guarded service is a composite contract in the sense of this chapter.
 
@@ -572,7 +527,7 @@ The coverage ledger matters because an adversarial sampling is almost always a f
 
 **Two error rates, one constrained.** A guardrail can miss harmful content and can wrongly block acceptable content, and moving its operating threshold trades one error for the other. The methodology resolves the trade as the Neyman–Pearson principle does [24, 25]: the graver error is constrained at a declared level, and the other is kept as small as that constraint allows. For a guardrail that protects users from harmful content the miss is the graver error, so sensitivity carries a normative threshold derived from the tolerable residual harm, decided by the compliance test. Specificity is not given a matching requirement by the same reasoning, because the harm analysis supplies none. It is measured, and it is guarded so that a guardrail that blocks everything cannot pass: by a normative floor taken from an operational commitment, such as an SLO, until a baseline exists, and thereafter by an empirical threshold derived from that baseline, decided by the regression test (§5). The architectural commitment states which error is constrained and why; where a wrongful block is the graver harm, as in front of an emergency-information service, the roles invert. Requiring the specificity clause does not weaken the sensitivity clause (Statistical Companion §1.4.5b).
 
-### 8.10 Composition Graph Identity and Baseline Provenance
+### 9.10 Composition Graph Identity and Baseline Provenance
 
 A baseline for a single service contract is already a structured artefact. It is tied to the contract identity, structural reference, factor record, covariate profile, sampling, and expiry conditions (Statistical Companion §1.5.3, §8.4.2). A composite baseline must carry at least the same discipline, and in practice more.
 
@@ -597,7 +552,7 @@ If any of these change materially, the composite baseline should not silently re
 
 This is especially important because a composite can appear stable at the boundary while changing internally. The input type and output type may remain unchanged, and even the final output may appear superficially similar, while a stage replacement shifts the distribution of intermediate values or changes which failures are masked, repaired, or propagated. Composition graph identity is the safeguard against treating such a change as the same empirical object.
 
-### 8.11 An Illustrative API
+### 9.11 An Illustrative API
 
 What composition means in practice is easiest to see in the shape an API for it might take. The sketch below is an illustration of the idea, not a specification: no mavai framework implements it, and the family's frameworks compose today in host code that invokes declared services. A Java rendering might read:
 
@@ -620,11 +575,11 @@ The statistics at the interfaces of such an API would look like this:
 - **At the composite's boundary:** the composite verdict — the structured tuple over the composite's own criteria, each decided by its rule (§5.3) at its error level, with the two envelopes disclosed and the composite sampling's size as every criterion's denominator.
 - **At each stage boundary inside it:** the stage's reach count $n^{\mathrm{reach}}_j$, its stage-local outcomes over that count labelled as descriptive diagnostics, and the reasons for any failure or non-reach.
 - **For latency:** the composite's percentiles over the samples on which the composite succeeded, decided by the latency rules; stage durations as diagnostics.
-- **For a guarded composition:** the guardrail's detection verdict and its false-positive clause from its own contract, and the residual risk as a labelled derived quantity with its basis, per §8.9.
+- **For a guarded composition:** the guardrail's detection verdict and its false-positive clause from its own contract, and the residual risk as a labelled derived quantity with its basis, per §9.9.
 
 Whatever form an implementation takes, a composition must preserve the properties this chapter depends on. Stage identifiers are stable and unique. Adjacent stage types are compatible. Child contract identities and their factor records are present and stable. Covariate names do not collide silently. The composition graph identity can be produced and recorded. The failure propagation policy is explicit. The composite's own criteria are declared, even where stage-local criteria are inherited. And each reached stage is evaluated through the same machinery as a standalone evaluation — postconditions, criteria, timing, covariate capture — rather than bypassed because it runs inside a larger contract.
 
-### 8.12 What Composition Is Not
+### 9.12 What Composition Is Not
 
 Several exclusions are essential.
 
@@ -638,9 +593,9 @@ Fourth, composition does not collapse criteria. The argument against aggregate r
 
 Fifth, composition is not ordinary orchestration. Orchestration connects components so that values flow. Contract composition connects contracts so that evidence remains interpretable.
 
-Finally, composition is not a rare-event certification device. A guarded architecture may reduce risk, and the companion's containment model (§1.4.5b) structures that claim, but no finite ordinary sample proves the absence of catastrophic behaviour. High-consequence obligations remain governed by the categorical clause of §4.6 and the guarded composition of §8.9, within the limits of finite empirical evidence.
+Finally, composition is not a rare-event certification device. A guarded architecture may reduce risk, and the companion's containment model (§1.4.5b) structures that claim, but no finite ordinary sample proves the absence of catastrophic behaviour. High-consequence obligations remain governed by the categorical clause of §4.6 and the guarded composition of §9.9, within the limits of finite empirical evidence.
 
-### 8.13 Summary
+### 9.13 Summary
 
 Distributional contract composition extends the central move of this paper from individual stochastic services to connected stochastic architectures. A service contract is a statistically characterised interface. When such interfaces are connected, the resulting composition must not be treated as an unstructured implementation detail, nor as an invitation to calculate end-to-end quality from standalone component summaries.
 
@@ -650,7 +605,7 @@ The guiding rule is therefore:
 
 > Operational composition is first-class; empirical composition is authoritative; derived composition is secondary, labelled, and assumption-bearing.
 
-## 9. The mavai Project Family: Implementations of the Distributional Contract
+## 10. The mavai Project Family: Implementations of the Distributional Contract
 
 This section describes the mavai project family, which implements the model as practical tooling for developers working with stochastic systems.
 
@@ -668,25 +623,25 @@ The methodology is implemented as language-native frameworks, each idiomatic to 
 
 Each framework is a direct operational realisation of the distributional contract, its features corresponding to the elements of the model.
 
-### 9.1 Expressing a Distributional Contract
+### 10.1 Expressing a Distributional Contract
 
 Each framework gives the developer the means to express a distributional contract as a declarative specification. The functional dimension is defined through one or more **criteria**, each hosting one or more postconditions — syntactic validity, presence of required fields, schema adherence, semantic correctness, absence of disallowed content. Postconditions are grouped into criteria by the design rule of §4.5, each criterion its own statistical stream with its own threshold and confidence level. The developer may additionally declare latency thresholds — percentile-level bounds to which the service must adhere — expressing the temporal dimension of the contract.
 
-All frameworks evaluate both dimensions by the methods of this paper. Every verdict names the rule that produced it by the versioned identifier the Statistical Companion assigns — `regression/fisher` for the Fisher test, `compliance/exact-binomial` for the exact binomial test, `latency/precedence` for the latency precedence rule, and so on — so that a reader can trace each verdict to its rule. The Wilson interval is reported beside the verdict only as a description of the observed rate. The frameworks report the structured composite verdict of §6.6, with its disclosed Type-I envelopes, and follow its enforcement semantics.
+All frameworks evaluate both dimensions by the methods of this paper. Every verdict names the rule that produced it by the versioned identifier the Statistical Companion assigns — `regression/fisher` for the Fisher test, `compliance/exact-binomial` for the exact binomial test, `latency/precedence` for the latency precedence rule, and so on — so that a reader can trace each verdict to its rule. The Wilson interval is reported beside the verdict only as a description of the observed rate. The frameworks report the structured composite verdict of §8.1, with its disclosed Type-I envelopes (§8.2), and follow its enforcement semantics (§8.3).
 
 The move to a distributional contract also reframes what it means for a postcondition to fail. In Meyer's original formulation, a violated postcondition is evidence of a defect in the supplier: the routine failed to honour its obligation, and the appropriate response is to locate and fix the bug. Under a distributional contract this interpretation is no longer available at the level of an individual execution. A single execution on which a postcondition is not satisfied does not, by itself, establish a defect — it is indistinguishable from a sample outcome drawn from the variability the contract explicitly admits.
 
 The notion of contract failure is therefore lifted along with the postcondition: a failure is no longer the falsification of a postcondition on one execution, but the failure of a criterion, over a principled number of executions, to deliver the desired outcome with sufficient probability. Accordingly, the frameworks treat an individual failing execution as data, not as an alarm, and reserve the contract-failure verdict for the statistical assessment of the population as a whole.
 
-### 9.2 Stipulated and Empirical Thresholds
+### 10.2 Stipulated and Empirical Thresholds
 
 Both threshold sources are supported across all implementations. A developer may declare a stipulated threshold directly — from an SLA, regulatory requirement, or organisational policy — or may conduct a baseline measurement experiment against which later tests are judged by the Fisher test. The baseline result is recorded as a persistent specification artefact, capturing the success count and sample size together with the conditions under which the baseline was established; the cutoff a test must reach is derived from it when the test runs, since it depends on the test's own size.
 
-### 9.3 The Feasibility Gate
+### 10.3 The Feasibility Gate
 
-All implementations check the design before any sample runs and refuse the configurations of §7.5 (`COMPLIANCE_INFEASIBLE`, `TEST_LARGER_THAN_BASELINE`), honouring the test's declared intent. A refusal is a configuration error — distinct from a system failure and from any verdict — and it applies whether a dimension is enforced or advisory.
+All implementations check the design before any sample runs and refuse the configurations of §7 (`COMPLIANCE_INFEASIBLE`, `TEST_LARGER_THAN_BASELINE`), honouring the test's declared intent. A refusal is a configuration error — distinct from a system failure and from any verdict — and it applies whether a dimension is enforced or advisory.
 
-### 9.4 Early Termination
+### 10.4 Early Termination
 
 In some cases, the final verdict can be determined before all planned samples have been executed. Every decision rule reduces to a count of successes the test must reach. If enough failures have been observed that this count can no longer be reached even if all remaining samples pass, continued execution is pointless. Conversely, once the count has been reached, the verdict is determined regardless of the remaining outcomes. The frameworks detect both conditions and terminate early.
 
@@ -694,7 +649,7 @@ Each additional execution beyond the point at which the verdict is fixed consume
 
 Continuing to sample once the verdict is mathematically determined is therefore an active waste of non-renewable budget. The frameworks treat early termination as a first-class obligation rather than an optional optimisation, on the pragmatic grounds that a methodology which ignores the operational cost of its own evaluations is unlikely to be adopted, and less likely still to be sustained.
 
-### 9.5 Operational Safeguards
+### 10.5 Operational Safeguards
 
 The Bernoulli model assumes independence between executions and stationarity of the success probability across the sampling window. These assumptions are not given by the operational environment; they must be actively maintained. The frameworks provide several mechanisms toward this end. A warmup facility allows initial observations to be discarded, mitigating cold-start non-stationarity caused by caches, connection pools, or runtime compilation.
 
@@ -708,15 +663,15 @@ Baseline expiration tracking alerts operators when a specification may no longer
 
 The covariate problem points to a deeper reality: for many stochastic services, behaviour is environmentally dependent in ways that cannot be fully captured at baseline time. A service that meets its distributional contract in a test environment may violate it in production, not because the service itself has changed but because the operating conditions have. It is therefore insufficient, in many cases, to rely on one-time evaluations conducted in controlled settings. What is needed is a mechanism for probing the service's behaviour in situ — in the environment where it actually operates, under the conditions it actually encounters. Sentinel capabilities within the mavai family address this requirement, providing lightweight runtime agents that evaluate the distributional contract continuously against the live deployment, detecting degradation as it occurs rather than after the fact. Continuous evaluation repeats the test, and the per-run error level $\alpha$ bounds one run, not a horizon of them: over $H$ runs against one baseline the probability of at least one false alarm is bounded only by $H\alpha$, so a monitor states the horizon over which it controls false alarms, and choosing that control is part of designing it (Statistical Companion §8.5).
 
-### 9.6 The Experiment-to-Test Workflow
+### 10.6 The Experiment-to-Test Workflow
 
 The frameworks operationalise the experiment-then-test workflow of §4.2 and §5: an experiment produces a specification, and later tests, with fewer samples, are judged against it. The use case — the reusable unit that invokes the service and evaluates the result — is shared between experiments and tests, ensuring that the contract's criteria are applied consistently.
 
-### 9.7 Conformance Across Implementations
+### 10.7 Conformance Across Implementations
 
 Because the distributional contract is a statistical model, not a language-specific construct, all mavai framework implementations must produce identical statistical results for the same inputs. The [mavai-R](https://github.com/mavai-org/mavai-R) project provides the verification mechanism: it generates canonical reference datasets using R — the gold standard for statistical computing — against which each framework validates its statistics engine. This ensures that a distributional contract evaluated by punit in Java produces the same verdict as one evaluated by feotest in Rust, within stated floating-point tolerances. Agreement of results is necessary but not sufficient: with each release mavai-R also publishes a calibration certification, showing that its reference implementation achieves the error rates the regression, compliance and latency rules claim.
 
-## 10. Conclusion
+## 11. Conclusion
 
 Meyer's Design by Contract gave software engineering a powerful organising principle: the obligations between caller and callee, expressed as preconditions, postconditions, and invariants, and enforced deterministically at runtime. For over three decades it has stood as a beacon for those who care about software correctness. Still, the systems it addressed were, by and large, deterministic: a postcondition either held or it did not, and a single counterexample was definitive evidence of a defect.
 
@@ -738,11 +693,11 @@ The mavai project family demonstrates that the distributional contract is not me
 
 Several questions remain open. The treatment of exogenous covariates in this paper is operational rather than formal: covariates are declared and tracked, but there is no statistical framework for adjusting inference when covariate drift is detected.
 
-The architectural commitment of §8.9 is a documentary record; whether it should become a structured artefact that frameworks consume is left open until a consumer needs one. Derived compositional claims beyond the guarded case have no general model, and the chapter on composition treats them as labelled commentary. And the independence assumption, while supported by operational safeguards, is ultimately unverifiable from the data alone.
+The architectural commitment of §9.9 is a documentary record; whether it should become a structured artefact that frameworks consume is left open until a consumer needs one. Derived compositional claims beyond the guarded case have no general model, and the chapter on composition treats them as labelled commentary. And the independence assumption, while supported by operational safeguards, is ultimately unverifiable from the data alone.
 
 These are not deficiencies to be apologised for; they are honest boundaries of what a practical framework can achieve. The distributional contract does not claim to resolve the fundamental difficulty of reasoning about stochastic systems. It claims only to provide a disciplined, statistically grounded basis for doing so — one that makes its assumptions explicit, its limitations visible, and its verdicts defensible.
 
-## 11. References
+## 12. References
 
 [1] Meyer, B. "Applying 'Design by Contract'." *IEEE Computer*, vol. 25, no. 10, October 1992, pp. 40–51.
 
