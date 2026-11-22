@@ -267,7 +267,7 @@ Sample size, threshold and error level are bound together: fixing any two determ
 
 ## 8. The Contract Verdict
 
-A contract is decided by many rules: one for each functional criterion and one for each latency constraint. This chapter sets out how their verdicts combine into the contract's verdict, what Type-I error that verdict carries, and when its failure fails the test.
+A contract's verdict rests on many decisions: one for each of its criteria, and one for each percentile constraint of its latency assertion. This chapter sets out how their verdicts combine into the contract's verdict, what Type-I error that verdict carries, and when its failure fails the test.
 
 ### 8.1 The Structured Verdict
 
@@ -307,7 +307,7 @@ The purpose of composition is not to manufacture an end-to-end probability from 
 
 > Compose contracts to measure compositions, not to multiply component rates.
 
-The chapter states the contractual meaning of composition, what any composition must preserve, and the principal cautions that prevent misuse. It introduces no new statistics: a composed contract is evaluated with the models the Statistical Companion [3] already defines, and where this chapter names a statistical quantity it cites the companion for its treatment. The guarded architecture of §9.9 — a generator followed by a safety boundary — is the composition used when a service cannot be tested for an outcome it must never produce, and the companion's model of its residual risk (§1.4.5b) is the statistical side of that arrangement.
+The chapter states the contractual meaning of composition, what any composition must preserve, and the principal cautions that prevent misuse. It introduces no new statistics: a composed contract is evaluated with the models the Statistical Companion [3] already defines, and where this chapter names a statistical quantity it cites the companion for its treatment. The guarded architecture of §9.9 — a generator followed by a safety boundary — is the composition used when a service cannot be tested for an outcome its contract prohibits, and the companion's model of its residual risk (§1.4.5b) is the statistical side of that arrangement.
 
 ### 9.1 A Service Contract as a Statistical Interface
 
@@ -599,7 +599,7 @@ Finally, composition is not a rare-event certification device. A guarded archite
 
 Distributional contract composition extends the central move of this paper from individual stochastic services to connected stochastic architectures. A service contract is a statistically characterised interface. When such interfaces are connected, the resulting composition must not be treated as an unstructured implementation detail, nor as an invitation to calculate end-to-end quality from standalone component summaries.
 
-A composite contract is a new empirical object. It has its own population claim, denominator, criteria, latency behaviour, baseline identity, and verdict, all evaluated with the machinery a single contract uses. The component contracts remain present as trace-preserving substructures, supplying attribution and diagnostic evidence. A guarded composition polices a service that cannot be tested for an outcome it must never produce, and its architectural commitment is recorded as a contractual statement whose statistics the companion supplies.
+A composite contract is a new empirical object. It has its own population claim, denominator, criteria, latency behaviour, baseline identity, and verdict, all evaluated with the machinery a single contract uses. The component contracts remain present as trace-preserving substructures, supplying attribution and diagnostic evidence. A guarded composition polices a service that cannot be tested for an outcome its contract prohibits, and its architectural commitment is recorded as a contractual statement whose statistics the companion supplies.
 
 The guiding rule is therefore:
 
@@ -685,7 +685,7 @@ The contract is expressed along two orthogonal dimensions: functional stochastic
 
 A contract's obligations also divide by form: rate-bounded clauses, bounded statistically by the machinery above, and categorical clauses, which admit no rate and are evaluated by an observational zero-failures criterion, falsified by a single violation and never demonstrated by a clean run. A rate-bounded clause's threshold is, on a separate axis, either normative in origin — stipulated by an SLA, SLO, policy, or regulation — or empirical, derived conservatively from a measured baseline. Every criterion is subject to the constraint that binds sample size, threshold and confidence in any honest statistical claim.
 
-Services composed into chains and guarded architectures are distributional contracts in their own right. The composed service is measured end to end, with its own criteria, denominator and verdict; its stages keep their evidence as diagnostics; and component rates are not multiplied into an end-to-end claim. Where a service cannot be tested for an outcome it must never produce, a guardrail is tested in its place.
+Services composed into chains and guarded architectures are distributional contracts in their own right. The composed service is measured end to end, with its own criteria, denominator and verdict; its stages keep their evidence as diagnostics; and component rates are not multiplied into an end-to-end claim. Where a service cannot be tested for an outcome its contract prohibits, a guardrail is tested in its place.
 
 The model is deliberately conservative in its statistical choices. Each verdict is decided by an exact rule chosen for its question — the Fisher test for degradation, the exact binomial test for compliance — because only an exact rule keeps the probability of a false verdict within the stated level at every sample size; an approximation, however well-behaved, cannot promise that. The rules are conservative by construction: where they err, they err towards fewer false alarms and fewer false claims of compliance, at a modest cost in sensitivity that was judged a smaller risk than false precision. The Wilson interval remains, to describe what was observed, but it decides nothing.
 
