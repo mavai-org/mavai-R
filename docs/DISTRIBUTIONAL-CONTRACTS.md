@@ -1,6 +1,6 @@
 ---
 title: "Distributional Contracts for Stochastic Systems"
-author: "Version 0.9.2 · last updated 2026-11-22 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
+author: "Version 0.9.3 · last updated 2026-11-23 · Copyright © 2026, Michael Franz Mannion BSc (Hons) MBA"
 ---
 
 ## 1. Document History
@@ -15,6 +15,7 @@ This is a working document: a formal declaration of what the mavai family of fra
 | 4 | **2026-05** | **Criterion decomposition.** The functional dimension becomes a conjunction of criteria, each its own Bernoulli stream, with a tuple-valued composite verdict; rate-bounded and categorical clause forms; every trial counts toward its criterion's denominator. |
 | 5 | **2026-07** | **Behavioural populations** (§4.8). |
 | 6 | **2026-11** | **Exact decision rules and composition.** Fisher's exact test for degradation, the exact binomial test for compliance (Wilson describes only); aligned with Statistical Companion 1.7.x; a short chapter on composed and guarded services; the contract verdict given a chapter of its own; sample sizing left to the Statistical Companion. Prose tightened and repetition removed. |
+| 7 | **2026-11** | **Scope relative to Design by Contract.** Only the supplier's obligations are lifted: preconditions remain the caller's duty and invariants remain absolute; response time is a clause Design by Contract never stated; per-call run-time checking gives way to evaluation over samplings in experiments, tests and sentinels, the sentinel being an architectural construct rather than new machinery. |
 
 Milestone 4 supersedes the exclusion of no-testable-value outcomes, and milestone 6 the use of Wilson as a decision rule; the Bernoulli/binomial foundation of milestone 1 stands.
 
